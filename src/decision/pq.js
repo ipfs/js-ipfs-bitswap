@@ -3,12 +3,9 @@
 const Heap = require('heap')
 
 module.exports = class PriorityQueue {
-
-  // less is a function that returns true if a is less than b
-  // and false otherwise
-  constructor (less) {
+  constructor (cmp) {
     this.q = new Heap((a, b) => {
-      return less(a, b) ? 1 : -1
+      return cmp(a, b) ? -1 : 1
     })
   }
 
@@ -26,5 +23,9 @@ module.exports = class PriorityQueue {
 
   size () {
     return this.q.size()
+  }
+
+  isEmpty () {
+    return this.q.empty()
   }
 }

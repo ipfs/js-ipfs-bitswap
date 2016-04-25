@@ -6,6 +6,7 @@ log.error = debug('engine:error')
 
 const Wantlist = require('../wantlist')
 const PeerRequestQueue = require('./peer-request-queue')
+const Ledger = require('./ledger')
 
 module.exports = class Engine {
   constructor (blockStore) {
