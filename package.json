@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "debug": "^2.2.0",
+    "heap": "^0.2.6",
     "ipfs-blocks": "^0.2.3",
     "lodash.isundefined": "^3.0.1",
     "protocol-buffers": "^3.1.6"

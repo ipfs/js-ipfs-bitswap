@@ -6,7 +6,7 @@ log.error = debug('bitswap:error')
 
 // const cs = require('./constants')
 // const WantManager = require('./want-manager')
-// const DecisionEngine = require('./decision-engine')
+const decision = require('./decision')
 
 module.exports = class Bitwap {
   constructor (p, network, bstore) {
@@ -22,7 +22,7 @@ module.exports = class Bitwap {
     // handle message sending
     // this.wm = new WantManager(network)
 
-    // this.engine = new DecisionEngine(bstore)
+    this.engine = new decision.Engine(bstore)
 
     // this.wm.run()
   }
