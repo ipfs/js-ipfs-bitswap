@@ -40,6 +40,6 @@ module.exports = class Wantlist {
   }
 
   contains (key) {
-    return this.set.has(key)
+    return this.set.get(key)
   }
 }

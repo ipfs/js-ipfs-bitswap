@@ -85,14 +85,10 @@ describe('Wantlist', () => {
 
     expect(
       wm.contains(b1.key)
-    ).to.be.eql(
-      true
-    )
+    ).to.exist
 
     expect(
       wm.contains(b2.key)
-    ).to.be.eql(
-      false
-    )
+    ).to.not.exist
   })
 })
