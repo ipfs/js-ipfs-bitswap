@@ -8,9 +8,10 @@ const protobuf = require('protocol-buffers')
 const path = require('path')
 const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../src/message/message.proto')))
 
+const WantlistEntry = require('../src/wantlist/entry')
 const BitswapMessage = require('../src/message')
 
-describe.only('BitswapMessage', () => {
+describe('BitswapMessage', () => {
   it('append wanted', () => {
     const str = 'foo'
     const block = new Block(str)
@@ -60,7 +61,7 @@ describe.only('BitswapMessage', () => {
     expect(
       Array.from(protoMessage.wantlist)
     ).to.be.eql([
-      ['hello', {entry: {key: 'hello', priority: 0}, cancel: false}]
+      ['hello', {cancel: false, entry: new WantlistEntry('hello', 0)}]
     ])
 
     const b1 = new Block('hello')
