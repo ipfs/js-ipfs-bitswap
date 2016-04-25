@@ -26,6 +26,18 @@ describe.only('BitswapMessage', () => {
     })
   })
 
+  it('encodes blocks', () => {
+    const block = new Block('hello')
+    const m = new BitswapMessage(true)
+    m.addBlock(block)
+
+    expect(
+      pbm.Message.decode(m.toProto()).blocks
+    ).to.be.eql([
+      block.data
+    ])
+  })
+
   it('new message fromProto', () => {
     const raw = pbm.Message.encode({
       wantlist: {
@@ -63,16 +75,36 @@ describe.only('BitswapMessage', () => {
 
   it('duplicates', () => {
     const b = new Block('foo')
-    const msg = new BitswapMessage(true)
+    const m = new BitswapMessage(true)
 
-    msg.addEntry(b.key, 1)
-    msg.addEntry(b.key, 1)
+    m.addEntry(b.key, 1)
+    m.addEntry(b.key, 1)
 
-    expect(msg.wantlist.size).to.be.eql(1)
+    expect(m.wantlist.size).to.be.eql(1)
 
-    msg.addBlock(b)
-    msg.addBlock(b)
+    m.addBlock(b)
+    m.addBlock(b)
 
-    expect(msg.blocks.size).to.be.eql(1)
+    expect(m.blocks.size).to.be.eql(1)
+  })
+
+  it('empty', () => {
+    const m = new BitswapMessage(true)
+
+    expect(
+      m.empty
+    ).to.be.eql(
+      true
+    )
+  })
+
+  it('non full message', () => {
+    const m = new BitswapMessage(false)
+
+    expect(
+      pbm.Message.decode(m.toProto()).wantlist.full
+    ).to.be.eql(
+      false
+    )
   })
 })

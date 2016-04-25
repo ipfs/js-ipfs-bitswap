@@ -16,7 +16,7 @@ class BitswapMessage {
   }
 
   get empty () {
-    return this.blocks.length === 0 && this.wantlist.length === 0
+    return this.blocks.size === 0 && this.wantlist.size === 0
   }
 
   addEntry (key, priority, cancel) {
