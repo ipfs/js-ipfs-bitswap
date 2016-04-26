@@ -28,11 +28,26 @@ module.exports = class Bitwap {
   }
 
   // handle messages received through the network
-  _receiveMessage (p, incoming) {
+  _receiveMessage (peerId, incoming) {
 
   }
 
-    // getBlock attempts to retrieve a particular block with key `k` from peers
+  // handle errors on the receiving channel
+  _receiveError (err) {
+    log.debug('Bitswap ReceiveError: %s', err.message)
+  }
+
+  // handle new peers
+  _onPeerConnected (peerId) {
+
+  }
+
+  // handle peers being disconnected
+  _onPeerDisconnected (peerId) {
+
+  }
+
+  // getBlock attempts to retrieve a particular block with key `k` from peers
   getBlock (k) {
     throw new Error('Not implemented')
   }
