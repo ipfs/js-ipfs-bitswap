@@ -20,7 +20,7 @@ function newEngine (id) {
   }
 }
 
-describe.only('Engine', () => {
+describe('Engine', () => {
   it('consistent accounting', () => {
     const sender = newEngine('Ernie')
     const receiver = newEngine('Bert')
