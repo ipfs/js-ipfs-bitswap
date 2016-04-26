@@ -12,7 +12,7 @@ const PeerRequestQueue = require('../../src/decision/peer-request-queue')
 describe('PeerRequestQueue', () => {
   it('push and pop', () => {
     const prq = new PeerRequestQueue()
-    const partner = PeerId.create()
+    const partner = PeerId.create({bits: 64})
     const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('').sort()
     const vowels = 'aeiou'.split('').sort()
     const consonants = alphabet.filter((a) => !_.includes(vowels, a)).sort()
@@ -46,7 +46,7 @@ describe('PeerRequestQueue', () => {
   it('peer repeats', () => {
     // This test checks that peers wont starve out other peers
     const prq = new PeerRequestQueue()
-    const peers = _.range(4).map(() => PeerId.create())
+    const peers = _.range(4).map(() => PeerId.create({bits: 64}))
 
     _.range(5).map((i) => {
       peers.forEach((peer) => {

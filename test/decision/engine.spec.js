@@ -88,7 +88,7 @@ describe('Engine', () => {
   })
 
   it('partner wants then cancels', () => {
-    const numRounds = 10
+    const numRounds = global.window ? 2 : 10
     const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('')
     const vowels = 'aeiou'.split('')
     const testCases = [
@@ -157,7 +157,7 @@ describe('Engine', () => {
         const keeps = _.difference(set, cancels)
 
         const e = new Engine(bs)
-        const partner = PeerId.create()
+        const partner = PeerId.create({bits: 64})
 
         partnerWants(e, set, partner)
         partnerCancels(e, cancels, partner)

@@ -7,7 +7,7 @@ const PeerId = require('peer-id')
 const Ledger = require('../../src/decision/ledger')
 
 describe('Ledger', () => {
-  const p = PeerId.create()
+  const p = PeerId.create({bits: 64})
   let ledger
 
   beforeEach(() => {
