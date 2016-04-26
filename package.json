@@ -1,0 +1,55 @@
+{
+  "name": "ipfs-bitswap",
+  "version": "0.1.0",
+  "description": "Node.js implementation of the Bitswap data exchange protocol used by IPFS",
+  "main": "lib/index.js",
+  "jsnext:main": "src/index.js",
+  "scripts": {
+    "test": "aegir-test",
+    "test:browser": "aegir-test browser",
+    "test:node": "aegir-test node",
+    "lint": "aegir-lint",
+    "release": "aegir-release",
+    "build": "aegir-build",
+    "coverage": "aegir-coverage",
+    "coverage-publish": "aegir-coverage publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ipfs/js-ipfs-bitswap.git"
+  },
+  "keywords": [
+    "ipfs",
+    "libp2p",
+    "p2p",
+    "exchange"
+  ],
+  "author": "Friedel Ziegelmayer <dignifiedquire@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ipfs/js-ipfs-bitswap/issues"
+  },
+  "homepage": "https://github.com/ipfs/js-ipfs-bitswap#readme",
+  "devDependencies": {
+    "aegir": "^2.1.2",
+    "chai": "^3.5.0",
+    "lodash": "^4.11.1",
+    "peer-id": "^0.6.6"
+  },
+  "dependencies": {
+    "debug": "^2.2.0",
+    "heap": "^0.2.6",
+    "ipfs-blocks": "^0.2.3",
+    "lodash.isundefined": "^3.0.1",
+    "protocol-buffers": "^3.1.6"
+  },
+  "aegir": {
+    "webpack": {
+      "resolve": {
+        "alias": {
+          "node-forge": "../../../node_modules/peer-id/vendor/forge.bundle.js"
+        }
+      }
+    }
+  }
+}
