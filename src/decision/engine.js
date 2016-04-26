@@ -18,8 +18,36 @@ module.exports = class Engine {
     // A priority queue of requests received from different
     // peers.
     this.peerRequestQueue = new PeerRequestQueue()
+
+    // Can't declare generator functions regularly
+    this.outbox = function * () {
+      // eslint-disable-next-line
+      while (true) {
+        const nextTask = this.peerRequestQueue.pop()
+        if (!nextTask) break
+
+        const block = this.blockStore.get(nextTask.entry.key)
+        if (!block) {
+          nextTask.done()
+          continue
+        }
+
+        yield {
+          peer: nextTask.target,
+          block: block,
+          sent: () => {
+            nextTask.done()
+          }
+        }
+      }
+    }
   }
 
+  peers () {
+    return Array.from(this.ledgerMap.values()).map((l) => l.partner)
+  }
+
+  // Handle incoming messages
   messageReceived (peerId, msg) {
     if (msg.empty) {
       log('received empty message from %s', peerId)
@@ -33,16 +61,17 @@ module.exports = class Engine {
     }
 
     for (let entry of msg.wantlist.values()) {
+      const key = entry.entry.key
       if (entry.cancel) {
-        log('cancel %s', entry.key)
-        ledger.cancelWant(entry.key)
-        this.peerRequestQueue.remove(entry.key, peerId)
+        log('cancel %s', key)
+        ledger.cancelWant(key)
+        this.peerRequestQueue.remove(key, peerId)
       } else {
-        log('wants %s - %s', entry.key, entry.priority)
-        ledger.wants(entry.key, entry.priority)
+        log('wants %s - %s', key, entry.entry.priority)
+        ledger.wants(key, entry.entry.priority)
 
         // If we already have the block, serve it
-        if (this.blockStore.has(entry.key)) {
+        if (this.blockStore.has(key)) {
           this.peerRequestQueue.push(entry.entry, peerId)
         }
       }
@@ -63,13 +92,31 @@ module.exports = class Engine {
     }
   }
 
+  // Clear up all accounting things after message was sent
+  messageSent (peerId, msg) {
+    const ledger = this._findOrCreate(peerId)
+    for (let block of msg.blocks.values()) {
+      ledger.sentBytes(block.data.length)
+      ledger.wantlist.remove(block.key)
+      this.peerRequestQueue.remove(block.key, peerId)
+    }
+  }
+
+  numBytesSentTo (peerId) {
+    return this._findOrCreate(peerId).accounting.bytesSent
+  }
+
+  numBytesReceivedFrom (peerId) {
+    return this._findOrCreate(peerId).accounting.bytesRecv
+  }
+
   _findOrCreate (peerId) {
     if (this.ledgerMap.has(peerId)) {
-      return this.ledgerMap(peerId)
+      return this.ledgerMap.get(peerId)
     }
 
     const l = new Ledger(peerId)
-    this.ledgerMap.add(peerId, l)
+    this.ledgerMap.set(peerId, l)
 
     return l
   }

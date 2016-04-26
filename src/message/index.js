@@ -37,6 +37,11 @@ class BitswapMessage {
     this.blocks.set(block.key, block)
   }
 
+  cancel (key) {
+    this.wantlist.delete(key)
+    this.addEntry(key, 0, true)
+  }
+
   toProto () {
     return pbm.Message.encode({
       wantlist: {
