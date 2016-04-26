@@ -5,22 +5,23 @@ const log = debug('bitswap')
 log.error = debug('bitswap:error')
 
 // const cs = require('./constants')
-// const WantManager = require('./want-manager')
+const WantManager = require('./want-manager')
+const Network = require('./network')
 const decision = require('./decision')
 
 module.exports = class Bitwap {
-  constructor (p, network, bstore) {
+  constructor (p, libp2p, bstore) {
     // the ID of the peer to act on behalf of
     this.self = p
 
     // the network delivers messages
-    this.network = network
+    this.network = new Network(libp2p)
 
     // local database
     this.blockstore = bstore
 
     // handle message sending
-    // this.wm = new WantManager(network)
+    this.wm = new WantManager(this.network)
 
     this.engine = new decision.Engine(bstore)
 
