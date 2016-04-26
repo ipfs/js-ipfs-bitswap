@@ -12,12 +12,12 @@ const Network = require('./network')
 const decision = require('./decision')
 
 module.exports = class Bitwap {
-  constructor (p, libp2p, datastore) {
+  constructor (p, libp2p, datastore, peerBook) {
     // the ID of the peer to act on behalf of
     this.self = p
 
     // the network delivers messages
-    this.network = new Network(libp2p)
+    this.network = new Network(libp2p, peerBook, this)
 
     // local database
     this.datastore = datastore

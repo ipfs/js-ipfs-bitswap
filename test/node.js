@@ -36,3 +36,4 @@ const repo = {
 
 require('./index-test')(repo)
 require('./decision/engine-test')(repo)
+require('./network/network.node.js')
