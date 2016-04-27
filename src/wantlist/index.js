@@ -39,6 +39,10 @@ module.exports = class Wantlist {
     return this.set.entries()
   }
 
+  sortedEntries () {
+    return new Map(Array.from(this.set.entries()).sort())
+  }
+
   contains (key) {
     return this.set.get(key)
   }

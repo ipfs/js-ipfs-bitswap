@@ -46,6 +46,14 @@ module.exports = class Engine {
     })
   }
 
+  wantlistForPeer (peerId) {
+    if (!this.ledgerMap.has(peerId)) {
+      return new Map()
+    }
+
+    return this.ledgerMap.get(peerId).wantlist.sortedEntries()
+  }
+
   peers () {
     return Array.from(this.ledgerMap.values()).map((l) => l.partner)
   }
@@ -129,6 +137,15 @@ module.exports = class Engine {
 
   numBytesReceivedFrom (peerId) {
     return this._findOrCreate(peerId).accounting.bytesRecv
+  }
+
+  peerDisconnected (peerId) {
+    // if (this.ledgerMap.has(peerId)) {
+    //   this.ledgerMap.delete(peerId)
+    // }
+    //
+    // TODO: figure out how to remove all other references
+    // in the peerrequestqueue
   }
 
   _findOrCreate (peerId) {

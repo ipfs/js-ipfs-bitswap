@@ -25,7 +25,11 @@ module.exports = class Bitwap {
 
     this.engine = new decision.Engine(bstore)
 
-    // this.wm.run()
+    this.blocksRecvd = 0
+    this.dupBlocksRecvd = 0
+    this.dupDataRecvd = 0
+
+    this.wm.run()
   }
 
   // handle messages received through the network
@@ -40,31 +44,55 @@ module.exports = class Bitwap {
 
   // handle new peers
   _onPeerConnected (peerId) {
-
+    this.wm.connected(peerId)
   }
 
   // handle peers being disconnected
   _onPeerDisconnected (peerId) {
-
+    this.wm.disconnected(peerId)
+    this.engine.peerDisconnected(peerId)
   }
 
-  // getBlock attempts to retrieve a particular block with key `k` from peers
-  getBlock (k) {
-    throw new Error('Not implemented')
+  // getBlock attempts to retrieve a particular block with key `key` from peers
+  getBlock (key, cb) {
+    log('getBlock.start %s', key.toString('hex'))
+    const done = (err, block) => {
+      if (err) {
+        log('getBlock.fail %s', key.toString('hex'))
+      } else {
+        log('getBlock.end %s', key.toString('hex'))
+      }
+    }
+
+    this.getBlocks([key])
+      .errors((err) => {
+        done(err)
+      })
+      .toArray((result) => {
+        done(null, result[0])
+      })
   }
 
-  // return the current wantlist for a given peerId `p`
-  wantlistForPeer (p) {
-    throw new Error('Not implemented')
+  // return the current wantlist for a given `peerId`
+  wantlistForPeer (peerId) {
+    this.engine.wantlistForPeer(peerId)
+  }
+
+  getBlocks (keys) {
+    return this.wm.wantBlocks(keys)
   }
 
   // removes the given keys from the want list
-  cancelWants (ks) {
-    throw new Error('Not implemented')
+  cancelWants (keys) {
+    this.wm.cancelWants(keys)
   }
 
   // announces the existance of a block to this service
   hasBlock (blk) {
     throw new Error('Not implemented')
+  }
+
+  getWantlist () {
+    return this.wm.wl.entries()
   }
 }

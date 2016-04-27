@@ -78,6 +78,21 @@ describe('Wantlist', () => {
     ])
   })
 
+  it('sortedEntries', () => {
+    const b1 = new Block('hello')
+    const b2 = new Block('world')
+
+    wm.add(b2.key, 1)
+    wm.add(b1.key, 1)
+
+    expect(
+      Array.from(wm.sortedEntries())
+    ).to.be.eql([
+      [b1.key, new Entry(b1.key, 1)],
+      [b2.key, new Entry(b2.key, 1)]
+    ])
+  })
+
   it('contains', () => {
     const b1 = new Block('hello')
     const b2 = new Block('world')
