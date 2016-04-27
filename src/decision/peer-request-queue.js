@@ -112,7 +112,6 @@ module.exports = class PeerRequestQueue {
   // Remove a task from the queue
   remove (key, peerId) {
     const t = this.taskMap.get(taskKey(peerId, key))
-
     if (t) {
       // remove the task "lazily"
       // simply mark it as trash, so it'll be dropped when popped off the
@@ -126,7 +125,7 @@ module.exports = class PeerRequestQueue {
 }
 
 function taskKey (peerId, key) {
-  return `${peerId.toHexString()}${key.toString('hex')}`
+  return `${peerId.toHexString()}:${key.toString('hex')}`
 }
 
 function partnerCompare (a, b) {

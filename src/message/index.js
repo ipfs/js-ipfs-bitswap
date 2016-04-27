@@ -2,7 +2,7 @@
 
 const protobuf = require('protocol-buffers')
 const fs = require('fs')
-const Block = require('ipfs-blocks').Block
+const Block = require('ipfs-block')
 const path = require('path')
 
 const WantlistEntry = require('../wantlist/entry')

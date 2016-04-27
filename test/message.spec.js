@@ -3,7 +3,7 @@
 
 const expect = require('chai').expect
 const fs = require('fs')
-const Block = require('ipfs-blocks').Block
+const Block = require('ipfs-block')
 const protobuf = require('protocol-buffers')
 const path = require('path')
 const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../src/message/message.proto')))

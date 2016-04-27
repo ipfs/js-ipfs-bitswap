@@ -1,6 +1,9 @@
 'use strict'
 
 const debug = require('debug')
+const _ = require('highland')
+const async = require('async')
+
 const log = debug('engine')
 log.error = debug('engine:error')
 
@@ -9,8 +12,8 @@ const PeerRequestQueue = require('./peer-request-queue')
 const Ledger = require('./ledger')
 
 module.exports = class Engine {
-  constructor (blockStore) {
-    this.blockStore = blockStore
+  constructor (datastore) {
+    this.datastore = datastore
 
     // A list of of ledgers by their partner id
     this.ledgerMap = new Map()
@@ -20,27 +23,27 @@ module.exports = class Engine {
     this.peerRequestQueue = new PeerRequestQueue()
 
     // Can't declare generator functions regularly
-    this.outbox = function * () {
-      // eslint-disable-next-line
-      while (true) {
-        const nextTask = this.peerRequestQueue.pop()
-        if (!nextTask) break
+    this.outbox = _((push, next) => {
+      const nextTask = this.peerRequestQueue.pop()
 
-        const block = this.blockStore.get(nextTask.entry.key)
-        if (!block) {
+      if (!nextTask) return push(null, _.nil)
+
+      this.datastore.get(nextTask.entry.key, (err, block) => {
+        if (err || !block) {
           nextTask.done()
-          continue
+        } else {
+          push(null, {
+            peer: nextTask.target,
+            block: block,
+            sent: () => {
+              nextTask.done()
+            }
+          })
         }
 
-        yield {
-          peer: nextTask.target,
-          block: block,
-          sent: () => {
-            nextTask.done()
-          }
-        }
-      }
-    }
+        next()
+      })
+    })
   }
 
   peers () {
@@ -48,7 +51,7 @@ module.exports = class Engine {
   }
 
   // Handle incoming messages
-  messageReceived (peerId, msg) {
+  messageReceived (peerId, msg, cb) {
     if (msg.empty) {
       log('received empty message from %s', peerId)
     }
@@ -60,24 +63,42 @@ module.exports = class Engine {
       ledger.wantlist = new Wantlist()
     }
 
-    for (let entry of msg.wantlist.values()) {
-      const key = entry.entry.key
-      if (entry.cancel) {
-        log('cancel %s', key)
-        ledger.cancelWant(key)
-        this.peerRequestQueue.remove(key, peerId)
-      } else {
-        log('wants %s - %s', key, entry.entry.priority)
-        ledger.wants(key, entry.entry.priority)
+    this._processBlocks(msg.blocks, ledger)
 
-        // If we already have the block, serve it
-        if (this.blockStore.has(key)) {
+    async.eachSeries(
+      msg.wantlist.values(),
+      this._processWantlist.bind(this, ledger, peerId),
+      (err) => {
+        async.setImmediate(() => cb(err))
+      })
+  }
+
+  _processWantlist (ledger, peerId, entry, cb) {
+    const key = entry.entry.key
+
+    if (entry.cancel) {
+      log('cancel %s', key)
+      ledger.cancelWant(key)
+      this.peerRequestQueue.remove(key, peerId)
+      async.setImmediate(() => cb())
+    } else {
+      log('wants %s - %s', key, entry.entry.priority)
+      ledger.wants(key, entry.entry.priority)
+
+      // If we already have the block, serve it
+      this.datastore.has(key, (err, exists) => {
+        if (err) {
+          log('failed existence check %s', key)
+        } else {
           this.peerRequestQueue.push(entry.entry, peerId)
         }
-      }
+        cb()
+      })
     }
+  }
 
-    for (let block of msg.blocks.values()) {
+  _processBlocks (blocks, ledger) {
+    for (let block of blocks.values()) {
       log('got block %s %s bytes', block.key, block.data.length)
       ledger.receivedBytes(block.data.length)
 
