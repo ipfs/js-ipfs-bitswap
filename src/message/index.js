@@ -54,6 +54,24 @@ class BitswapMessage {
       blocks: Array.from(this.blocks.values()).map((b) => b.data)
     })
   }
+
+  equals (other) {
+    console.log(this.wantlist.size !== other.wantlist.size)
+    console.log(this.blocks.size !== other.blocks.size)
+    console.log(this.full !== other.full)
+    console.log(Array.from(this.wantlist.entries()), Array.from(other.wantlist.entries()))
+    console.log(Array.from(this.blocks.entries()), Array.from(other.blocks.entries()))
+    if (this.wantlist.size !== other.wantlist.size ||
+        this.blocks.size !== other.blocks.size ||
+        this.full !== other.full ||
+        Array.from(this.wantlist.entries()) !== Array.from(other.wantlist.entries()) ||
+        Array.from(this.blocks.entries()) !== Array.from(other.blocks.entries())
+       ) {
+      return false
+    }
+
+    return true
+  }
 }
 
 BitswapMessage.fromProto = (raw) => {

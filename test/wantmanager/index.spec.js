@@ -3,7 +3,9 @@
 
 const expect = require('chai').expect
 const PeerId = require('peer-id')
+const async = require('async')
 
+const cs = require('../../src/constants')
 const Message = require('../../src/message')
 const Wantmanager = require('../../src/wantmanager')
 
@@ -21,13 +23,17 @@ function mockNetwork (calls, done) {
 
   return {
     connectTo (p, cb) {
-      connects.push(p)
-      cb()
+      async.setImmediate(() => {
+        connects.push(p)
+        cb()
+      })
     },
     sendMessage (p, msg, cb) {
-      messages.push([p, msg])
-      cb()
-      finish()
+      async.setImmediate(() => {
+        messages.push([p, msg])
+        cb()
+        finish()
+      })
     }
   }
 }
@@ -36,33 +42,31 @@ describe('Wantmanager', () => {
   it('sends wantlist to all connected peers', (done) => {
     const peer1 = PeerId.create({bits: 64})
     const peer2 = PeerId.create({bits: 64})
-
-    const network = mockNetwork(4, (calls) => {
-      expect(calls.connects).to.have.length(4)
-
+    let wm
+    const network = mockNetwork(6, (calls) => {
+      expect(calls.connects).to.have.length(6)
       const m1 = new Message(true)
-      m1.addEntry('hello', 1)
-      m1.addEntry('world', 1)
+      m1.addEntry('hello', cs.kMaxPriority)
+      m1.addEntry('world', cs.kMaxPriority - 1)
 
       const m2 = new Message(false)
       m2.cancel('world')
 
       const m3 = new Message(false)
-      m3.addEntry('foo', 1)
+      m3.addEntry('foo', cs.kMaxPriority - 2)
 
-      expect(
-        calls.messages
-      ).to.be.eql([
-        [peer1, m1],
-        [peer2, m1],
-        [peer1, m2],
-        [peer2, m2]
-      ])
+      const msgs = [m1, m1, m2, m2, m3, m3]
 
+      calls.messages.forEach((m, i) => {
+        expect(m[0]).to.be.eql(calls.connects[i])
+        expect(m[1].equals(msgs[i])).to.be.eql(true)
+      })
+
+      wm = null
       done()
     })
 
-    const wm = new Wantmanager(network)
+    wm = new Wantmanager(network)
 
     wm.run()
     wm.wantBlocks(['hello', 'world'])
@@ -72,7 +76,9 @@ describe('Wantmanager', () => {
 
     setTimeout(() => {
       wm.cancelWants(['world'])
-      wm.wantBlocks(['foo'])
-    }, 10)
+      setTimeout(() => {
+        wm.wantBlocks(['foo'])
+      }, 100)
+    }, 100)
   })
 })

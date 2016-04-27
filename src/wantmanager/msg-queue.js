@@ -25,7 +25,6 @@ module.exports = class MsgQueue {
 
   addEntries (entries, full) {
     const msg = new Message(Boolean(full))
-
     entries.forEach((entry) => {
       if (entry.cancel) {
         msg.cancel(entry.key)

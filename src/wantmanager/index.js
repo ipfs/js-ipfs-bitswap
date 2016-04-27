@@ -1,7 +1,7 @@
 'use strict'
 
-const async = require('async')
 const debug = require('debug')
+const _ = require('highland')
 
 const Message = require('../message')
 const Wantlist = require('../wantlist')
@@ -17,11 +17,6 @@ module.exports = class Wantmanager {
     this.wl = new Wantlist()
 
     this.network = network
-
-    // For now array, figure out sth better
-    this.incoming = []
-    this.connect = []
-    this.disconnect = []
   }
 
   _newMsgQueue (peerId) {
@@ -29,9 +24,26 @@ module.exports = class Wantmanager {
   }
 
   _addEntries (keys, cancel) {
-    this.incoming = this.incoming.concat(keys.map((key, i) => {
-      return new Message.Entry(key, cs.kMaxPriority - i, cancel)
-    }))
+    let i = -1
+    _(keys)
+      .map((key) => {
+        i++
+        return new Message.Entry(key, cs.kMaxPriority - i, cancel)
+      })
+      .tap((e) => {
+        // add changes to our wantlist
+        if (e.cancel) {
+          this.wl.remove(e.key)
+        } else {
+          this.wl.add(e.key, e.priority)
+        }
+      })
+      .toArray((entries) => {
+        // broadcast changes
+        for (let p of this.peers.values()) {
+          p.addEntries(entries, false)
+        }
+      })
   }
 
   _startPeerHandler (peerId) {
@@ -47,7 +59,7 @@ module.exports = class Wantmanager {
     // new peer, give them the full wantlist
     const fullwantlist = new Message(true)
     for (let entry of this.wl.entries()) {
-      fullwantlist.addEntry(entry.key, entry.priority)
+      fullwantlist.addEntry(entry[1].key, entry[1].priority)
     }
     mq.addMessage(fullwantlist)
 
@@ -80,6 +92,7 @@ module.exports = class Wantmanager {
 
   // cancel wanting all of the given keys
   cancelWants (keys) {
+    log('cancel wants: ', keys)
     this._addEntries(keys, true)
   }
 
@@ -103,81 +116,25 @@ module.exports = class Wantmanager {
   }
 
   connected (peerId) {
-    this.connect.push(peerId)
+    this._startPeerHandler(peerId)
   }
 
   disconnected (peerId) {
-    this.disconnect.push(peerId)
+    this._stopPeerHandler(peerId)
   }
 
   run () {
-    const timer = {
-      start () {
-        this.expired = false
-        setTimeout(() => {
-          this.expired = true
-        }, cs.rebroadcastDelay)
-      },
-      expired: false
-    }
+    //     // resend entirew wantlist every so often
+    //     const es = []
+    //     for (let e of this.wl.entries()) {
+    //       es.push(new Message.Entry(e.key, e.priority))
+    //     }
 
-    async.forever((cb) => {
-      const next = () => async.setImmediate(cb)
-
-      if (this.incoming.length > 0) {
-        const entries = this.incoming
-        this.incoming = []
-
-        // add changes to our wantlist
-        entries.forEach((e) => {
-          if (e.cancel) {
-            this.wl.remove(e.key)
-          } else {
-            this.wl.add(e.key, e.priority)
-          }
-        })
-
-        // broadcast changes
-        for (let p of this.peers.values()) {
-          p.addEntries(entries)
-        }
-
-        next()
-      } else if (this.connect.length > 0) {
-        const peers = this.connect
-        this.connect = []
-
-        peers.forEach((p) => {
-          this._startPeerHandler(p)
-        })
-
-        next()
-      } else if (this.disconnect.length > 0) {
-        const peers = this.disconnect
-        this.disconnect = []
-
-        peers.forEach((p) => {
-          this._stopPeerHandler(p)
-        })
-
-        next()
-      } else if (timer.expired) {
-        // resend entirew wantlist every so often
-        const es = []
-        for (let e of this.wl.entries()) {
-          es.push(new Message.Entry(e.key, e.priority))
-        }
-
-        this.peers.forEach((p) => {
-          p.addEntries(es, true)
-        })
-        timer.start()
-        next()
-      } else {
-        next()
-      }
-    }, (err) => {
-      log('oh no: ', err.message)
-    })
+    //     this.peers.forEach((p) => {
+    //       p.addEntries(es, true)
+    //     })
+    //     timer.start()
+    //   }
+    // }
   }
 }
