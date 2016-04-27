@@ -26,13 +26,13 @@ module.exports = class MsgQueue {
   addEntries (entries, full) {
     const msg = new Message(Boolean(full))
 
-    for (let entry of entries) {
+    entries.forEach((entry) => {
       if (entry.cancel) {
         msg.cancel(entry.key)
       } else {
         msg.addEntry(entry.key, entry.priority)
       }
-    }
+    })
 
     this.addMessage(msg)
   }

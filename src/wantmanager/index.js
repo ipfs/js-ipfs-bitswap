@@ -22,7 +22,6 @@ module.exports = class Wantmanager {
     this.incoming = []
     this.connect = []
     this.disconnect = []
-    this.peerReqs = []
   }
 
   _newMsgQueue (peerId) {
@@ -30,7 +29,7 @@ module.exports = class Wantmanager {
   }
 
   _addEntries (keys, cancel) {
-    this.incoming.push(keys.map((key, i) => {
+    this.incoming = this.incoming.concat(keys.map((key, i) => {
       return new Message.Entry(key, cs.kMaxPriority - i, cancel)
     }))
   }
@@ -86,7 +85,7 @@ module.exports = class Wantmanager {
 
   // Returns a list of all currently connected peers
   connectedPeers () {
-    return this.peerReqs
+    return Array.from(this.peers.keys())
   }
 
   sendBlock (env, cb) {
@@ -122,7 +121,9 @@ module.exports = class Wantmanager {
       expired: false
     }
 
-    async.forever((next) => {
+    async.forever((cb) => {
+      const next = () => async.setImmediate(cb)
+
       if (this.incoming.length > 0) {
         const entries = this.incoming
         this.incoming = []
