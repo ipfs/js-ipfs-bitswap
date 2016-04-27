@@ -4,7 +4,9 @@
 const expect = require('chai').expect
 const PeerId = require('peer-id')
 const _ = require('lodash')
-const hash = require('ipfs-blocks').util.hash
+const Block = require('ipfs-block')
+
+const hash = (data) => (new Block(data)).key
 
 const WantlistEntry = require('../../src/wantlist/entry')
 const PeerRequestQueue = require('../../src/decision/peer-request-queue')

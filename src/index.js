@@ -5,7 +5,7 @@ const log = debug('bitswap')
 log.error = debug('bitswap:error')
 
 // const cs = require('./constants')
-const WantManager = require('./want-manager')
+const WantManager = require('./wantmanager')
 const Network = require('./network')
 const decision = require('./decision')
 

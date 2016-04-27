@@ -2,7 +2,7 @@
 'use strict'
 
 const expect = require('chai').expect
-const Block = require('ipfs-blocks').Block
+const Block = require('ipfs-block')
 
 const Entry = require('../src/wantlist/entry')
 const Wantlist = require('../src/wantlist')
