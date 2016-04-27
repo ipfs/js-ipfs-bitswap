@@ -48,6 +48,7 @@
     "heap": "^0.2.6",
     "highland": "^3.0.0-beta.1",
     "ipfs-block": "^0.2.0",
+    "lodash.isequal": "^4.1.4",
     "lodash.isundefined": "^3.0.1",
     "protocol-buffers": "^3.1.6"
   },

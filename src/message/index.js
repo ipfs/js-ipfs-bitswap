@@ -4,6 +4,7 @@ const protobuf = require('protocol-buffers')
 const fs = require('fs')
 const Block = require('ipfs-block')
 const path = require('path')
+const isEqual = require('lodash.isequal')
 
 const pbm = protobuf(fs.readFileSync(path.join(__dirname, 'message.proto')))
 const Entry = require('./entry')
@@ -56,17 +57,13 @@ class BitswapMessage {
   }
 
   equals (other) {
-    console.log(this.wantlist.size !== other.wantlist.size)
-    console.log(this.blocks.size !== other.blocks.size)
-    console.log(this.full !== other.full)
-    console.log(Array.from(this.wantlist.entries()), Array.from(other.wantlist.entries()))
-    console.log(Array.from(this.blocks.entries()), Array.from(other.blocks.entries()))
-    if (this.wantlist.size !== other.wantlist.size ||
-        this.blocks.size !== other.blocks.size ||
-        this.full !== other.full ||
-        Array.from(this.wantlist.entries()) !== Array.from(other.wantlist.entries()) ||
-        Array.from(this.blocks.entries()) !== Array.from(other.blocks.entries())
+    if (this.full !== other.full ||
+        !isEqual(this.wantlist, other.wantlist) ||
+        !isEqual(this.blocks, other.blocks)
        ) {
+      console.log(this.wantlist)
+      console.log('---')
+      console.log(other.wantlist)
       return false
     }
 

@@ -53,7 +53,7 @@ describe('Wantmanager', () => {
       m2.cancel('world')
 
       const m3 = new Message(false)
-      m3.addEntry('foo', cs.kMaxPriority - 2)
+      m3.addEntry('foo', cs.kMaxPriority)
 
       const msgs = [m1, m1, m2, m2, m3, m3]
 
