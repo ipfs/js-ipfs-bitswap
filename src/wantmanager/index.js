@@ -5,7 +5,6 @@ const debug = require('debug')
 
 const Message = require('../message')
 const Wantlist = require('../wantlist')
-const WantlistEntry = require('../wantlist/entry')
 const cs = require('../constants')
 const MsgQueue = require('./msg-queue')
 
@@ -32,10 +31,7 @@ module.exports = class Wantmanager {
 
   _addEntries (keys, cancel) {
     this.incoming.push(keys.map((key, i) => {
-      return {
-        cancel: cancel,
-        entry: new WantlistEntry(key, cs.kMaxPriority - i)
-      }
+      return new Message.Entry(key, cs.kMaxPriority - i, cancel)
     }))
   }
 
@@ -54,7 +50,7 @@ module.exports = class Wantmanager {
     for (let entry of this.wl.entries()) {
       fullwantlist.addEntry(entry.key, entry.priority)
     }
-    mq.out = fullwantlist
+    mq.addMessage(fullwantlist)
 
     this.peers.set(peerId, mq)
     mq.run()
@@ -142,7 +138,7 @@ module.exports = class Wantmanager {
 
         // broadcast changes
         for (let p of this.peers.values()) {
-          p.addMessage(entries)
+          p.addEntries(entries)
         }
 
         next()
@@ -151,7 +147,7 @@ module.exports = class Wantmanager {
         this.connect = []
 
         peers.forEach((p) => {
-          this.startPeerHandler(p)
+          this._startPeerHandler(p)
         })
 
         next()
@@ -160,7 +156,7 @@ module.exports = class Wantmanager {
         this.disconnect = []
 
         peers.forEach((p) => {
-          this.stopPeerHandler(p)
+          this._stopPeerHandler(p)
         })
 
         next()
@@ -168,12 +164,11 @@ module.exports = class Wantmanager {
         // resend entirew wantlist every so often
         const es = []
         for (let e of this.wl.entries()) {
-          es.push({entry: e})
+          es.push(new Message.Entry(e.key, e.priority))
         }
 
         this.peers.forEach((p) => {
-          p.out = new Message(true)
-          p.addMessage(es)
+          p.addEntries(es, true)
         })
         timer.start()
         next()

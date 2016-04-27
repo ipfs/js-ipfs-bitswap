@@ -82,21 +82,19 @@ module.exports = class Engine {
   }
 
   _processWantlist (ledger, peerId, entry, cb) {
-    const key = entry.entry.key
-
     if (entry.cancel) {
-      log('cancel %s', key)
-      ledger.cancelWant(key)
-      this.peerRequestQueue.remove(key, peerId)
+      log('cancel %s', entry.key)
+      ledger.cancelWant(entry.key)
+      this.peerRequestQueue.remove(entry.key, peerId)
       async.setImmediate(() => cb())
     } else {
-      log('wants %s - %s', key, entry.entry.priority)
-      ledger.wants(key, entry.entry.priority)
+      log('wants %s - %s', entry.key, entry.priority)
+      ledger.wants(entry.key, entry.priority)
 
       // If we already have the block, serve it
-      this.datastore.has(key, (err, exists) => {
+      this.datastore.has(entry.key, (err, exists) => {
         if (err) {
-          log('failed existence check %s', key)
+          log('failed existence check %s', entry.key)
         } else {
           this.peerRequestQueue.push(entry.entry, peerId)
         }

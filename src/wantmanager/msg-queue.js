@@ -1,8 +1,9 @@
 'use strict'
 
 const debug = require('debug')
+const async = require('async')
 
-const Message = require('./message')
+const Message = require('../message')
 
 const log = debug('bitswap:wantmanager:queue')
 log.error = debug('bitswap:wantmanager:queue:error')
@@ -10,57 +11,61 @@ log.error = debug('bitswap:wantmanager:queue:error')
 module.exports = class MsgQueue {
   constructor (peerId, network) {
     this.p = peerId
-    this.out = null
     this.network = network
     this.refcnt = 1
+
+    this.queue = async.queue(this.doWork.bind(this), 1)
+    // only start when `run` is called
+    this.queue.pause()
   }
 
-  addMessage (entries) {
-    if (this.out == null) {
-      this.out = new Message(false)
-    }
+  addMessage (msg) {
+    this.queue.push(msg)
+  }
 
-    for (let entry of entries.values()) {
+  addEntries (entries, full) {
+    const msg = new Message(Boolean(full))
+
+    for (let entry of entries) {
       if (entry.cancel) {
-        this.out.cancel(entry.key)
+        msg.cancel(entry.key)
       } else {
-        this.out.addEntry(entry.key, entry.priority)
+        msg.addEntry(entry.key, entry.priority)
       }
     }
+
+    this.addMessage(msg)
   }
 
-  doWork (done) {
+  doWork (wlm, cb) {
     this.network.connectTo(this.p, (err) => {
       if (err) {
         log('cant connect to peer %s: %s', this.p.toHexString(), err.message)
-        return done()
+        return cb()
       }
-
-      const wlm = this.out
-
-      if (wlm == null || wlm.empty) {
-        // Nothing to do here
-        return done()
-      }
-
-      this.out = null
 
       this.network.sendMessage(this.p, wlm, (err) => {
         if (err) {
           log('send error: %s', err.message)
         }
 
-        done()
+        cb()
       })
     })
   }
 
   run () {
-    // TODO: implement me
+    this.queue.resume()
   }
 
   stop () {
-    // TODO: implment me
-    // is this needed?
+    const done = () => {
+      this.queue.kill()
+      this.queue.pause()
+    }
+
+    // Give the queue up to 1s time to finish things
+    this.queue.drain = done
+    setTimeout(done, 1000)
   }
 }

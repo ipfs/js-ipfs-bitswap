@@ -8,7 +8,7 @@ const Block = require('ipfs-block')
 
 const hash = (data) => (new Block(data)).key
 
-const WantlistEntry = require('../../src/wantlist/entry')
+const WantlistEntry = require('../../src/wantlist').Entry
 const PeerRequestQueue = require('../../src/decision/peer-request-queue')
 
 describe('PeerRequestQueue', () => {

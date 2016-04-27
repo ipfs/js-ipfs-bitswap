@@ -5,8 +5,8 @@ const fs = require('fs')
 const Block = require('ipfs-block')
 const path = require('path')
 
-const WantlistEntry = require('../wantlist/entry')
 const pbm = protobuf(fs.readFileSync(path.join(__dirname, 'message.proto')))
+const Entry = require('./entry')
 
 class BitswapMessage {
   constructor (full) {
@@ -23,13 +23,10 @@ class BitswapMessage {
     const e = this.wantlist.get(key)
 
     if (e) {
-      e.entry.priority = priority
+      e.priority = priority
       e.cancel = Boolean(cancel)
     } else {
-      this.wantlist.set(key, {
-        entry: new WantlistEntry(key, priority),
-        cancel: Boolean(cancel)
-      })
+      this.wantlist.set(key, new Entry(key, priority, cancel))
     }
   }
 
@@ -47,8 +44,8 @@ class BitswapMessage {
       wantlist: {
         entries: Array.from(this.wantlist.values()).map((e) => {
           return {
-            block: String(e.entry.key),
-            priority: Number(e.entry.priority),
+            block: String(e.key),
+            priority: Number(e.priority),
             cancel: Boolean(e.cancel)
           }
         }),
@@ -71,4 +68,5 @@ BitswapMessage.fromProto = (raw) => {
   return m
 }
 
+BitswapMessage.Entry = Entry
 module.exports = BitswapMessage
