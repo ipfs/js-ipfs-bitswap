@@ -237,6 +237,23 @@ module.exports = (repo) => {
       }, 200)
     })
   })
+
+  describe('stat', () => {
+    it('has initial stats', () => {
+      const me = PeerId.create({bit: 64})
+      const bs = new Bitswap(me, {}, {})
+
+      expect(
+        bs.stat()
+      ).to.be.eql({
+        wantlist: new Map(),
+        blocksReceived: 0,
+        dupBlksReceived: 0,
+        dupDataReceived: 0,
+        peers: []
+      })
+    })
+  })
 }
 
 function hasBlocks (msg, store, cb) {

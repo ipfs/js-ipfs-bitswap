@@ -203,4 +203,14 @@ module.exports = class Bitwap {
   getWantlist () {
     return this.wm.wl.entries()
   }
+
+  stat () {
+    return {
+      wantlist: this.getWantlist(),
+      blocksReceived: this.blocksRecvd,
+      dupBlksReceived: this.dupBlocksRecvd,
+      dupDataReceived: this.dupDataRecvd,
+      peers: this.engine.peers()
+    }
+  }
 }
