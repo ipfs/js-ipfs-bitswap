@@ -12,7 +12,7 @@ const Network = require('./network')
 const decision = require('./decision')
 
 module.exports = class Bitwap {
-  constructor (p, libp2p, bstore) {
+  constructor (p, libp2p, datastore) {
     // the ID of the peer to act on behalf of
     this.self = p
 
@@ -20,9 +20,9 @@ module.exports = class Bitwap {
     this.network = new Network(libp2p)
 
     // local database
-    this.blockstore = bstore
+    this.datastore = datastore
 
-    this.engine = new decision.Engine(bstore, this.network)
+    this.engine = new decision.Engine(datastore, this.network)
 
     // handle message sending
     this.wm = new WantManager(this.network)
@@ -87,9 +87,9 @@ module.exports = class Bitwap {
 
   _updateReceiveCounters (block, cb) {
     this.blocksRecvd ++
-    this.blockstore.has(block.key, (err, has) => {
+    this.datastore.has(block.key, (err, has) => {
       if (err) {
-        log('blockstore.has error: %s', err.message)
+        log('datastore.has error: %s', err.message)
         return cb(err)
       }
 
@@ -105,7 +105,7 @@ module.exports = class Bitwap {
 
   _tryPutBlock (block, times, cb) {
     async.retry({times, interval: 400}, (done) => {
-      this.blockstore.put(block, done)
+      this.datastore.put(block, done)
     }, cb)
   }
 
@@ -163,7 +163,7 @@ module.exports = class Bitwap {
     keys.forEach((key) => {
       // Sanity check, we don't want to announce looking for blocks
       // when we might have them ourselves
-      this.blockstore.get(key, (err, res) => {
+      this.datastore.get(key, (err, res) => {
         if (!err && res) {
           this.wm.cancelWants([key])
           finish(res)
@@ -171,7 +171,7 @@ module.exports = class Bitwap {
         }
 
         if (err) {
-          log('error in blockstore.get: ', err.message)
+          log('error in datastore.get: ', err.message)
         }
 
         this.notifications.once(`block:${key.toString('hex')}`, (block) => {
