@@ -1,5 +1,7 @@
 'use strict'
 
+const async = require('async')
+const _ = require('highland')
 const debug = require('debug')
 const log = debug('bitswap')
 log.error = debug('bitswap:error')
@@ -33,8 +35,77 @@ module.exports = class Bitwap {
   }
 
   // handle messages received through the network
-  _receiveMessage (peerId, incoming) {
+  _receiveMessage (peerId, incoming, cb) {
+    console.log('_receiveMessage')
+    this.engine.messageReceived(peerId, incoming, (err) => {
+      if (err) {
+        log('failed to receive message', incoming)
+      }
 
+      const iblocks = incoming.blocks
+
+      if (iblocks.size === 0) {
+        return cb()
+      }
+      console.log('handling blocks')
+      // quickly send out cancels, reduces chances of duplicate block receives
+      const keys = []
+      for (let block of iblocks.values()) {
+        const found = this.wm.wl.contains(block.key)
+        if (!found) {
+          log('received un-askes-for %s from %s', block, peerId)
+        } else {
+          keys.push(block.key)
+        }
+      }
+
+      async.eachLimit(iblocks.values(), 10, (block, next) => {
+        async.series([
+          (innerCb) => this._updateReceiveCounters(block, (err) => {
+            if (err) {
+              // ignore, as these have been handled in _updateReceiveCounters
+              return innerCb()
+            }
+
+            console.log('got block')
+            log('got block %s from %s', block, peerId)
+            innerCb()
+          }),
+          (innerCb) => this.hasBlock(block, (err) => {
+            console.log('finished writing')
+            if (err) {
+              log.error('receiveMessage hasBlock error: %s', err.message)
+            }
+            innerCb()
+          })
+        ], next)
+      }, cb)
+    })
+  }
+
+  _updateReceiveCounters (block, cb) {
+    this.blocksRecvd ++
+    this.blockstore.has(block.key, (err, has) => {
+      if (err) {
+        log('blockstore.has error: %s', err.message)
+        return cb(err)
+      }
+
+      if (has) {
+        this.dupBlocksRecvd ++
+        this.dupDataRecvd += block.data.length
+        cb(new Error('Already have block'))
+      }
+
+      cb()
+    })
+  }
+
+  _tryPutBlock (block, times, cb) {
+    async.retry({times, interval: 400}, (done) => {
+      console.log('putting block', block.key, block.data.toString())
+      this.blockstore.put(block, done)
+    }, cb)
   }
 
   // handle errors on the receiving channel
@@ -75,7 +146,7 @@ module.exports = class Bitwap {
 
   // return the current wantlist for a given `peerId`
   wantlistForPeer (peerId) {
-    this.engine.wantlistForPeer(peerId)
+    return this.engine.wantlistForPeer(peerId)
   }
 
   getBlocks (keys) {
@@ -88,8 +159,16 @@ module.exports = class Bitwap {
   }
 
   // announces the existance of a block to this service
-  hasBlock (blk) {
-    throw new Error('Not implemented')
+  hasBlock (block, cb) {
+    this._tryPutBlock(block, 4, (err) => {
+      if (err) {
+        log.error('Error writing block to datastor: %s', err.message)
+        return cb(err)
+      }
+
+      // TODO: notify about block
+      cb()
+    })
   }
 
   getWantlist () {

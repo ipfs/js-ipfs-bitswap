@@ -60,6 +60,7 @@ module.exports = class Engine {
 
   // Handle incoming messages
   messageReceived (peerId, msg, cb) {
+    console.log('engine:receive')
     if (msg.empty) {
       log('received empty message from %s', peerId)
     }

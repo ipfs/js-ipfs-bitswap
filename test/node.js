@@ -29,7 +29,10 @@ function removeRepos (done) {
   }, done)
 }
 
-require('./decision/engine-test')({
+const repo = {
   create: createRepo,
   remove: removeRepos
-})
+}
+
+require('./index-test')(repo)
+require('./decision/engine-test')(repo)
