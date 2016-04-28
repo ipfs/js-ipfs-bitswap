@@ -4,7 +4,6 @@
 const expect = require('chai').expect
 const Block = require('ipfs-block')
 
-const Entry = require('../src/wantlist/entry')
 const Wantlist = require('../src/wantlist')
 
 describe('Wantlist', () => {
@@ -74,7 +73,22 @@ describe('Wantlist', () => {
     expect(
       Array.from(wm.entries())
     ).to.be.eql([
-      [b.key, new Entry(b.key, 2)]
+      [b.key, new Wantlist.Entry(b.key, 2)]
+    ])
+  })
+
+  it('sortedEntries', () => {
+    const b1 = new Block('hello')
+    const b2 = new Block('world')
+
+    wm.add(b2.key, 1)
+    wm.add(b1.key, 1)
+
+    expect(
+      Array.from(wm.sortedEntries())
+    ).to.be.eql([
+      [b1.key, new Wantlist.Entry(b1.key, 1)],
+      [b2.key, new Wantlist.Entry(b2.key, 1)]
     ])
   })
 

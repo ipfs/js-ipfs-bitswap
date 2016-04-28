@@ -11,21 +11,21 @@
 
 > Node.js implementation of the Bitswap 'data exchange' protocol used by IPFS
 
-# Installation
+## Installation
 
-## npm
+### npm
 
 ```sh
 > npm i ipfs-bitswap
 ```
 
-## Use in Node.js
+### Use in Node.js
 
 ```js
 const bitswap = require('ipfs-bitswap')
 ```
 
-## Use in a browser with browserify, webpack or any other bundler
+### Use in a browser with browserify, webpack or any other bundler
 
 The code published to npm that gets loaded on require is in fact a ES5 transpiled version with the right shims added. This means that you can require it and use with your favourite bundler without having to adjust asset management process.
 
@@ -33,12 +33,14 @@ The code published to npm that gets loaded on require is in fact a ES5 transpile
 const bitswap = require('ipfs-bitswap')
 ```
 
-## Use in a browser Using a script tag
+### Use in a browser using a script tag
 
-Loading this module through a script tag will make the `Unixfs` obj available in the global namespace.
+Loading this module through a script tag will make the `IpfsBitswap` object available in the global namespace.
 
 ```html
 <script src="https://npmcdn.com/ipfs-bitswap/dist/index.min.js"></script>
 <!-- OR -->
 <script src="https://npmcdn.com/ipfs-bitswap/dist/index.js"></script>
 ```
+
+For the documentation see [API.md](API.md).

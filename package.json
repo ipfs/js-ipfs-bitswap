@@ -31,12 +31,12 @@
   },
   "homepage": "https://github.com/ipfs/js-ipfs-bitswap#readme",
   "devDependencies": {
-    "aegir": "^2.1.2",
+    "aegir": "^3.0.0",
     "buffer-loader": "0.0.1",
     "chai": "^3.5.0",
     "fs-blob-store": "^5.2.1",
     "idb-plus-blob-store": "^1.1.2",
-    "ipfs-repo": "^0.7.0",
+    "ipfs-repo": "^0.7.1",
     "lodash": "^4.11.1",
     "ncp": "^2.0.0",
     "peer-id": "^0.6.6",
@@ -48,6 +48,7 @@
     "heap": "^0.2.6",
     "highland": "^3.0.0-beta.1",
     "ipfs-block": "^0.2.0",
+    "lodash.isequal": "^4.1.4",
     "lodash.isundefined": "^3.0.1",
     "protocol-buffers": "^3.1.6"
   },
