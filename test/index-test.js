@@ -243,15 +243,12 @@ module.exports = (repo) => {
       const me = PeerId.create({bit: 64})
       const bs = new Bitswap(me, {}, {})
 
-      expect(
-        bs.stat()
-      ).to.be.eql({
-        wantlist: new Map(),
-        blocksReceived: 0,
-        dupBlksReceived: 0,
-        dupDataReceived: 0,
-        peers: []
-      })
+      const stats = bs.stat()
+      expect(stats).to.have.property('wantlist')
+      expect(stats).to.have.property('blocksReceived', 0)
+      expect(stats).to.have.property('dupBlksReceived', 0)
+      expect(stats).to.have.property('dupDataReceived', 0)
+      expect(stats).to.have.property('peers')
     })
   })
 }
