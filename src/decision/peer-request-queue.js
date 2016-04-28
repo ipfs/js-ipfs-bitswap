@@ -93,7 +93,6 @@ module.exports = class PeerRequestQueue {
     while (!partner.taskQueue.isEmpty()) {
       out = partner.taskQueue.pop()
       this.taskMap.delete(out.key)
-
       if (out.trash) {
         out = null
         // discarding tasks that have been removed

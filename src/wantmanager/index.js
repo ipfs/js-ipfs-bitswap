@@ -101,20 +101,6 @@ module.exports = class Wantmanager {
     return Array.from(this.peers.keys())
   }
 
-  sendBlock (env, cb) {
-    const msg = new Message(false)
-    msg.addBlock(env.block)
-
-    log('Sending block %s to %s', env.peer.toHexString(), env.block)
-
-    this.network.sendMessage(env.peer, msg, (err) => {
-      if (err) {
-        log('sendblock error: %s', err.message)
-      }
-      cb()
-    })
-  }
-
   connected (peerId) {
     this._startPeerHandler(peerId)
   }

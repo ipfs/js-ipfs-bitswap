@@ -1,12 +1,12 @@
 'use strict'
 
 const async = require('async')
-const _ = require('highland')
 const debug = require('debug')
 const log = debug('bitswap')
 log.error = debug('bitswap:error')
+const EventEmitter = require('events').EventEmitter
 
-// const cs = require('./constants')
+const cs = require('./constants')
 const WantManager = require('./wantmanager')
 const Network = require('./network')
 const decision = require('./decision')
@@ -22,21 +22,23 @@ module.exports = class Bitwap {
     // local database
     this.blockstore = bstore
 
+    this.engine = new decision.Engine(bstore, this.network)
+
     // handle message sending
     this.wm = new WantManager(this.network)
-
-    this.engine = new decision.Engine(bstore)
 
     this.blocksRecvd = 0
     this.dupBlocksRecvd = 0
     this.dupDataRecvd = 0
+
+    this.notifications = new EventEmitter()
+    this.notifications.setMaxListeners(cs.maxListeners)
 
     this.wm.run()
   }
 
   // handle messages received through the network
   _receiveMessage (peerId, incoming, cb) {
-    console.log('_receiveMessage')
     this.engine.messageReceived(peerId, incoming, (err) => {
       if (err) {
         log('failed to receive message', incoming)
@@ -47,7 +49,7 @@ module.exports = class Bitwap {
       if (iblocks.size === 0) {
         return cb()
       }
-      console.log('handling blocks')
+
       // quickly send out cancels, reduces chances of duplicate block receives
       const keys = []
       for (let block of iblocks.values()) {
@@ -59,6 +61,8 @@ module.exports = class Bitwap {
         }
       }
 
+      this.wm.cancelWants(keys)
+
       async.eachLimit(iblocks.values(), 10, (block, next) => {
         async.series([
           (innerCb) => this._updateReceiveCounters(block, (err) => {
@@ -67,12 +71,10 @@ module.exports = class Bitwap {
               return innerCb()
             }
 
-            console.log('got block')
             log('got block %s from %s', block, peerId)
             innerCb()
           }),
           (innerCb) => this.hasBlock(block, (err) => {
-            console.log('finished writing')
             if (err) {
               log.error('receiveMessage hasBlock error: %s', err.message)
             }
@@ -94,7 +96,7 @@ module.exports = class Bitwap {
       if (has) {
         this.dupBlocksRecvd ++
         this.dupDataRecvd += block.data.length
-        cb(new Error('Already have block'))
+        return cb(new Error('Already have block'))
       }
 
       cb()
@@ -103,7 +105,6 @@ module.exports = class Bitwap {
 
   _tryPutBlock (block, times, cb) {
     async.retry({times, interval: 400}, (done) => {
-      console.log('putting block', block.key, block.data.toString())
       this.blockstore.put(block, done)
     }, cb)
   }
@@ -133,15 +134,16 @@ module.exports = class Bitwap {
       } else {
         log('getBlock.end %s', key.toString('hex'))
       }
+      cb(err, block)
     }
 
-    this.getBlocks([key])
-      .errors((err) => {
-        done(err)
-      })
-      .toArray((result) => {
-        done(null, result[0])
-      })
+    this.getBlocks([key], (err, res) => {
+      if (err) {
+        return done(err)
+      }
+
+      done(null, res[0])
+    })
   }
 
   // return the current wantlist for a given `peerId`
@@ -149,8 +151,36 @@ module.exports = class Bitwap {
     return this.engine.wantlistForPeer(peerId)
   }
 
-  getBlocks (keys) {
-    return this.wm.wantBlocks(keys)
+  getBlocks (keys, cb) {
+    const blocks = []
+    const finish = (block) => {
+      blocks.push(block)
+      if (blocks.length === keys.length) {
+        cb(null, blocks)
+      }
+    }
+
+    keys.forEach((key) => {
+      // Sanity check, we don't want to announce looking for blocks
+      // when we might have them ourselves
+      this.blockstore.get(key, (err, res) => {
+        if (!err && res) {
+          this.wm.cancelWants([key])
+          finish(res)
+          return
+        }
+
+        if (err) {
+          log('error in blockstore.get: ', err.message)
+        }
+
+        this.notifications.once(`block:${key.toString('hex')}`, (block) => {
+          finish(block)
+        })
+      })
+    })
+
+    this.wm.wantBlocks(keys)
   }
 
   // removes the given keys from the want list
@@ -165,8 +195,7 @@ module.exports = class Bitwap {
         log.error('Error writing block to datastor: %s', err.message)
         return cb(err)
       }
-
-      // TODO: notify about block
+      this.notifications.emit(`block:${block.key.toString('hex')}`, block)
       cb()
     })
   }

@@ -3,40 +3,12 @@
 
 const expect = require('chai').expect
 const PeerId = require('peer-id')
-const async = require('async')
 
 const cs = require('../../src/constants')
 const Message = require('../../src/message')
 const Wantmanager = require('../../src/wantmanager')
 
-function mockNetwork (calls, done) {
-  const connects = []
-  const messages = []
-  let i = 0
-
-  const finish = () => {
-    i++
-    if (i === calls) {
-      done({connects, messages})
-    }
-  }
-
-  return {
-    connectTo (p, cb) {
-      async.setImmediate(() => {
-        connects.push(p)
-        cb()
-      })
-    },
-    sendMessage (p, msg, cb) {
-      async.setImmediate(() => {
-        messages.push([p, msg])
-        cb()
-        finish()
-      })
-    }
-  }
-}
+const mockNetwork = require('../utils').mockNetwork
 
 describe('Wantmanager', () => {
   it('sends wantlist to all connected peers', (done) => {

@@ -61,9 +61,6 @@ class BitswapMessage {
         !isEqual(this.wantlist, other.wantlist) ||
         !isEqual(this.blocks, other.blocks)
        ) {
-      console.log(this.wantlist)
-      console.log('---')
-      console.log(other.wantlist)
       return false
     }
 

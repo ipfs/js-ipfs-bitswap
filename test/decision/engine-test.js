@@ -10,6 +10,8 @@ const async = require('async')
 const Message = require('../../src/message')
 const Engine = require('../../src/decision/engine')
 
+const mockNetwork = require('../utils').mockNetwork
+
 module.exports = (repo) => {
   function newEngine (id, done) {
     repo.create(id, (err, repo) => {
@@ -17,7 +19,7 @@ module.exports = (repo) => {
 
       done(null, {
         peer: new PeerId(id),
-        engine: new Engine(repo.datastore)
+        engine: new Engine(repo.datastore, mockNetwork())
       })
     })
   }
@@ -37,7 +39,7 @@ module.exports = (repo) => {
         const sender = res[0]
         const receiver = res[1]
 
-        async.eachSeries(_.range(1000), (i, cb) => {
+        async.eachLimit(_.range(1000), 100, (i, cb) => {
           const m = new Message(false)
           const content = `this is message ${i}`
           m.addBlock(new Block(content))
@@ -137,6 +139,7 @@ module.exports = (repo) => {
               const block = new Block(letter)
               add.addEntry(block.key, Math.pow(2, 32) - 1 - i)
             })
+
             e.messageReceived(p, add, cb)
           }
 
@@ -146,22 +149,8 @@ module.exports = (repo) => {
               const block = new Block(k)
               cancels.cancel(block.key)
             })
+
             e.messageReceived(p, cancels, cb)
-          }
-
-          const checkHandledInOrder = (e, keys, cb) => {
-            async.eachSeries(keys, (k, innerCb) => {
-              e.outbox.pull((err, res) => {
-                expect(err).to.not.exist
-
-                expect(
-                  res.block.key.toString('hex')
-                ).to.be.eql(
-                  (new Block(k)).key.toString('hex')
-                )
-                innerCb()
-              })
-            }, cb)
           }
 
           async.eachSeries(_.range(numRounds), (i, cb) => {
@@ -170,13 +159,24 @@ module.exports = (repo) => {
               const cancels = testcase[1]
               const keeps = _.difference(set, cancels)
 
-              const e = new Engine(repo.datastore)
+              const network = mockNetwork(keeps.length, (res) => {
+                const msgs = _.flatten(res.messages.map(
+                  (m) => Array.from(m[1].blocks.values())
+                    .map((b) => b.data.toString())
+                ))
+
+                expect(msgs).to.be.eql(keeps)
+                innerCb()
+              })
+
+              const e = new Engine(repo.datastore, network)
               const partner = PeerId.create({bits: 64})
               async.series([
                 (c) => partnerWants(e, set, partner, c),
-                (c) => partnerCancels(e, cancels, partner, c),
-                (c) => checkHandledInOrder(e, keeps, c)
-              ], innerCb)
+                (c) => partnerCancels(e, cancels, partner, c)
+              ], (err) => {
+                if (err) throw err
+              })
             }, cb)
           }, done)
         })

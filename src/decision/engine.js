@@ -7,13 +7,15 @@ const async = require('async')
 const log = debug('engine')
 log.error = debug('engine:error')
 
+const Message = require('../message')
 const Wantlist = require('../wantlist')
 const PeerRequestQueue = require('./peer-request-queue')
 const Ledger = require('./ledger')
 
 module.exports = class Engine {
-  constructor (datastore) {
+  constructor (datastore, network) {
     this.datastore = datastore
+    this.network = network
 
     // A list of of ledgers by their partner id
     this.ledgerMap = new Map()
@@ -21,29 +23,58 @@ module.exports = class Engine {
     // A priority queue of requests received from different
     // peers.
     this.peerRequestQueue = new PeerRequestQueue()
+  }
 
-    // Can't declare generator functions regularly
-    this.outbox = _((push, next) => {
-      const nextTask = this.peerRequestQueue.pop()
+  _sendBlock (env, cb) {
+    const msg = new Message(false)
+    msg.addBlock(env.block)
 
-      if (!nextTask) return push(null, _.nil)
+    log('Sending block %s to %s', env.peer.toHexString(), env.block)
 
-      this.datastore.get(nextTask.entry.key, (err, block) => {
-        if (err || !block) {
-          nextTask.done()
-        } else {
-          push(null, {
-            peer: nextTask.target,
-            block: block,
-            sent: () => {
-              nextTask.done()
-            }
-          })
-        }
-
-        next()
-      })
+    this.network.sendMessage(env.peer, msg, (err) => {
+      if (err) {
+        log('sendblock error: %s', err.message)
+      }
+      cb(null, 'done')
     })
+  }
+
+  _outbox () {
+    if (!this._timer) {
+      this._timer = setTimeout(() => {
+        doIt(() => {
+          this._timer = null
+        })
+      }, 200)
+    }
+
+    const doIt = (cb) => {
+      _((push, next) => {
+        const nextTask = this.peerRequestQueue.pop()
+
+        if (!nextTask) return push(null, _.nil)
+
+        this.datastore.get(nextTask.entry.key, (err, block) => {
+          if (err || !block) {
+            nextTask.done()
+          } else {
+            push(null, {
+              peer: nextTask.target,
+              block: block,
+              sent: () => {
+                nextTask.done()
+              }
+            })
+          }
+
+          next()
+        })
+      })
+        .flatMap((envelope) => {
+          return _.wrapCallback(this._sendBlock.bind(this))(envelope)
+        })
+        .done(cb)
+    }
   }
 
   wantlistForPeer (peerId) {
@@ -60,7 +91,6 @@ module.exports = class Engine {
 
   // Handle incoming messages
   messageReceived (peerId, msg, cb) {
-    console.log('engine:receive')
     if (msg.empty) {
       log('received empty message from %s', peerId)
     }
@@ -78,7 +108,10 @@ module.exports = class Engine {
       msg.wantlist.values(),
       this._processWantlist.bind(this, ledger, peerId),
       (err) => {
-        async.setImmediate(() => cb(err))
+        const done = (err) => async.setImmediate(() => cb(err))
+        if (err) return done(err)
+        this._outbox()
+        done()
       })
   }
 
