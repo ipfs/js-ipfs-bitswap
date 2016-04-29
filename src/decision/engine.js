@@ -45,7 +45,7 @@ module.exports = class Engine {
         doIt(() => {
           this._timer = null
         })
-      }, 200)
+      }, 100)
     }
 
     const doIt = (cb) => {
@@ -115,6 +115,22 @@ module.exports = class Engine {
       })
   }
 
+  receivedBlock (block) {
+    this._processBlock(block)
+    this._outbox()
+  }
+
+  _processBlock (block) {
+    // Check all connected peers if they want the block we received
+    for (let l of this.ledgerMap.values()) {
+      const entry = l.wantlistContains(block.key)
+
+      if (entry) {
+        this.peerRequestQueue.push(entry, l.partner)
+      }
+    }
+  }
+
   _processWantlist (ledger, peerId, entry, cb) {
     if (entry.cancel) {
       log('cancel %s', entry.key)
@@ -142,14 +158,7 @@ module.exports = class Engine {
       log('got block %s %s bytes', block.key, block.data.length)
       ledger.receivedBytes(block.data.length)
 
-      // Check all connected peers if they want the block we received
-      for (let l of this.ledgerMap.values()) {
-        const entry = l.wantlistContains(block.key)
-
-        if (entry) {
-          this.peerRequestQueue.push(entry, ledger.partner)
-        }
-      }
+      this.receivedBlock(block)
     }
   }
 

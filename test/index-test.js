@@ -11,6 +11,11 @@ const Message = require('../src/message')
 const Bitswap = require('../src')
 
 const mockNetwork = require('./utils').mockNetwork
+const applyNetwork = (bs, n) => {
+  bs.network = n
+  bs.wm.network = n
+  bs.engine.network = n
+}
 
 module.exports = (repo) => {
   describe('bitswap', () => {
@@ -189,9 +194,7 @@ module.exports = (repo) => {
         }
       }
       bs1 = new Bitswap(me, libp2p, store)
-      bs1.network = n1
-      bs1.wm.network = n1
-      bs1.engine.network = n1
+      applyNetwork(bs1, n1)
 
       let store2
 
@@ -203,9 +206,7 @@ module.exports = (repo) => {
         },
         (val, cb) => {
           bs2 = new Bitswap(other, libp2p, store2)
-          bs2.network = n2
-          bs2.wm.network = n2
-          bs2.engine.network = n2
+          applyNetwork(bs2, n2)
           bs1._onPeerConnected(other)
           bs2._onPeerConnected(me)
           bs1.getBlock(block.key, cb)
@@ -235,6 +236,74 @@ module.exports = (repo) => {
       setTimeout(() => {
         bs.hasBlock(block, () => {})
       }, 200)
+    })
+
+    it('block is sent after local add', (done) => {
+      const me = PeerId.create({bit: 64})
+      const other = PeerId.create({bit: 64})
+      const libp2p = {}
+      const block = new Block('hello world local add')
+      let bs1
+      let bs2
+      let n1
+      let n2
+
+      n1 = {
+        connectTo (id, cb) {
+          let err
+          if (id.toHexString() !== other.toHexString()) {
+            err = new Error('unkown peer')
+          }
+          async.setImmediate(() => cb(err))
+        },
+        sendMessage (id, msg, cb) {
+          if (id.toHexString() === other.toHexString()) {
+            bs2._receiveMessage(me, msg, cb)
+          } else {
+            async.setImmediate(() => cb(new Error('unkown peer')))
+          }
+        }
+      }
+      n2 = {
+        connectTo (id, cb) {
+          let err
+          if (id.toHexString() !== me.toHexString()) {
+            err = new Error('unkown peer')
+          }
+          async.setImmediate(() => cb(err))
+        },
+        sendMessage (id, msg, cb) {
+          if (id.toHexString() === me.toHexString()) {
+            bs1._receiveMessage(other, msg, cb)
+          } else {
+            async.setImmediate(() => cb(new Error('unkown peer')))
+          }
+        }
+      }
+      bs1 = new Bitswap(me, libp2p, store)
+      applyNetwork(bs1, n1)
+
+      let store2
+
+      async.waterfall([
+        (cb) => repo.create('world', cb),
+        (repo, cb) => {
+          store2 = repo.datastore
+          bs2 = new Bitswap(other, libp2p, store2)
+          applyNetwork(bs2, n2)
+          bs1._onPeerConnected(other)
+          bs2._onPeerConnected(me)
+          bs1.getBlock(block.key, cb)
+
+          setTimeout(() => {
+            bs2.hasBlock(block)
+          }, 1000)
+        },
+        (res, cb) => {
+          expect(res).to.be.eql(res)
+          cb()
+        }
+      ], done)
     })
   })
 
