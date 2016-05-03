@@ -190,12 +190,15 @@ module.exports = class Bitwap {
 
   // announces the existance of a block to this service
   hasBlock (block, cb) {
+    cb = cb || (() => {})
+
     this._tryPutBlock(block, 4, (err) => {
       if (err) {
-        log.error('Error writing block to datastor: %s', err.message)
+        log.error('Error writing block to datastore: %s', err.message)
         return cb(err)
       }
       this.notifications.emit(`block:${block.key.toString('hex')}`, block)
+      this.engine.receivedBlock(block)
       cb()
     })
   }
