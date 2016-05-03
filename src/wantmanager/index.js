@@ -110,6 +110,7 @@ module.exports = class Wantmanager {
   }
 
   run () {
+    // TODO: is this needed? if so enable it
     //     // resend entirew wantlist every so often
     //     const es = []
     //     for (let e of this.wl.entries()) {

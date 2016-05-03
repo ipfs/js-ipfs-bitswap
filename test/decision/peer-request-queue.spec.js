@@ -81,4 +81,15 @@ describe('PeerRequestQueue', () => {
       })
     })
   })
+
+  it('push same block multiple times', () => {
+    const prq = new PeerRequestQueue()
+    const partner = PeerId.create({bits: 64})
+
+    prq.push(new WantlistEntry(hash('hello')), partner)
+    prq.push(new WantlistEntry(hash('hello')), partner)
+
+    expect(prq.pop()).to.exist
+    expect(prq.pop()).to.not.exist
+  })
 })

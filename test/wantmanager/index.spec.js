@@ -50,6 +50,9 @@ describe('Wantmanager', () => {
       wm.cancelWants(['world'])
       setTimeout(() => {
         wm.wantBlocks(['foo'])
+
+        wm.disconnected(peer1)
+        wm.disconnected(peer2)
       }, 100)
     }, 100)
   })

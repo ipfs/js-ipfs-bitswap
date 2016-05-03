@@ -107,4 +107,56 @@ describe('BitswapMessage', () => {
       false
     )
   })
+
+  describe('.equals', () => {
+    it('true, same message', () => {
+      const b = new Block('foo')
+      const m1 = new BitswapMessage(true)
+      const m2 = new BitswapMessage(true)
+
+      m1.addEntry(b.key, 1)
+      m1.addBlock(b)
+      m2.addEntry(b.key, 1)
+      m2.addBlock(b)
+
+      expect(m1.equals(m2)).to.be.eql(true)
+    })
+
+    it('false, different entries', () => {
+      const b = new Block('foo')
+      const m1 = new BitswapMessage(true)
+      const m2 = new BitswapMessage(true)
+
+      m1.addEntry(b.key, 1)
+      m1.addBlock(b)
+      m2.addEntry(b.key, 2)
+      m2.addBlock(b)
+
+      expect(m1.equals(m2)).to.be.eql(false)
+    })
+  })
+
+  describe('Entry', () => {
+    it('exposes the wantlist entry properties', () => {
+      const entry = new BitswapMessage.Entry('hello', 5, false)
+
+      expect(entry).to.have.property('key', 'hello')
+      expect(entry).to.have.property('priority', 5)
+
+      expect(entry).to.have.property('cancel', false)
+    })
+
+    it('allows setting properties on the wantlist entry', () => {
+      const entry = new BitswapMessage.Entry('hello', 5, false)
+
+      expect(entry.entry).to.have.property('key', 'hello')
+      expect(entry.entry).to.have.property('priority', 5)
+
+      entry.key = 'world'
+      entry.priority = 2
+
+      expect(entry.entry).to.have.property('key', 'world')
+      expect(entry.entry).to.have.property('priority', 2)
+    })
+  })
 })

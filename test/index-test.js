@@ -30,11 +30,11 @@ module.exports = (repo) => {
       })
 
       it('simple block message', (done) => {
-        const me = PeerId.create({bit: 64})
+        const me = PeerId.create({bits: 64})
         const libp2p = {}
         const bs = new Bitswap(me, libp2p, store)
 
-        const other = PeerId.create({bit: 64})
+        const other = PeerId.create({bits: 64})
         const b1 = new Block('hello')
         const b2 = new Block('world')
         const msg = new Message(false)
@@ -63,11 +63,11 @@ module.exports = (repo) => {
       })
 
       it('simple want message', (done) => {
-        const me = PeerId.create({bit: 64})
+        const me = PeerId.create({bits: 64})
         const libp2p = {}
         const bs = new Bitswap(me, libp2p, store)
 
-        const other = PeerId.create({bit: 64})
+        const other = PeerId.create({bits: 64})
         const b1 = new Block('hello')
         const b2 = new Block('world')
         const msg = new Message(false)
@@ -89,11 +89,11 @@ module.exports = (repo) => {
       })
 
       it('multi peer', (done) => {
-        const me = PeerId.create({bit: 64})
+        const me = PeerId.create({bits: 64})
         const libp2p = {}
         const bs = new Bitswap(me, libp2p, store)
 
-        const others = _.range(5).map(() => PeerId.create({bit: 64}))
+        const others = _.range(5).map(() => PeerId.create({bits: 64}))
         const blocks = _.range(10).map((i) => new Block(`hello ${i}`))
         const messages = _.range(5).map((i) => {
           const m = new Message(false)
@@ -130,7 +130,7 @@ module.exports = (repo) => {
     })
 
     it('block exists locally', (done) => {
-      const me = PeerId.create({bit: 64})
+      const me = PeerId.create({bits: 64})
       const libp2p = {}
       const block = new Block('hello')
       store.put(block, (err) => {
@@ -169,7 +169,7 @@ module.exports = (repo) => {
     })
 
     it('block is added locally afterwards', (done) => {
-      const me = PeerId.create({bit: 64})
+      const me = PeerId.create({bits: 64})
       const libp2p = {}
       const block = new Block('world')
       const bs = new Bitswap(me, libp2p, store)
@@ -189,8 +189,8 @@ module.exports = (repo) => {
     })
 
     it('block is sent after local add', (done) => {
-      const me = PeerId.create({bit: 64})
-      const other = PeerId.create({bit: 64})
+      const me = PeerId.create({bits: 64})
+      const other = PeerId.create({bits: 64})
       const libp2p = {}
       const block = new Block('hello world local add')
       let bs1
@@ -259,7 +259,7 @@ module.exports = (repo) => {
 
   describe('stat', () => {
     it('has initial stats', () => {
-      const me = PeerId.create({bit: 64})
+      const me = PeerId.create({bits: 64})
       const bs = new Bitswap(me, {}, {})
 
       const stats = bs.stat()
