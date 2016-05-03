@@ -36,7 +36,7 @@ exports.mockNetwork = (calls, done) => {
 }
 
 exports.createMockNet = (repo, count, cb) => {
-  async.map(_.range(count), (i, cb) => repo.create(i, (err, res) => {
+  async.map(_.range(count), (i, cb) => repo.create(`repo-${i}`, (err, res) => {
     if (err) return cb(err)
     cb(null, res.datastore)
   }), (err, stores) => {
@@ -49,13 +49,13 @@ exports.createMockNet = (repo, count, cb) => {
       return {
         connectTo (id, cb) {
           const done = (err) => async.setImmediate(() => cb(err))
-          if (!_.contains(hexIds(), id.toHexString())) {
+          if (!_.includes(hexIds, id.toHexString())) {
             return done(new Error('unkown peer'))
           }
           done()
         },
         sendMessage (id, msg, cb) {
-          const j = _.findIndex(hexIds(), id.toHexString())
+          const j = _.findIndex(hexIds, (el) => el === id.toHexString())
           bitswaps[j]._receiveMessage(ids[i], msg, cb)
         }
       }

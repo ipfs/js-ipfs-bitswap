@@ -13,7 +13,7 @@ const Bitswap = require('../src')
 const utils = require('./utils')
 
 module.exports = (repo) => {
-  describe.only('bitswap', () => {
+  describe('bitswap', () => {
     describe('receive message', () => {
       let store
 
@@ -154,7 +154,7 @@ module.exports = (repo) => {
         (cb) => utils.createMockNet(repo, 2, cb),
         (net, cb) => {
           mockNet = net
-          net.store[1].put(block, cb)
+          net.stores[1].put(block, cb)
         },
         (val, cb) => {
           mockNet.bitswaps[0]._onPeerConnected(mockNet.ids[1])
