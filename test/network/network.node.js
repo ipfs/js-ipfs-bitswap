@@ -2,16 +2,15 @@
 
 'use strict'
 
-const Network = require('./../../src/network')
 const libp2p = require('libp2p-ipfs')
 const PeerInfo = require('peer-info')
 const multiaddr = require('multiaddr')
 const expect = require('chai').expect
-const fs = require('fs')
-const path = require('path')
-const protobuf = require('protocol-buffers')
-const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../../src/message/message.proto')))
 const PeerBook = require('peer-book')
+const Block = require('ipfs-block')
+
+const Network = require('../../src/network')
+const Message = require('../../src/message')
 
 describe('network', () => {
   let libp2pNodeA
@@ -61,14 +60,14 @@ describe('network', () => {
     }
   })
 
-  var bitswapMockA = {
+  let bitswapMockA = {
     _receiveMessage: () => {},
     _receiveError: () => {},
     _onPeerConnected: () => {},
     _onPeerDisconnected: () => {}
   }
 
-  var bitswapMockB = {
+  let bitswapMockB = {
     _receiveMessage: () => {},
     _receiveError: () => {},
     _onPeerConnected: () => {},
@@ -126,17 +125,11 @@ describe('network', () => {
   })
 
   it('_receiveMessage success', (done) => {
-    const msg = {
-      wantlist: {
-        entries: [{
-          block: 'hello',
-          cancel: false,
-          priority: 0
-        }],
-        full: true
-      },
-      blocks: [new Buffer('hello'), new Buffer('world')]
-    }
+    const msg = new Message(true)
+    const b = new Block('hello')
+    msg.addEntry(b.key, 0, false)
+    msg.addBlock(b)
+    msg.addBlock(new Block('world'))
 
     bitswapMockB._receiveMessage = (peerId, msgReceived) => {
       expect(msg).to.deep.equal(msgReceived)
@@ -153,23 +146,17 @@ describe('network', () => {
       expect(err).to.not.exist
     })
 
-    const msgEncoded = pbm.Message.encode(msg)
+    const msgEncoded = msg.toProto()
     conn.write(msgEncoded)
     conn.end()
   })
 
   it('sendMessage', (done) => {
-    const msg = {
-      wantlist: {
-        entries: [{
-          block: 'hello',
-          cancel: false,
-          priority: 0
-        }],
-        full: true
-      },
-      blocks: [new Buffer('hello'), new Buffer('world')]
-    }
+    const msg = new Message(true)
+    const b = new Block('hello')
+    msg.addEntry(b.key, 0, false)
+    msg.addBlock(b)
+    msg.addBlock(new Block('world'))
 
     bitswapMockB._receiveMessage = (peerId, msgReceived) => {
       expect(msg).to.deep.equal(msgReceived)
