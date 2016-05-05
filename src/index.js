@@ -138,9 +138,9 @@ module.exports = class Bitwap {
       cb(err, block)
     }
 
-    this.getBlocks([key], (err, res) => {
-      if (err) {
-        return done(err)
+    this.getBlocks([key], (errs, res) => {
+      if (errs) {
+        return done(errs[0])
       }
 
       done(null, res[0])
@@ -154,13 +154,52 @@ module.exports = class Bitwap {
 
   getBlocks (keys, cb) {
     const blocks = []
-    const finish = (block) => {
-      blocks.push(block)
-      log('finish: %s/%s', blocks.length, keys.length)
-      if (blocks.length === keys.length) {
+    const errs = []
+    const unwantListeners = {}
+    const blockListeners = {}
+    const unwantEvent = (key) => `unwant:${key.toString('hex')}`
+    const blockEvent = (key) => `block:${key.toString('hex')}`
+
+    const cleanupListeners = () => {
+      keys.forEach((key) => {
+        this.notifications.removeListener(unwantEvent(key), unwantListeners[key])
+        this.notifications.removeListener(blockEvent(key), blockListeners[key])
+      })
+    }
+
+    const addListeners = () => {
+      keys.forEach((key) => {
+        unwantListeners[key] = () => {
+          finish(new Error(`manual unwant: ${key.toString('hex')}`))
+        }
+
+        blockListeners[key] = (block) => {
+          finish(null, block)
+        }
+
+        this.notifications.once(unwantEvent(key), unwantListeners[key])
+        this.notifications.once(blockEvent(key), blockListeners[key])
+      })
+    }
+
+    const finish = (err, block) => {
+      if (err) {
+        errs.push(err)
+      }
+      if (block) {
+        blocks.push(block)
+      }
+
+      if (blocks.length + errs.length === keys.length) {
+        cleanupListeners()
+        if (errs.length > 0) {
+          return cb(errs, blocks)
+        }
         cb(null, blocks)
       }
     }
+
+    addListeners()
 
     keys.forEach((key) => {
       // Sanity check, we don't want to announce looking for blocks
@@ -175,7 +214,7 @@ module.exports = class Bitwap {
           this.datastore.get(key, (err, res) => {
             if (!err && res) {
               this.wm.cancelWants([key])
-              finish(res)
+              finish(null, res)
               return
             }
 
@@ -185,12 +224,17 @@ module.exports = class Bitwap {
           })
         }
       })
-      this.notifications.once(`block:${key.toString('hex')}`, (block) => {
-        finish(block)
-      })
     })
 
     this.wm.wantBlocks(keys)
+  }
+
+  // removes the given keys from the want list independent of any ref counts
+  unwantBlocks (keys) {
+    this.wm.unwantBlocks(keys)
+    keys.forEach((key) => {
+      this.notifications.emit(`unwant:${key.toString('hex')}`)
+    })
   }
 
   // removes the given keys from the want list

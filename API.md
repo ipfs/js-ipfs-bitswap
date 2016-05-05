@@ -27,6 +27,14 @@ Fetch a single block.
 
 Fetch multiple blocks.
 
+### `unwantBlocks(keys)`
+
+- `keys: []Multihash`
+
+Cancel previously requested keys, forcefully. That means they are removed from the
+wantlist independent of how many other resources requested these keys. Callbacks
+attached to `getBlock` are errored with `Error('manual unwant: key')`.
+
 ### `cancelWants(keys)`
 
 - `keys: []Multihash`

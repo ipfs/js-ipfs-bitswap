@@ -120,170 +120,203 @@ module.exports = (repo) => {
         }, done)
       })
     })
-  })
+    describe('getBlock', () => {
+      let store
 
-  describe('getBlock', () => {
-    let store
-
-    before((done) => {
-      repo.create('hello', (err, r) => {
-        if (err) return done(err)
-        store = r.datastore
-        done()
+      before((done) => {
+        repo.create('hello', (err, r) => {
+          if (err) return done(err)
+          store = r.datastore
+          done()
+        })
       })
-    })
 
-    after((done) => {
-      repo.remove(done)
-    })
+      after((done) => {
+        repo.remove(done)
+      })
 
-    it('block exists locally', (done) => {
-      const me = PeerId.create({bits: 64})
-      const block = new Block('hello')
-      store.put(block, (err) => {
-        if (err) throw err
+      it('block exists locally', (done) => {
+        const me = PeerId.create({bits: 64})
+        const block = new Block('hello')
+        store.put(block, (err) => {
+          if (err) throw err
+          const bs = new Bitswap(me, libp2pMock, store)
+
+          bs.getBlock(block.key, (err, res) => {
+            if (err) throw err
+
+            expect(res).to.be.eql(block)
+            done()
+          })
+        })
+      })
+
+      // Not sure if I understand what is going on here
+      // test fails because now the network is not properly mocked
+      // what are these net.stores and mockNet.bitswaps?
+      it.skip('block is retrived from peer', (done) => {
+        const block = new Block('hello world')
+
+        let mockNet
+        async.waterfall([
+          (cb) => utils.createMockNet(repo, 2, cb),
+          (net, cb) => {
+            mockNet = net
+            net.stores[1].put(block, cb)
+          },
+          (val, cb) => {
+            mockNet.bitswaps[0]._onPeerConnected(mockNet.ids[1])
+            mockNet.bitswaps[1]._onPeerConnected(mockNet.ids[0])
+            mockNet.bitswaps[0].getBlock(block.key, cb)
+          },
+          (res, cb) => {
+            expect(res).to.be.eql(res)
+            cb()
+          }
+        ], done)
+      })
+
+      it('block is added locally afterwards', (done) => {
+        const me = PeerId.create({bits: 64})
+        const block = new Block('world')
         const bs = new Bitswap(me, libp2pMock, store)
+        const net = utils.mockNetwork()
+        bs.network = net
+        bs.wm.network = net
+        bs.engine.network = net
         bs.start()
 
         bs.getBlock(block.key, (err, res) => {
           if (err) throw err
-
           expect(res).to.be.eql(block)
           done()
         })
+        setTimeout(() => {
+          bs.hasBlock(block, () => {})
+        }, 200)
+      })
+
+      it('block is sent after local add', (done) => {
+        const me = PeerId.create({bits: 64})
+        const other = PeerId.create({bits: 64})
+        const block = new Block('hello world local add')
+        let bs1
+        let bs2
+        let n1
+        let n2
+
+        n1 = {
+          connectTo (id, cb) {
+            let err
+            if (id.toHexString() !== other.toHexString()) {
+              err = new Error('unkown peer')
+            }
+            async.setImmediate(() => cb(err))
+          },
+          sendMessage (id, msg, cb) {
+            if (id.toHexString() === other.toHexString()) {
+              bs2._receiveMessage(me, msg, cb)
+            } else {
+              async.setImmediate(() => cb(new Error('unkown peer')))
+            }
+          }
+        }
+        n2 = {
+          connectTo (id, cb) {
+            let err
+            if (id.toHexString() !== me.toHexString()) {
+              err = new Error('unkown peer')
+            }
+            async.setImmediate(() => cb(err))
+          },
+          sendMessage (id, msg, cb) {
+            if (id.toHexString() === me.toHexString()) {
+              bs1._receiveMessage(other, msg, cb)
+            } else {
+              async.setImmediate(() => cb(new Error('unkown peer')))
+            }
+          }
+        }
+        bs1 = new Bitswap(me, libp2pMock, store)
+        utils.applyNetwork(bs1, n1)
+
+        let store2
+
+        async.waterfall([
+          (cb) => repo.create('world', cb),
+          (repo, cb) => {
+            store2 = repo.datastore
+            bs2 = new Bitswap(other, libp2pMock, store2)
+            utils.applyNetwork(bs2, n2)
+            bs1._onPeerConnected(other)
+            bs2._onPeerConnected(me)
+            bs1.getBlock(block.key, cb)
+
+            setTimeout(() => {
+              bs2.hasBlock(block)
+            }, 1000)
+          },
+          (res, cb) => {
+            expect(res).to.be.eql(res)
+            cb()
+          }
+        ], done)
       })
     })
 
-    // Not sure if I understand what is going on here
-    // test fails because now the network is not properly mocked
-    // what are these net.stores and mockNet.bitswaps?
-    it.skip('block is retrived from peer', (done) => {
-      const block = new Block('hello world')
+    describe('stat', () => {
+      it('has initial stats', () => {
+        const me = PeerId.create({bits: 64})
+        const bs = new Bitswap(me, libp2pMock, {})
 
-      let mockNet
-      async.waterfall([
-        (cb) => utils.createMockNet(repo, 2, cb),
-        (net, cb) => {
-          mockNet = net
-          net.stores[1].put(block, cb)
-        },
-        (val, cb) => {
-          mockNet.bitswaps[0]._onPeerConnected(mockNet.ids[1])
-          mockNet.bitswaps[1]._onPeerConnected(mockNet.ids[0])
-          mockNet.bitswaps[0].getBlock(block.key, cb)
-        },
-        (res, cb) => {
-          expect(res).to.be.eql(res)
-          cb()
-        }
-      ], done)
-    })
-
-    it('block is added locally afterwards', (done) => {
-      const me = PeerId.create({bits: 64})
-      const block = new Block('world')
-      const bs = new Bitswap(me, libp2pMock, store)
-      const net = utils.mockNetwork()
-      bs.network = net
-      bs.wm.network = net
-      bs.engine.network = net
-      bs.start()
-
-      bs.getBlock(block.key, (err, res) => {
-        if (err) throw err
-        expect(res).to.be.eql(block)
-        done()
+        const stats = bs.stat()
+        expect(stats).to.have.property('wantlist')
+        expect(stats).to.have.property('blocksReceived', 0)
+        expect(stats).to.have.property('dupBlksReceived', 0)
+        expect(stats).to.have.property('dupDataReceived', 0)
+        expect(stats).to.have.property('peers')
       })
-      setTimeout(() => {
-        bs.hasBlock(block, () => {})
-      }, 200)
     })
 
-    it('block is sent after local add', (done) => {
-      const me = PeerId.create({bits: 64})
-      const other = PeerId.create({bits: 64})
-      const block = new Block('hello world local add')
-      let bs1
-      let bs2
-      let n1
-      let n2
+    describe('unwantBlocks', () => {
+      let store
+      beforeEach((done) => {
+        repo.create('hello', (err, r) => {
+          if (err) return done(err)
+          store = r.datastore
+          done()
+        })
+      })
 
-      n1 = {
-        connectTo (id, cb) {
-          let err
-          if (id.toHexString() !== other.toHexString()) {
-            err = new Error('unkown peer')
+      afterEach((done) => {
+        repo.remove(done)
+      })
+
+      it('removes blocks that are wanted multiple times', (done) => {
+        const me = PeerId.create({bits: 64})
+        const bs = new Bitswap(me, libp2pMock, store)
+        bs.start()
+        const b = new Block('hello')
+
+        let i = 0
+        const finish = () => {
+          i++
+          if (i === 2) {
+            done()
           }
-          async.setImmediate(() => cb(err))
-        },
-        sendMessage (id, msg, cb) {
-          if (id.toHexString() === other.toHexString()) {
-            bs2._receiveMessage(me, msg, cb)
-          } else {
-            async.setImmediate(() => cb(new Error('unkown peer')))
-          }
-        },
-        start () {
         }
-      }
-      n2 = {
-        connectTo (id, cb) {
-          let err
-          if (id.toHexString() !== me.toHexString()) {
-            err = new Error('unkown peer')
-          }
-          async.setImmediate(() => cb(err))
-        },
-        sendMessage (id, msg, cb) {
-          if (id.toHexString() === me.toHexString()) {
-            bs1._receiveMessage(other, msg, cb)
-          } else {
-            async.setImmediate(() => cb(new Error('unkown peer')))
-          }
-        },
-        start () {
-        }
-      }
-      bs1 = new Bitswap(me, libp2pMock, store)
-      utils.applyNetwork(bs1, n1)
-      bs1.start()
 
-      let store2
+        bs.getBlock(b.key, (err, res) => {
+          expect(err.message).to.be.eql(`manual unwant: ${b.key.toString('hex')}`)
+          finish()
+        })
+        bs.getBlock(b.key, (err, res) => {
+          expect(err.message).to.be.eql(`manual unwant: ${b.key.toString('hex')}`)
+          finish()
+        })
 
-      async.waterfall([
-        (cb) => repo.create('world', cb),
-        (repo, cb) => {
-          store2 = repo.datastore
-          bs2 = new Bitswap(other, libp2pMock, store2)
-          utils.applyNetwork(bs2, n2)
-          bs2.start()
-          bs1._onPeerConnected(other)
-          bs2._onPeerConnected(me)
-          bs1.getBlock(block.key, cb)
-
-          setTimeout(() => {
-            bs2.hasBlock(block)
-          }, 1000)
-        },
-        (res, cb) => {
-          expect(res).to.be.eql(res)
-          cb()
-        }
-      ], done)
-    })
-  })
-
-  describe('stat', () => {
-    it('has initial stats', () => {
-      const me = PeerId.create({bits: 64})
-      const bs = new Bitswap(me, libp2pMock, {})
-
-      const stats = bs.stat()
-      expect(stats).to.have.property('wantlist')
-      expect(stats).to.have.property('blocksReceived', 0)
-      expect(stats).to.have.property('dupBlksReceived', 0)
-      expect(stats).to.have.property('dupDataReceived', 0)
-      expect(stats).to.have.property('peers')
+        bs.unwantBlocks([b.key])
+      })
     })
   })
 }
