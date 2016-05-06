@@ -20,7 +20,7 @@ describe('BitswapMessage', () => {
     expect(
       pbm.Message.decode(m.toProto()).wantlist.entries[0]
     ).to.be.eql({
-      block: block.key.toString(),
+      block: block.key.toString('hex'),
       priority: 1,
       cancel: false
     })
@@ -42,7 +42,7 @@ describe('BitswapMessage', () => {
     const raw = pbm.Message.encode({
       wantlist: {
         entries: [{
-          block: 'hello',
+          block: new Buffer('hello').toString('hex'),
           cancel: false
         }],
         full: true
@@ -60,7 +60,7 @@ describe('BitswapMessage', () => {
     expect(
       Array.from(protoMessage.wantlist)
     ).to.be.eql([
-      ['hello', new BitswapMessage.Entry('hello', 0, false)]
+      [new Buffer('hello').toString('hex'), new BitswapMessage.Entry(new Buffer('hello'), 0, false)]
     ])
 
     const b1 = new Block('hello')
@@ -68,8 +68,8 @@ describe('BitswapMessage', () => {
     expect(
       Array.from(protoMessage.blocks)
     ).to.be.eql([
-      [b1.key, b1],
-      [b2.key, b2]
+      [b1.key.toString('hex'), b1],
+      [b2.key.toString('hex'), b2]
     ])
   })
 

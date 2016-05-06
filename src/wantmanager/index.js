@@ -47,7 +47,7 @@ module.exports = class Wantmanager {
   }
 
   _startPeerHandler (peerId) {
-    let mq = this.peers.get(peerId)
+    let mq = this.peers.get(peerId.toB58String())
 
     if (mq) {
       mq.refcnt ++
@@ -63,13 +63,13 @@ module.exports = class Wantmanager {
     }
     mq.addMessage(fullwantlist)
 
-    this.peers.set(peerId, mq)
+    this.peers.set(peerId.toB58String(), mq)
     mq.run()
     return mq
   }
 
   _stopPeerHandler (peerId) {
-    const mq = this.peers.get(peerId)
+    const mq = this.peers.get(peerId.toB58String())
 
     if (!mq) {
       return
@@ -81,7 +81,7 @@ module.exports = class Wantmanager {
     }
 
     mq.stop()
-    this.peers.delete(peerId)
+    this.peers.delete(peerId.toB58String())
   }
 
   // add all the keys to the wantlist
@@ -102,10 +102,12 @@ module.exports = class Wantmanager {
   }
 
   connected (peerId) {
+    log('peer connected: %s', peerId.toB58String())
     this._startPeerHandler(peerId)
   }
 
   disconnected (peerId) {
+    log('peer disconnected: %s', peerId.toB58String())
     this._stopPeerHandler(peerId)
   }
 
@@ -123,5 +125,11 @@ module.exports = class Wantmanager {
     //     timer.start()
     //   }
     // }
+  }
+
+  stop () {
+    for (let mq of this.peers.values()) {
+      this.disconnected(mq.p)
+    }
   }
 }

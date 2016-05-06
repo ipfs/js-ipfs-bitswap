@@ -18,7 +18,7 @@ module.exports = (repo) => {
       if (err) return done(err)
 
       done(null, {
-        peer: new PeerId(id),
+        peer: PeerId.create({bits: 64}),
         engine: new Engine(repo.datastore, mockNetwork())
       })
     })
@@ -44,7 +44,7 @@ module.exports = (repo) => {
           const content = `this is message ${i}`
           m.addBlock(new Block(content))
           sender.engine.messageSent(receiver.peer, m)
-          receiver.engine.messageReceived(sender.Peer, m, cb)
+          receiver.engine.messageReceived(sender.peer, m, cb)
         }, (err) => {
           expect(err).to.not.exist
 
@@ -57,7 +57,7 @@ module.exports = (repo) => {
           expect(
             sender.engine.numBytesSentTo(receiver.peer)
           ).to.be.eql(
-            receiver.engine.numBytesReceivedFrom(sender.peers)
+            receiver.engine.numBytesReceivedFrom(sender.peer)
           )
 
           expect(

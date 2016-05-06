@@ -33,12 +33,12 @@ module.exports = class Bitwap {
 
     this.notifications = new EventEmitter()
     this.notifications.setMaxListeners(cs.maxListeners)
-
-    this.wm.run()
   }
 
   // handle messages received through the network
   _receiveMessage (peerId, incoming, cb) {
+    cb = cb || (() => {})
+    log('receiving message from %s', peerId.toB58String())
     this.engine.messageReceived(peerId, incoming, (err) => {
       if (err) {
         log('failed to receive message', incoming)
@@ -55,7 +55,7 @@ module.exports = class Bitwap {
       for (let block of iblocks.values()) {
         const found = this.wm.wl.contains(block.key)
         if (!found) {
-          log('received un-askes-for %s from %s', block, peerId)
+          log('received un-askes-for %s from %s', block.key.toString('hex'), peerId.toB58String())
         } else {
           keys.push(block.key)
         }
@@ -71,7 +71,7 @@ module.exports = class Bitwap {
               return innerCb()
             }
 
-            log('got block %s from %s', block, peerId)
+            log('got block from %s', peerId.toB58String(), block.data.toString())
             innerCb()
           }),
           (innerCb) => this.hasBlock(block, (err) => {
@@ -104,6 +104,7 @@ module.exports = class Bitwap {
   }
 
   _tryPutBlock (block, times, cb) {
+    log('trying to put block %s', block.data.toString())
     async.retry({times, interval: 400}, (done) => {
       this.datastore.put(block, done)
     }, cb)
@@ -111,7 +112,7 @@ module.exports = class Bitwap {
 
   // handle errors on the receiving channel
   _receiveError (err) {
-    log.debug('Bitswap ReceiveError: %s', err.message)
+    log.error('ReceiveError: %s', err.message)
   }
 
   // handle new peers
@@ -155,6 +156,7 @@ module.exports = class Bitwap {
     const blocks = []
     const finish = (block) => {
       blocks.push(block)
+      log('finish: %s/%s', blocks.length, keys.length)
       if (blocks.length === keys.length) {
         cb(null, blocks)
       }
@@ -163,20 +165,28 @@ module.exports = class Bitwap {
     keys.forEach((key) => {
       // Sanity check, we don't want to announce looking for blocks
       // when we might have them ourselves
-      this.datastore.get(key, (err, res) => {
-        if (!err && res) {
-          this.wm.cancelWants([key])
-          finish(res)
+      this.datastore.has(key, (err, exists) => {
+        if (err) {
+          log('error in datastore.has: ', err.message)
           return
         }
 
-        if (err) {
-          log('error in datastore.get: ', err.message)
-        }
+        if (exists) {
+          this.datastore.get(key, (err, res) => {
+            if (!err && res) {
+              this.wm.cancelWants([key])
+              finish(res)
+              return
+            }
 
-        this.notifications.once(`block:${key.toString('hex')}`, (block) => {
-          finish(block)
-        })
+            if (err) {
+              log('error in datastore.get: ', err.message)
+            }
+          })
+        }
+      })
+      this.notifications.once(`block:${key.toString('hex')}`, (block) => {
+        finish(block)
       })
     })
 
@@ -197,6 +207,7 @@ module.exports = class Bitwap {
         log.error('Error writing block to datastore: %s', err.message)
         return cb(err)
       }
+      log('put block: %s', block.key.toString('hex'))
       this.notifications.emit(`block:${block.key.toString('hex')}`, block)
       this.engine.receivedBlock(block)
       cb()
@@ -215,5 +226,16 @@ module.exports = class Bitwap {
       dupDataReceived: this.dupDataRecvd,
       peers: this.engine.peers()
     }
+  }
+
+  start () {
+    this.wm.run()
+    this.network.start()
+  }
+
+  // Halt everything
+  stop () {
+    this.wm.stop()
+    this.network.start()
   }
 }

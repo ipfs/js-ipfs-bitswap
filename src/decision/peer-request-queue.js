@@ -53,12 +53,12 @@ module.exports = class PeerRequestQueue {
 
   // Add a new entry to the queue
   push (entry, to) {
-    let partner = this.partners.get(to)
+    let partner = this.partners.get(to.toB58String())
 
     if (!partner) {
       partner = new ActivePartner()
       this.pQueue.push(partner)
-      this.partners.set(to, partner)
+      this.partners.set(to.toB58String(), partner)
     }
 
     if (partner.activeBlocks.has(entry.key)) {
@@ -118,13 +118,13 @@ module.exports = class PeerRequestQueue {
       t.trash = true
 
       // having canceled a block, we now account for that in the given partner
-      this.partners.get(peerId).requests --
+      this.partners.get(peerId.toB58String()).requests --
     }
   }
 }
 
 function taskKey (peerId, key) {
-  return `${peerId.toHexString()}:${key.toString('hex')}`
+  return `${peerId.toB58String()}:${key.toString('hex')}`
 }
 
 function partnerCompare (a, b) {
