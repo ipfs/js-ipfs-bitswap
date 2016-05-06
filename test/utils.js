@@ -3,7 +3,15 @@
 const async = require('async')
 const _ = require('lodash')
 const PeerId = require('peer-id')
+const PeerInfo = require('peer-info')
+const PeerBook = require('peer-book')
+const multiaddr = require('multiaddr')
 const Bitswap = require('../src')
+const libp2p = require('libp2p-ipfs')
+const os = require('os')
+const Repo = require('ipfs-repo')
+const bs = require('abstract-blob-store')
+// const bs = require('fs-blob-store')
 
 exports.mockNetwork = (calls, done) => {
   done = done || (() => {})
@@ -84,3 +92,87 @@ exports.applyNetwork = (bs, n) => {
   bs.wm.network = n
   bs.engine.network = n
 }
+
+exports.genBitswapNetwork = (n, callback) => {
+  const netArray = [] // bitswap, peerBook, libp2p, peerInfo, repo
+  const basePort = 12000
+
+  // create PeerInfo and libp2p.Node for each
+  _.range(n).forEach((i) => {
+    const p = new PeerInfo()
+    const mh1 = multiaddr('/ip4/127.0.0.1/tcp/' + (basePort + i))
+    const mh2 = multiaddr('/ip4/127.0.0.1/tcp/' + (basePort + i + 2000) + '/websockets')
+
+    p.multiaddr.add(mh1)
+    p.multiaddr.add(mh2)
+
+    const l = new libp2p.Node(p)
+    netArray.push({peerInfo: p, libp2p: l})
+  })
+
+  // create PeerBook and populate peerBook
+  netArray.forEach((net, i) => {
+    const pb = new PeerBook()
+    netArray.forEach((net, j) => {
+      if (i === j) {
+        return
+      }
+      pb.put(net.peerInfo)
+    })
+    netArray[i].peerBook = pb
+  })
+
+  // create the repos
+  const tmpDir = os.tmpdir()
+  netArray.forEach((net, i) => {
+    const repoPath = tmpDir + '/' + net.peerInfo.id.toB58String()
+    net.repo = new Repo(repoPath, { stores: bs })
+  })
+
+  // start every libp2pNode
+  async.each(netArray, (net, cb) => {
+    net.libp2p.start(cb)
+  }, (err) => {
+    if (err) {
+      throw err
+    }
+    createBitswaps()
+  })
+
+  // create every BitSwap
+  function createBitswaps () {
+    netArray.forEach((net) => {
+      net.bitswap = new Bitswap(net.peerInfo, net.libp2p, net.repo, net.peerBook)
+    })
+    establishLinks()
+  }
+
+  // connect all the nodes between each other
+  function establishLinks () {
+    async.eachSeries(netArray, (from, cbI) => {
+      async.eachSeries(netArray, (to, cbJ) => {
+        if (from.peerInfo.id.toB58String() ===
+            to.peerInfo.id.toB58String()) {
+          return cbJ()
+        }
+        from.libp2p.swarm.dial(to.peerInfo, cbJ)
+      }, (err) => {
+        if (err) {
+          throw err
+        }
+        cbI()
+      })
+    }, (err) => {
+      if (err) {
+        throw err
+      }
+      finish()
+    })
+  }
+
+  // callback with netArray
+  function finish () {
+    callback(null, netArray)
+  }
+}
+
