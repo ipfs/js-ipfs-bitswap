@@ -21,23 +21,23 @@ class BitswapMessage {
   }
 
   addEntry (key, priority, cancel) {
-    const e = this.wantlist.get(key)
+    const e = this.wantlist.get(key.toString('hex'))
 
     if (e) {
       e.priority = priority
       e.cancel = Boolean(cancel)
     } else {
-      this.wantlist.set(key, new Entry(key, priority, cancel))
+      this.wantlist.set(key.toString('hex'), new Entry(key, priority, cancel))
     }
   }
 
   addBlock (block) {
-    this.blocks.set(block.key, block)
+    this.blocks.set(block.key.toString('hex'), block)
   }
 
   cancel (key) {
-    this.wantlist.delete(key)
-    this.addEntry(key, 0, true)
+    this.wantlist.delete(key.toString('hex'))
+    this.addEntry(key.toString('hex'), 0, true)
   }
 
   toProto () {
@@ -45,7 +45,7 @@ class BitswapMessage {
       wantlist: {
         entries: Array.from(this.wantlist.values()).map((e) => {
           return {
-            block: String(e.key),
+            block: e.key.toString('hex'),
             priority: Number(e.priority),
             cancel: Boolean(e.cancel)
           }
@@ -73,7 +73,7 @@ BitswapMessage.fromProto = (raw) => {
   const m = new BitswapMessage(dec.wantlist.full)
 
   dec.wantlist.entries.forEach((e) => {
-    m.addEntry(e.block, e.priority, e.cancel)
+    m.addEntry(new Buffer(e.block, 'hex'), e.priority, e.cancel)
   })
   dec.blocks.forEach((b) => m.addBlock(new Block(b)))
 

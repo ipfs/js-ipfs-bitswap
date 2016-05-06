@@ -14,7 +14,7 @@ describe('Wantlist', () => {
 
   it('length', () => {
     const b1 = new Block('hello')
-    const b2 = new Block('hello')
+    const b2 = new Block('world')
 
     wm.add(b1.key, 2)
     wm.add(b2.key, 1)
@@ -73,7 +73,7 @@ describe('Wantlist', () => {
     expect(
       Array.from(wm.entries())
     ).to.be.eql([
-      [b.key, new Wantlist.Entry(b.key, 2)]
+      [b.key.toString('hex'), new Wantlist.Entry(b.key, 2)]
     ])
   })
 
@@ -87,8 +87,8 @@ describe('Wantlist', () => {
     expect(
       Array.from(wm.sortedEntries())
     ).to.be.eql([
-      [b1.key, new Wantlist.Entry(b1.key, 1)],
-      [b2.key, new Wantlist.Entry(b2.key, 1)]
+      [b1.key.toString('hex'), new Wantlist.Entry(b1.key, 1)],
+      [b2.key.toString('hex'), new Wantlist.Entry(b2.key, 1)]
     ])
   })
 

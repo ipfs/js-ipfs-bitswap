@@ -31,6 +31,8 @@ exports.mockNetwork = (calls, done) => {
         cb()
         finish()
       })
+    },
+    start () {
     }
   }
 }
@@ -57,12 +59,15 @@ exports.createMockNet = (repo, count, cb) => {
         sendMessage (id, msg, cb) {
           const j = _.findIndex(hexIds, (el) => el === id.toHexString())
           bitswaps[j]._receiveMessage(ids[i], msg, cb)
+        },
+        start () {
         }
       }
     })
 
     _.range(count).forEach((i) => {
       exports.applyNetwork(bitswaps[i], networks[i])
+      bitswaps[i].start()
     })
 
     cb(null, {

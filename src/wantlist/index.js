@@ -12,18 +12,18 @@ class Wantlist {
   }
 
   add (key, priority) {
-    const e = this.set.get(key)
+    const e = this.set.get(key.toString('hex'))
 
     if (e) {
       e.inc()
       e.priority = priority
     } else {
-      this.set.set(key, new Entry(key, priority))
+      this.set.set(key.toString('hex'), new Entry(key, priority))
     }
   }
 
   remove (key) {
-    const e = this.set.get(key)
+    const e = this.set.get(key.toString('hex'))
 
     if (!e) return
 
@@ -32,7 +32,7 @@ class Wantlist {
     // only delete when no refs are held
     if (e.hasRefs()) return
 
-    this.set.delete(key)
+    this.set.delete(key.toString('hex'))
   }
 
   entries () {
@@ -44,7 +44,7 @@ class Wantlist {
   }
 
   contains (key) {
-    return this.set.get(key)
+    return this.set.get(key.toString('hex'))
   }
 }
 

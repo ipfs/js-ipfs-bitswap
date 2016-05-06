@@ -79,6 +79,9 @@ describe('network', () => {
     networkB = new Network(libp2pNodeB, peerBookB, bitswapMockB)
     expect(networkA).to.exist
     expect(networkB).to.exist
+
+    networkA.start()
+    networkB.start()
     done()
   })
 

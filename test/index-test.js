@@ -40,6 +40,7 @@ module.exports = (repo) => {
       it('simple block message', (done) => {
         const me = PeerId.create({bits: 64})
         const bs = new Bitswap(me, libp2pMock, store)
+        bs.start()
 
         const other = PeerId.create({bits: 64})
         const b1 = new Block('hello')
@@ -72,6 +73,7 @@ module.exports = (repo) => {
       it('simple want message', (done) => {
         const me = PeerId.create({bits: 64})
         const bs = new Bitswap(me, libp2pMock, store)
+        bs.start()
 
         const other = PeerId.create({bits: 64})
         const b1 = new Block('hello')
@@ -87,8 +89,8 @@ module.exports = (repo) => {
           expect(bs.dupBlocksRecvd).to.be.eql(0)
 
           const wl = bs.wantlistForPeer(other)
-          expect(wl.has(b1.key)).to.be.eql(true)
-          expect(wl.has(b2.key)).to.be.eql(true)
+          expect(wl.has(b1.key.toString('hex'))).to.be.eql(true)
+          expect(wl.has(b2.key.toString('hex'))).to.be.eql(true)
 
           done()
         })
@@ -97,6 +99,7 @@ module.exports = (repo) => {
       it('multi peer', (done) => {
         const me = PeerId.create({bits: 64})
         const bs = new Bitswap(me, libp2pMock, store)
+        bs.start()
 
         const others = _.range(5).map(() => PeerId.create({bits: 64}))
         const blocks = _.range(10).map((i) => new Block(`hello ${i}`))
@@ -140,6 +143,7 @@ module.exports = (repo) => {
       store.put(block, (err) => {
         if (err) throw err
         const bs = new Bitswap(me, libp2pMock, store)
+        bs.start()
 
         bs.getBlock(block.key, (err, res) => {
           if (err) throw err
@@ -183,6 +187,7 @@ module.exports = (repo) => {
       bs.network = net
       bs.wm.network = net
       bs.engine.network = net
+      bs.start()
 
       bs.getBlock(block.key, (err, res) => {
         if (err) throw err
@@ -217,6 +222,8 @@ module.exports = (repo) => {
           } else {
             async.setImmediate(() => cb(new Error('unkown peer')))
           }
+        },
+        start () {
         }
       }
       n2 = {
@@ -233,10 +240,13 @@ module.exports = (repo) => {
           } else {
             async.setImmediate(() => cb(new Error('unkown peer')))
           }
+        },
+        start () {
         }
       }
       bs1 = new Bitswap(me, libp2pMock, store)
       utils.applyNetwork(bs1, n1)
+      bs1.start()
 
       let store2
 
@@ -246,6 +256,7 @@ module.exports = (repo) => {
           store2 = repo.datastore
           bs2 = new Bitswap(other, libp2pMock, store2)
           utils.applyNetwork(bs2, n2)
+          bs2.start()
           bs1._onPeerConnected(other)
           bs2._onPeerConnected(me)
           bs1.getBlock(block.key, cb)

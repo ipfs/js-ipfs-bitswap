@@ -4,8 +4,8 @@ const debug = require('debug')
 const _ = require('highland')
 const async = require('async')
 
-const log = debug('engine')
-log.error = debug('engine:error')
+const log = debug('bitswap:engine')
+log.error = debug('bitswap:engine:error')
 
 const Message = require('../message')
 const Wantlist = require('../wantlist')
@@ -29,7 +29,7 @@ module.exports = class Engine {
     const msg = new Message(false)
     msg.addBlock(env.block)
 
-    log('Sending block %s to %s', env.peer.toHexString(), env.block)
+    log('Sending block to %s', env.peer.toB58String(), env.block.data.toString())
 
     this.network.sendMessage(env.peer, msg, (err) => {
       if (err) {
@@ -55,6 +55,7 @@ module.exports = class Engine {
         if (!nextTask) return push(null, _.nil)
 
         this.datastore.get(nextTask.entry.key, (err, block) => {
+          log('fetched: %s', block.key.toString('hex'), block.data.toString())
           if (err || !block) {
             nextTask.done()
           } else {
@@ -78,11 +79,11 @@ module.exports = class Engine {
   }
 
   wantlistForPeer (peerId) {
-    if (!this.ledgerMap.has(peerId)) {
+    if (!this.ledgerMap.has(peerId.toB58String())) {
       return new Map()
     }
 
-    return this.ledgerMap.get(peerId).wantlist.sortedEntries()
+    return this.ledgerMap.get(peerId.toB58String()).wantlist.sortedEntries()
   }
 
   peers () {
@@ -92,7 +93,7 @@ module.exports = class Engine {
   // Handle incoming messages
   messageReceived (peerId, msg, cb) {
     if (msg.empty) {
-      log('received empty message from %s', peerId)
+      log('received empty message from %s', peerId.toB58String())
     }
 
     const ledger = this._findOrCreate(peerId)
@@ -103,7 +104,7 @@ module.exports = class Engine {
     }
 
     this._processBlocks(msg.blocks, ledger)
-
+    log('wantlist', Array.from(msg.wantlist.values()))
     async.eachSeries(
       msg.wantlist.values(),
       this._processWantlist.bind(this, ledger, peerId),
@@ -133,19 +134,20 @@ module.exports = class Engine {
 
   _processWantlist (ledger, peerId, entry, cb) {
     if (entry.cancel) {
-      log('cancel %s', entry.key)
+      log('cancel %s', entry.key.toString('hex'))
       ledger.cancelWant(entry.key)
       this.peerRequestQueue.remove(entry.key, peerId)
       async.setImmediate(() => cb())
     } else {
-      log('wants %s - %s', entry.key, entry.priority)
+      log('wants %s - %s', entry.key.toString('hex'), entry.priority)
       ledger.wants(entry.key, entry.priority)
 
       // If we already have the block, serve it
       this.datastore.has(entry.key, (err, exists) => {
         if (err) {
-          log('failed existence check %s', entry.key)
-        } else {
+          log('failed existence check %s', entry.key.toString('hex'))
+        } else if (exists) {
+          log('has want %s', entry.key.toString('hex'))
           this.peerRequestQueue.push(entry.entry, peerId)
         }
         cb()
@@ -155,7 +157,7 @@ module.exports = class Engine {
 
   _processBlocks (blocks, ledger) {
     for (let block of blocks.values()) {
-      log('got block %s %s bytes', block.key, block.data.length)
+      log('got block %s %s bytes', block.key.toString('hex'), block.data.length)
       ledger.receivedBytes(block.data.length)
 
       this.receivedBlock(block)
@@ -181,8 +183,8 @@ module.exports = class Engine {
   }
 
   peerDisconnected (peerId) {
-    // if (this.ledgerMap.has(peerId)) {
-    //   this.ledgerMap.delete(peerId)
+    // if (this.ledgerMap.has(peerId.toB58String())) {
+    //   this.ledgerMap.delete(peerId.toB58String())
     // }
     //
     // TODO: figure out how to remove all other references
@@ -190,12 +192,12 @@ module.exports = class Engine {
   }
 
   _findOrCreate (peerId) {
-    if (this.ledgerMap.has(peerId)) {
-      return this.ledgerMap.get(peerId)
+    if (this.ledgerMap.has(peerId.toB58String())) {
+      return this.ledgerMap.get(peerId.toB58String())
     }
 
     const l = new Ledger(peerId)
-    this.ledgerMap.set(peerId, l)
+    this.ledgerMap.set(peerId.toB58String(), l)
 
     return l
   }

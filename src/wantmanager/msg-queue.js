@@ -20,10 +20,12 @@ module.exports = class MsgQueue {
   }
 
   addMessage (msg) {
+    log('addMessage: %s', this.p.toB58String())
     this.queue.push(msg)
   }
 
   addEntries (entries, full) {
+    log('addEntries: %s', entries.length)
     const msg = new Message(Boolean(full))
     entries.forEach((entry) => {
       if (entry.cancel) {
@@ -37,15 +39,16 @@ module.exports = class MsgQueue {
   }
 
   doWork (wlm, cb) {
+    log('doWork: %s', this.p.toB58String())
     this.network.connectTo(this.p, (err) => {
       if (err) {
-        log('cant connect to peer %s: %s', this.p.toHexString(), err.message)
+        log.error('cant connect to peer %s: %s', this.p.toB58String(), err.message)
         return cb()
       }
 
       this.network.sendMessage(this.p, wlm, (err) => {
         if (err) {
-          log('send error: %s', err.message)
+          log.error('send error: %s', err.message)
         }
 
         cb()
