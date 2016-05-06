@@ -10,6 +10,8 @@
     "test:node": "aegir-test node",
     "lint": "aegir-lint",
     "release": "aegir-release",
+    "release-minor": "gulp release --type minor",
+    "release-major": "gulp release --type major",
     "build": "aegir-build",
     "coverage": "aegir-coverage",
     "coverage-publish": "aegir-coverage publish"
