@@ -36,7 +36,7 @@
     "chai": "^3.5.0",
     "fs-blob-store": "^5.2.1",
     "idb-plus-blob-store": "^1.1.2",
-    "ipfs-repo": "^0.7.5",
+    "ipfs-repo": "^0.8.0",
     "lodash": "^4.11.2",
     "libp2p-ipfs": "^0.3.5",
     "multiaddr": "^1.4.1",
@@ -47,7 +47,7 @@
     "rimraf": "^2.5.2"
   },
   "dependencies": {
-    "async": "^2.0.0-rc.3",
+    "async": "^2.0.0-rc.4",
     "debug": "^2.2.0",
     "heap": "^0.2.6",
     "highland": "^3.0.0-beta.1",
