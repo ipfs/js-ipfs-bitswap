@@ -296,7 +296,7 @@ module.exports = (repo) => {
         const me = PeerId.create({bits: 64})
         const bs = new Bitswap(me, libp2pMock, store)
         bs.start()
-        const b = new Block('hello')
+        const b = new Block(`hello ${Math.random()}`)
 
         let i = 0
         const finish = () => {

@@ -206,8 +206,8 @@ module.exports = class Bitwap {
         if (exists) {
           this.datastore.get(key, (err, res) => {
             if (!err && res) {
-              this.wm.cancelWants([key])
               finish(key, null, res)
+              this.wm.cancelWants([key])
               return
             }
 
