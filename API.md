@@ -25,7 +25,14 @@ Fetch a single block.
 - `keys: []Multihash`
 - `cb: Function`
 
-Fetch multiple blocks.
+Fetch multiple blocks. The `cb` is called with a result object of the form
+```js
+{
+  [key1]: {error: errorOrUndefined, block: blockOrUndefined},
+  [key2]: {error: errorOrUndefined, block: blockOrUndefined},
+  ...
+}
+```
 
 ### `unwantBlocks(keys)`
 

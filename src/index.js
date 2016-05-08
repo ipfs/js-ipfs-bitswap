@@ -138,12 +138,11 @@ module.exports = class Bitwap {
       cb(err, block)
     }
 
-    this.getBlocks([key], (errs, res) => {
-      if (errs) {
-        return done(errs[0])
-      }
+    this.getBlocks([key], (results) => {
+      const err = results[key].error
+      const block = results[key].block
 
-      done(null, res[0])
+      done(err, block)
     })
   }
 
@@ -153,8 +152,7 @@ module.exports = class Bitwap {
   }
 
   getBlocks (keys, cb) {
-    const blocks = []
-    const errs = []
+    const results = {}
     const unwantListeners = {}
     const blockListeners = {}
     const unwantEvent = (key) => `unwant:${key.toString('hex')}`
@@ -170,11 +168,11 @@ module.exports = class Bitwap {
     const addListeners = () => {
       keys.forEach((key) => {
         unwantListeners[key] = () => {
-          finish(new Error(`manual unwant: ${key.toString('hex')}`))
+          finish(key, new Error(`manual unwant: ${key.toString('hex')}`))
         }
 
         blockListeners[key] = (block) => {
-          finish(null, block)
+          finish(key, null, block)
         }
 
         this.notifications.once(unwantEvent(key), unwantListeners[key])
@@ -182,20 +180,15 @@ module.exports = class Bitwap {
       })
     }
 
-    const finish = (err, block) => {
-      if (err) {
-        errs.push(err)
-      }
-      if (block) {
-        blocks.push(block)
+    const finish = (key, err, block) => {
+      results[key] = {
+        error: err,
+        block: block
       }
 
-      if (blocks.length + errs.length === keys.length) {
+      if (Object.keys(results).length === keys.length) {
         cleanupListeners()
-        if (errs.length > 0) {
-          return cb(errs, blocks)
-        }
-        cb(null, blocks)
+        cb(results)
       }
     }
 
@@ -214,7 +207,7 @@ module.exports = class Bitwap {
           this.datastore.get(key, (err, res) => {
             if (!err && res) {
               this.wm.cancelWants([key])
-              finish(null, res)
+              finish(key, null, res)
               return
             }
 
