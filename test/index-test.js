@@ -12,6 +12,8 @@ const Bitswap = require('../src')
 
 const utils = require('./utils')
 
+const makeBlock = () => new Block(`hello world ${Math.random()}`)
+
 module.exports = (repo) => {
   const libp2pMock = {
     swarm: {
@@ -43,8 +45,8 @@ module.exports = (repo) => {
         bs.start()
 
         const other = PeerId.create({bits: 64})
-        const b1 = new Block('hello')
-        const b2 = new Block('world')
+        const b1 = makeBlock()
+        const b2 = makeBlock()
         const msg = new Message(false)
         msg.addBlock(b1)
         msg.addBlock(b2)
@@ -76,8 +78,8 @@ module.exports = (repo) => {
         bs.start()
 
         const other = PeerId.create({bits: 64})
-        const b1 = new Block('hello')
-        const b2 = new Block('world')
+        const b1 = makeBlock()
+        const b2 = makeBlock()
         const msg = new Message(false)
         msg.addEntry(b1.key, 1, false)
         msg.addEntry(b2.key, 1, false)
@@ -137,7 +139,7 @@ module.exports = (repo) => {
 
       it('block exists locally', (done) => {
         const me = PeerId.create({bits: 64})
-        const block = new Block('hello')
+        const block = makeBlock()
         store.put(block, (err) => {
           if (err) throw err
           const bs = new Bitswap(me, libp2pMock, store)
@@ -155,7 +157,7 @@ module.exports = (repo) => {
       // test fails because now the network is not properly mocked
       // what are these net.stores and mockNet.bitswaps?
       it.skip('block is retrived from peer', (done) => {
-        const block = new Block('hello world')
+        const block = makeBlock()
 
         let mockNet
         async.waterfall([
@@ -178,7 +180,7 @@ module.exports = (repo) => {
 
       it('block is added locally afterwards', (done) => {
         const me = PeerId.create({bits: 64})
-        const block = new Block('world')
+        const block = makeBlock()
         const bs = new Bitswap(me, libp2pMock, store)
         const net = utils.mockNetwork()
         bs.network = net
@@ -199,7 +201,7 @@ module.exports = (repo) => {
       it('block is sent after local add', (done) => {
         const me = PeerId.create({bits: 64})
         const other = PeerId.create({bits: 64})
-        const block = new Block('hello world local add')
+        const block = makeBlock()
         let bs1
         let bs2
 
@@ -294,7 +296,7 @@ module.exports = (repo) => {
         const me = PeerId.create({bits: 64})
         const bs = new Bitswap(me, libp2pMock, store)
         bs.start()
-        const b = new Block(`hello ${Math.random()}`)
+        const b = makeBlock()
 
         let i = 0
         const finish = () => {
