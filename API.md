@@ -25,7 +25,24 @@ Fetch a single block.
 - `keys: []Multihash`
 - `cb: Function`
 
-Fetch multiple blocks.
+Fetch multiple blocks. The `cb` is called with a result object of the form
+```js
+{
+  [key1]: {error: errorOrUndefined, block: blockOrUndefined},
+  [key2]: {error: errorOrUndefined, block: blockOrUndefined},
+  ...
+}
+```
+
+Where `key<i>` is the multihash of the block.
+
+### `unwantBlocks(keys)`
+
+- `keys: []Multihash`
+
+Cancel previously requested keys, forcefully. That means they are removed from the
+wantlist independent of how many other resources requested these keys. Callbacks
+attached to `getBlock` are errored with `Error('manual unwant: key')`.
 
 ### `cancelWants(keys)`
 

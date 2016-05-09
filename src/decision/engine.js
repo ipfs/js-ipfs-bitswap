@@ -55,7 +55,6 @@ module.exports = class Engine {
         if (!nextTask) return push(null, _.nil)
 
         this.datastore.get(nextTask.entry.key, (err, block) => {
-          log('fetched: %s', block.key.toString('hex'), block.data.toString())
           if (err || !block) {
             nextTask.done()
           } else {

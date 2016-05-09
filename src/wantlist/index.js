@@ -35,6 +35,12 @@ class Wantlist {
     this.set.delete(key.toString('hex'))
   }
 
+  removeForce (key) {
+    if (this.set.has(key)) {
+      this.set.delete(key)
+    }
+  }
+
   entries () {
     return this.set.entries()
   }
