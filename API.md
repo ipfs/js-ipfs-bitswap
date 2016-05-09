@@ -34,6 +34,8 @@ Fetch multiple blocks. The `cb` is called with a result object of the form
 }
 ```
 
+Where `key<i>` is the multihash of the block.
+
 ### `unwantBlocks(keys)`
 
 - `keys: []Multihash`

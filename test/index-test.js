@@ -202,10 +202,8 @@ module.exports = (repo) => {
         const block = new Block('hello world local add')
         let bs1
         let bs2
-        let n1
-        let n2
 
-        n1 = {
+        const n1 = {
           connectTo (id, cb) {
             let err
             if (id.toHexString() !== other.toHexString()) {
@@ -221,7 +219,7 @@ module.exports = (repo) => {
             }
           }
         }
-        n2 = {
+        const n2 = {
           connectTo (id, cb) {
             let err
             if (id.toHexString() !== me.toHexString()) {

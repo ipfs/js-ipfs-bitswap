@@ -195,8 +195,8 @@ module.exports = class Bitwap {
     addListeners()
 
     keys.forEach((key) => {
-      // Sanity check, we don't want to announce looking for blocks
-      // when we might have them ourselves
+      // We don't want to announce looking for blocks
+      // when we might have them ourselves.
       this.datastore.has(key, (err, exists) => {
         if (err) {
           log('error in datastore.has: ', err.message)
