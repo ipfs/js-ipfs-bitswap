@@ -86,7 +86,7 @@ module.exports = class Network {
       return done(err)
     }
 
-    const conn = this.libp2p.swarm.dial(peerInfo, '/ipfs/bitswap/1.0.0', (err) => {
+    const conn = this.libp2p.swarm.dial(peerInfo, PROTOCOL_IDENTIFIER, (err) => {
       if (err) {
         return done(err)
       }
