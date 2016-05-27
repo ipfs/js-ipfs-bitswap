@@ -12,7 +12,9 @@ const Block = require('ipfs-block')
 const Network = require('../../src/network')
 const Message = require('../../src/message')
 
-describe('network', () => {
+describe('network', function () {
+  this.timeout(15 * 1000)
+
   let libp2pNodeA
   let libp2pNodeB
   let peerInfoA
@@ -27,8 +29,11 @@ describe('network', () => {
     peerInfoA = new PeerInfo()
     peerInfoB = new PeerInfo()
 
-    peerInfoA.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/10100'))
-    peerInfoB.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/10500'))
+    peerInfoA.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/10100/ipfs/' + peerInfoA.id.toB58String()))
+    console.log('peerA', peerInfoA.id.toB58String())
+
+    peerInfoB.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/10500/ipfs/' + peerInfoB.id.toB58String()))
+    console.log('peerB', peerInfoB.id.toB58String())
 
     peerBookA = new PeerBook()
     peerBookB = new PeerBook()
@@ -36,9 +41,9 @@ describe('network', () => {
     peerBookA.put(peerInfoB)
     peerBookB.put(peerInfoA)
 
-    libp2pNodeA = new libp2p.Node(peerInfoA)
+    libp2pNodeA = new libp2p.Node(peerInfoA, peerBookA)
     libp2pNodeA.start(started)
-    libp2pNodeB = new libp2p.Node(peerInfoB)
+    libp2pNodeB = new libp2p.Node(peerInfoB, peerBookB)
     libp2pNodeB.start(started)
 
     function started () {
@@ -50,8 +55,8 @@ describe('network', () => {
 
   after((done) => {
     let counter = 0
-    libp2pNodeA.swarm.close(stopped)
-    libp2pNodeB.swarm.close(stopped)
+    libp2pNodeA.stop(stopped)
+    libp2pNodeB.stop(stopped)
 
     function stopped () {
       if (++counter === 2) {
@@ -109,7 +114,7 @@ describe('network', () => {
       }
     }
 
-    libp2pNodeA.swarm.dial(peerInfoB, (err) => {
+    libp2pNodeA.dialByPeerInfo(peerInfoB, (err) => {
       expect(err).to.not.exist
     })
 
@@ -145,13 +150,12 @@ describe('network', () => {
       expect(err).to.not.exist
     }
 
-    const conn = libp2pNodeA.swarm.dial(peerInfoB, '/ipfs/bitswap/1.0.0', (err) => {
+    libp2pNodeA.dialByPeerInfo(peerInfoB, '/ipfs/bitswap/1.0.0', (err, conn) => {
+      const msgEncoded = msg.toProto()
+      conn.write(msgEncoded)
+      conn.end()
       expect(err).to.not.exist
     })
-
-    const msgEncoded = msg.toProto()
-    conn.write(msgEncoded)
-    conn.end()
   })
 
   it('sendMessage', (done) => {

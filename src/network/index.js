@@ -22,7 +22,7 @@ module.exports = class Network {
     this._onPeerMux = this._onPeerMux.bind(this)
     this._onPeerMuxClosed = this._onPeerMuxClosed.bind(this)
 
-    this.libp2p.swarm.handle(PROTOCOL_IDENTIFIER, this._onConnection)
+    this.libp2p.handle(PROTOCOL_IDENTIFIER, this._onConnection)
 
     this.libp2p.swarm.on('peer-mux-established', this._onPeerMux)
 
@@ -30,7 +30,7 @@ module.exports = class Network {
   }
 
   stop () {
-    this.libp2p.swarm.unhandle(PROTOCOL_IDENTIFIER)
+    this.libp2p.unhandle(PROTOCOL_IDENTIFIER)
     this.libp2p.swarm.removeEventListener('peer-mux-established', this._onPeerMux)
 
     this.libp2p.swarm.removeEventListener('peer-mux-closed', this._onPeerMuxClosed)
@@ -86,7 +86,7 @@ module.exports = class Network {
       return done(err)
     }
 
-    const conn = this.libp2p.swarm.dial(peerInfo, PROTOCOL_IDENTIFIER, (err) => {
+    this.libp2p.dialByPeerInfo(peerInfo, PROTOCOL_IDENTIFIER, (err, conn) => {
       if (err) {
         return done(err)
       }

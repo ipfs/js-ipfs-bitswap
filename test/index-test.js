@@ -16,8 +16,8 @@ const makeBlock = () => new Block(`hello world ${Math.random()}`)
 
 module.exports = (repo) => {
   const libp2pMock = {
+    handle: function () {},
     swarm: {
-      handle: function () {},
       muxedConns: {},
       on: function () {}
     }
