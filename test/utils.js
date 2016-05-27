@@ -101,7 +101,7 @@ exports.genBitswapNetwork = (n, callback) => {
   _.range(n).forEach((i) => {
     const p = new PeerInfo()
     const mh1 = multiaddr('/ip4/127.0.0.1/tcp/' + (basePort + i))
-    const mh2 = multiaddr('/ip4/127.0.0.1/tcp/' + (basePort + i + 2000) + '/websockets')
+    const mh2 = multiaddr('/ip4/127.0.0.1/tcp/' + (basePort + i + 2000) + '/ws')
 
     p.multiaddr.add(mh1)
     p.multiaddr.add(mh2)

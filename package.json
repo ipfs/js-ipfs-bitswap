@@ -34,19 +34,19 @@
   "homepage": "https://github.com/ipfs/js-ipfs-bitswap#readme",
   "devDependencies": {
     "abstract-blob-store": "^3.2.0",
-    "aegir": "^3.0.1",
+    "aegir": "^3.1.0",
     "buffer-loader": "0.0.1",
     "chai": "^3.5.0",
     "fs-blob-store": "^5.2.1",
     "idb-plus-blob-store": "^1.1.2",
     "ipfs-repo": "^0.8.0",
-    "libp2p-ipfs": "^0.3.6",
+    "libp2p-ipfs": "^0.9.0",
     "lodash": "^4.11.2",
-    "multiaddr": "^1.4.1",
+    "multiaddr": "^2.0.2",
     "ncp": "^2.0.0",
-    "peer-book": "^0.1.0",
-    "peer-id": "^0.6.6",
-    "peer-info": "^0.6.2",
+    "peer-book": "^0.3.0",
+    "peer-id": "^0.7.0",
+    "peer-info": "^0.7.0",
     "rimraf": "^2.5.2"
   },
   "dependencies": {
@@ -58,15 +58,6 @@
     "lodash.isequal": "^4.1.4",
     "lodash.isundefined": "^3.0.1",
     "protocol-buffers": "^3.1.6"
-  },
-  "aegir": {
-    "webpack": {
-      "resolve": {
-        "alias": {
-          "node-forge": "../../../node_modules/peer-id/vendor/forge.bundle.js"
-        }
-      }
-    }
   },
   "contributors": [
     "David Dias <daviddias.p@gmail.com>",
