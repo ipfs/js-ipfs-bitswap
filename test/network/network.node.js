@@ -30,10 +30,7 @@ describe('network', function () {
     peerInfoB = new PeerInfo()
 
     peerInfoA.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/10100/ipfs/' + peerInfoA.id.toB58String()))
-    console.log('peerA', peerInfoA.id.toB58String())
-
     peerInfoB.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/10500/ipfs/' + peerInfoB.id.toB58String()))
-    console.log('peerB', peerInfoB.id.toB58String())
 
     peerBookA = new PeerBook()
     peerBookB = new PeerBook()
