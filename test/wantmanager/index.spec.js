@@ -18,14 +18,14 @@ describe('Wantmanager', () => {
     const network = mockNetwork(6, (calls) => {
       expect(calls.connects).to.have.length(6)
       const m1 = new Message(true)
-      m1.addEntry('hello', cs.kMaxPriority)
-      m1.addEntry('world', cs.kMaxPriority - 1)
+      m1.addEntry(new Buffer('hello'), cs.kMaxPriority)
+      m1.addEntry(new Buffer('world'), cs.kMaxPriority - 1)
 
       const m2 = new Message(false)
-      m2.cancel('world')
+      m2.cancel(new Buffer('world'))
 
       const m3 = new Message(false)
-      m3.addEntry('foo', cs.kMaxPriority)
+      m3.addEntry(new Buffer('foo'), cs.kMaxPriority)
 
       const msgs = [m1, m1, m2, m2, m3, m3]
 
@@ -41,15 +41,15 @@ describe('Wantmanager', () => {
     wm = new Wantmanager(network)
 
     wm.run()
-    wm.wantBlocks(['hello', 'world'])
+    wm.wantBlocks([new Buffer('hello'), new Buffer('world')])
 
     wm.connected(peer1)
     wm.connected(peer2)
 
     setTimeout(() => {
-      wm.cancelWants(['world'])
+      wm.cancelWants([new Buffer('world')])
       setTimeout(() => {
-        wm.wantBlocks(['foo'])
+        wm.wantBlocks([new Buffer('foo')])
 
         wm.disconnected(peer1)
         wm.disconnected(peer2)

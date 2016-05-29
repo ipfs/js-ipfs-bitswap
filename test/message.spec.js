@@ -6,6 +6,7 @@ const fs = require('fs')
 const Block = require('ipfs-block')
 const protobuf = require('protocol-buffers')
 const path = require('path')
+const mh = require('multihashes')
 const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../src/message/message.proto')))
 
 const BitswapMessage = require('../src/message')
@@ -20,7 +21,7 @@ describe('BitswapMessage', () => {
     expect(
       pbm.Message.decode(m.toProto()).wantlist.entries[0]
     ).to.be.eql({
-      block: block.key.toString('hex'),
+      block: mh.toB58String(block.key),
       priority: 1,
       cancel: false
     })
@@ -42,7 +43,7 @@ describe('BitswapMessage', () => {
     const raw = pbm.Message.encode({
       wantlist: {
         entries: [{
-          block: new Buffer('hello').toString('hex'),
+          block: mh.toB58String(new Buffer('hello')),
           cancel: false
         }],
         full: true
@@ -60,7 +61,7 @@ describe('BitswapMessage', () => {
     expect(
       Array.from(protoMessage.wantlist)
     ).to.be.eql([
-      [new Buffer('hello').toString('hex'), new BitswapMessage.Entry(new Buffer('hello'), 0, false)]
+      [mh.toB58String(new Buffer('hello')), new BitswapMessage.Entry(new Buffer('hello'), 0, false)]
     ])
 
     const b1 = new Block('hello')
@@ -68,8 +69,8 @@ describe('BitswapMessage', () => {
     expect(
       Array.from(protoMessage.blocks)
     ).to.be.eql([
-      [b1.key.toString('hex'), b1],
-      [b2.key.toString('hex'), b2]
+      [mh.toB58String(b1.key), b1],
+      [mh.toB58String(b2.key), b2]
     ])
   })
 
@@ -138,24 +139,25 @@ describe('BitswapMessage', () => {
 
   describe('Entry', () => {
     it('exposes the wantlist entry properties', () => {
-      const entry = new BitswapMessage.Entry('hello', 5, false)
+      const entry = new BitswapMessage.Entry(new Buffer('hello'), 5, false)
 
-      expect(entry).to.have.property('key', 'hello')
+      expect(entry).to.have.property('key')
       expect(entry).to.have.property('priority', 5)
 
       expect(entry).to.have.property('cancel', false)
     })
 
     it('allows setting properties on the wantlist entry', () => {
-      const entry = new BitswapMessage.Entry('hello', 5, false)
+      const entry = new BitswapMessage.Entry(new Buffer('hello'), 5, false)
 
-      expect(entry.entry).to.have.property('key', 'hello')
+      expect(entry.entry).to.have.property('key')
       expect(entry.entry).to.have.property('priority', 5)
 
-      entry.key = 'world'
+      entry.key = new Buffer('world')
       entry.priority = 2
 
-      expect(entry.entry).to.have.property('key', 'world')
+      expect(entry.entry).to.have.property('key')
+      expect(entry.entry.key.equals(new Buffer('world')))
       expect(entry.entry).to.have.property('priority', 2)
     })
   })

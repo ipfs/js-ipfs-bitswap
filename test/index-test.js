@@ -6,6 +6,8 @@ const _ = require('lodash')
 const expect = require('chai').expect
 const PeerId = require('peer-id')
 const Block = require('ipfs-block')
+const mh = require('multihashes')
+const PeerBook = require('peer-book')
 
 const Message = require('../src/message')
 const Bitswap = require('../src')
@@ -19,7 +21,8 @@ module.exports = (repo) => {
     handle: function () {},
     swarm: {
       muxedConns: {},
-      on: function () {}
+      on () {},
+      setMaxListeners () {}
     }
   }
 
@@ -41,7 +44,8 @@ module.exports = (repo) => {
 
       it('simple block message', (done) => {
         const me = PeerId.create({bits: 64})
-        const bs = new Bitswap(me, libp2pMock, store)
+        const book = new PeerBook()
+        const bs = new Bitswap(me, libp2pMock, store, book)
         bs.start()
 
         const other = PeerId.create({bits: 64})
@@ -74,7 +78,8 @@ module.exports = (repo) => {
 
       it('simple want message', (done) => {
         const me = PeerId.create({bits: 64})
-        const bs = new Bitswap(me, libp2pMock, store)
+        const book = new PeerBook()
+        const bs = new Bitswap(me, libp2pMock, store, book)
         bs.start()
 
         const other = PeerId.create({bits: 64})
@@ -91,8 +96,8 @@ module.exports = (repo) => {
           expect(bs.dupBlocksRecvd).to.be.eql(0)
 
           const wl = bs.wantlistForPeer(other)
-          expect(wl.has(b1.key.toString('hex'))).to.be.eql(true)
-          expect(wl.has(b2.key.toString('hex'))).to.be.eql(true)
+          expect(wl.has(mh.toB58String(b1.key))).to.be.eql(true)
+          expect(wl.has(mh.toB58String(b2.key))).to.be.eql(true)
 
           done()
         })
@@ -100,7 +105,8 @@ module.exports = (repo) => {
 
       it('multi peer', (done) => {
         const me = PeerId.create({bits: 64})
-        const bs = new Bitswap(me, libp2pMock, store)
+        const book = new PeerBook()
+        const bs = new Bitswap(me, libp2pMock, store, book)
         bs.start()
 
         const others = _.range(5).map(() => PeerId.create({bits: 64}))
@@ -122,6 +128,7 @@ module.exports = (repo) => {
         }, done)
       })
     })
+
     describe('getBlock', () => {
       let store
 
@@ -142,7 +149,8 @@ module.exports = (repo) => {
         const block = makeBlock()
         store.put(block, (err) => {
           if (err) throw err
-          const bs = new Bitswap(me, libp2pMock, store)
+          const book = new PeerBook()
+          const bs = new Bitswap(me, libp2pMock, store, book)
 
           bs.getBlock(block.key, (err, res) => {
             if (err) throw err
@@ -181,7 +189,8 @@ module.exports = (repo) => {
       it('block is added locally afterwards', (done) => {
         const me = PeerId.create({bits: 64})
         const block = makeBlock()
-        const bs = new Bitswap(me, libp2pMock, store)
+        const book = new PeerBook()
+        const bs = new Bitswap(me, libp2pMock, store, book)
         const net = utils.mockNetwork()
         bs.network = net
         bs.wm.network = net
@@ -219,7 +228,9 @@ module.exports = (repo) => {
             } else {
               async.setImmediate(() => cb(new Error('unkown peer')))
             }
-          }
+          },
+          start () {},
+          stop () {}
         }
         const n2 = {
           connectTo (id, cb) {
@@ -235,10 +246,13 @@ module.exports = (repo) => {
             } else {
               async.setImmediate(() => cb(new Error('unkown peer')))
             }
-          }
+          },
+          start () {},
+          stop () {}
         }
-        bs1 = new Bitswap(me, libp2pMock, store)
+        bs1 = new Bitswap(me, libp2pMock, store, new PeerBook())
         utils.applyNetwork(bs1, n1)
+        bs1.start()
 
         let store2
 
@@ -246,8 +260,9 @@ module.exports = (repo) => {
           (cb) => repo.create('world', cb),
           (repo, cb) => {
             store2 = repo.datastore
-            bs2 = new Bitswap(other, libp2pMock, store2)
+            bs2 = new Bitswap(other, libp2pMock, store2, new PeerBook())
             utils.applyNetwork(bs2, n2)
+            bs2.start()
             bs1._onPeerConnected(other)
             bs2._onPeerConnected(me)
             bs1.getBlock(block.key, cb)
@@ -267,7 +282,7 @@ module.exports = (repo) => {
     describe('stat', () => {
       it('has initial stats', () => {
         const me = PeerId.create({bits: 64})
-        const bs = new Bitswap(me, libp2pMock, {})
+        const bs = new Bitswap(me, libp2pMock, {}, new PeerBook())
 
         const stats = bs.stat()
         expect(stats).to.have.property('wantlist')
@@ -294,7 +309,7 @@ module.exports = (repo) => {
 
       it('removes blocks that are wanted multiple times', (done) => {
         const me = PeerId.create({bits: 64})
-        const bs = new Bitswap(me, libp2pMock, store)
+        const bs = new Bitswap(me, libp2pMock, store, new PeerBook())
         bs.start()
         const b = makeBlock()
 
@@ -307,11 +322,11 @@ module.exports = (repo) => {
         }
 
         bs.getBlock(b.key, (err, res) => {
-          expect(err.message).to.be.eql(`manual unwant: ${b.key.toString('hex')}`)
+          expect(err.message).to.be.eql(`manual unwant: ${mh.toB58String(b.key)}`)
           finish()
         })
         bs.getBlock(b.key, (err, res) => {
-          expect(err.message).to.be.eql(`manual unwant: ${b.key.toString('hex')}`)
+          expect(err.message).to.be.eql(`manual unwant: ${mh.toB58String(b.key)}`)
           finish()
         })
 

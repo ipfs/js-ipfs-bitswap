@@ -1,6 +1,12 @@
 'use strict'
 
+const mh = require('multihashes')
+const debug = require('debug')
+const assert = require('assert')
+
 const PriorityQueue = require('./pq')
+
+const log = debug('bitswap:peer-request-queue')
 
 class PeerRequestTask {
   constructor (entry, target, done) {
@@ -13,10 +19,16 @@ class PeerRequestTask {
   get key () {
     return taskKey(this.target, this.entry.key)
   }
+
+  get [Symbol.toStringTag] () {
+    return `PeerRequestTask <target: ${this.target.toB58String()}, entry: ${this.entry.toString()}>`
+  }
 }
 
 class ActivePartner {
-  constructor () {
+  constructor (id) {
+    this.id = id
+
     // The number of blocks this peer is currently being sent.
     this.active = 0
 
@@ -30,17 +42,18 @@ class ActivePartner {
   }
 
   startTask (key) {
-    this.activeBlocks.set(key, {})
+    this.activeBlocks.set(mh.toB58String(key), 1)
     this.active ++
   }
 
   taskDone (key) {
-    this.activeBlocks.delete(key)
+    const k = mh.toB58String(key)
+    assert(this.activeBlocks.has(k), 'finishing non existent task')
+
+    this.activeBlocks.delete()
     this.active --
 
-    if (this.active < 0) {
-      throw new Error('more tasks finished than started')
-    }
+    assert(this.active >= 0, 'more tasks finished than started')
   }
 }
 
@@ -53,21 +66,24 @@ module.exports = class PeerRequestQueue {
 
   // Add a new entry to the queue
   push (entry, to) {
+    log('push, to: %s', to.toB58String())
     let partner = this.partners.get(to.toB58String())
 
     if (!partner) {
-      partner = new ActivePartner()
+      partner = new ActivePartner(to)
       this.pQueue.push(partner)
       this.partners.set(to.toB58String(), partner)
     }
 
     if (partner.activeBlocks.has(entry.key)) {
+      log('has activeBlocks', entry.key)
       return
     }
 
     let task = this.taskMap.get(taskKey(to, entry.key))
 
     if (task) {
+      log('updating task', task.toString())
       task.entry.priority = entry.priority
       partner.taskQueue.update(task)
       return
@@ -79,6 +95,7 @@ module.exports = class PeerRequestQueue {
     })
 
     partner.taskQueue.push(task)
+    log('taskMap.set', task.key, task.toString())
     this.taskMap.set(task.key, task)
     partner.requests ++
     partner.taskQueue.update(task)
@@ -86,6 +103,8 @@ module.exports = class PeerRequestQueue {
 
   // Get the task with the hightest priority from the queue
   pop () {
+    // log('pop, empty? %s', this.pQueue.isEmpty())
+    // log('partners', Array.from(this.partners.values()).map((val) => [val.requests, val.taskQueue.size()]))
     if (this.pQueue.isEmpty()) return
 
     let partner = this.pQueue.pop()
@@ -103,7 +122,7 @@ module.exports = class PeerRequestQueue {
       partner.requests --
       break
     }
-
+    // log('pop, out', partner.taskQueue.isEmpty(), out)
     this.pQueue.push(partner)
     return out
   }
@@ -120,11 +139,15 @@ module.exports = class PeerRequestQueue {
       // having canceled a block, we now account for that in the given partner
       this.partners.get(peerId.toB58String()).requests --
     }
+
+    log('taskMap', Array.from(this.taskMap.values()).map((v) => {
+      return v.toString()
+    }))
   }
 }
 
 function taskKey (peerId, key) {
-  return `${peerId.toB58String()}:${key.toString('hex')}`
+  return `${peerId.toB58String()}:${mh.toB58String(key)}`
 }
 
 function partnerCompare (a, b) {

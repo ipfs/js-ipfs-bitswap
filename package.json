@@ -40,23 +40,26 @@
     "fs-blob-store": "^5.2.1",
     "idb-plus-blob-store": "^1.1.2",
     "ipfs-repo": "^0.8.0",
-    "libp2p-ipfs": "^0.10.0",
-    "lodash": "^4.11.2",
+    "libp2p-ipfs": "^0.11.0",
+    "lodash": "^4.13.1",
     "multiaddr": "^2.0.2",
     "ncp": "^2.0.0",
     "peer-book": "^0.3.0",
     "peer-id": "^0.7.0",
     "peer-info": "^0.7.0",
-    "rimraf": "^2.5.2"
+    "rimraf": "^2.5.2",
+    "safe-buffer": "^5.0.1"
   },
   "dependencies": {
-    "async": "^2.0.0-rc.4",
+    "async": "^2.0.0-rc.5",
+    "bl": "^1.1.2",
     "debug": "^2.2.0",
     "heap": "^0.2.6",
     "highland": "^3.0.0-beta.1",
     "ipfs-block": "^0.3.0",
-    "lodash.isequal": "^4.1.4",
+    "lodash.isequalwith": "^4.2.0",
     "lodash.isundefined": "^3.0.1",
+    "multihashes": "^0.2.2",
     "protocol-buffers": "^3.1.6"
   },
   "contributors": [
