@@ -5,6 +5,7 @@ const async = require('async')
 const debug = require('debug')
 
 const Message = require('../message')
+const cs = require('../constants')
 const log = debug('bitswap:network')
 
 const PROTOCOL_IDENTIFIER = '/ipfs/bitswap/1.0.0'
@@ -14,6 +15,9 @@ module.exports = class Network {
     this.libp2p = libp2p
     this.peerBook = peerBook
     this.bitswap = bitswap
+
+    // increase event listener max
+    this.libp2p.swarm.setMaxListeners(cs.maxListeners)
   }
 
   start () {
@@ -27,13 +31,19 @@ module.exports = class Network {
     this.libp2p.swarm.on('peer-mux-established', this._onPeerMux)
 
     this.libp2p.swarm.on('peer-mux-closed', this._onPeerMuxClosed)
+
+    // All existing connections are like new ones for us
+    const pKeys = Object.keys(this.peerBook.getAll())
+    pKeys.forEach((k) => {
+      this._onPeerMux(this.peerBook.getByB58String(k))
+    })
   }
 
   stop () {
     this.libp2p.unhandle(PROTOCOL_IDENTIFIER)
-    this.libp2p.swarm.removeEventListener('peer-mux-established', this._onPeerMux)
+    this.libp2p.swarm.removeListener('peer-mux-established', this._onPeerMux)
 
-    this.libp2p.swarm.removeEventListener('peer-mux-closed', this._onPeerMuxClosed)
+    this.libp2p.swarm.removeListener('peer-mux-closed', this._onPeerMuxClosed)
   }
 
   _onConnection (conn) {
@@ -50,6 +60,11 @@ module.exports = class Network {
       }
       this.bitswap._receiveMessage(conn.peerId, msg)
     }))
+
+    conn.on('error', (err) => {
+      this.bitswap._receiveError(err)
+      conn.end()
+    })
   }
 
   _onPeerMux (peerInfo) {

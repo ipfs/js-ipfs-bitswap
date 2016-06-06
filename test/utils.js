@@ -102,11 +102,11 @@ exports.genBitswapNetwork = (n, callback) => {
     const p = new PeerInfo()
     const mh1 = multiaddr('/ip4/127.0.0.1/tcp/' + (basePort + i) +
         '/ipfs/' + p.id.toB58String())
-    const mh2 = multiaddr('/ip4/127.0.0.1/tcp/' + (basePort + i + 2000) + '/ws' +
-        '/ipfs/' + p.id.toB58String())
-
     p.multiaddr.add(mh1)
-    p.multiaddr.add(mh2)
+
+    // const mh2 = multiaddr('/ip4/127.0.0.1/tcp/' + (basePort + i + 2000) + '/ws' +
+    //                       '/ipfs/' + p.id.toB58String())
+    // p.multiaddr.add(mh2)
 
     const l = new libp2p.Node(p)
     netArray.push({peerInfo: p, libp2p: l})
@@ -144,7 +144,7 @@ exports.genBitswapNetwork = (n, callback) => {
   // create every BitSwap
   function createBitswaps () {
     netArray.forEach((net) => {
-      net.bitswap = new Bitswap(net.peerInfo, net.libp2p, net.repo, net.peerBook)
+      net.bitswap = new Bitswap(net.peerInfo, net.libp2p, net.repo.datastore, net.peerBook)
     })
     establishLinks()
   }
@@ -177,4 +177,3 @@ exports.genBitswapNetwork = (n, callback) => {
     callback(null, netArray)
   }
 }
-

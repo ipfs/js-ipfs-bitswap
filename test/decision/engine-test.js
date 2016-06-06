@@ -16,10 +16,12 @@ module.exports = (repo) => {
   function newEngine (id, done) {
     repo.create(id, (err, repo) => {
       if (err) return done(err)
+      const engine = new Engine(repo.datastore, mockNetwork())
+      engine.start()
 
       done(null, {
         peer: PeerId.create({bits: 64}),
-        engine: new Engine(repo.datastore, mockNetwork())
+        engine
       })
     })
   }
@@ -170,6 +172,7 @@ module.exports = (repo) => {
               })
 
               const e = new Engine(repo.datastore, network)
+              e.start()
               const partner = PeerId.create({bits: 64})
               async.series([
                 (c) => partnerWants(e, set, partner, c),

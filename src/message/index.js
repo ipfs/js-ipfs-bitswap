@@ -4,7 +4,9 @@ const protobuf = require('protocol-buffers')
 const fs = require('fs')
 const Block = require('ipfs-block')
 const path = require('path')
-const isEqual = require('lodash.isequal')
+const isEqualWith = require('lodash.isequalwith')
+const mh = require('multihashes')
+const assert = require('assert')
 
 const pbm = protobuf(fs.readFileSync(path.join(__dirname, 'message.proto')))
 const Entry = require('./entry')
@@ -21,23 +23,25 @@ class BitswapMessage {
   }
 
   addEntry (key, priority, cancel) {
-    const e = this.wantlist.get(key.toString('hex'))
+    assert(Buffer.isBuffer(key), 'key must be a buffer')
+
+    const e = this.wantlist.get(mh.toB58String(key))
 
     if (e) {
       e.priority = priority
       e.cancel = Boolean(cancel)
     } else {
-      this.wantlist.set(key.toString('hex'), new Entry(key, priority, cancel))
+      this.wantlist.set(mh.toB58String(key), new Entry(key, priority, cancel))
     }
   }
 
   addBlock (block) {
-    this.blocks.set(block.key.toString('hex'), block)
+    this.blocks.set(mh.toB58String(block.key), block)
   }
 
   cancel (key) {
-    this.wantlist.delete(key.toString('hex'))
-    this.addEntry(key.toString('hex'), 0, true)
+    this.wantlist.delete(mh.toB58String(key))
+    this.addEntry(key, 0, true)
   }
 
   toProto () {
@@ -45,7 +49,7 @@ class BitswapMessage {
       wantlist: {
         entries: Array.from(this.wantlist.values()).map((e) => {
           return {
-            block: e.key.toString('hex'),
+            block: mh.toB58String(e.key),
             priority: Number(e.priority),
             cancel: Boolean(e.cancel)
           }
@@ -57,14 +61,26 @@ class BitswapMessage {
   }
 
   equals (other) {
+    const cmp = (a, b) => {
+      if (a.equals && typeof a.equals === 'function') {
+        return a.equals(b)
+      }
+    }
+
     if (this.full !== other.full ||
-        !isEqual(this.wantlist, other.wantlist) ||
-        !isEqual(this.blocks, other.blocks)
+        !isEqualWith(this.wantlist, other.wantlist, cmp) ||
+        !isEqualWith(this.blocks, other.blocks, cmp)
        ) {
       return false
     }
 
     return true
+  }
+
+  get [Symbol.toStringTag] () {
+    const list = Array.from(this.wantlist.keys())
+    const blocks = Array.from(this.blocks.keys())
+    return `BitswapMessage <full: ${this.full}, list: ${list}, blocks: ${blocks}>`
   }
 }
 
@@ -73,7 +89,7 @@ BitswapMessage.fromProto = (raw) => {
   const m = new BitswapMessage(dec.wantlist.full)
 
   dec.wantlist.entries.forEach((e) => {
-    m.addEntry(new Buffer(e.block, 'hex'), e.priority, e.cancel)
+    m.addEntry(mh.fromB58String(e.block), e.priority, e.cancel)
   })
   dec.blocks.forEach((b) => m.addBlock(new Block(b)))
 

@@ -11,8 +11,8 @@ describe('MsgQueue', () => {
   it('connects and sends messages', (done) => {
     const id = PeerId.create({bits: 64})
     const msg = new Message(true)
-    msg.addEntry('hello world', 3)
-    msg.addEntry('foo bar', 1)
+    msg.addEntry(new Buffer('hello world'), 3)
+    msg.addEntry(new Buffer('foo bar'), 1)
 
     const messages = []
     const connects = []
@@ -27,11 +27,11 @@ describe('MsgQueue', () => {
         ])
 
         const m1 = new Message(false)
-        m1.addEntry('hello', 1)
-        m1.addEntry('world', 2)
+        m1.addEntry(new Buffer('hello'), 1)
+        m1.addEntry(new Buffer('world'), 2)
         const m2 = new Message(false)
-        m2.cancel('foo')
-        m2.cancel('bar')
+        m2.cancel(new Buffer('foo'))
+        m2.cancel(new Buffer('bar'))
 
         expect(
           messages
@@ -61,13 +61,13 @@ describe('MsgQueue', () => {
     expect(mq.refcnt).to.be.eql(1)
 
     const batch1 = [
-      new Message.Entry('hello', 1, false),
-      new Message.Entry('world', 2, false)
+      new Message.Entry(new Buffer('hello'), 1, false),
+      new Message.Entry(new Buffer('world'), 2, false)
     ]
 
     const batch2 = [
-      new Message.Entry('foo', 1, true),
-      new Message.Entry('bar', 2, true)
+      new Message.Entry(new Buffer('foo'), 1, true),
+      new Message.Entry(new Buffer('bar'), 2, true)
     ]
 
     mq.run()
