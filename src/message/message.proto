@@ -5,7 +5,7 @@ message Message {
   message Wantlist {
 
     message Entry {
-      optional string block = 1; // the block key
+      optional bytes block = 1; // the block key
       optional int32 priority = 2; // the priority (normalized). default to 1
       optional bool cancel = 3;  // whether this revokes an entry
     }
