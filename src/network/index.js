@@ -3,6 +3,7 @@
 const bl = require('bl')
 const async = require('async')
 const debug = require('debug')
+const lps = require('length-prefixed-stream')
 
 const Message = require('../message')
 const cs = require('../constants')
@@ -47,7 +48,8 @@ module.exports = class Network {
   }
 
   _onConnection (conn) {
-    conn.pipe(bl((err, data) => {
+    const decode = lps.decode()
+    conn.pipe(decode).pipe(bl((err, data) => {
       conn.end()
       if (err) {
         return this.bitswap._receiveError(err)
@@ -106,10 +108,13 @@ module.exports = class Network {
         return done(err)
       }
 
-      conn.write(msg.toProto())
       conn.once('error', (err) => done(err))
       conn.once('finish', done)
-      conn.end()
+
+      const encode = lps.encode()
+      encode.pipe(conn)
+      encode.write(msg.toProto())
+      encode.end()
     })
   }
 }

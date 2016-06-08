@@ -8,6 +8,7 @@ const multiaddr = require('multiaddr')
 const expect = require('chai').expect
 const PeerBook = require('peer-book')
 const Block = require('ipfs-block')
+const lps = require('length-prefixed-stream')
 
 const Network = require('../../src/network')
 const Message = require('../../src/message')
@@ -148,10 +149,13 @@ describe('network', function () {
     }
 
     libp2pNodeA.dialByPeerInfo(peerInfoB, '/ipfs/bitswap/1.0.0', (err, conn) => {
-      const msgEncoded = msg.toProto()
-      conn.write(msgEncoded)
-      conn.end()
       expect(err).to.not.exist
+
+      const msgEncoded = msg.toProto()
+      const enc = lps.encode()
+      enc.pipe(conn)
+      enc.write(msgEncoded)
+      enc.end()
     })
   })
 

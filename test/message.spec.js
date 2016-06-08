@@ -12,6 +12,25 @@ const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../src/message/messag
 const BitswapMessage = require('../src/message')
 
 describe('BitswapMessage', () => {
+  it('go interop', () => {
+    const goEncoded = new Buffer('CioKKAoiEiAs8k26X7CjDiboOyrFueKeGxYeXB+nQl5zBDNik4uYJBAKGAA=', 'base64')
+
+    const m = new BitswapMessage(false)
+    m.addEntry(mh.fromB58String('QmRN6wdp1S2A5EtjW9A3M1vKSBuQQGcgvuhoMUoEz4iiT5'), 10)
+
+    expect(
+      BitswapMessage.fromProto(goEncoded)
+    ).to.be.eql(
+      m
+    )
+
+    expect(
+      m.toProto()
+    ).to.be.eql(
+      goEncoded
+    )
+  })
+
   it('append wanted', () => {
     const str = 'foo'
     const block = new Block(str)
@@ -21,7 +40,7 @@ describe('BitswapMessage', () => {
     expect(
       pbm.Message.decode(m.toProto()).wantlist.entries[0]
     ).to.be.eql({
-      block: mh.toB58String(block.key),
+      block: block.key,
       priority: 1,
       cancel: false
     })
@@ -43,7 +62,7 @@ describe('BitswapMessage', () => {
     const raw = pbm.Message.encode({
       wantlist: {
         entries: [{
-          block: mh.toB58String(new Buffer('hello')),
+          block: new Buffer('hello'),
           cancel: false
         }],
         full: true

@@ -45,19 +45,25 @@ class BitswapMessage {
   }
 
   toProto () {
-    return pbm.Message.encode({
+    const msg = {
       wantlist: {
         entries: Array.from(this.wantlist.values()).map((e) => {
           return {
-            block: mh.toB58String(e.key),
+            block: e.key,
             priority: Number(e.priority),
             cancel: Boolean(e.cancel)
           }
-        }),
-        full: this.full
+        })
       },
-      blocks: Array.from(this.blocks.values()).map((b) => b.data)
-    })
+      blocks: Array.from(this.blocks.values())
+        .map((b) => b.data)
+    }
+
+    if (this.full) {
+      msg.wantlist.full = true
+    }
+
+    return pbm.Message.encode(msg)
   }
 
   equals (other) {
@@ -89,7 +95,7 @@ BitswapMessage.fromProto = (raw) => {
   const m = new BitswapMessage(dec.wantlist.full)
 
   dec.wantlist.entries.forEach((e) => {
-    m.addEntry(mh.fromB58String(e.block), e.priority, e.cancel)
+    m.addEntry(e.block, e.priority, e.cancel)
   })
   dec.blocks.forEach((b) => m.addBlock(new Block(b)))
 

@@ -57,6 +57,7 @@
     "heap": "^0.2.6",
     "highland": "^3.0.0-beta.1",
     "ipfs-block": "^0.3.0",
+    "length-prefixed-stream": "^1.5.0",
     "lodash.isequalwith": "^4.2.0",
     "lodash.isundefined": "^3.0.1",
     "multihashes": "^0.2.2",
