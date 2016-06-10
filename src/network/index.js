@@ -9,7 +9,9 @@ const Message = require('../message')
 const cs = require('../constants')
 const log = debug('bitswap:network')
 
-const PROTOCOL_IDENTIFIER = '/ipfs/bitswap/1.0.0'
+// Go does not yet support /1.0.0
+// const PROTOCOL_IDENTIFIER = '/ipfs/bitswap/1.0.0'
+const PROTOCOL_IDENTIFIER = '/ipfs/bitswap'
 
 module.exports = class Network {
   constructor (libp2p, peerBook, bitswap) {
