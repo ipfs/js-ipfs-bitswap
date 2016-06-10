@@ -190,6 +190,7 @@ module.exports = class Bitwap {
       })
     }
 
+    let finished = false
     const finish = (key, err, block) => {
       results[key] = {
         error: err,
@@ -198,7 +199,11 @@ module.exports = class Bitwap {
 
       if (Object.keys(results).length === keys.length) {
         cleanupListeners()
-        cb(results)
+
+        if (!finished) {
+          cb(results)
+        }
+        finished = true
       }
     }
 
