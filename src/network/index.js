@@ -62,7 +62,12 @@ module.exports = class Network {
       } catch (err) {
         return this.bitswap._receiveError(err)
       }
-      this.bitswap._receiveMessage(conn.peerId, msg)
+      conn.getPeerInfo((err, peerInfo) => {
+        if (err) {
+          return this.bitswap._receiveError(err)
+        }
+        this.bitswap._receiveMessage(peerInfo.id, msg)
+      })
     }))
 
     conn.on('error', (err) => {
