@@ -1,9 +1,8 @@
 'use strict'
 
-const bl = require('bl')
-const async = require('async')
 const debug = require('debug')
-const lps = require('length-prefixed-stream')
+const lp = require('pull-length-prefixed')
+const pull = require('pull-stream')
 
 const Message = require('../message')
 const cs = require('../constants')
@@ -50,30 +49,28 @@ module.exports = class Network {
   }
 
   _onConnection (conn) {
-    const decode = lps.decode()
-    conn.pipe(decode).pipe(bl((err, data) => {
-      conn.end()
-      if (err) {
-        return this.bitswap._receiveError(err)
-      }
-      let msg
-      try {
-        msg = Message.fromProto(data)
-      } catch (err) {
-        return this.bitswap._receiveError(err)
-      }
-      conn.getPeerInfo((err, peerInfo) => {
+    pull(
+      conn,
+      lp.decode(),
+      pull.collect((err, msgs) => msgs.forEach((data) => {
+        log('raw message', data)
         if (err) {
           return this.bitswap._receiveError(err)
         }
-        this.bitswap._receiveMessage(peerInfo.id, msg)
-      })
-    }))
-
-    conn.on('error', (err) => {
-      this.bitswap._receiveError(err)
-      conn.end()
-    })
+        let msg
+        try {
+          msg = Message.fromProto(data)
+        } catch (err) {
+          return this.bitswap._receiveError(err)
+        }
+        conn.getPeerInfo((err, peerInfo) => {
+          if (err) {
+            return this.bitswap._receiveError(err)
+          }
+          this.bitswap._receiveMessage(peerInfo.id, msg)
+        })
+      }))
+    )
   }
 
   _onPeerMux (peerInfo) {
@@ -87,7 +84,7 @@ module.exports = class Network {
   // Connect to the given peer
   connectTo (peerId, cb) {
     log('connecting to %s', peerId.toB58String())
-    const done = (err) => async.setImmediate(() => cb(err))
+    const done = (err) => setImmediate(() => cb(err))
     // NOTE: For now, all this does is ensure that we are
     // connected. Once we have Peer Routing, we will be able
     // to find the Peer
@@ -101,27 +98,24 @@ module.exports = class Network {
   // Send the given msg (instance of Message) to the given peer
   sendMessage (peerId, msg, cb) {
     log('sendMessage to %s', peerId.toB58String())
-    log('msg %s', msg.full, msg.wantlist, msg.blocks)
-    const done = (err) => async.setImmediate(() => cb(err))
+    log('msg', msg)
     let peerInfo
     try {
       peerInfo = this.peerBook.getByMultihash(peerId.toBytes())
     } catch (err) {
-      return done(err)
+      return cb(err)
     }
 
     this.libp2p.dialByPeerInfo(peerInfo, PROTOCOL_IDENTIFIER, (err, conn) => {
       if (err) {
-        return done(err)
+        return cb(err)
       }
-
-      conn.once('error', (err) => done(err))
-      conn.once('finish', done)
-
-      const encode = lps.encode()
-      encode.pipe(conn)
-      encode.write(msg.toProto())
-      encode.end()
+      pull(
+        pull.values([msg.toProto()]),
+        lp.encode(),
+        conn
+      )
+      cb()
     })
   }
 }

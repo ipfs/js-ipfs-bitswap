@@ -1,13 +1,17 @@
 /* eslint-env mocha */
+/* eslint max-nested-callbacks: ["error", 8] */
 'use strict'
 
-const async = require('async')
+const eachSeries = require('async/eachSeries')
+const waterfall = require('async/waterfall')
+const each = require('async/each')
 const _ = require('lodash')
 const expect = require('chai').expect
 const PeerId = require('peer-id')
 const Block = require('ipfs-block')
 const mh = require('multihashes')
 const PeerBook = require('peer-book')
+const pull = require('pull-stream')
 
 const Message = require('../src/message')
 const Bitswap = require('../src')
@@ -33,7 +37,7 @@ module.exports = (repo) => {
       beforeEach((done) => {
         repo.create('hello', (err, r) => {
           if (err) return done(err)
-          store = r.datastore
+          store = r.blockstore
           done()
         })
       })
@@ -61,18 +65,17 @@ module.exports = (repo) => {
           expect(bs.blocksRecvd).to.be.eql(2)
           expect(bs.dupBlocksRecvd).to.be.eql(0)
 
-          async.parallel([
-            (cb) => store.get(b1.key, (err, res) => {
-              if (err) cb(err)
-              expect(res).to.be.eql(b1)
-              cb()
-            }),
-            (cb) => store.get(b1.key, (err, res) => {
-              if (err) return cb(err)
-              expect(res).to.be.eql(b1)
-              cb()
+          pull(
+            pull.values([b1, b1]),
+            pull.map((block) => store.getStream(block.key)),
+            pull.flatten(),
+            pull.collect((err, blocks) => {
+              if (err) return done(err)
+
+              expect(blocks).to.be.eql([b1, b1])
+              done()
             })
-          ], done)
+          )
         })
       })
 
@@ -96,6 +99,7 @@ module.exports = (repo) => {
           expect(bs.dupBlocksRecvd).to.be.eql(0)
 
           const wl = bs.wantlistForPeer(other)
+
           expect(wl.has(mh.toB58String(b1.key))).to.be.eql(true)
           expect(wl.has(mh.toB58String(b2.key))).to.be.eql(true)
 
@@ -118,7 +122,7 @@ module.exports = (repo) => {
           return m
         })
         let i = 0
-        async.eachSeries(others, (other, cb) => {
+        eachSeries(others, (other, cb) => {
           const msg = messages[i]
           i++
           bs._receiveMessage(other, msg, (err) => {
@@ -129,13 +133,13 @@ module.exports = (repo) => {
       })
     })
 
-    describe('getBlock', () => {
+    describe('getStream', () => {
       let store
 
       before((done) => {
         repo.create('hello', (err, r) => {
           if (err) return done(err)
-          store = r.datastore
+          store = r.blockstore
           done()
         })
       })
@@ -147,18 +151,54 @@ module.exports = (repo) => {
       it('block exists locally', (done) => {
         const me = PeerId.create({bits: 64})
         const block = makeBlock()
-        store.put(block, (err) => {
-          if (err) throw err
-          const book = new PeerBook()
-          const bs = new Bitswap(me, libp2pMock, store, book)
+        pull(
+          pull.values([block]),
+          store.putStream(),
+          pull.onEnd((err) => {
+            if (err) return done(err)
 
-          bs.getBlock(block.key, (err, res) => {
-            if (err) throw err
+            const book = new PeerBook()
+            const bs = new Bitswap(me, libp2pMock, store, book)
 
-            expect(res).to.be.eql(block)
-            done()
+            pull(
+              bs.getStream(block.key),
+              pull.collect((err, res) => {
+                if (err) return done(err)
+
+                expect(res).to.be.eql([block])
+                done()
+              })
+            )
           })
-        })
+        )
+      })
+
+      it('blocks exist locally', (done) => {
+        const me = PeerId.create({bits: 64})
+        const b1 = makeBlock()
+        const b2 = makeBlock()
+        const b3 = makeBlock()
+
+        pull(
+          pull.values([b1, b2, b3]),
+          store.putStream(),
+          pull.onEnd((err) => {
+            if (err) return done(err)
+
+            const book = new PeerBook()
+            const bs = new Bitswap(me, libp2pMock, store, book)
+
+            pull(
+              bs.getStream([b1.key, b2.key, b3.key]),
+              pull.collect((err, res) => {
+                if (err) return done(err)
+
+                expect(res).to.be.eql([b1, b2, b3])
+                done()
+              })
+            )
+          })
+        )
       })
 
       // Not sure if I understand what is going on here
@@ -168,7 +208,7 @@ module.exports = (repo) => {
         const block = makeBlock()
 
         let mockNet
-        async.waterfall([
+        waterfall([
           (cb) => utils.createMockNet(repo, 2, cb),
           (net, cb) => {
             mockNet = net
@@ -177,7 +217,13 @@ module.exports = (repo) => {
           (val, cb) => {
             mockNet.bitswaps[0]._onPeerConnected(mockNet.ids[1])
             mockNet.bitswaps[1]._onPeerConnected(mockNet.ids[0])
-            mockNet.bitswaps[0].getBlock(block.key, cb)
+            pull(
+              mockNet.bitswaps[0].getStream(block.key),
+              pull.collect((err, res) => {
+                if (err) return cb(err)
+                cb(null, res[0])
+              })
+            )
           },
           (res, cb) => {
             expect(res).to.be.eql(res)
@@ -197,13 +243,17 @@ module.exports = (repo) => {
         bs.engine.network = net
         bs.start()
 
-        bs.getBlock(block.key, (err, res) => {
-          if (err) throw err
-          expect(res).to.be.eql(block)
-          done()
-        })
+        pull(
+          bs.getStream(block.key),
+          pull.collect((err, res) => {
+            if (err) throw err
+            expect(res).to.be.eql([block])
+            done()
+          })
+        )
+
         setTimeout(() => {
-          bs.hasBlock(block, () => {})
+          bs.put(block, () => {})
         }, 200)
       })
 
@@ -220,13 +270,13 @@ module.exports = (repo) => {
             if (id.toHexString() !== other.toHexString()) {
               err = new Error('unkown peer')
             }
-            async.setImmediate(() => cb(err))
+            setImmediate(() => cb(err))
           },
           sendMessage (id, msg, cb) {
             if (id.toHexString() === other.toHexString()) {
               bs2._receiveMessage(me, msg, cb)
             } else {
-              async.setImmediate(() => cb(new Error('unkown peer')))
+              setImmediate(() => cb(new Error('unkown peer')))
             }
           },
           start () {},
@@ -238,13 +288,13 @@ module.exports = (repo) => {
             if (id.toHexString() !== me.toHexString()) {
               err = new Error('unkown peer')
             }
-            async.setImmediate(() => cb(err))
+            setImmediate(() => cb(err))
           },
           sendMessage (id, msg, cb) {
             if (id.toHexString() === me.toHexString()) {
               bs1._receiveMessage(other, msg, cb)
             } else {
-              async.setImmediate(() => cb(new Error('unkown peer')))
+              setImmediate(() => cb(new Error('unkown peer')))
             }
           },
           start () {},
@@ -256,19 +306,25 @@ module.exports = (repo) => {
 
         let store2
 
-        async.waterfall([
+        waterfall([
           (cb) => repo.create('world', cb),
           (repo, cb) => {
-            store2 = repo.datastore
+            store2 = repo.blockstore
             bs2 = new Bitswap(other, libp2pMock, store2, new PeerBook())
             utils.applyNetwork(bs2, n2)
             bs2.start()
             bs1._onPeerConnected(other)
             bs2._onPeerConnected(me)
-            bs1.getBlock(block.key, cb)
+            pull(
+              bs1.getStream(block.key),
+              pull.collect((err, res) => {
+                if (err) return cb(err)
+                cb(null, res[0])
+              })
+            )
 
             setTimeout(() => {
-              bs2.hasBlock(block)
+              bs2.put(block)
             }, 1000)
           },
           (res, cb) => {
@@ -293,12 +349,12 @@ module.exports = (repo) => {
       })
     })
 
-    describe('unwantBlocks', () => {
+    describe('unwant', () => {
       let store
       beforeEach((done) => {
         repo.create('hello', (err, r) => {
           if (err) return done(err)
-          store = r.datastore
+          store = r.blockstore
           done()
         })
       })
@@ -321,23 +377,31 @@ module.exports = (repo) => {
           }
         }
 
-        bs.getBlock(b.key, (err, res) => {
-          expect(err.message).to.be.eql(`manual unwant: ${mh.toB58String(b.key)}`)
-          finish()
-        })
-        bs.getBlock(b.key, (err, res) => {
-          expect(err.message).to.be.eql(`manual unwant: ${mh.toB58String(b.key)}`)
-          finish()
-        })
+        pull(
+          bs.getStream(b.key),
+          pull.collect((err, res) => {
+            expect(err).to.not.exist
+            expect(res).to.be.empty
+            finish()
+          })
+        )
+        pull(
+          bs.getStream(b.key),
+          pull.collect((err, res) => {
+            expect(err).to.not.exist
+            expect(res).to.be.empty
+            finish()
+          })
+        )
 
-        bs.unwantBlocks([b.key])
+        setTimeout(() => bs.unwant(b.key), 10)
       })
     })
   })
 }
 
 function hasBlocks (msg, store, cb) {
-  async.each(Array.from(msg.blocks.values()), (b, next) => {
+  each(Array.from(msg.blocks.values()), (b, next) => {
     if (!b.cancel) {
       store.has(b.key, next)
     } else {

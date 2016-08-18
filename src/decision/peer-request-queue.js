@@ -152,14 +152,14 @@ function taskKey (peerId, key) {
 
 function partnerCompare (a, b) {
   // having no blocks in their wantlist means lowest priority
-	// having both of these checks ensures stability of the sort
+  // having both of these checks ensures stability of the sort
   if (a.requests === 0) return false
   if (b.requests === 0) return true
 
   if (a.active === b.active) {
     // sorting by taskQueue.size() aids in cleaning out trash entries faster
-		// if we sorted instead by requests, one peer could potentially build up
-		// a huge number of cancelled entries in the queue resulting in a memory leak
+    // if we sorted instead by requests, one peer could potentially build up
+    // a huge number of cancelled entries in the queue resulting in a memory leak
     return a.taskQueue.size() > b.taskQueue.size()
   }
 

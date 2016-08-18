@@ -6,39 +6,45 @@
 
 - `id: PeerId`, the id of the local instance.
 - `libp2p: Libp2p`, instance of the local network stack.
-- `datastore: Datastore`, instance of the local database (`IpfsRepo.datastore`)
+- `blockstore: Datastore`, instance of the local database (`IpfsRepo.blockstore`)
 
 Create a new instance.
 
-### `getBlock(key, cb)`
 
-- `key: Multihash`
-- `cb: Function`
+### `getStream(key)`
 
-Fetch a single block.
+- `key: Multihash|Array`
+
+Returns a source `pull-stream`. Values emitted are the received blocks.
+
+Example:
+
+```js
+// Single block
+pull(
+  bitswap.getStream(key),
+  pull.collect((err, blocks) => {
+    // blocks === [block]
+  })
+)
+
+// Many blocks
+pull(
+  bitswap.getStream([key1, key2, key3]),
+  pull.collect((err, blocks) => {
+    // blocks === [block1, block2, block3]
+  })
+)
+```
+
 
 > Note: This is safe guarded so that the network is not asked
 > for blocks that are in the local `datastore`.
 
-### `getBlocks(keys, cb)`
 
-- `keys: []Multihash`
-- `cb: Function`
+### `unwant(keys)`
 
-Fetch multiple blocks. The `cb` is called with a result object of the form
-```js
-{
-  [key1]: {error: errorOrUndefined, block: blockOrUndefined},
-  [key2]: {error: errorOrUndefined, block: blockOrUndefined},
-  ...
-}
-```
-
-Where `key<i>` is the multihash of the block.
-
-### `unwantBlocks(keys)`
-
-- `keys: []Multihash`
+- `keys: Mutlihash|[]Multihash`
 
 Cancel previously requested keys, forcefully. That means they are removed from the
 wantlist independent of how many other resources requested these keys. Callbacks
@@ -46,12 +52,15 @@ attached to `getBlock` are errored with `Error('manual unwant: key')`.
 
 ### `cancelWants(keys)`
 
-- `keys: []Multihash`
+- `keys: Multihash|[]Multihash`
 
 Cancel previously requested keys.
 
+### `putStream()`
 
-### `hasBlock(block, cb)`
+Returns a duplex `pull-stream` that emits an object `{key: Multihash}` for every written block when it was stored.
+
+### `put(block, cb)`
 
 - `block: IpfsBlock`
 - `cb: Function`

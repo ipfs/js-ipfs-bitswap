@@ -1,11 +1,15 @@
 'use strict'
 
-const async = require('async')
+const series = require('async/series')
+const retry = require('async/retry')
 const debug = require('debug')
 const log = debug('bitswap')
 log.error = debug('bitswap:error')
 const EventEmitter = require('events').EventEmitter
 const mh = require('multihashes')
+const pull = require('pull-stream')
+const paramap = require('pull-paramap')
+const defer = require('pull-defer/source')
 
 const cs = require('./constants')
 const WantManager = require('./wantmanager')
@@ -13,7 +17,7 @@ const Network = require('./network')
 const decision = require('./decision')
 
 module.exports = class Bitwap {
-  constructor (p, libp2p, datastore, peerBook) {
+  constructor (p, libp2p, blockstore, peerBook) {
     // the ID of the peer to act on behalf of
     this.self = p
 
@@ -21,9 +25,9 @@ module.exports = class Bitwap {
     this.network = new Network(libp2p, peerBook, this)
 
     // local database
-    this.datastore = datastore
+    this.blockstore = blockstore
 
-    this.engine = new decision.Engine(datastore, this.network)
+    this.engine = new decision.Engine(blockstore, this.network)
 
     // handle message sending
     this.wm = new WantManager(this.network)
@@ -45,52 +49,61 @@ module.exports = class Bitwap {
         log('failed to receive message', incoming)
       }
 
-      const iblocks = incoming.blocks
+      const iblocks = Array.from(incoming.blocks.values())
 
-      if (iblocks.size === 0) {
+      if (iblocks.length === 0) {
         return cb()
       }
 
       // quickly send out cancels, reduces chances of duplicate block receives
-      const keys = []
-      for (let block of iblocks.values()) {
-        const found = this.wm.wl.contains(block.key)
-        if (!found) {
-          log('received un-askes-for %s from %s', mh.toB58String(block.key), peerId.toB58String())
-        } else {
-          keys.push(block.key)
-        }
-      }
 
-      this.wm.cancelWants(keys)
+      pull(
+        pull.values(iblocks),
+        pull.map((block) => block.key),
+        pull.filter((key) => this.wm.wl.contains(key)),
+        pull.collect((err, keys) => {
+          if (err) {
+            return log.error(err)
+          }
+          this.wm.cancelWants(keys)
+        })
+      )
 
-      async.eachLimit(iblocks.values(), 10, (block, next) => {
-        async.series([
-          (innerCb) => this._updateReceiveCounters(block, (err) => {
-            if (err) {
-              // ignore, as these have been handled in _updateReceiveCounters
-              return innerCb()
-            }
-
-            log('got block from %s', peerId.toB58String(), block.data.toString())
-            innerCb()
-          }),
-          (innerCb) => this.hasBlock(block, (err) => {
-            if (err) {
-              log.error('receiveMessage hasBlock error: %s', err.message)
-            }
-            innerCb()
-          })
-        ], next)
-      }, cb)
+      pull(
+        pull.values(iblocks),
+        paramap(this._handleReceivedBlock.bind(this, peerId), 10),
+        pull.onEnd(cb)
+      )
     })
+  }
+
+  _handleReceivedBlock (peerId, block, cb) {
+    log('handling block', block)
+    series([
+      (cb) => this._updateReceiveCounters(block, (err) => {
+        if (err) {
+          // ignore, as these have been handled
+          // in _updateReceiveCounters
+          return cb()
+        }
+
+        log('got block from %s', peerId.toB58String(), block.data.toString())
+        cb()
+      }),
+      (cb) => this.put(block, (err) => {
+        if (err) {
+          log.error('receiveMessage put error: %s', err.message)
+        }
+        cb()
+      })
+    ], cb)
   }
 
   _updateReceiveCounters (block, cb) {
     this.blocksRecvd ++
-    this.datastore.has(block.key, (err, has) => {
+    this.blockstore.has(block.key, (err, has) => {
       if (err) {
-        log('datastore.has error: %s', err.message)
+        log('blockstore.has error: %s', err.message)
         return cb(err)
       }
 
@@ -106,8 +119,12 @@ module.exports = class Bitwap {
 
   _tryPutBlock (block, times, cb) {
     log('trying to put block %s', block.data.toString())
-    async.retry({times, interval: 400}, (done) => {
-      this.datastore.put(block, done)
+    retry({times, interval: 400}, (done) => {
+      pull(
+        pull.values([block]),
+        this.blockstore.putStream(),
+        pull.onEnd(done)
+      )
     }, cb)
   }
 
@@ -127,120 +144,89 @@ module.exports = class Bitwap {
     this.engine.peerDisconnected(peerId)
   }
 
-  // getBlock attempts to retrieve a particular block with key `key` from peers
-  getBlock (key, cb) {
-    const keyS = mh.toB58String(key)
-    log('getBlock.start %s', keyS)
-    const done = (err, block) => {
-      if (err) {
-        log('getBlock.fail %s', keyS)
-        return cb(err)
-      }
-
-      if (!block) {
-        log('getBlock.fail %s', keyS)
-        return cb(new Error('Empty block received'))
-      }
-
-      log('getBlock.end %s', keyS)
-      cb(null, block)
-    }
-
-    this.getBlocks([key], (results) => {
-      const err = results[keyS].error
-      const block = results[keyS].block
-
-      done(err, block)
-    })
-  }
-
   // return the current wantlist for a given `peerId`
   wantlistForPeer (peerId) {
     return this.engine.wantlistForPeer(peerId)
   }
 
-  getBlocks (keys, cb) {
-    const results = {}
+  getStream (keys) {
+    if (!Array.isArray(keys)) {
+      return this._getStreamSingle(keys)
+    }
+
+    return pull(
+      pull.values(keys),
+      paramap((key, cb) => {
+        pull(
+          this._getStreamSingle(key),
+          pull.collect(cb)
+        )
+      }),
+      pull.flatten()
+    )
+  }
+
+  _getStreamSingle (key) {
     const unwantListeners = {}
     const blockListeners = {}
     const unwantEvent = (key) => `unwant:${key}`
     const blockEvent = (key) => `block:${key}`
+    const d = defer()
 
-    const cleanupListeners = () => {
-      keys.forEach((key) => {
-        const keyS = mh.toB58String(key)
+    const cleanupListener = (key) => {
+      const keyS = mh.toB58String(key)
+
+      if (unwantListeners[keyS]) {
         this.notifications.removeListener(unwantEvent(keyS), unwantListeners[keyS])
+        delete unwantListeners[keyS]
+      }
+
+      if (blockListeners[keyS]) {
         this.notifications.removeListener(blockEvent(keyS), blockListeners[keyS])
-      })
-    }
-
-    const addListeners = () => {
-      keys.forEach((key) => {
-        const keyS = mh.toB58String(key)
-        unwantListeners[keyS] = () => {
-          finish(keyS, new Error(`manual unwant: ${keyS}`))
-        }
-
-        blockListeners[keyS] = (block) => {
-          finish(keyS, null, block)
-        }
-
-        this.notifications.once(unwantEvent(keyS), unwantListeners[keyS])
-        this.notifications.once(blockEvent(keyS), blockListeners[keyS])
-      })
-    }
-
-    let finished = false
-    const finish = (key, err, block) => {
-      results[key] = {
-        error: err,
-        block: block
-      }
-
-      if (Object.keys(results).length === keys.length) {
-        cleanupListeners()
-
-        if (!finished) {
-          cb(results)
-        }
-        finished = true
+        delete blockListeners[keyS]
       }
     }
 
-    addListeners()
-    this.wm.wantBlocks(keys)
+    const addListener = (key) => {
+      const keyS = mh.toB58String(key)
+      unwantListeners[keyS] = () => {
+        log(`manual unwant: ${keyS}`)
+        cleanupListener(key)
+        this.wm.cancelWants([key])
+        d.resolve(pull.empty())
+      }
 
-    async.parallel(keys.map((key) => (cb) => {
-      // We don't want to announce looking for blocks
-      // when we might have them ourselves.
-      this.datastore.has(key, (err, exists) => {
-        if (err) {
-          log('error in datastore.has: ', err.message)
-          return cb()
-        }
+      blockListeners[keyS] = (block) => {
+        this.wm.cancelWants([block.key])
+        cleanupListener(key)
+        d.resolve(pull.values([block]))
+      }
 
-        if (!exists) {
-          return cb()
-        }
+      this.notifications.once(unwantEvent(keyS), unwantListeners[keyS])
+      this.notifications.once(blockEvent(keyS), blockListeners[keyS])
+    }
 
-        this.datastore.get(key, (err, res) => {
-          if (err) {
-            log('error in datastore.get: ', err.message)
-          }
+    this.blockstore.has(key, (err, exists) => {
+      if (err) {
+        return d.resolve(pull.error(err))
+      }
+      if (exists) {
+        return d.resolve(this.blockstore.getStream(key))
+      }
 
-          if (!err && res) {
-            finish(mh.toB58String(key), null, res)
-            this.wm.cancelWants([key])
-          }
+      addListener(key)
+      this.wm.wantBlocks([key])
+    })
 
-          cb()
-        })
-      })
-    }))
+    return d
   }
 
   // removes the given keys from the want list independent of any ref counts
-  unwantBlocks (keys) {
+  unwant (keys) {
+    if (!Array.isArray(keys)) {
+      keys = [keys]
+    }
+
     this.wm.unwantBlocks(keys)
     keys.forEach((key) => {
       this.notifications.emit(`unwant:${mh.toB58String(key)}`)
@@ -249,23 +235,46 @@ module.exports = class Bitwap {
 
   // removes the given keys from the want list
   cancelWants (keys) {
+    if (!Array.isArray(keys)) {
+      keys = [keys]
+    }
     this.wm.cancelWants(keys)
   }
 
-  // announces the existance of a block to this service
-  hasBlock (block, cb) {
-    cb = cb || (() => {})
+  putStream () {
+    return pull(
+      pull.asyncMap((block, cb) => {
+        this.blockstore.has(block.key, (err, exists) => {
+          if (err) return cb(err)
+          cb(null, [block, exists])
+        })
+      }),
+      pull.filter((val) => !val[1]),
+      pull.map((val) => {
+        const block = val[0]
 
-    this._tryPutBlock(block, 4, (err) => {
-      if (err) {
-        log.error('Error writing block to datastore: %s', err.message)
-        return cb(err)
-      }
-      log('put block: %s', mh.toB58String(block.key))
-      this.notifications.emit(`block:${mh.toB58String(block.key)}`, block)
-      this.engine.receivedBlock(block)
-      cb()
-    })
+        return pull(
+          pull.values([block]),
+          this.blockstore.putStream(),
+          pull.through((meta) => {
+            const key = block.key
+            log('put block: %s', mh.toB58String(key))
+            this.notifications.emit(`block:${mh.toB58String(key)}`, block)
+            this.engine.receivedBlock(key)
+          })
+        )
+      }),
+      pull.flatten()
+    )
+  }
+
+  // announces the existance of a block to this service
+  put (block, cb) {
+    pull(
+      pull.values([block]),
+      this.putStream(),
+      pull.onEnd(cb)
+    )
   }
 
   getWantlist () {

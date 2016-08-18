@@ -1,14 +1,19 @@
 /* eslint-env mocha */
+/* eslint max-nested-callbacks: ["error", 8] */
 'use strict'
 
 const expect = require('chai').expect
 const utils = require('../utils')
-const async = require('async')
+const series = require('async/series')
+const parallel = require('async/parallel')
+const each = require('async/each')
 const _ = require('lodash')
 const Block = require('ipfs-block')
 const Buffer = require('safe-buffer').Buffer
+const pull = require('pull-stream')
 
 describe('gen Bitswap network', function () {
+  // CI is very slow
   this.timeout(300 * 1000)
 
   it('retrieves local blocks', (done) => {
@@ -22,21 +27,26 @@ describe('gen Bitswap network', function () {
         return new Block(b)
       })
 
-      async.series([
+      series([
         (cb) => {
-          async.parallel(blocks.map((b) => (cb) => {
-            node.bitswap.hasBlock(b, cb)
-          }), cb)
+          pull(
+            pull.values(blocks),
+            node.bitswap.putStream(),
+            pull.onEnd(cb)
+          )
         },
         (cb) => {
-          async.each(_.range(100), (i, cb) => {
-            async.parallel(blocks.map((b) => (cb) => {
-              node.bitswap.getBlock(b.key, (err, res) => {
-                expect(err).to.not.exist
-                expect(res).to.be.eql(b)
+          each(_.range(100), (i, cb) => {
+            pull(
+              node.bitswap.getStream(
+                blocks.map((b) => b.key)
+              ),
+              pull.collect((err, res) => {
+                if (err) return cb(err)
+                expect(res).to.have.length(blocks.length)
                 cb()
               })
-            }), cb)
+            )
           }, cb)
         }
       ], (err) => {
@@ -50,10 +60,9 @@ describe('gen Bitswap network', function () {
   })
 
   // const counts = [2, 3, 4, 5, 10]
-  const counts = [2, 3, 5]
+  const counts = [2]
 
-  // TODO: Enable once we figured out why this is failing on CI
-  describe.skip('distributed blocks', () => {
+  describe('distributed blocks', () => {
     counts.forEach((n) => {
       it(`with ${n} nodes`, (done) => {
         utils.genBitswapNetwork(n, (err, nodeArr) => {
@@ -79,40 +88,46 @@ describe('gen Bitswap network', function () {
 
             const d = (new Date()).getTime()
 
-            async.parallel(_.map(nodeArr, (node, i) => (callback) => {
+            parallel(_.map(nodeArr, (node, i) => (callback) => {
               node.bitswap.start()
-              async.parallel([
+              parallel([
                 (finish) => {
-                  async.parallel(_.range(blockFactor).map((j) => (cb) => {
-                    // console.log('has node:%s block %s', i, i * blockFactor + j)
-                    node.bitswap.hasBlock(blocks[i * blockFactor + j], cb)
-                  }), finish)
+                  pull(
+                    pull.values(
+                      _.range(blockFactor)
+                    ),
+                    pull.map((j) => blocks[i * blockFactor + j]),
+                    node.bitswap.putStream(),
+                    pull.onEnd(finish)
+                  )
                 },
                 (finish) => {
-                  async.parallel(_.map(blocks, (b, j) => (cb) => {
-                    node.bitswap.getBlock(b.key, (err, res) => {
-                      // console.log('node:%s got block: %s', i, j)
-                      expect(err).to.not.exist
-                      expect(res).to.be.eql(b)
-                      cb()
+                  pull(
+                    node.bitswap.getStream(
+                      blocks.map((b) => b.key)
+                    ),
+                    pull.collect((err, res) => {
+                      if (err) return finish(err)
+                      expect(res).to.have.length(blocks.length)
+                      finish()
                     })
-                  }), finish)
+                  )
                 }
               ], callback)
             }), (err) => {
               if (err) return cb(err)
-              console.log('time -- %s', (new Date()).getTime() - d)
+              console.log('  time -- %s', (new Date()).getTime() - d)
               cb()
             })
           }
 
-          async.series(
+          series(
             _.range(2).map((i) => (cb) => round(i, cb)),
             (err) => {
               // setTimeout is used to avoid closing the TCP socket while spdy is
               // still sending a ton of signalling data
               setTimeout(() => {
-                async.parallel(nodeArr.map((node) => (cb) => {
+                parallel(nodeArr.map((node) => (cb) => {
                   node.bitswap.stop()
                   node.libp2p.stop(cb)
                 }), (err2) => {

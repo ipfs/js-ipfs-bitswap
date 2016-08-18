@@ -1,7 +1,8 @@
 'use strict'
 
 const debug = require('debug')
-const _ = require('highland')
+const pull = require('pull-stream')
+const mh = require('multihashes')
 
 const Message = require('../message')
 const Wantlist = require('../wantlist')
@@ -25,12 +26,13 @@ module.exports = class Wantmanager {
 
   _addEntries (keys, cancel, force) {
     let i = -1
-    _(keys)
-      .map((key) => {
+    pull(
+      pull.values(keys),
+      pull.map((key) => {
         i++
         return new Message.Entry(key, cs.kMaxPriority - i, cancel)
-      })
-      .tap((e) => {
+      }),
+      pull.through((e) => {
         // add changes to our wantlist
         if (e.cancel) {
           if (force) {
@@ -39,15 +41,18 @@ module.exports = class Wantmanager {
             this.wl.remove(e.key)
           }
         } else {
+          log('adding to wl', mh.toB58String(e.key), e.priority)
           this.wl.add(e.key, e.priority)
         }
-      })
-      .toArray((entries) => {
+      }),
+      pull.collect((err, entries) => {
+        if (err) throw err
         // broadcast changes
         for (let p of this.peers.values()) {
           p.addEntries(entries, false)
         }
       })
+    )
   }
 
   _startPeerHandler (peerId) {
@@ -65,6 +70,7 @@ module.exports = class Wantmanager {
     for (let entry of this.wl.entries()) {
       fullwantlist.addEntry(entry[1].key, entry[1].priority)
     }
+
     mq.addMessage(fullwantlist)
 
     this.peers.set(peerId.toB58String(), mq)
@@ -90,19 +96,19 @@ module.exports = class Wantmanager {
 
   // add all the keys to the wantlist
   wantBlocks (keys) {
-    log('want blocks:', keys)
+    log('want blocks:', keys.map((k) => mh.toB58String(k)))
     this._addEntries(keys, false)
   }
 
   // remove blocks of all the given keys without respecting refcounts
   unwantBlocks (keys) {
-    log('unwant blocks:', keys)
+    log('unwant blocks:', keys.map((k) => mh.toB58String(k)))
     this._addEntries(keys, true, true)
   }
 
   // cancel wanting all of the given keys
   cancelWants (keys) {
-    log('cancel wants: ', keys)
+    log('cancel wants: ', keys.map((k) => mh.toB58String(k)))
     this._addEntries(keys, true)
   }
 

@@ -4,9 +4,9 @@ const IPFSRepo = require('ipfs-repo')
 const path = require('path')
 const ncp = require('ncp')
 const rimraf = require('rimraf')
-const fs = require('fs-blob-store')
+const Store = require('fs-pull-blob-store')
 const testRepoPath = path.join(__dirname, 'test-repo')
-const async = require('async')
+const each = require('async/each')
 
 // book keeping
 const repos = []
@@ -17,14 +17,14 @@ function createRepo (id, done) {
   ncp(testRepoPath, repoPath, (err) => {
     if (err) return done(err)
 
-    const repo = new IPFSRepo(repoPath, {stores: fs})
+    const repo = new IPFSRepo(repoPath, {stores: Store})
     repos.push(repoPath)
     done(null, repo)
   })
 }
 
 function removeRepos (done) {
-  async.each(repos, (repo, cb) => {
+  each(repos, (repo, cb) => {
     rimraf(repo, cb)
   }, done)
 }
