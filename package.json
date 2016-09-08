@@ -39,7 +39,7 @@
     "chai": "^3.5.0",
     "fs-blob-store": "^5.2.1",
     "idb-plus-blob-store": "^1.1.2",
-    "ipfs-repo": "^0.8.0",
+    "ipfs-repo": "^0.9.0",
     "libp2p-ipfs": "^0.12.0",
     "lodash": "^4.13.1",
     "multiaddr": "^2.0.3",
