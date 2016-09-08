@@ -42,7 +42,7 @@
     "ipfs-repo": "^0.8.0",
     "libp2p-ipfs": "^0.12.0",
     "lodash": "^4.13.1",
-    "multiaddr": "^2.0.2",
+    "multiaddr": "^2.0.3",
     "ncp": "^2.0.0",
     "peer-book": "^0.3.0",
     "peer-id": "^0.7.0",
