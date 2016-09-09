@@ -14,7 +14,7 @@ const idb = window.indexedDB ||
         window.msIndexedDB
 
 // book keeping
-const dbs = []
+let dbs = []
 
 function createRepo (id, done) {
   const repoData = []
@@ -55,6 +55,7 @@ function removeRepos (done) {
     idb.deleteDatabase(db)
     idb.deleteDatabase(`${db}/blocks`)
   })
+  dbs = []
   done()
 }
 

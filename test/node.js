@@ -9,7 +9,7 @@ const testRepoPath = path.join(__dirname, 'test-repo')
 const each = require('async/each')
 
 // book keeping
-const repos = []
+let repos = []
 
 function createRepo (id, done) {
   const date = Date.now().toString()
@@ -26,7 +26,10 @@ function createRepo (id, done) {
 function removeRepos (done) {
   each(repos, (repo, cb) => {
     rimraf(repo, cb)
-  }, done)
+  }, (err) => {
+    repos = []
+    done(err)
+  })
 }
 
 const repo = {
