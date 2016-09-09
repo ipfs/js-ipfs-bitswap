@@ -31,21 +31,21 @@ module.exports = (repo) => {
   }
 
   describe('bitswap', () => {
+    let store
+
+    before((done) => {
+      repo.create('hello', (err, r) => {
+        if (err) return done(err)
+        store = r.blockstore
+        done()
+      })
+    })
+
+    after((done) => {
+      repo.remove(done)
+    })
+
     describe('receive message', () => {
-      let store
-
-      beforeEach((done) => {
-        repo.create('hello', (err, r) => {
-          if (err) return done(err)
-          store = r.blockstore
-          done()
-        })
-      })
-
-      afterEach((done) => {
-        repo.remove(done)
-      })
-
       it('simple block message', (done) => {
         const me = PeerId.create({bits: 64})
         const book = new PeerBook()
@@ -134,20 +134,6 @@ module.exports = (repo) => {
     })
 
     describe('getStream', () => {
-      let store
-
-      before((done) => {
-        repo.create('hello', (err, r) => {
-          if (err) return done(err)
-          store = r.blockstore
-          done()
-        })
-      })
-
-      after((done) => {
-        repo.remove(done)
-      })
-
       it('block exists locally', (done) => {
         const me = PeerId.create({bits: 64})
         const block = makeBlock()
@@ -350,19 +336,6 @@ module.exports = (repo) => {
     })
 
     describe('unwant', () => {
-      let store
-      beforeEach((done) => {
-        repo.create('hello', (err, r) => {
-          if (err) return done(err)
-          store = r.blockstore
-          done()
-        })
-      })
-
-      afterEach((done) => {
-        repo.remove(done)
-      })
-
       it('removes blocks that are wanted multiple times', (done) => {
         const me = PeerId.create({bits: 64})
         const bs = new Bitswap(me, libp2pMock, store, new PeerBook())

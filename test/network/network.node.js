@@ -149,7 +149,7 @@ describe('network', function () {
       expect(err).to.not.exist
     }
 
-    libp2pNodeA.dialByPeerInfo(peerInfoB, '/ipfs/bitswap', (err, conn) => {
+    libp2pNodeA.dialByPeerInfo(peerInfoB, '/ipfs/bitswap/1.0.0', (err, conn) => {
       expect(err).to.not.exist
 
       pull(
