@@ -34,7 +34,7 @@
   "homepage": "https://github.com/ipfs/js-ipfs-bitswap#readme",
   "devDependencies": {
     "abstract-blob-store": "^3.2.0",
-    "aegir": "^3.2.0",
+    "aegir": "^8.0.1",
     "buffer-loader": "0.0.1",
     "chai": "^3.5.0",
     "fs-blob-store": "^5.2.1",
