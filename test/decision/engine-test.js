@@ -5,7 +5,11 @@ const expect = require('chai').expect
 const PeerId = require('peer-id')
 const _ = require('lodash')
 const Block = require('ipfs-block')
-const async = require('async')
+const parallel = require('async/parallel')
+const series = require('async/series')
+const eachSeries = require('async/eachSeries')
+const pull = require('pull-stream')
+const paramap = require('pull-paramap')
 
 const Message = require('../../src/message')
 const Engine = require('../../src/decision/engine')
@@ -16,7 +20,7 @@ module.exports = (repo) => {
   function newEngine (id, done) {
     repo.create(id, (err, repo) => {
       if (err) return done(err)
-      const engine = new Engine(repo.datastore, mockNetwork())
+      const engine = new Engine(repo.blockstore, mockNetwork())
       engine.start()
 
       done(null, {
@@ -32,7 +36,7 @@ module.exports = (repo) => {
     })
 
     it('consistent accounting', (done) => {
-      async.parallel([
+      parallel([
         (cb) => newEngine('Ernie', cb),
         (cb) => newEngine('Bert', cb)
       ], (err, res) => {
@@ -41,46 +45,50 @@ module.exports = (repo) => {
         const sender = res[0]
         const receiver = res[1]
 
-        async.eachLimit(_.range(1000), 100, (i, cb) => {
-          const m = new Message(false)
-          const content = `this is message ${i}`
-          m.addBlock(new Block(content))
-          sender.engine.messageSent(receiver.peer, m)
-          receiver.engine.messageReceived(sender.peer, m, cb)
-        }, (err) => {
-          expect(err).to.not.exist
+        pull(
+          pull.values(_.range(1000)),
+          paramap((i, cb) => {
+            const m = new Message(false)
+            const content = `this is message ${i}`
+            m.addBlock(new Block(content))
+            sender.engine.messageSent(receiver.peer, m)
+            receiver.engine.messageReceived(sender.peer, m, cb)
+          }, 100),
+          pull.onEnd((err) => {
+            expect(err).to.not.exist
 
-          expect(
-            sender.engine.numBytesSentTo(receiver.peer)
-          ).to.be.above(
-            0
-          )
+            expect(
+              sender.engine.numBytesSentTo(receiver.peer)
+            ).to.be.above(
+              0
+            )
 
-          expect(
-            sender.engine.numBytesSentTo(receiver.peer)
-          ).to.be.eql(
-            receiver.engine.numBytesReceivedFrom(sender.peer)
-          )
+            expect(
+              sender.engine.numBytesSentTo(receiver.peer)
+            ).to.be.eql(
+              receiver.engine.numBytesReceivedFrom(sender.peer)
+            )
 
-          expect(
-            receiver.engine.numBytesSentTo(sender.peer)
-          ).to.be.eql(
-            0
-          )
+            expect(
+              receiver.engine.numBytesSentTo(sender.peer)
+            ).to.be.eql(
+              0
+            )
 
-          expect(
-            sender.engine.numBytesReceivedFrom(receiver.peer)
-          ).to.be.eql(
-            0
-          )
+            expect(
+              sender.engine.numBytesReceivedFrom(receiver.peer)
+            ).to.be.eql(
+              0
+            )
 
-          done()
-        })
+            done()
+          })
+        )
       })
     })
 
     it('peer is added to peers when message receiver or sent', (done) => {
-      async.parallel([
+      parallel([
         (cb) => newEngine('sf', cb),
         (cb) => newEngine('sea', cb)
       ], (err, res) => {
@@ -129,60 +137,66 @@ module.exports = (repo) => {
       repo.create('p', (err, repo) => {
         expect(err).to.not.exist
 
-        async.each(alphabet, (letter, cb) => {
-          const block = new Block(letter)
-          repo.datastore.put(block, cb)
-        }, (err) => {
-          expect(err).to.not.exist
+        pull(
+          pull.values(alphabet),
+          pull.map((l) => new Block(l)),
+          repo.blockstore.putStream(),
+          pull.onEnd((err) => {
+            expect(err).to.not.exist
 
-          const partnerWants = (e, keys, p, cb) => {
-            const add = new Message(false)
-            keys.forEach((letter, i) => {
-              const block = new Block(letter)
-              add.addEntry(block.key, Math.pow(2, 32) - 1 - i)
-            })
+            const partnerWants = (e, keys, p, cb) => {
+              const add = new Message(false)
+              keys.forEach((letter, i) => {
+                const block = new Block(letter)
+                add.addEntry(block.key, Math.pow(2, 32) - 1 - i)
+              })
 
-            e.messageReceived(p, add, cb)
-          }
+              e.messageReceived(p, add, cb)
+            }
 
-          const partnerCancels = (e, keys, p, cb) => {
-            const cancels = new Message(false)
-            keys.forEach((k) => {
-              const block = new Block(k)
-              cancels.cancel(block.key)
-            })
+            const partnerCancels = (e, keys, p, cb) => {
+              const cancels = new Message(false)
+              keys.forEach((k) => {
+                const block = new Block(k)
+                cancels.cancel(block.key)
+              })
 
-            e.messageReceived(p, cancels, cb)
-          }
+              e.messageReceived(p, cancels, cb)
+            }
 
-          async.eachSeries(_.range(numRounds), (i, cb) => {
-            async.eachSeries(testCases, (testcase, innerCb) => {
-              const set = testcase[0]
-              const cancels = testcase[1]
-              const keeps = _.difference(set, cancels)
+            eachSeries(_.range(numRounds), (i, cb) => {
+              eachSeries(testCases, (testcase, innerCb) => {
+                const set = testcase[0]
+                const cancels = testcase[1]
+                const keeps = _.difference(set, cancels)
 
-              const network = mockNetwork(keeps.length, (res) => {
-                const msgs = _.flatten(res.messages.map(
-                  (m) => Array.from(m[1].blocks.values())
+                const messageToString = (m) => {
+                  return Array.from(m[1].blocks.values())
                     .map((b) => b.data.toString())
-                ))
+                }
+                const stringifyMessages = (messages) => {
+                  return _.flatten(messages.map(messageToString))
+                }
 
-                expect(msgs).to.be.eql(keeps)
-                innerCb()
-              })
+                const network = mockNetwork(keeps.length, (res) => {
+                  const msgs = stringifyMessages(res.messages)
+                  expect(msgs).to.be.eql(keeps)
+                  innerCb()
+                })
 
-              const e = new Engine(repo.datastore, network)
-              e.start()
-              const partner = PeerId.create({bits: 64})
-              async.series([
-                (c) => partnerWants(e, set, partner, c),
-                (c) => partnerCancels(e, cancels, partner, c)
-              ], (err) => {
-                if (err) throw err
-              })
-            }, cb)
-          }, done)
-        })
+                const e = new Engine(repo.blockstore, network)
+                e.start()
+                const partner = PeerId.create({bits: 64})
+                series([
+                  (c) => partnerWants(e, set, partner, c),
+                  (c) => partnerCancels(e, cancels, partner, c)
+                ], (err) => {
+                  if (err) throw err
+                })
+              }, cb)
+            }, done)
+          })
+        )
       })
     })
   })

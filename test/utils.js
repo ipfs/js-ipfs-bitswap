@@ -1,6 +1,8 @@
 'use strict'
 
-const async = require('async')
+const each = require('async/each')
+const eachSeries = require('async/eachSeries')
+const map = require('async/map')
 const _ = require('lodash')
 const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
@@ -10,8 +12,7 @@ const Bitswap = require('../src')
 const libp2p = require('libp2p-ipfs')
 const os = require('os')
 const Repo = require('ipfs-repo')
-const bs = require('abstract-blob-store')
-// const bs = require('fs-blob-store')
+const Store = require('interface-pull-blob-store/lib/reference')
 
 exports.mockNetwork = (calls, done) => {
   done = done || (() => {})
@@ -28,13 +29,13 @@ exports.mockNetwork = (calls, done) => {
 
   return {
     connectTo (p, cb) {
-      async.setImmediate(() => {
+      setImmediate(() => {
         connects.push(p)
         cb()
       })
     },
     sendMessage (p, msg, cb) {
-      async.setImmediate(() => {
+      setImmediate(() => {
         messages.push([p, msg])
         cb()
         finish()
@@ -46,9 +47,9 @@ exports.mockNetwork = (calls, done) => {
 }
 
 exports.createMockNet = (repo, count, cb) => {
-  async.map(_.range(count), (i, cb) => repo.create(`repo-${i}`, (err, res) => {
+  map(_.range(count), (i, cb) => repo.create(`repo-${i}`, (err, res) => {
     if (err) return cb(err)
-    cb(null, res.datastore)
+    cb(null, res.blockstore)
   }), (err, stores) => {
     if (err) return cb(err)
 
@@ -58,7 +59,7 @@ exports.createMockNet = (repo, count, cb) => {
     const networks = _.range(count).map((i) => {
       return {
         connectTo (id, cb) {
-          const done = (err) => async.setImmediate(() => cb(err))
+          const done = (err) => setImmediate(() => cb(err))
           if (!_.includes(hexIds, id.toHexString())) {
             return done(new Error('unkown peer'))
           }
@@ -128,11 +129,11 @@ exports.genBitswapNetwork = (n, callback) => {
   const tmpDir = os.tmpdir()
   netArray.forEach((net, i) => {
     const repoPath = tmpDir + '/' + net.peerInfo.id.toB58String()
-    net.repo = new Repo(repoPath, { stores: bs })
+    net.repo = new Repo(repoPath, { stores: Store })
   })
 
   // start every libp2pNode
-  async.each(netArray, (net, cb) => {
+  each(netArray, (net, cb) => {
     net.libp2p.start(cb)
   }, (err) => {
     if (err) {
@@ -144,15 +145,15 @@ exports.genBitswapNetwork = (n, callback) => {
   // create every BitSwap
   function createBitswaps () {
     netArray.forEach((net) => {
-      net.bitswap = new Bitswap(net.peerInfo, net.libp2p, net.repo.datastore, net.peerBook)
+      net.bitswap = new Bitswap(net.peerInfo, net.libp2p, net.repo.blockstore, net.peerBook)
     })
     establishLinks()
   }
 
   // connect all the nodes between each other
   function establishLinks () {
-    async.eachSeries(netArray, (from, cbI) => {
-      async.eachSeries(netArray, (to, cbJ) => {
+    eachSeries(netArray, (from, cbI) => {
+      eachSeries(netArray, (to, cbJ) => {
         if (from.peerInfo.id.toB58String() ===
             to.peerInfo.id.toB58String()) {
           return cbJ()

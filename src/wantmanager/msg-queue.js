@@ -1,7 +1,8 @@
 'use strict'
 
 const debug = require('debug')
-const async = require('async')
+const pull = require('pull-stream')
+const pushable = require('pull-pushable')
 
 const Message = require('../message')
 
@@ -14,13 +15,11 @@ module.exports = class MsgQueue {
     this.network = network
     this.refcnt = 1
 
-    this.queue = async.queue(this.doWork.bind(this), 1)
-    // only start when `run` is called
-    this.queue.pause()
+    this.queue = pushable()
   }
 
   addMessage (msg) {
-    log('addMessage: %s', this.p.toB58String())
+    log('addMessage: %s', this.p.toB58String(), msg)
     this.queue.push(msg)
   }
 
@@ -39,35 +38,39 @@ module.exports = class MsgQueue {
   }
 
   doWork (wlm, cb) {
-    log('doWork: %s', this.p.toB58String())
+    log('doWork: %s', this.p.toB58String(), wlm)
+    if (wlm.empty) return cb()
     this.network.connectTo(this.p, (err) => {
       if (err) {
         log.error('cant connect to peer %s: %s', this.p.toB58String(), err.message)
         return cb()
       }
-
+      log('sending message', wlm)
       this.network.sendMessage(this.p, wlm, (err) => {
         if (err) {
           log.error('send error: %s', err.message)
         }
-
         cb()
       })
     })
   }
 
   run () {
-    this.queue.resume()
+    log('starting queue')
+
+    pull(
+      this.queue,
+      pull.asyncMap(this.doWork.bind(this)),
+      pull.onEnd((err) => {
+        if (err) {
+          log.error('error processing message queue', err)
+        }
+        this.queue = pushable()
+      })
+    )
   }
 
   stop () {
-    const done = () => {
-      this.queue.kill()
-      this.queue.pause()
-    }
-
-    // Give the queue up to 1s time to finish things
-    this.queue.drain = done
-    setTimeout(done, 1000)
+    this.queue.end()
   }
 }

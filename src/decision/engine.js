@@ -1,9 +1,9 @@
 'use strict'
 
 const debug = require('debug')
-const _ = require('highland')
-const async = require('async')
 const mh = require('multihashes')
+const pull = require('pull-stream')
+const generate = require('pull-generate')
 
 const log = debug('bitswap:engine')
 log.error = debug('bitswap:engine:error')
@@ -14,8 +14,8 @@ const PeerRequestQueue = require('./peer-request-queue')
 const Ledger = require('./ledger')
 
 module.exports = class Engine {
-  constructor (datastore, network) {
-    this.datastore = datastore
+  constructor (blockstore, network) {
+    this.blockstore = blockstore
     this.network = network
 
     // A list of of ledgers by their partner id
@@ -45,34 +45,43 @@ module.exports = class Engine {
   _outbox () {
     if (!this._running) return
 
-    const doIt = (cb) => {
-      _((push, next) => {
-        if (!this._running) return push(null, _.nil)
+    const doIt = (cb) => pull(
+      generate(null, (state, cb) => {
+        log('generating', this._running)
+        if (!this._running) {
+          return cb(true)
+        }
+
         const nextTask = this.peerRequestQueue.pop()
+        log('got task', nextTask)
+        if (!nextTask) {
+          return cb(true)
+        }
 
-        if (!nextTask) return push(null, _.nil)
+        pull(
+          this.blockstore.getStream(nextTask.entry.key),
+          pull.collect((err, blocks) => {
+            log('generated', blocks)
+            const block = blocks[0]
+            if (err || !block) {
+              nextTask.done()
+              return cb(null, false)
+            }
 
-        this.datastore.get(nextTask.entry.key, (err, block) => {
-          if (err || !block) {
-            nextTask.done()
-          } else {
-            push(null, {
+            cb(null, {
               peer: nextTask.target,
               block: block,
               sent: () => {
                 nextTask.done()
               }
             })
-          }
-
-          next()
-        })
-      })
-        .flatMap((envelope) => {
-          return _.wrapCallback(this._sendBlock.bind(this))(envelope)
-        })
-        .done(cb)
-    }
+          })
+        )
+      }),
+      pull.filter(Boolean),
+      pull.asyncMap(this._sendBlock.bind(this)),
+      pull.onEnd(cb)
+    )
 
     if (!this._timer) {
       this._timer = setTimeout(() => {
@@ -97,11 +106,12 @@ module.exports = class Engine {
 
   // Handle incoming messages
   messageReceived (peerId, msg, cb) {
+    const ledger = this._findOrCreate(peerId)
+
     if (msg.empty) {
       log('received empty message from %s', peerId.toB58String())
+      return cb()
     }
-
-    const ledger = this._findOrCreate(peerId)
 
     // If the message was a full wantlist clear the current one
     if (msg.full) {
@@ -110,27 +120,29 @@ module.exports = class Engine {
 
     this._processBlocks(msg.blocks, ledger)
     log('wantlist', Array.from(msg.wantlist.values()).map((e) => e.toString()))
-    async.eachSeries(
-      msg.wantlist.values(),
-      this._processWantlist.bind(this, ledger, peerId),
-      (err) => {
-        const done = (err) => async.setImmediate(() => cb(err))
-        if (err) return done(err)
+
+    pull(
+      pull.values(Array.from(msg.wantlist.values())),
+      pull.asyncMap((entry, cb) => {
+        this._processWantlist(ledger, peerId, entry, cb)
+      }),
+      pull.onEnd((err) => {
+        if (err) return cb(err)
         this._outbox()
-        done()
-      }
+        cb()
+      })
     )
   }
 
-  receivedBlock (block) {
-    this._processBlock(block)
+  receivedBlock (key) {
+    this._processBlock(key)
     this._outbox()
   }
 
-  _processBlock (block) {
+  _processBlock (key) {
     // Check all connected peers if they want the block we received
     for (let l of this.ledgerMap.values()) {
-      const entry = l.wantlistContains(block.key)
+      const entry = l.wantlistContains(key)
 
       if (entry) {
         this.peerRequestQueue.push(entry, l.partner)
@@ -143,13 +155,13 @@ module.exports = class Engine {
       log('cancel %s', mh.toB58String(entry.key))
       ledger.cancelWant(entry.key)
       this.peerRequestQueue.remove(entry.key, peerId)
-      async.setImmediate(() => cb())
+      setImmediate(() => cb())
     } else {
       log('wants %s - %s', mh.toB58String(entry.key), entry.priority)
       ledger.wants(entry.key, entry.priority)
 
       // If we already have the block, serve it
-      this.datastore.has(entry.key, (err, exists) => {
+      this.blockstore.has(entry.key, (err, exists) => {
         if (err) {
           log('failed existence check %s', mh.toB58String(entry.key))
         } else if (exists) {
@@ -166,7 +178,7 @@ module.exports = class Engine {
       log('got block %s (%s bytes)', mh.toB58String(block.key), block.data.length)
       ledger.receivedBytes(block.data.length)
 
-      this.receivedBlock(block)
+      this.receivedBlock(block.key)
     }
   }
 

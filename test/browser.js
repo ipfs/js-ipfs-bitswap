@@ -1,9 +1,10 @@
 'use strict'
 
-const async = require('async')
-const store = require('idb-plus-blob-store')
+const eachSeries = require('async/eachSeries')
+const Store = require('idb-pull-blob-store')
 const _ = require('lodash')
 const IPFSRepo = require('ipfs-repo')
+const pull = require('pull-stream')
 
 const repoContext = require.context('buffer!./test-repo', true)
 
@@ -24,12 +25,12 @@ function createRepo (id, done) {
     })
   })
 
-  const mainBlob = store(id)
-  const blocksBlob = store(`${id}/blocks`)
+  const mainBlob = new Store(id)
+  const blocksBlob = new Store(`${id}/blocks`)
 
   dbs.push(id)
 
-  async.eachSeries(repoData, (file, cb) => {
+  eachSeries(repoData, (file, cb) => {
     if (_.startsWith(file.key, 'datastore/')) {
       return cb()
     }
@@ -39,11 +40,12 @@ function createRepo (id, done) {
 
     const key = blocks ? file.key.replace(/^blocks\//, '') : file.key
 
-    blob.createWriteStream({
-      key: key
-    }).end(file.value, cb)
+    pull(
+      pull.values([file.value]),
+      blob.write(key, cb)
+    )
   }, () => {
-    const repo = new IPFSRepo(id, {stores: store})
+    const repo = new IPFSRepo(id, {stores: Store})
     done(null, repo)
   })
 }
