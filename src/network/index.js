@@ -47,12 +47,11 @@ module.exports = class Network {
   }
 
   _onConnection (conn) {
-    log('connected')
+    log('incomming new bitswap connection')
     pull(
       conn,
       lp.decode(),
       pull.through((data) => {
-        log('raw message', data)
         let msg
         try {
           msg = Message.fromProto(data)
