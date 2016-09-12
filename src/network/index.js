@@ -47,14 +47,11 @@ module.exports = class Network {
   }
 
   _onConnection (conn) {
+    log('incomming new bitswap connection')
     pull(
       conn,
       lp.decode(),
-      pull.collect((err, msgs) => msgs.forEach((data) => {
-        log('raw message', data)
-        if (err) {
-          return this.bitswap._receiveError(err)
-        }
+      pull.through((data) => {
         let msg
         try {
           msg = Message.fromProto(data)
@@ -67,7 +64,12 @@ module.exports = class Network {
           }
           this.bitswap._receiveMessage(peerInfo.id, msg)
         })
-      }))
+      }),
+      pull.onEnd((err) => {
+        if (err) {
+          return this.bitswap._receiveError(err)
+        }
+      })
     )
   }
 
@@ -105,6 +107,7 @@ module.exports = class Network {
     }
 
     this.libp2p.dialByPeerInfo(peerInfo, PROTOCOL_IDENTIFIER, (err, conn) => {
+      log('dialed %s', peerInfo.id.toB58String(), err)
       if (err) {
         return cb(err)
       }
