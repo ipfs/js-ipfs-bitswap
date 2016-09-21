@@ -3,6 +3,7 @@
 const debug = require('debug')
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
+const pushable = require('pull-pushable')
 
 const Message = require('../message')
 const cs = require('../constants')
@@ -15,6 +16,7 @@ module.exports = class Network {
     this.libp2p = libp2p
     this.peerBook = peerBook
     this.bitswap = bitswap
+    this.conns = {}
 
     // increase event listener max
     this.libp2p.swarm.setMaxListeners(cs.maxListeners)
@@ -47,7 +49,6 @@ module.exports = class Network {
   }
 
   _onConnection (conn) {
-    log('incomming new bitswap connection')
     pull(
       conn,
       lp.decode(),
@@ -62,10 +63,12 @@ module.exports = class Network {
           if (err) {
             return this.bitswap._receiveError(err)
           }
+          log('data from', peerInfo.id.toB58String())
           this.bitswap._receiveMessage(peerInfo.id, msg)
         })
       }),
       pull.onEnd((err) => {
+        log('ending connection')
         if (err) {
           return this.bitswap._receiveError(err)
         }
@@ -106,17 +109,31 @@ module.exports = class Network {
       return cb(err)
     }
 
-    this.libp2p.dialByPeerInfo(peerInfo, PROTOCOL_IDENTIFIER, (err, conn) => {
-      log('dialed %s', peerInfo.id.toB58String(), err)
-      if (err) {
-        return cb(err)
-      }
-      pull(
-        pull.values([msg.toProto()]),
-        lp.encode(),
-        conn
-      )
+    if (this.conns[peerInfo]) {
+      this.conns[peerInfo].push(msg.toProto())
       cb()
-    })
+    } else {
+      this.libp2p.dialByPeerInfo(peerInfo, PROTOCOL_IDENTIFIER, (err, conn) => {
+        log('dialed %s', peerInfo.id.toB58String(), err)
+        if (err) {
+          return cb(err)
+        }
+
+        const p = this.conns[peerInfo] = pushable()
+
+        pull(
+          this.conns[peerInfo],
+          lp.encode(),
+          conn,
+          pull.onEnd(() => {
+            p.end()
+            this.conns[peerInfo] = null
+          })
+        )
+
+        p.push(msg.toProto())
+        cb()
+      })
+    }
   }
 }

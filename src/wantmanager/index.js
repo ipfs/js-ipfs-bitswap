@@ -128,24 +128,23 @@ module.exports = class Wantmanager {
   }
 
   run () {
-    // TODO: is this needed? if so enable it
-    //     // resend entirew wantlist every so often
-    //     const es = []
-    //     for (let e of this.wl.entries()) {
-    //       es.push(new Message.Entry(e.key, e.priority))
-    //     }
-
-    //     this.peers.forEach((p) => {
-    //       p.addEntries(es, true)
-    //     })
-    //     timer.start()
+    // this.timer = setInterval(() => {
+    //   // resend entirew wantlist every so often
+    //   const fullwantlist = new Message(true)
+    //   for (let entry of this.wl.entries()) {
+    //     fullwantlist.addEntry(entry[1].key, entry[1].priority)
     //   }
-    // }
+
+    //   this.peers.forEach((p) => {
+    //     p.addMessage(fullwantlist)
+    //   })
+    // }, 10 * 1000)
   }
 
   stop () {
     for (let mq of this.peers.values()) {
       this.disconnected(mq.p)
     }
+    // clearInterval(this.timer)
   }
 }

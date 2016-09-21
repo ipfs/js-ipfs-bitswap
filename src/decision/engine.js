@@ -3,7 +3,8 @@
 const debug = require('debug')
 const mh = require('multihashes')
 const pull = require('pull-stream')
-const generate = require('pull-generate')
+const whilst = require('async/whilst')
+const debounce = require('lodash.debounce')
 
 const log = debug('bitswap:engine')
 log.error = debug('bitswap:engine:error')
@@ -26,6 +27,8 @@ module.exports = class Engine {
     this.peerRequestQueue = new PeerRequestQueue()
 
     this._running = false
+
+    this._outbox = debounce(this._outboxExec.bind(this), 100)
   }
 
   _sendBlock (env, cb) {
@@ -42,21 +45,23 @@ module.exports = class Engine {
     })
   }
 
-  _outbox () {
-    if (!this._running) return
+  _outboxExec () {
+    let nextTask
+    log('outbox')
 
-    const doIt = (cb) => pull(
-      generate(null, (state, cb) => {
-        log('generating', this._running)
+    whilst(
+      () => {
         if (!this._running) {
-          return cb(true)
+          return
         }
 
-        const nextTask = this.peerRequestQueue.pop()
+        nextTask = this.peerRequestQueue.pop()
+        log('check', this._running && nextTask)
+        return Boolean(nextTask)
+      },
+      (next) => {
+        log('generating')
         log('got task', nextTask)
-        if (!nextTask) {
-          return cb(true)
-        }
 
         pull(
           this.blockstore.getStream(nextTask.entry.key),
@@ -65,31 +70,20 @@ module.exports = class Engine {
             const block = blocks[0]
             if (err || !block) {
               nextTask.done()
-              return cb(null, false)
+              return next()
             }
 
-            cb(null, {
+            this._sendBlock({
               peer: nextTask.target,
               block: block,
-              sent: () => {
+              sent () {
                 nextTask.done()
               }
-            })
+            }, next)
           })
         )
-      }),
-      pull.filter(Boolean),
-      pull.asyncMap(this._sendBlock.bind(this)),
-      pull.onEnd(cb)
+      }
     )
-
-    if (!this._timer) {
-      this._timer = setTimeout(() => {
-        doIt(() => {
-          this._timer = null
-        })
-      }, 50)
-    }
   }
 
   wantlistForPeer (peerId) {

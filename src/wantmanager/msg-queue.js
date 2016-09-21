@@ -1,8 +1,7 @@
 'use strict'
 
+const queue = require('async/queue')
 const debug = require('debug')
-const pull = require('pull-stream')
-const pushable = require('pull-pushable')
 
 const Message = require('../message')
 
@@ -15,10 +14,14 @@ module.exports = class MsgQueue {
     this.network = network
     this.refcnt = 1
 
-    this.queue = pushable()
+    this.queue = queue(this.doWork.bind(this), 5)
+    this.queue.pause()
   }
 
   addMessage (msg) {
+    if (msg.empty) {
+      return
+    }
     log('addMessage: %s', this.p.toB58String(), msg)
     this.queue.push(msg)
   }
@@ -43,12 +46,13 @@ module.exports = class MsgQueue {
     this.network.connectTo(this.p, (err) => {
       if (err) {
         log.error('cant connect to peer %s: %s', this.p.toB58String(), err.message)
-        return cb()
+        return cb(err)
       }
       log('sending message', wlm)
       this.network.sendMessage(this.p, wlm, (err) => {
         if (err) {
           log.error('send error: %s', err.message)
+          return cb(err)
         }
         cb()
       })
@@ -57,20 +61,11 @@ module.exports = class MsgQueue {
 
   run () {
     log('starting queue')
-
-    pull(
-      this.queue,
-      pull.asyncMap(this.doWork.bind(this)),
-      pull.onEnd((err) => {
-        if (err) {
-          log.error('error processing message queue', err)
-        }
-        this.queue = pushable()
-      })
-    )
+    this.queue.resume()
   }
 
   stop () {
-    this.queue.end()
+    log('killing queue')
+    this.queue.kill()
   }
 }
