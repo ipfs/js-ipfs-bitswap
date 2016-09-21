@@ -14,7 +14,7 @@ module.exports = class MsgQueue {
     this.network = network
     this.refcnt = 1
 
-    this.queue = queue(this.doWork.bind(this), 5)
+    this.queue = queue(this.doWork.bind(this), 1)
     this.queue.pause()
   }
 

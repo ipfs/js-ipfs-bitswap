@@ -31,7 +31,6 @@ module.exports = class Network {
     this.libp2p.handle(PROTOCOL_IDENTIFIER, this._onConnection)
 
     this.libp2p.swarm.on('peer-mux-established', this._onPeerMux)
-
     this.libp2p.swarm.on('peer-mux-closed', this._onPeerMuxClosed)
 
     // All existing connections are like new ones for us
@@ -49,6 +48,7 @@ module.exports = class Network {
   }
 
   _onConnection (conn) {
+    log('got connection')
     pull(
       conn,
       lp.decode(),
@@ -110,28 +110,30 @@ module.exports = class Network {
     }
 
     if (this.conns[peerInfo]) {
+      log('connection exists')
       this.conns[peerInfo].push(msg.toProto())
       cb()
     } else {
+      log('dialByPeerInfo')
       this.libp2p.dialByPeerInfo(peerInfo, PROTOCOL_IDENTIFIER, (err, conn) => {
         log('dialed %s', peerInfo.id.toB58String(), err)
         if (err) {
           return cb(err)
         }
 
-        const p = this.conns[peerInfo] = pushable()
+        this.conns[peerInfo] = pushable()
+        this.conns[peerInfo].push(msg.toProto())
 
         pull(
           this.conns[peerInfo],
           lp.encode(),
           conn,
-          pull.onEnd(() => {
-            p.end()
+          pull.onEnd((err) => {
+            this.conns[peerInfo].end()
             this.conns[peerInfo] = null
           })
         )
 
-        p.push(msg.toProto())
         cb()
       })
     }
