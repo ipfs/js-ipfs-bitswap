@@ -27,6 +27,5 @@ build/Release
 node_modules
 
 dist
-lib
 
 test/test-repo-for*

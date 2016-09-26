@@ -3,6 +3,8 @@
 
 const expect = require('chai').expect
 const PeerId = require('peer-id')
+const parallel = require('async/parallel')
+const series = require('async/series')
 
 const cs = require('../../src/constants')
 const Message = require('../../src/message')
@@ -12,48 +14,60 @@ const mockNetwork = require('../utils').mockNetwork
 
 describe('Wantmanager', () => {
   it('sends wantlist to all connected peers', (done) => {
-    const peer1 = PeerId.create({bits: 64})
-    const peer2 = PeerId.create({bits: 64})
-    let wm
-    const network = mockNetwork(6, (calls) => {
-      expect(calls.connects).to.have.length(6)
-      const m1 = new Message(true)
-      m1.addEntry(new Buffer('hello'), cs.kMaxPriority)
-      m1.addEntry(new Buffer('world'), cs.kMaxPriority - 1)
+    parallel([
+      (cb) => PeerId.create(cb),
+      (cb) => PeerId.create(cb)
+    ], (err, peers) => {
+      if (err) {
+        return done(err)
+      }
 
-      const m2 = new Message(false)
-      m2.cancel(new Buffer('world'))
+      const peer1 = peers[0]
+      const peer2 = peers[1]
 
-      const m3 = new Message(false)
-      m3.addEntry(new Buffer('foo'), cs.kMaxPriority)
+      let wm
+      const network = mockNetwork(6, (calls) => {
+        expect(calls.connects).to.have.length(6)
+        const m1 = new Message(true)
+        m1.addEntry(new Buffer('hello'), cs.kMaxPriority)
+        m1.addEntry(new Buffer('world'), cs.kMaxPriority - 1)
 
-      const msgs = [m1, m1, m2, m2, m3, m3]
+        const m2 = new Message(false)
+        m2.cancel(new Buffer('world'))
 
-      calls.messages.forEach((m, i) => {
-        expect(m[0]).to.be.eql(calls.connects[i])
-        expect(m[1].equals(msgs[i])).to.be.eql(true)
+        const m3 = new Message(false)
+        m3.addEntry(new Buffer('foo'), cs.kMaxPriority)
+
+        const msgs = [m1, m1, m2, m2, m3, m3]
+
+        calls.messages.forEach((m, i) => {
+          expect(m[0]).to.be.eql(calls.connects[i])
+          expect(m[1].equals(msgs[i])).to.be.eql(true)
+        })
+
+        wm = null
+        done()
       })
 
-      wm = null
-      done()
-    })
+      wm = new Wantmanager(network)
 
-    wm = new Wantmanager(network)
+      wm.run()
+      wm.wantBlocks([new Buffer('hello'), new Buffer('world')])
 
-    wm.run()
-    wm.wantBlocks([new Buffer('hello'), new Buffer('world')])
+      wm.connected(peer1)
+      wm.connected(peer2)
 
-    wm.connected(peer1)
-    wm.connected(peer2)
-
-    setTimeout(() => {
-      wm.cancelWants([new Buffer('world')])
-      setTimeout(() => {
+      series([
+        (cb) => setTimeout(cb, 100),
+        (cb) => {
+          wm.cancelWants([new Buffer('world')])
+          cb()
+        },
+        (cb) => setTimeout(cb, 100)
+      ], (err) => {
+        expect(err).to.not.exist
         wm.wantBlocks([new Buffer('foo')])
-
-        wm.disconnected(peer1)
-        wm.disconnected(peer2)
-      }, 100)
-    }, 100)
+      })
+    })
   })
 })

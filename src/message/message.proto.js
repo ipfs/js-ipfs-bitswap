@@ -1,4 +1,6 @@
-package bitswap.message.pb;
+'use strict'
+
+module.exports = `package bitswap.message.pb;
 
 message Message {
 
@@ -16,4 +18,4 @@ message Message {
 
   optional Wantlist wantlist = 1;
   repeated bytes blocks = 2;
-}
+}`

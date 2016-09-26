@@ -10,6 +10,7 @@ const mh = require('multihashes')
 const pull = require('pull-stream')
 const paramap = require('pull-paramap')
 const defer = require('pull-defer/source')
+const Block = require('ipfs-block')
 
 const cs = require('./constants')
 const WantManager = require('./wantmanager')
@@ -59,7 +60,7 @@ module.exports = class Bitwap {
 
       pull(
         pull.values(iblocks),
-        pull.map((block) => block.key),
+        pull.asyncMap((block, cb) => block.key(cb)),
         pull.filter((key) => this.wm.wl.contains(key)),
         pull.collect((err, keys) => {
           if (err) {
@@ -78,7 +79,6 @@ module.exports = class Bitwap {
   }
 
   _handleReceivedBlock (peerId, block, cb) {
-    log('handling block', block)
     series([
       (cb) => this._updateReceiveCounters(block, (err) => {
         if (err) {
@@ -87,33 +87,44 @@ module.exports = class Bitwap {
           return cb()
         }
 
-        log('got block from %s', peerId.toB58String(), block.data.toString())
+        log('got block from %s', peerId.toB58String(), block.data.length)
         cb()
       }),
-      (cb) => this.put(block, (err) => {
+      (cb) => block.key((err, key) => {
         if (err) {
-          log.error('receiveMessage put error: %s', err.message)
+          return cb(err)
         }
-        cb()
+        this.put({data: block.data, key: key}, (err) => {
+          if (err) {
+            log.error('receiveMessage put error: %s', err.message)
+          }
+          cb()
+        })
       })
     ], cb)
   }
 
   _updateReceiveCounters (block, cb) {
     this.blocksRecvd ++
-    this.blockstore.has(block.key, (err, has) => {
+    block.key((err, key) => {
       if (err) {
-        log('blockstore.has error: %s', err.message)
         return cb(err)
       }
 
-      if (has) {
-        this.dupBlocksRecvd ++
-        this.dupDataRecvd += block.data.length
-        return cb(new Error('Already have block'))
-      }
+      this.blockstore.has(key, (err, has) => {
+        if (err) {
+          log('blockstore.has error: %s', err.message)
+          return cb(err)
+        }
 
-      cb()
+        if (has) {
+          this.dupBlocksRecvd ++
+          this.dupDataRecvd += block.data.length
+          return cb(new Error('Already have block'))
+        }
+
+        cb()
+      })
     })
   }
 
@@ -122,6 +133,7 @@ module.exports = class Bitwap {
     retry({times, interval: 400}, (done) => {
       pull(
         pull.values([block]),
+        pull.asyncMap(blockToStore),
         this.blockstore.putStream(),
         pull.onEnd(done)
       )
@@ -150,6 +162,7 @@ module.exports = class Bitwap {
   }
 
   getStream (keys) {
+    log('getStream', keys.length)
     if (!Array.isArray(keys)) {
       return this._getStreamSingle(keys)
     }
@@ -167,6 +180,7 @@ module.exports = class Bitwap {
   }
 
   _getStreamSingle (key) {
+    log('getStreamSingle', mh.toB58String(key))
     const unwantListeners = {}
     const blockListeners = {}
     const unwantEvent = (key) => `unwant:${key}`
@@ -197,7 +211,7 @@ module.exports = class Bitwap {
       }
 
       blockListeners[keyS] = (block) => {
-        this.wm.cancelWants([block.key])
+        this.wm.cancelWants([key])
         cleanupListener(key)
         d.resolve(pull.values([block]))
       }
@@ -211,6 +225,7 @@ module.exports = class Bitwap {
         return d.resolve(pull.error(err))
       }
       if (exists) {
+        log('already have block', mh.toB58String(key))
         return d.resolve(this.blockstore.getStream(key))
       }
 
@@ -243,24 +258,32 @@ module.exports = class Bitwap {
 
   putStream () {
     return pull(
-      pull.asyncMap((block, cb) => {
-        this.blockstore.has(block.key, (err, exists) => {
-          if (err) return cb(err)
-          cb(null, [block, exists])
+      pull.asyncMap((blockAndKey, cb) => {
+        this.blockstore.has(blockAndKey.key, (err, exists) => {
+          if (err) {
+            return cb(err)
+          }
+          cb(null, [new Block(blockAndKey.data), exists])
         })
       }),
       pull.filter((val) => !val[1]),
       pull.map((val) => {
         const block = val[0]
-
+        log('putting block')
         return pull(
           pull.values([block]),
+          pull.asyncMap(blockToStore),
           this.blockstore.putStream(),
-          pull.through((meta) => {
-            const key = block.key
-            log('put block: %s', mh.toB58String(key))
-            this.notifications.emit(`block:${mh.toB58String(key)}`, block)
-            this.engine.receivedBlock(key)
+          pull.asyncMap((meta, cb) => {
+            block.key((err, key) => {
+              if (err) {
+                return cb(err)
+              }
+              log('put block: %s', mh.toB58String(key))
+              this.notifications.emit(`block:${mh.toB58String(key)}`, block)
+              this.engine.receivedBlock(key)
+              cb(null, meta)
+            })
           })
         )
       }),
@@ -269,9 +292,9 @@ module.exports = class Bitwap {
   }
 
   // announces the existance of a block to this service
-  put (block, cb) {
+  put (blockAndKey, cb) {
     pull(
-      pull.values([block]),
+      pull.values([blockAndKey]),
       this.putStream(),
       pull.onEnd(cb)
     )
@@ -303,4 +326,14 @@ module.exports = class Bitwap {
     this.network.stop()
     this.engine.stop()
   }
+}
+
+// Helper method, to add a cid to a block before storing it in the ipfs-repo/blockstore
+function blockToStore (b, cb) {
+  b.key((err, key) => {
+    if (err) {
+      return cb(err)
+    }
+    cb(null, {data: b.data, key: key})
+  })
 }

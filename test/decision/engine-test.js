@@ -1,3 +1,4 @@
+/* eslint max-nested-callbacks: ["error", 8] */
 /* eslint-env mocha */
 'use strict'
 
@@ -7,6 +8,7 @@ const _ = require('lodash')
 const Block = require('ipfs-block')
 const parallel = require('async/parallel')
 const series = require('async/series')
+const map = require('async/map')
 const eachSeries = require('async/eachSeries')
 const pull = require('pull-stream')
 const paramap = require('pull-paramap')
@@ -18,13 +20,19 @@ const mockNetwork = require('../utils').mockNetwork
 
 module.exports = (repo) => {
   function newEngine (id, done) {
-    repo.create(id, (err, repo) => {
-      if (err) return done(err)
-      const engine = new Engine(repo.blockstore, mockNetwork())
+    parallel([
+      (cb) => repo.create(id, cb),
+      (cb) => PeerId.create(cb)
+    ], (err, results) => {
+      if (err) {
+        return done(err)
+      }
+      const blockstore = results[0].blockstore
+      const engine = new Engine(blockstore, mockNetwork())
       engine.start()
 
       done(null, {
-        peer: PeerId.create({bits: 64}),
+        peer: results[1],
         engine
       })
     })
@@ -48,11 +56,18 @@ module.exports = (repo) => {
         pull(
           pull.values(_.range(1000)),
           paramap((i, cb) => {
-            const m = new Message(false)
             const content = `this is message ${i}`
-            m.addBlock(new Block(content))
-            sender.engine.messageSent(receiver.peer, m)
-            receiver.engine.messageReceived(sender.peer, m, cb)
+            cb(null, new Block(content))
+          }),
+          paramap((block, cb) => {
+            const m = new Message(false)
+            m.addBlock(block, (err) => {
+              if (err) {
+                return cb(err)
+              }
+              sender.engine.messageSent(receiver.peer, m)
+              receiver.engine.messageReceived(sender.peer, m, cb)
+            })
           }, 100),
           pull.onEnd((err) => {
             expect(err).to.not.exist
@@ -139,29 +154,40 @@ module.exports = (repo) => {
 
         pull(
           pull.values(alphabet),
-          pull.map((l) => new Block(l)),
+          pull.asyncMap((l, cb) => {
+            const block = new Block(l)
+            block.key((err, key) => {
+              if (err) {
+                return cb(err)
+              }
+              cb(null, {data: block.data, key: key})
+            })
+          }),
           repo.blockstore.putStream(),
           pull.onEnd((err) => {
             expect(err).to.not.exist
 
             const partnerWants = (e, keys, p, cb) => {
               const add = new Message(false)
-              keys.forEach((letter, i) => {
-                const block = new Block(letter)
-                add.addEntry(block.key, Math.pow(2, 32) - 1 - i)
-              })
+              const blocks = keys.map((k) => new Block(k))
+              map(blocks, (b, cb) => b.key(cb), (err, keys) => {
+                expect(err).to.not.exist
+                blocks.forEach((b, i) => {
+                  add.addEntry(keys[i], Math.pow(2, 32) - 1 - i)
+                })
 
-              e.messageReceived(p, add, cb)
+                e.messageReceived(p, add, cb)
+              })
             }
 
             const partnerCancels = (e, keys, p, cb) => {
               const cancels = new Message(false)
-              keys.forEach((k) => {
-                const block = new Block(k)
-                cancels.cancel(block.key)
+              const blocks = keys.map((k) => new Block(k))
+              map(blocks, (b, cb) => b.key(cb), (err, keys) => {
+                expect(err).to.not.exist
+                keys.forEach((k) => cancels.cancel(k))
+                e.messageReceived(p, cancels, cb)
               })
-
-              e.messageReceived(p, cancels, cb)
             }
 
             eachSeries(_.range(numRounds), (i, cb) => {
@@ -186,10 +212,17 @@ module.exports = (repo) => {
 
                 const e = new Engine(repo.blockstore, network)
                 e.start()
-                const partner = PeerId.create({bits: 64})
+                let partner
                 series([
-                  (c) => partnerWants(e, set, partner, c),
-                  (c) => partnerCancels(e, cancels, partner, c)
+                  (cb) => PeerId.create((err, id) => {
+                    if (err) {
+                      return cb(err)
+                    }
+                    partner = id
+                    cb()
+                  }),
+                  (cb) => partnerWants(e, set, partner, cb),
+                  (cb) => partnerCancels(e, cancels, partner, cb)
                 ], (err) => {
                   if (err) throw err
                 })

@@ -2,63 +2,83 @@
 'use strict'
 
 const expect = require('chai').expect
-const fs = require('fs')
 const Block = require('ipfs-block')
 const protobuf = require('protocol-buffers')
-const path = require('path')
 const mh = require('multihashes')
-const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../src/message/message.proto')))
+const series = require('async/series')
+const map = require('async/map')
+const pbm = protobuf(require('../src/message/message.proto'))
 
 const BitswapMessage = require('../src/message')
 
 describe('BitswapMessage', () => {
-  it('go interop', () => {
+  let blocks
+  let keys
+
+  before((done) => {
+    const data = [
+      'foo',
+      'hello',
+      'world'
+    ]
+    blocks = data.map((d) => new Block(d))
+    map(blocks, (b, cb) => b.key(cb), (err, res) => {
+      if (err) {
+        return done(err)
+      }
+      keys = res
+      done()
+    })
+  })
+
+  it('go interop', (done) => {
     const goEncoded = new Buffer('CioKKAoiEiAs8k26X7CjDiboOyrFueKeGxYeXB+nQl5zBDNik4uYJBAKGAA=', 'base64')
 
     const m = new BitswapMessage(false)
     m.addEntry(mh.fromB58String('QmRN6wdp1S2A5EtjW9A3M1vKSBuQQGcgvuhoMUoEz4iiT5'), 10)
 
-    expect(
-      BitswapMessage.fromProto(goEncoded)
-    ).to.be.eql(
-      m
-    )
+    BitswapMessage.fromProto(goEncoded, (err, res) => {
+      expect(err).to.not.exist
+      expect(res).to.be.eql(m)
 
-    expect(
-      m.toProto()
-    ).to.be.eql(
-      goEncoded
-    )
+      expect(
+        m.toProto()
+      ).to.be.eql(
+        goEncoded
+      )
+      done()
+    })
   })
 
   it('append wanted', () => {
-    const str = 'foo'
-    const block = new Block(str)
+    const key = keys[1]
     const m = new BitswapMessage(true)
-    m.addEntry(block.key, 1)
+    m.addEntry(key, 1)
 
     expect(
       pbm.Message.decode(m.toProto()).wantlist.entries[0]
     ).to.be.eql({
-      block: block.key,
+      block: key,
       priority: 1,
       cancel: false
     })
   })
 
-  it('encodes blocks', () => {
-    const block = new Block('hello')
+  it('encodes blocks', (done) => {
+    const block = blocks[1]
     const m = new BitswapMessage(true)
-    m.addBlock(block)
-
-    expect(
-      pbm.Message.decode(m.toProto()).blocks
-    ).to.be.eql([
-      block.data
-    ])
+    m.addBlock(block, (err) => {
+      expect(err).to.not.exist
+      expect(
+        pbm.Message.decode(m.toProto()).blocks
+      ).to.be.eql([
+        block.data
+      ])
+      done()
+    })
   })
 
-  it('new message fromProto', () => {
+  it('new message fromProto', (done) => {
     const raw = pbm.Message.encode({
       wantlist: {
         entries: [{
@@ -70,42 +90,52 @@ describe('BitswapMessage', () => {
       blocks: ['hello', 'world']
     })
 
-    const protoMessage = BitswapMessage.fromProto(raw)
+    BitswapMessage.fromProto(raw, (err, protoMessage) => {
+      expect(err).to.not.exist
+      expect(
+        protoMessage.full
+      ).to.be.eql(
+        true
+      )
+      expect(
+        Array.from(protoMessage.wantlist)
+      ).to.be.eql([
+        [mh.toB58String(new Buffer('hello')), new BitswapMessage.Entry(new Buffer('hello'), 0, false)]
+      ])
 
-    expect(
-      protoMessage.full
-    ).to.be.eql(
-      true
-    )
-    expect(
-      Array.from(protoMessage.wantlist)
-    ).to.be.eql([
-      [mh.toB58String(new Buffer('hello')), new BitswapMessage.Entry(new Buffer('hello'), 0, false)]
-    ])
+      const b1 = blocks[1]
+      const b2 = blocks[2]
+      const k1 = keys[1]
+      const k2 = keys[2]
 
-    const b1 = new Block('hello')
-    const b2 = new Block('world')
-    expect(
-      Array.from(protoMessage.blocks)
-    ).to.be.eql([
-      [mh.toB58String(b1.key), b1],
-      [mh.toB58String(b2.key), b2]
-    ])
+      expect(
+        Array.from(protoMessage.blocks).map((b) => [b[0], b[1].data])
+      ).to.be.eql([
+        [mh.toB58String(k1), b1.data],
+        [mh.toB58String(k2), b2.data]
+      ])
+
+      done()
+    })
   })
 
-  it('duplicates', () => {
-    const b = new Block('foo')
+  it('duplicates', (done) => {
+    const b = blocks[0]
+    const key = keys[0]
     const m = new BitswapMessage(true)
 
-    m.addEntry(b.key, 1)
-    m.addEntry(b.key, 1)
+    m.addEntry(key, 1)
+    m.addEntry(key, 1)
 
     expect(m.wantlist.size).to.be.eql(1)
-
-    m.addBlock(b)
-    m.addBlock(b)
-
-    expect(m.blocks.size).to.be.eql(1)
+    series([
+      (cb) => m.addBlock(b, cb),
+      (cb) => m.addBlock(b, cb)
+    ], (err) => {
+      expect(err).to.not.exist
+      expect(m.blocks.size).to.be.eql(1)
+      done()
+    })
   })
 
   it('empty', () => {
@@ -129,30 +159,42 @@ describe('BitswapMessage', () => {
   })
 
   describe('.equals', () => {
-    it('true, same message', () => {
-      const b = new Block('foo')
+    it('true, same message', (done) => {
+      const b = blocks[0]
+      const key = keys[0]
       const m1 = new BitswapMessage(true)
       const m2 = new BitswapMessage(true)
 
-      m1.addEntry(b.key, 1)
-      m1.addBlock(b)
-      m2.addEntry(b.key, 1)
-      m2.addBlock(b)
+      m1.addEntry(key, 1)
+      m2.addEntry(key, 1)
 
-      expect(m1.equals(m2)).to.be.eql(true)
+      series([
+        (cb) => m1.addBlock(b, cb),
+        (cb) => m2.addBlock(b, cb)
+      ], (err) => {
+        expect(err).to.not.exist
+        expect(m1.equals(m2)).to.be.eql(true)
+        done()
+      })
     })
 
-    it('false, different entries', () => {
-      const b = new Block('foo')
+    it('false, different entries', (done) => {
+      const b = blocks[0]
+      const key = keys[0]
       const m1 = new BitswapMessage(true)
       const m2 = new BitswapMessage(true)
 
-      m1.addEntry(b.key, 1)
-      m1.addBlock(b)
-      m2.addEntry(b.key, 2)
-      m2.addBlock(b)
+      m1.addEntry(key, 1)
+      m2.addEntry(key, 2)
 
-      expect(m1.equals(m2)).to.be.eql(false)
+      series([
+        (cb) => m1.addBlock(b, cb),
+        (cb) => m2.addBlock(b, cb)
+      ], (err) => {
+        expect(err).to.not.exist
+        expect(m1.equals(m2)).to.be.eql(false)
+        done()
+      })
     })
   })
 

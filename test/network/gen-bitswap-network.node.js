@@ -1,16 +1,17 @@
-/* eslint-env mocha */
 /* eslint max-nested-callbacks: ["error", 8] */
+/* eslint-env mocha */
 'use strict'
 
 const expect = require('chai').expect
-const utils = require('../utils')
 const series = require('async/series')
 const parallel = require('async/parallel')
+const map = require('async/map')
 const each = require('async/each')
 const _ = require('lodash')
 const Block = require('ipfs-block')
 const Buffer = require('safe-buffer').Buffer
 const pull = require('pull-stream')
+const utils = require('../utils')
 
 describe('gen Bitswap network', function () {
   // CI is very slow
@@ -21,32 +22,49 @@ describe('gen Bitswap network', function () {
       expect(err).to.not.exist
 
       const node = nodes[0]
-      const blocks = _.range(100).map((k) => {
-        const b = Buffer.alloc(1024)
-        b.fill(k)
-        return new Block(b)
-      })
+      let blocks
 
       series([
+        (cb) => map(_.range(100), (k, cb) => {
+          const b = Buffer.alloc(1024)
+          b.fill(k)
+          cb(null, new Block(b))
+        }, (err, _blocks) => {
+          if (err) {
+            return cb(err)
+          }
+          blocks = _blocks
+          cb()
+        }),
         (cb) => {
           pull(
             pull.values(blocks),
+            pull.asyncMap((b, cb) => {
+              b.key((err, key) => {
+                if (err) {
+                  return cb(err)
+                }
+
+                cb(null, {data: b.data, key: key})
+              })
+            }),
             node.bitswap.putStream(),
             pull.onEnd(cb)
           )
         },
         (cb) => {
           each(_.range(100), (i, cb) => {
-            pull(
-              node.bitswap.getStream(
-                blocks.map((b) => b.key)
-              ),
-              pull.collect((err, res) => {
-                if (err) return cb(err)
-                expect(res).to.have.length(blocks.length)
-                cb()
-              })
-            )
+            map(blocks, (b, cb) => b.key(cb), (err, keys) => {
+              expect(err).to.not.exist
+              pull(
+                node.bitswap.getStream(keys),
+                pull.collect((err, res) => {
+                  expect(err).to.not.exist
+                  expect(res).to.have.length(blocks.length)
+                  cb()
+                })
+              )
+            })
           }, cb)
         }
       ], (err) => {
@@ -79,45 +97,55 @@ describe('gen Bitswap network', function () {
 
           const round = (j, cb) => {
             const blockFactor = 10
-            const blocks = _.range(n * blockFactor).map((k) => {
-              const buf = Buffer.alloc(1024)
-              buf.fill(k)
-              buf[0] = j
-              return new Block(buf)
-            })
+            map(_.range(n * blockFactor), (k, cb) => {
+              const b = Buffer.alloc(1024)
+              b.fill(k)
+              cb(null, new Block(b))
+            }, (err, blocks) => {
+              if (err) {
+                return cb(err)
+              }
 
-            const d = (new Date()).getTime()
+              const d = (new Date()).getTime()
 
-            parallel(_.map(nodeArr, (node, i) => (callback) => {
-              node.bitswap.start()
-              parallel([
-                (finish) => {
-                  pull(
+              parallel(_.map(nodeArr, (node, i) => (callback) => {
+                node.bitswap.start()
+                parallel([
+                  (finish) => pull(
                     pull.values(
                       _.range(blockFactor)
                     ),
                     pull.map((j) => blocks[i * blockFactor + j]),
+                    pull.asyncMap((b, cb) => {
+                      b.key((err, key) => {
+                        if (err) {
+                          return cb(err)
+                        }
+                        cb(null, {data: b.data, key: key})
+                      })
+                    }),
                     node.bitswap.putStream(),
                     pull.onEnd(finish)
-                  )
-                },
-                (finish) => {
-                  pull(
-                    node.bitswap.getStream(
-                      blocks.map((b) => b.key)
-                    ),
-                    pull.collect((err, res) => {
-                      if (err) return finish(err)
-                      expect(res).to.have.length(blocks.length)
-                      finish()
+                  ),
+                  (finish) => {
+                    map(blocks, (b, cb) => b.key(cb), (err, keys) => {
+                      expect(err).to.not.exist
+                      pull(
+                        node.bitswap.getStream(keys),
+                        pull.collect((err, res) => {
+                          expect(err).to.not.exist
+                          expect(res).to.have.length(blocks.length)
+                          finish()
+                        })
+                      )
                     })
-                  )
-                }
-              ], callback)
-            }), (err) => {
-              if (err) return cb(err)
-              console.log('  time -- %s', (new Date()).getTime() - d)
-              cb()
+                  }
+                ], callback)
+              }), (err) => {
+                expect(err).to.not.exist
+                console.log('  time -- %s', (new Date()).getTime() - d)
+                cb()
+              })
             })
           }
 
@@ -133,7 +161,7 @@ describe('gen Bitswap network', function () {
                 }), (err2) => {
                   done(err || err2)
                 })
-              }, 2000)
+              }, 3000)
             }
           )
         })

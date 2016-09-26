@@ -1,14 +1,13 @@
 'use strict'
 
 const protobuf = require('protocol-buffers')
-const fs = require('fs')
 const Block = require('ipfs-block')
-const path = require('path')
 const isEqualWith = require('lodash.isequalwith')
 const mh = require('multihashes')
 const assert = require('assert')
+const map = require('async/map')
 
-const pbm = protobuf(fs.readFileSync(path.join(__dirname, 'message.proto')))
+const pbm = protobuf(require('./message.proto'))
 const Entry = require('./entry')
 
 class BitswapMessage {
@@ -35,8 +34,15 @@ class BitswapMessage {
     }
   }
 
-  addBlock (block) {
-    this.blocks.set(mh.toB58String(block.key), block)
+  addBlock (block, cb) {
+    block.key((err, key) => {
+      if (err) {
+        return cb(err)
+      }
+
+      this.blocks.set(mh.toB58String(key), block)
+      cb()
+    })
   }
 
   cancel (key) {
@@ -90,16 +96,20 @@ class BitswapMessage {
   }
 }
 
-BitswapMessage.fromProto = (raw) => {
+BitswapMessage.fromProto = (raw, callback) => {
   const dec = pbm.Message.decode(raw)
   const m = new BitswapMessage(dec.wantlist.full)
 
   dec.wantlist.entries.forEach((e) => {
     m.addEntry(e.block, e.priority, e.cancel)
   })
-  dec.blocks.forEach((b) => m.addBlock(new Block(b)))
 
-  return m
+  map(dec.blocks, (b, cb) => m.addBlock(new Block(b), cb), (err) => {
+    if (err) {
+      return callback(err)
+    }
+    callback(null, m)
+  })
 }
 
 BitswapMessage.Entry = Entry

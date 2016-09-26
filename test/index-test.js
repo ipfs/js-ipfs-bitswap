@@ -5,6 +5,9 @@
 const eachSeries = require('async/eachSeries')
 const waterfall = require('async/waterfall')
 const each = require('async/each')
+const map = require('async/map')
+const parallel = require('async/parallel')
+const setImmediate = require('async/setImmediate')
 const _ = require('lodash')
 const expect = require('chai').expect
 const PeerId = require('peer-id')
@@ -18,7 +21,7 @@ const Bitswap = require('../src')
 
 const utils = require('./utils')
 
-const makeBlock = () => new Block(`hello world ${Math.random()}`)
+const makeBlock = (cb) => cb(null, new Block(`hello world ${Math.random()}`))
 
 module.exports = (repo) => {
   const libp2pMock = {
@@ -32,11 +35,23 @@ module.exports = (repo) => {
 
   describe('bitswap', () => {
     let store
+    let blocks
+    let ids
 
     before((done) => {
-      repo.create('hello', (err, r) => {
-        if (err) return done(err)
-        store = r.blockstore
+      parallel([
+        (cb) => repo.create('hello', cb),
+        (cb) => map(_.range(12), (i, cb) => makeBlock(cb), cb),
+        (cb) => map(_.range(2), (i, cb) => PeerId.create(cb), cb)
+      ], (err, results) => {
+        if (err) {
+          return done(err)
+        }
+
+        store = results[0].blockstore
+        blocks = results[1]
+        ids = results[2]
+
         done()
       })
     })
@@ -47,111 +62,150 @@ module.exports = (repo) => {
 
     describe('receive message', () => {
       it('simple block message', (done) => {
-        const me = PeerId.create({bits: 64})
+        const me = ids[0]
         const book = new PeerBook()
         const bs = new Bitswap(me, libp2pMock, store, book)
         bs.start()
 
-        const other = PeerId.create({bits: 64})
-        const b1 = makeBlock()
-        const b2 = makeBlock()
+        const other = ids[1]
+        const b1 = blocks[0]
+        const b2 = blocks[1]
         const msg = new Message(false)
-        msg.addBlock(b1)
-        msg.addBlock(b2)
+        each([b1, b2], (b, cb) => msg.addBlock(b, cb), (err) => {
+          expect(err).to.not.exist
 
-        bs._receiveMessage(other, msg, (err) => {
-          if (err) throw err
+          bs._receiveMessage(other, msg, (err) => {
+            if (err) {
+              throw err
+            }
 
-          expect(bs.blocksRecvd).to.be.eql(2)
-          expect(bs.dupBlocksRecvd).to.be.eql(0)
+            expect(bs.blocksRecvd).to.be.eql(2)
+            expect(bs.dupBlocksRecvd).to.be.eql(0)
 
-          pull(
-            pull.values([b1, b1]),
-            pull.map((block) => store.getStream(block.key)),
-            pull.flatten(),
-            pull.collect((err, blocks) => {
-              if (err) return done(err)
+            pull(
+              pull.values([b1, b2]),
+              pull.asyncMap((b, cb) => b.key(cb)),
+              pull.map((key) => store.getStream(key)),
+              pull.flatten(),
+              pull.collect((err, blocks) => {
+                if (err) return done(err)
 
-              expect(blocks).to.be.eql([b1, b1])
-              done()
-            })
-          )
+                expect(blocks[0].data).to.be.eql(b1.data)
+                expect(blocks[1].data).to.be.eql(b2.data)
+                done()
+              })
+            )
+          })
         })
       })
 
       it('simple want message', (done) => {
-        const me = PeerId.create({bits: 64})
+        const me = ids[0]
         const book = new PeerBook()
         const bs = new Bitswap(me, libp2pMock, store, book)
         bs.start()
 
-        const other = PeerId.create({bits: 64})
-        const b1 = makeBlock()
-        const b2 = makeBlock()
+        const other = ids[1]
+        const b1 = blocks[2]
+        const b2 = blocks[3]
         const msg = new Message(false)
-        msg.addEntry(b1.key, 1, false)
-        msg.addEntry(b2.key, 1, false)
+        parallel([
+          (cb) => b1.key(cb),
+          (cb) => b2.key(cb)
+        ], (err, keys) => {
+          expect(err).to.not.exist
 
-        bs._receiveMessage(other, msg, (err) => {
-          if (err) throw err
+          msg.addEntry(keys[0], 1, false)
+          msg.addEntry(keys[1], 1, false)
 
-          expect(bs.blocksRecvd).to.be.eql(0)
-          expect(bs.dupBlocksRecvd).to.be.eql(0)
+          bs._receiveMessage(other, msg, (err) => {
+            expect(err).to.not.exist
 
-          const wl = bs.wantlistForPeer(other)
+            expect(bs.blocksRecvd).to.be.eql(0)
+            expect(bs.dupBlocksRecvd).to.be.eql(0)
 
-          expect(wl.has(mh.toB58String(b1.key))).to.be.eql(true)
-          expect(wl.has(mh.toB58String(b2.key))).to.be.eql(true)
+            const wl = bs.wantlistForPeer(other)
 
-          done()
+            expect(wl.has(mh.toB58String(keys[0]))).to.be.eql(true)
+            expect(wl.has(mh.toB58String(keys[1]))).to.be.eql(true)
+
+            done()
+          })
         })
       })
 
       it('multi peer', (done) => {
-        const me = PeerId.create({bits: 64})
+        const me = ids[0]
         const book = new PeerBook()
         const bs = new Bitswap(me, libp2pMock, store, book)
         bs.start()
 
-        const others = _.range(5).map(() => PeerId.create({bits: 64}))
-        const blocks = _.range(10).map((i) => new Block(`hello ${i}`))
-        const messages = _.range(5).map((i) => {
-          const m = new Message(false)
-          m.addBlock(blocks[i])
-          m.addBlock(blocks[5 + i])
-          return m
-        })
-        let i = 0
-        eachSeries(others, (other, cb) => {
-          const msg = messages[i]
-          i++
-          bs._receiveMessage(other, msg, (err) => {
-            if (err) return cb(err)
-            hasBlocks(msg, store, cb)
+        parallel([
+          (cb) => map(_.range(5), (i, cb) => PeerId.create(cb), cb),
+          (cb) => cb(null, _.range(10).map((i) => new Block(`hello ${i}`)))
+        ], (err, results) => {
+          if (err) {
+            return done(err)
+          }
+
+          const others = results[0]
+          const blocks = results[1]
+
+          map(_.range(5), (i, cb) => {
+            const m = new Message(false)
+            each(
+              [blocks[i], blocks[5 + i]],
+              (b, cb) => m.addBlock(b, cb),
+              (err) => {
+                if (err) {
+                  return cb(err)
+                }
+                cb(null, m)
+              }
+            )
+          }, (err, messages) => {
+            expect(err).to.not.exist
+            let i = 0
+            eachSeries(others, (other, cb) => {
+              const msg = messages[i]
+              i++
+              bs._receiveMessage(other, msg, (err) => {
+                if (err) return cb(err)
+                hasBlocks(msg, store, cb)
+              })
+            }, done)
           })
-        }, done)
+        })
       })
     })
 
     describe('getStream', () => {
       it('block exists locally', (done) => {
-        const me = PeerId.create({bits: 64})
-        const block = makeBlock()
+        const me = ids[0]
+        const block = blocks[4]
         pull(
           pull.values([block]),
+          pull.asyncMap(blockToStore),
           store.putStream(),
           pull.onEnd((err) => {
-            if (err) return done(err)
+            if (err) {
+              return done(err)
+            }
 
             const book = new PeerBook()
             const bs = new Bitswap(me, libp2pMock, store, book)
 
             pull(
-              bs.getStream(block.key),
+              pull.values([block]),
+              pull.asyncMap((b, cb) => b.key(cb)),
+              pull.map((key) => bs.getStream(key)),
+              pull.flatten(),
               pull.collect((err, res) => {
-                if (err) return done(err)
+                if (err) {
+                  return done(err)
+                }
 
-                expect(res).to.be.eql([block])
+                expect(res[0].data).to.be.eql(block.data)
                 done()
               })
             )
@@ -160,27 +214,37 @@ module.exports = (repo) => {
       })
 
       it('blocks exist locally', (done) => {
-        const me = PeerId.create({bits: 64})
-        const b1 = makeBlock()
-        const b2 = makeBlock()
-        const b3 = makeBlock()
+        const me = ids[0]
+        const b1 = blocks[5]
+        const b2 = blocks[6]
+        const b3 = blocks[7]
 
         pull(
           pull.values([b1, b2, b3]),
+          pull.asyncMap(blockToStore),
           store.putStream(),
           pull.onEnd((err) => {
-            if (err) return done(err)
+            expect(err).to.not.exist
 
             const book = new PeerBook()
             const bs = new Bitswap(me, libp2pMock, store, book)
 
             pull(
-              bs.getStream([b1.key, b2.key, b3.key]),
-              pull.collect((err, res) => {
-                if (err) return done(err)
+              pull.values([b1, b2, b3]),
+              pull.asyncMap((b, cb) => b.key(cb)),
+              pull.collect((err, keys) => {
+                expect(err).to.not.exist
+                pull(
+                  bs.getStream(keys),
+                  pull.collect((err, res) => {
+                    expect(err).to.not.exist
 
-                expect(res).to.be.eql([b1, b2, b3])
-                done()
+                    expect(res[0].data).to.be.eql(b1.data)
+                    expect(res[1].data).to.be.eql(b2.data)
+                    expect(res[2].data).to.be.eql(b3.data)
+                    done()
+                  })
+                )
               })
             )
           })
@@ -191,7 +255,7 @@ module.exports = (repo) => {
       // test fails because now the network is not properly mocked
       // what are these net.stores and mockNet.bitswaps?
       it.skip('block is retrived from peer', (done) => {
-        const block = makeBlock()
+        const block = blocks[8]
 
         let mockNet
         waterfall([
@@ -204,23 +268,28 @@ module.exports = (repo) => {
             mockNet.bitswaps[0]._onPeerConnected(mockNet.ids[1])
             mockNet.bitswaps[1]._onPeerConnected(mockNet.ids[0])
             pull(
-              mockNet.bitswaps[0].getStream(block.key),
+              pull.values([block]),
+              pull.asyncMap((b, cb) => b.key(cb)),
+              pull.map((key) => mockNet.bitswaps[0].getStream(key)),
+              pull.flatten(),
               pull.collect((err, res) => {
-                if (err) return cb(err)
+                if (err) {
+                  return cb(err)
+                }
                 cb(null, res[0])
               })
             )
           },
           (res, cb) => {
-            expect(res).to.be.eql(res)
+            expect(res).to.be.eql(block)
             cb()
           }
         ], done)
       })
 
       it('block is added locally afterwards', (done) => {
-        const me = PeerId.create({bits: 64})
-        const block = makeBlock()
+        const me = ids[0]
+        const block = blocks[9]
         const book = new PeerBook()
         const bs = new Bitswap(me, libp2pMock, store, book)
         const net = utils.mockNetwork()
@@ -229,24 +298,30 @@ module.exports = (repo) => {
         bs.engine.network = net
         bs.start()
 
-        pull(
-          bs.getStream(block.key),
-          pull.collect((err, res) => {
-            if (err) throw err
-            expect(res).to.be.eql([block])
-            done()
-          })
-        )
+        block.key((err, key) => {
+          expect(err).to.not.exist
+          pull(
+            bs.getStream(key),
+            pull.collect((err, res) => {
+              expect(err).to.not.exist
+              expect(res[0].data).to.be.eql(block.data)
+              done()
+            })
+          )
 
-        setTimeout(() => {
-          bs.put(block, () => {})
-        }, 200)
+          setTimeout(() => {
+            bs.put({
+              data: block.data,
+              key: key
+            }, () => {})
+          }, 200)
+        })
       })
 
       it('block is sent after local add', (done) => {
-        const me = PeerId.create({bits: 64})
-        const other = PeerId.create({bits: 64})
-        const block = makeBlock()
+        const me = ids[0]
+        const other = ids[1]
+        const block = blocks[10]
         let bs1
         let bs2
 
@@ -301,17 +376,24 @@ module.exports = (repo) => {
             bs2.start()
             bs1._onPeerConnected(other)
             bs2._onPeerConnected(me)
-            pull(
-              bs1.getStream(block.key),
-              pull.collect((err, res) => {
-                if (err) return cb(err)
-                cb(null, res[0])
-              })
-            )
 
-            setTimeout(() => {
-              bs2.put(block)
-            }, 1000)
+            block.key((err, key) => {
+              expect(err).to.not.exist
+              pull(
+                bs1.getStream(key),
+                pull.collect((err, res) => {
+                  expect(err).to.not.exist
+                  cb(null, res[0])
+                })
+              )
+
+              setTimeout(() => {
+                bs2.put({
+                  data: block.data,
+                  key: key
+                })
+              }, 1000)
+            })
           },
           (res, cb) => {
             expect(res).to.be.eql(res)
@@ -323,7 +405,7 @@ module.exports = (repo) => {
 
     describe('stat', () => {
       it('has initial stats', () => {
-        const me = PeerId.create({bits: 64})
+        const me = ids[0]
         const bs = new Bitswap(me, libp2pMock, {}, new PeerBook())
 
         const stats = bs.stat()
@@ -337,10 +419,10 @@ module.exports = (repo) => {
 
     describe('unwant', () => {
       it('removes blocks that are wanted multiple times', (done) => {
-        const me = PeerId.create({bits: 64})
+        const me = ids[0]
         const bs = new Bitswap(me, libp2pMock, store, new PeerBook())
         bs.start()
-        const b = makeBlock()
+        const b = blocks[11]
 
         let i = 0
         const finish = () => {
@@ -349,25 +431,27 @@ module.exports = (repo) => {
             done()
           }
         }
+        b.key((err, key) => {
+          expect(err).to.not.exist
+          pull(
+            bs.getStream(key),
+            pull.collect((err, res) => {
+              expect(err).to.not.exist
+              expect(res).to.be.empty
+              finish()
+            })
+          )
+          pull(
+            bs.getStream(key),
+            pull.collect((err, res) => {
+              expect(err).to.not.exist
+              expect(res).to.be.empty
+              finish()
+            })
+          )
 
-        pull(
-          bs.getStream(b.key),
-          pull.collect((err, res) => {
-            expect(err).to.not.exist
-            expect(res).to.be.empty
-            finish()
-          })
-        )
-        pull(
-          bs.getStream(b.key),
-          pull.collect((err, res) => {
-            expect(err).to.not.exist
-            expect(res).to.be.empty
-            finish()
-          })
-        )
-
-        setTimeout(() => bs.unwant(b.key), 10)
+          setTimeout(() => bs.unwant(key), 10)
+        })
       })
     })
   })
@@ -375,10 +459,25 @@ module.exports = (repo) => {
 
 function hasBlocks (msg, store, cb) {
   each(Array.from(msg.blocks.values()), (b, next) => {
-    if (!b.cancel) {
-      store.has(b.key, next)
-    } else {
-      next()
-    }
+    b.key((err, key) => {
+      if (err) {
+        return next(err)
+      }
+      if (!b.cancel) {
+        store.has(key, next)
+      } else {
+        next()
+      }
+    })
   }, cb)
+}
+
+function blockToStore (b, cb) {
+  b.key((err, key) => {
+    if (err) {
+      return cb(err)
+    }
+
+    cb(null, {data: b.data, key: key})
+  })
 }
