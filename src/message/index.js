@@ -90,16 +90,22 @@ class BitswapMessage {
   }
 }
 
-BitswapMessage.fromProto = (raw) => {
+BitswapMessage.fromProto = (raw, callback) => {
   const dec = pbm.Message.decode(raw)
   const m = new BitswapMessage(dec.wantlist.full)
 
   dec.wantlist.entries.forEach((e) => {
     m.addEntry(e.block, e.priority, e.cancel)
   })
-  dec.blocks.forEach((b) => m.addBlock(new Block(b)))
 
-  return m
+  map(dec.blocks, Block.create, (err, blocks) => {
+    if (err) {
+      return callback(err)
+    }
+
+    blocks.forEach((b) => m.addBlock(b))
+    callback(null, m)
+  })
 }
 
 BitswapMessage.Entry = Entry

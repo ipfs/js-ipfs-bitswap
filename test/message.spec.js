@@ -12,23 +12,23 @@ const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../src/message/messag
 const BitswapMessage = require('../src/message')
 
 describe('BitswapMessage', () => {
-  it('go interop', () => {
+  it('go interop', (done) => {
     const goEncoded = new Buffer('CioKKAoiEiAs8k26X7CjDiboOyrFueKeGxYeXB+nQl5zBDNik4uYJBAKGAA=', 'base64')
 
     const m = new BitswapMessage(false)
     m.addEntry(mh.fromB58String('QmRN6wdp1S2A5EtjW9A3M1vKSBuQQGcgvuhoMUoEz4iiT5'), 10)
 
-    expect(
-      BitswapMessage.fromProto(goEncoded)
-    ).to.be.eql(
-      m
-    )
+    BitswapMessage.fromProto(goEncoded, (err, res) => {
+      expect(err).to.not.exist
+      expect(res).to.be.eql(m)
 
-    expect(
-      m.toProto()
-    ).to.be.eql(
-      goEncoded
-    )
+      expect(
+        m.toProto()
+      ).to.be.eql(
+        goEncoded
+      )
+      done()
+    })
   })
 
   it('append wanted', () => {
@@ -58,7 +58,7 @@ describe('BitswapMessage', () => {
     ])
   })
 
-  it('new message fromProto', () => {
+  it('new message fromProto', (done) => {
     const raw = pbm.Message.encode({
       wantlist: {
         entries: [{
@@ -70,27 +70,30 @@ describe('BitswapMessage', () => {
       blocks: ['hello', 'world']
     })
 
-    const protoMessage = BitswapMessage.fromProto(raw)
+    BitswapMessage.fromProto(raw, (err, protoMessage) => {
+      expect(err).to.not.exist
+      expect(
+        protoMessage.full
+      ).to.be.eql(
+        true
+      )
+      expect(
+        Array.from(protoMessage.wantlist)
+      ).to.be.eql([
+        [mh.toB58String(new Buffer('hello')), new BitswapMessage.Entry(new Buffer('hello'), 0, false)]
+      ])
 
-    expect(
-      protoMessage.full
-    ).to.be.eql(
-      true
-    )
-    expect(
-      Array.from(protoMessage.wantlist)
-    ).to.be.eql([
-      [mh.toB58String(new Buffer('hello')), new BitswapMessage.Entry(new Buffer('hello'), 0, false)]
-    ])
+      const b1 = new Block('hello')
+      const b2 = new Block('world')
+      expect(
+        Array.from(protoMessage.blocks)
+      ).to.be.eql([
+        [mh.toB58String(b1.key), b1],
+        [mh.toB58String(b2.key), b2]
+      ])
 
-    const b1 = new Block('hello')
-    const b2 = new Block('world')
-    expect(
-      Array.from(protoMessage.blocks)
-    ).to.be.eql([
-      [mh.toB58String(b1.key), b1],
-      [mh.toB58String(b2.key), b2]
-    ])
+      done()
+    })
   })
 
   it('duplicates', () => {

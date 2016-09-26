@@ -51,18 +51,14 @@ module.exports = class Network {
     pull(
       conn,
       lp.decode(),
-      pull.through((data) => {
-        let msg
-        try {
-          msg = Message.fromProto(data)
-        } catch (err) {
-          return this.bitswap._receiveError(err)
-        }
+      pull.asyncMap((data, cb) => Message.fromProto(data, cb)),
+      pull.asyncMap((msg, cb) => {
         conn.getPeerInfo((err, peerInfo) => {
           if (err) {
-            return this.bitswap._receiveError(err)
+            return cb(err)
           }
           this.bitswap._receiveMessage(peerInfo.id, msg)
+          cb()
         })
       }),
       pull.onEnd((err) => {
