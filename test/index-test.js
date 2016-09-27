@@ -5,6 +5,8 @@
 const eachSeries = require('async/eachSeries')
 const waterfall = require('async/waterfall')
 const each = require('async/each')
+const map = require('async/map')
+const parallel = require('async/parallel')
 const _ = require('lodash')
 const expect = require('chai').expect
 const PeerId = require('peer-id')
@@ -18,7 +20,7 @@ const Bitswap = require('../src')
 
 const utils = require('./utils')
 
-const makeBlock = () => new Block(`hello world ${Math.random()}`)
+const makeBlock = (cb) => Block.create(`hello world ${Math.random()}`, cb)
 
 module.exports = (repo) => {
   const libp2pMock = {
@@ -32,11 +34,23 @@ module.exports = (repo) => {
 
   describe('bitswap', () => {
     let store
+    let blocks
+    let ids
 
     before((done) => {
-      repo.create('hello', (err, r) => {
-        if (err) return done(err)
-        store = r.blockstore
+      parallel([
+        (cb) => repo.create('hello', cb),
+        (cb) => map(_.range(12), (i, cb) => makeBlock(cb), cb),
+        (cb) => map(_.range(2), (i, cb) => PeerId.create(cb), cb)
+      ], (err, results) => {
+        if (err) {
+          return done(err)
+        }
+
+        store = results[0].blockstore
+        blocks = results[1]
+        ids = results[2]
+
         done()
       })
     })
@@ -47,14 +61,14 @@ module.exports = (repo) => {
 
     describe('receive message', () => {
       it('simple block message', (done) => {
-        const me = PeerId.create({bits: 64})
+        const me = ids[0]
         const book = new PeerBook()
         const bs = new Bitswap(me, libp2pMock, store, book)
         bs.start()
 
-        const other = PeerId.create({bits: 64})
-        const b1 = makeBlock()
-        const b2 = makeBlock()
+        const other = ids[1]
+        const b1 = blocks[0]
+        const b2 = blocks[1]
         const msg = new Message(false)
         msg.addBlock(b1)
         msg.addBlock(b2)
@@ -80,14 +94,14 @@ module.exports = (repo) => {
       })
 
       it('simple want message', (done) => {
-        const me = PeerId.create({bits: 64})
+        const me = ids[0]
         const book = new PeerBook()
         const bs = new Bitswap(me, libp2pMock, store, book)
         bs.start()
 
-        const other = PeerId.create({bits: 64})
-        const b1 = makeBlock()
-        const b2 = makeBlock()
+        const other = ids[1]
+        const b1 = blocks[2]
+        const b2 = blocks[3]
         const msg = new Message(false)
         msg.addEntry(b1.key, 1, false)
         msg.addEntry(b2.key, 1, false)
@@ -108,35 +122,45 @@ module.exports = (repo) => {
       })
 
       it('multi peer', (done) => {
-        const me = PeerId.create({bits: 64})
+        const me = ids[0]
         const book = new PeerBook()
         const bs = new Bitswap(me, libp2pMock, store, book)
         bs.start()
 
-        const others = _.range(5).map(() => PeerId.create({bits: 64}))
-        const blocks = _.range(10).map((i) => new Block(`hello ${i}`))
-        const messages = _.range(5).map((i) => {
-          const m = new Message(false)
-          m.addBlock(blocks[i])
-          m.addBlock(blocks[5 + i])
-          return m
-        })
-        let i = 0
-        eachSeries(others, (other, cb) => {
-          const msg = messages[i]
-          i++
-          bs._receiveMessage(other, msg, (err) => {
-            if (err) return cb(err)
-            hasBlocks(msg, store, cb)
+        parallel([
+          (cb) => map(_.range(5), (i, cb) => PeerId.create(cb), cb),
+          (cb) => map(_.range(10), (i, cb) => Block.create(`hello ${i}`, cb), cb)
+        ], (err, results) => {
+          if (err) {
+            return done(err)
+          }
+
+          const others = results[0]
+          const blocks = results[1]
+
+          const messages = _.range(5).map((i) => {
+            const m = new Message(false)
+            m.addBlock(blocks[i])
+            m.addBlock(blocks[5 + i])
+            return m
           })
-        }, done)
+          let i = 0
+          eachSeries(others, (other, cb) => {
+            const msg = messages[i]
+            i++
+            bs._receiveMessage(other, msg, (err) => {
+              if (err) return cb(err)
+              hasBlocks(msg, store, cb)
+            })
+          }, done)
+        })
       })
     })
 
     describe('getStream', () => {
       it('block exists locally', (done) => {
-        const me = PeerId.create({bits: 64})
-        const block = makeBlock()
+        const me = ids[0]
+        const block = blocks[4]
         pull(
           pull.values([block]),
           store.putStream(),
@@ -160,10 +184,10 @@ module.exports = (repo) => {
       })
 
       it('blocks exist locally', (done) => {
-        const me = PeerId.create({bits: 64})
-        const b1 = makeBlock()
-        const b2 = makeBlock()
-        const b3 = makeBlock()
+        const me = ids[0]
+        const b1 = blocks[5]
+        const b2 = blocks[6]
+        const b3 = blocks[7]
 
         pull(
           pull.values([b1, b2, b3]),
@@ -191,7 +215,7 @@ module.exports = (repo) => {
       // test fails because now the network is not properly mocked
       // what are these net.stores and mockNet.bitswaps?
       it.skip('block is retrived from peer', (done) => {
-        const block = makeBlock()
+        const block = blocks[8]
 
         let mockNet
         waterfall([
@@ -219,8 +243,8 @@ module.exports = (repo) => {
       })
 
       it('block is added locally afterwards', (done) => {
-        const me = PeerId.create({bits: 64})
-        const block = makeBlock()
+        const me = ids[0]
+        const block = blocks[9]
         const book = new PeerBook()
         const bs = new Bitswap(me, libp2pMock, store, book)
         const net = utils.mockNetwork()
@@ -244,9 +268,9 @@ module.exports = (repo) => {
       })
 
       it('block is sent after local add', (done) => {
-        const me = PeerId.create({bits: 64})
-        const other = PeerId.create({bits: 64})
-        const block = makeBlock()
+        const me = ids[0]
+        const other = ids[1]
+        const block = blocks[10]
         let bs1
         let bs2
 
@@ -323,7 +347,7 @@ module.exports = (repo) => {
 
     describe('stat', () => {
       it('has initial stats', () => {
-        const me = PeerId.create({bits: 64})
+        const me = ids[0]
         const bs = new Bitswap(me, libp2pMock, {}, new PeerBook())
 
         const stats = bs.stat()
@@ -337,10 +361,10 @@ module.exports = (repo) => {
 
     describe('unwant', () => {
       it('removes blocks that are wanted multiple times', (done) => {
-        const me = PeerId.create({bits: 64})
+        const me = ids[0]
         const bs = new Bitswap(me, libp2pMock, store, new PeerBook())
         bs.start()
-        const b = makeBlock()
+        const b = blocks[11]
 
         let i = 0
         const finish = () => {

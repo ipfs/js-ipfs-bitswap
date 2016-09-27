@@ -7,6 +7,7 @@ const path = require('path')
 const isEqualWith = require('lodash.isequalwith')
 const mh = require('multihashes')
 const assert = require('assert')
+const map = require('async/map')
 
 const pbm = protobuf(fs.readFileSync(path.join(__dirname, 'message.proto')))
 const Entry = require('./entry')

@@ -2,6 +2,7 @@
 'use strict'
 
 const expect = require('chai').expect
+const map = require('async/map')
 const fs = require('fs')
 const Block = require('ipfs-block')
 const protobuf = require('protocol-buffers')
@@ -12,6 +13,22 @@ const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../src/message/messag
 const BitswapMessage = require('../src/message')
 
 describe('BitswapMessage', () => {
+  let blocks
+
+  before((done) => {
+    map([
+      'foo',
+      'hello',
+      'world'
+    ], Block.create, (err, _blocks) => {
+      if (err) {
+        return done(err)
+      }
+      blocks = _blocks
+      done()
+    })
+  })
+
   it('go interop', (done) => {
     const goEncoded = new Buffer('CioKKAoiEiAs8k26X7CjDiboOyrFueKeGxYeXB+nQl5zBDNik4uYJBAKGAA=', 'base64')
 
@@ -32,8 +49,7 @@ describe('BitswapMessage', () => {
   })
 
   it('append wanted', () => {
-    const str = 'foo'
-    const block = new Block(str)
+    const block = blocks[0]
     const m = new BitswapMessage(true)
     m.addEntry(block.key, 1)
 
@@ -47,7 +63,7 @@ describe('BitswapMessage', () => {
   })
 
   it('encodes blocks', () => {
-    const block = new Block('hello')
+    const block = blocks[1]
     const m = new BitswapMessage(true)
     m.addBlock(block)
 
@@ -83,8 +99,8 @@ describe('BitswapMessage', () => {
         [mh.toB58String(new Buffer('hello')), new BitswapMessage.Entry(new Buffer('hello'), 0, false)]
       ])
 
-      const b1 = new Block('hello')
-      const b2 = new Block('world')
+      const b1 = blocks[1]
+      const b2 = blocks[2]
       expect(
         Array.from(protoMessage.blocks)
       ).to.be.eql([
@@ -97,7 +113,7 @@ describe('BitswapMessage', () => {
   })
 
   it('duplicates', () => {
-    const b = new Block('foo')
+    const b = blocks[0]
     const m = new BitswapMessage(true)
 
     m.addEntry(b.key, 1)
@@ -133,7 +149,7 @@ describe('BitswapMessage', () => {
 
   describe('.equals', () => {
     it('true, same message', () => {
-      const b = new Block('foo')
+      const b = blocks[0]
       const m1 = new BitswapMessage(true)
       const m2 = new BitswapMessage(true)
 
@@ -146,7 +162,7 @@ describe('BitswapMessage', () => {
     })
 
     it('false, different entries', () => {
-      const b = new Block('foo')
+      const b = blocks[0]
       const m1 = new BitswapMessage(true)
       const m2 = new BitswapMessage(true)
 

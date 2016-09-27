@@ -1,5 +1,4 @@
 /* eslint-env mocha */
-
 'use strict'
 
 const libp2p = require('libp2p-ipfs')
@@ -10,6 +9,8 @@ const PeerBook = require('peer-book')
 const Block = require('ipfs-block')
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
+const map = require('async/map')
+const parallel = require('async/parallel')
 
 const Network = require('../../src/network')
 const Message = require('../../src/message')
@@ -25,31 +26,43 @@ describe('network', function () {
   let peerBookB
   let networkA
   let networkB
+  let blocks
 
   before((done) => {
     let counter = 0
-    peerInfoA = new PeerInfo()
-    peerInfoB = new PeerInfo()
-
-    peerInfoA.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/10100/ipfs/' + peerInfoA.id.toB58String()))
-    peerInfoB.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/10500/ipfs/' + peerInfoB.id.toB58String()))
-
-    peerBookA = new PeerBook()
-    peerBookB = new PeerBook()
-
-    peerBookA.put(peerInfoB)
-    peerBookB.put(peerInfoA)
-
-    libp2pNodeA = new libp2p.Node(peerInfoA, peerBookA)
-    libp2pNodeA.start(started)
-    libp2pNodeB = new libp2p.Node(peerInfoB, peerBookB)
-    libp2pNodeB.start(started)
-
-    function started () {
-      if (++counter === 2) {
-        done()
+    parallel([
+      (cb) => PeerInfo.create(cb),
+      (cb) => PeerInfo.create(cb),
+      (cb) => map(['hello', 'world'], Block.create, cb)
+    ], (err, results) => {
+      if (err) {
+        return done(err)
       }
-    }
+
+      peerInfoA = results[0]
+      peerInfoB = results[1]
+      blocks = results[2]
+
+      peerInfoA.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/10100/ipfs/' + peerInfoA.id.toB58String()))
+      peerInfoB.multiaddr.add(multiaddr('/ip4/127.0.0.1/tcp/10500/ipfs/' + peerInfoB.id.toB58String()))
+
+      peerBookA = new PeerBook()
+      peerBookB = new PeerBook()
+
+      peerBookA.put(peerInfoB)
+      peerBookB.put(peerInfoA)
+
+      libp2pNodeA = new libp2p.Node(peerInfoA, peerBookA)
+      libp2pNodeA.start(started)
+      libp2pNodeB = new libp2p.Node(peerInfoB, peerBookB)
+      libp2pNodeB.start(started)
+
+      function started () {
+        if (++counter === 2) {
+          done()
+        }
+      }
+    })
   })
 
   after((done) => {
@@ -133,10 +146,10 @@ describe('network', function () {
 
   it('_receiveMessage success', (done) => {
     const msg = new Message(true)
-    const b = new Block('hello')
+    const b = blocks[0]
     msg.addEntry(b.key, 0, false)
     msg.addBlock(b)
-    msg.addBlock(new Block('world'))
+    msg.addBlock(blocks[1])
 
     bitswapMockB._receiveMessage = (peerId, msgReceived) => {
       expect(msg).to.deep.equal(msgReceived)
@@ -162,10 +175,9 @@ describe('network', function () {
 
   it('sendMessage', (done) => {
     const msg = new Message(true)
-    const b = new Block('hello')
-    msg.addEntry(b.key, 0, false)
-    msg.addBlock(b)
-    msg.addBlock(new Block('world'))
+    msg.addEntry(blocks[0].key, 0, false)
+    msg.addBlock(blocks[0])
+    msg.addBlock(blocks[1])
 
     bitswapMockB._receiveMessage = (peerId, msgReceived) => {
       expect(msg).to.deep.equal(msgReceived)

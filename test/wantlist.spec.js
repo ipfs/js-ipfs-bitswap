@@ -4,18 +4,34 @@
 const expect = require('chai').expect
 const Block = require('ipfs-block')
 const mh = require('multihashes')
+const map = require('async/map')
 
 const Wantlist = require('../src/wantlist')
 
 describe('Wantlist', () => {
   let wm
+  let blocks
+
+  before((done) => {
+    map([
+      'hello',
+      'world'
+    ], Block.create, (err, _blocks) => {
+      if (err) {
+        return done(err)
+      }
+      blocks = _blocks
+      done()
+    })
+  })
+
   beforeEach(() => {
     wm = new Wantlist()
   })
 
   it('length', () => {
-    const b1 = new Block('hello')
-    const b2 = new Block('world')
+    const b1 = blocks[0]
+    const b2 = blocks[1]
 
     wm.add(b1.key, 2)
     wm.add(b2.key, 1)
@@ -25,7 +41,7 @@ describe('Wantlist', () => {
 
   describe('remove', () => {
     it('removes with a single ref', () => {
-      const b = new Block('hello')
+      const b = blocks[0]
 
       wm.add(b.key, 1)
       wm.remove(b.key)
@@ -34,8 +50,8 @@ describe('Wantlist', () => {
     })
 
     it('removes with multiple refs', () => {
-      const b1 = new Block('hello')
-      const b2 = new Block('world')
+      const b1 = blocks[0]
+      const b2 = blocks[1]
 
       wm.add(b1.key, 1)
       wm.add(b2.key, 2)
@@ -57,7 +73,7 @@ describe('Wantlist', () => {
     })
 
     it('ignores non existing removes', () => {
-      const b = new Block('hello')
+      const b = blocks[0]
 
       wm.add(b.key, 1)
       wm.remove(b.key)
@@ -68,7 +84,7 @@ describe('Wantlist', () => {
   })
 
   it('entries', () => {
-    const b = new Block('hello')
+    const b = blocks[0]
     wm.add(b.key, 2)
 
     expect(
@@ -79,8 +95,8 @@ describe('Wantlist', () => {
   })
 
   it('sortedEntries', () => {
-    const b1 = new Block('hello')
-    const b2 = new Block('world')
+    const b1 = blocks[0]
+    const b2 = blocks[1]
 
     wm.add(b2.key, 1)
     wm.add(b1.key, 1)
@@ -94,8 +110,8 @@ describe('Wantlist', () => {
   })
 
   it('contains', () => {
-    const b1 = new Block('hello')
-    const b2 = new Block('world')
+    const b1 = blocks[0]
+    const b2 = blocks[1]
     wm.add(b1.key, 2)
 
     expect(

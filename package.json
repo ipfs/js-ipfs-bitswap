@@ -5,13 +5,13 @@
   "main": "lib/index.js",
   "jsnext:main": "src/index.js",
   "scripts": {
-    "test": "aegir-test",
-    "test:browser": "aegir-test browser",
+    "test": "PHANTOM=off aegir-test",
+    "test:browser": "PHANTOM=off aegir-test browser",
     "test:node": "aegir-test node",
     "lint": "aegir-lint",
-    "release": "aegir-release",
-    "release-minor": "aegir-release --type minor",
-    "release-major": "aegir-release --type major",
+    "release": "PHANTOM=off aegir-release",
+    "release-minor": "PHANTOM=off aegir-release --type minor",
+    "release-major": "PHANTOM=off aegir-release --type major",
     "build": "aegir-build",
     "coverage": "aegir-coverage",
     "coverage-publish": "aegir-coverage publish"
