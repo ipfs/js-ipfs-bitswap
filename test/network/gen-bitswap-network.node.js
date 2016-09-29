@@ -13,7 +13,7 @@ const Block = require('ipfs-block')
 const Buffer = require('safe-buffer').Buffer
 const pull = require('pull-stream')
 
-describe.only('gen Bitswap network', function () {
+describe('gen Bitswap network', function () {
   // CI is very slow
   this.timeout(300 * 1000)
 

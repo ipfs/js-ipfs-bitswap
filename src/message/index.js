@@ -1,15 +1,13 @@
 'use strict'
 
 const protobuf = require('protocol-buffers')
-const fs = require('fs')
 const Block = require('ipfs-block')
-const path = require('path')
 const isEqualWith = require('lodash.isequalwith')
 const mh = require('multihashes')
 const assert = require('assert')
 const map = require('async/map')
 
-const pbm = protobuf(fs.readFileSync(path.join(__dirname, 'message.proto')))
+const pbm = protobuf(require('./message.proto'))
 const Entry = require('./entry')
 
 class BitswapMessage {

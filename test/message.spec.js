@@ -3,12 +3,10 @@
 
 const expect = require('chai').expect
 const map = require('async/map')
-const fs = require('fs')
 const Block = require('ipfs-block')
 const protobuf = require('protocol-buffers')
-const path = require('path')
 const mh = require('multihashes')
-const pbm = protobuf(fs.readFileSync(path.join(__dirname, '../src/message/message.proto')))
+const pbm = protobuf(require('../src/message/message.proto'))
 
 const BitswapMessage = require('../src/message')
 
