@@ -1,6 +1,6 @@
 'use strict'
 
-module.exports = new Buffer(`
+module.exports = `
 package bitswap.message.pb;
 
 message Message {
@@ -20,4 +20,4 @@ message Message {
   optional Wantlist wantlist = 1;
   repeated bytes blocks = 2;
 }
-`)
+`
