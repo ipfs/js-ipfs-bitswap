@@ -32,6 +32,9 @@
     "url": "https://github.com/ipfs/js-ipfs-bitswap/issues"
   },
   "homepage": "https://github.com/ipfs/js-ipfs-bitswap#readme",
+  "browserify": {
+      "transform": [ "brfs" ]
+  },
   "devDependencies": {
     "aegir": "^8.0.1",
     "buffer-loader": "0.0.1",
