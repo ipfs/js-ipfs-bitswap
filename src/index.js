@@ -16,7 +16,7 @@ const WantManager = require('./wantmanager')
 const Network = require('./network')
 const decision = require('./decision')
 
-module.exports = class Bitwap {
+class Bitswap {
   constructor (p, libp2p, blockstore, peerBook) {
     // the ID of the peer to act on behalf of
     this.self = p
@@ -32,6 +32,7 @@ module.exports = class Bitwap {
     // handle message sending
     this.wm = new WantManager(this.network)
 
+    // stats
     this.blocksRecvd = 0
     this.dupBlocksRecvd = 0
     this.dupDataRecvd = 0
@@ -42,7 +43,7 @@ module.exports = class Bitwap {
 
   // handle messages received through the network
   _receiveMessage (peerId, incoming, cb) {
-    cb = cb || (() => {})
+    cb = cb || noop
     log('receiving message from %s', peerId.toB58String())
     this.engine.messageReceived(peerId, incoming, (err) => {
       if (err) {
@@ -100,7 +101,7 @@ module.exports = class Bitwap {
   }
 
   _updateReceiveCounters (block, cb) {
-    this.blocksRecvd ++
+    this.blocksRecvd++
     this.blockstore.has(block.key, (err, has) => {
       if (err) {
         log('blockstore.has error: %s', err.message)
@@ -108,7 +109,7 @@ module.exports = class Bitwap {
       }
 
       if (has) {
-        this.dupBlocksRecvd ++
+        this.dupBlocksRecvd++
         this.dupDataRecvd += block.data.length
         return cb(new Error('Already have block'))
       }
@@ -245,11 +246,16 @@ module.exports = class Bitwap {
     return pull(
       pull.asyncMap((block, cb) => {
         this.blockstore.has(block.key, (err, exists) => {
-          if (err) return cb(err)
+          if (err) {
+            return cb(err)
+          }
           cb(null, [block, exists])
         })
       }),
-      pull.filter((val) => !val[1]),
+      pull.filter((val) => {
+        const exists = val[1]
+        return !exists
+      }),
       pull.map((val) => {
         const block = val[0]
 
@@ -304,3 +310,7 @@ module.exports = class Bitwap {
     this.engine.stop()
   }
 }
+
+module.exports = Bitswap
+
+function noop () {}
