@@ -51,7 +51,7 @@
     "safe-buffer": "^5.0.1"
   },
   "dependencies": {
-    "async": "^2.0.1",
+    "async": "^2.1.0",
     "debug": "^2.2.0",
     "heap": "^0.2.6",
     "ipfs-block": "^0.3.0",
