@@ -36,7 +36,7 @@
     "aegir": "^8.0.1",
     "buffer-loader": "0.0.1",
     "chai": "^3.5.0",
-    "fs-pull-blob-store": "^0.3.0",
+    "fs-pull-blob-store": "^0.4.1",
     "idb-pull-blob-store": "^0.4.0",
     "interface-pull-blob-store": "^0.5.0",
     "ipfs-repo": "^0.9.0",
