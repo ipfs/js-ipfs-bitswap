@@ -35,8 +35,9 @@ class BitswapMessage {
     }
   }
 
-  addBlock (block) {
-    this.blocks.set(mh.toB58String(block.key), block)
+  addBlock (block, hashAlg) {
+    const key = block.key(hashAlg)
+    this.blocks.set(mh.toB58String(key), block)
   }
 
   cancel (key) {

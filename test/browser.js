@@ -25,8 +25,8 @@ function createRepo (id, done) {
     })
   })
 
-  const mainBlob = new Store(id)
-  const blocksBlob = new Store(`${id}/blocks`)
+  const mainBlob = new Store(id + Math.random())
+  const blocksBlob = new Store(`${id}/blocks` + Math.random())
 
   dbs.push(id)
 

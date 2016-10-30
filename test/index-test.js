@@ -35,7 +35,7 @@ module.exports = (repo) => {
 
     before((done) => {
       repo.create('hello', (err, r) => {
-        if (err) return done(err)
+        expect(err).to.not.exist
         store = r.blockstore
         done()
       })
@@ -46,7 +46,7 @@ module.exports = (repo) => {
     })
 
     describe('receive message', () => {
-      it('simple block message', (done) => {
+      it.only('simple block message', (done) => {
         const me = PeerId.create({bits: 64})
         const book = new PeerBook()
         const bs = new Bitswap(me, libp2pMock, store, book)
@@ -56,23 +56,30 @@ module.exports = (repo) => {
         const b1 = makeBlock()
         const b2 = makeBlock()
         const msg = new Message(false)
-        msg.addBlock(b1)
-        msg.addBlock(b2)
+        msg.addBlock(b1, 'sha2-256')
+        msg.addBlock(b2, 'sha2-256')
 
         bs._receiveMessage(other, msg, (err) => {
-          if (err) throw err
+          expect(err).to.not.exist
 
           expect(bs.blocksRecvd).to.be.eql(2)
           expect(bs.dupBlocksRecvd).to.be.eql(0)
 
           pull(
-            pull.values([b1, b1]),
-            pull.map((block) => store.getStream(block.key)),
+            pull.values([
+              b1,
+              b2
+            ]),
+            pull.map((block) => {
+              return store.getStream(block.key('sha2-256'))
+            }),
             pull.flatten(),
             pull.collect((err, blocks) => {
-              if (err) return done(err)
-
-              expect(blocks).to.be.eql([b1, b1])
+              expect(err).to.not.exist
+              expect(blocks[0].key('sha2-256'))
+                .to.be.eql(b1.key('sha2-256'))
+              expect(blocks[1].key('sha2-256'))
+                .to.be.eql(b2.key('sha2-256'))
               done()
             })
           )
