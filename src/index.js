@@ -78,7 +78,6 @@ module.exports = class Bitwap {
   }
 
   _handleReceivedBlock (peerId, block, cb) {
-    log('handling block', block)
     series([
       (cb) => this._updateReceiveCounters(block, (err) => {
         if (err) {
@@ -87,7 +86,7 @@ module.exports = class Bitwap {
           return cb()
         }
 
-        log('got block from %s', peerId.toB58String(), block.data.toString())
+        log('got block from %s', peerId.toB58String(), block.data.length)
         cb()
       }),
       (cb) => this.put(block, (err) => {
@@ -150,6 +149,7 @@ module.exports = class Bitwap {
   }
 
   getStream (keys) {
+    log('getStream', keys.length)
     if (!Array.isArray(keys)) {
       return this._getStreamSingle(keys)
     }
@@ -167,6 +167,7 @@ module.exports = class Bitwap {
   }
 
   _getStreamSingle (key) {
+    log('getStreamSingle', mh.toB58String(key))
     const unwantListeners = {}
     const blockListeners = {}
     const unwantEvent = (key) => `unwant:${key}`
@@ -197,6 +198,7 @@ module.exports = class Bitwap {
       }
 
       blockListeners[keyS] = (block) => {
+        log('received block', keyS)
         this.wm.cancelWants([block.key])
         cleanupListener(key)
         d.resolve(pull.values([block]))
@@ -211,6 +213,7 @@ module.exports = class Bitwap {
         return d.resolve(pull.error(err))
       }
       if (exists) {
+        log('already have block', mh.toB58String(key))
         return d.resolve(this.blockstore.getStream(key))
       }
 

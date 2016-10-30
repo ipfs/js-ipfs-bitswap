@@ -3,6 +3,7 @@
 const debug = require('debug')
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
+const pushable = require('pull-pushable')
 
 const Message = require('../message')
 const cs = require('../constants')
@@ -15,6 +16,7 @@ module.exports = class Network {
     this.libp2p = libp2p
     this.peerBook = peerBook
     this.bitswap = bitswap
+    this.conns = {}
 
     // increase event listener max
     this.libp2p.swarm.setMaxListeners(cs.maxListeners)
@@ -29,7 +31,6 @@ module.exports = class Network {
     this.libp2p.handle(PROTOCOL_IDENTIFIER, this._onConnection)
 
     this.libp2p.swarm.on('peer-mux-established', this._onPeerMux)
-
     this.libp2p.swarm.on('peer-mux-closed', this._onPeerMuxClosed)
 
     // All existing connections are like new ones for us
@@ -47,7 +48,7 @@ module.exports = class Network {
   }
 
   _onConnection (conn) {
-    log('incomming new bitswap connection')
+    log('got connection')
     pull(
       conn,
       lp.decode(),
@@ -62,10 +63,12 @@ module.exports = class Network {
           if (err) {
             return this.bitswap._receiveError(err)
           }
+          log('data from', peerInfo.id.toB58String())
           this.bitswap._receiveMessage(peerInfo.id, msg)
         })
       }),
       pull.onEnd((err) => {
+        log('ending connection')
         if (err) {
           return this.bitswap._receiveError(err)
         }
@@ -106,17 +109,33 @@ module.exports = class Network {
       return cb(err)
     }
 
-    this.libp2p.dialByPeerInfo(peerInfo, PROTOCOL_IDENTIFIER, (err, conn) => {
-      log('dialed %s', peerInfo.id.toB58String(), err)
-      if (err) {
-        return cb(err)
-      }
-      pull(
-        pull.values([msg.toProto()]),
-        lp.encode(),
-        conn
-      )
+    if (this.conns[peerInfo]) {
+      log('connection exists')
+      this.conns[peerInfo].push(msg.toProto())
       cb()
-    })
+    } else {
+      log('dialByPeerInfo')
+      this.libp2p.dialByPeerInfo(peerInfo, PROTOCOL_IDENTIFIER, (err, conn) => {
+        log('dialed %s', peerInfo.id.toB58String(), err)
+        if (err) {
+          return cb(err)
+        }
+
+        this.conns[peerInfo] = pushable()
+        this.conns[peerInfo].push(msg.toProto())
+
+        pull(
+          this.conns[peerInfo],
+          lp.encode(),
+          conn,
+          pull.onEnd((err) => {
+            this.conns[peerInfo].end()
+            this.conns[peerInfo] = null
+          })
+        )
+
+        cb()
+      })
+    }
   }
 }

@@ -3,6 +3,7 @@
 
 const expect = require('chai').expect
 const PeerId = require('peer-id')
+const series = require('run-series')
 
 const cs = require('../../src/constants')
 const Message = require('../../src/message')
@@ -46,14 +47,21 @@ describe('Wantmanager', () => {
     wm.connected(peer1)
     wm.connected(peer2)
 
-    setTimeout(() => {
-      wm.cancelWants([new Buffer('world')])
-      setTimeout(() => {
+    series([
+      (cb) => setTimeout(cb, 100),
+      (cb) => {
+        wm.cancelWants([new Buffer('world')])
+        cb()
+      },
+      (cb) => setTimeout(cb, 100),
+      (cb) => {
         wm.wantBlocks([new Buffer('foo')])
-
-        wm.disconnected(peer1)
-        wm.disconnected(peer2)
-      }, 100)
-    }, 100)
+        cb()
+      },
+      (cb) => setTimeout(cb, 100)
+    ], () => {
+      wm.disconnected(peer1)
+      wm.disconnected(peer2)
+    })
   })
 })
