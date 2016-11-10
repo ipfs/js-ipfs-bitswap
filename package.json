@@ -58,7 +58,7 @@
     "lodash.isequalwith": "^4.4.0",
     "lodash.isundefined": "^3.0.1",
     "multihashes": "^0.2.2",
-    "protocol-buffers": "^3.1.6",
+    "protocol-buffers": "^3.1.7",
     "pull-defer": "^0.2.2",
     "pull-generate": "^2.2.0",
     "pull-length-prefixed": "^1.2.0",
