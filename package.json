@@ -52,7 +52,7 @@
   },
   "dependencies": {
     "async": "^2.1.0",
-    "debug": "^2.2.0",
+    "debug": "^2.3.2",
     "heap": "^0.2.6",
     "ipfs-block": "^0.3.0",
     "lodash.isequalwith": "^4.4.0",
