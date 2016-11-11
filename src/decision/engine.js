@@ -66,13 +66,11 @@ module.exports = class Engine {
         return Boolean(nextTask)
       },
       (next) => {
-        log('generating')
         log('got task', nextTask)
 
         pull(
           this.blockstore.getStream(nextTask.entry.key),
           pull.collect((err, blocks) => {
-            log('generated', blocks)
             const block = blocks[0]
             if (err || !block) {
               nextTask.done()
