@@ -98,14 +98,14 @@ module.exports = class PeerRequestQueue {
     log('taskMap.set', task.key, task.toString())
     this.taskMap.set(task.key, task)
     partner.requests ++
-    partner.taskQueue.update(task)
+    this.pQueue.update(partner)
   }
 
   // Get the task with the hightest priority from the queue
   pop () {
-    // log('pop, empty? %s', this.pQueue.isEmpty())
-    // log('partners', Array.from(this.partners.values()).map((val) => [val.requests, val.taskQueue.size()]))
-    if (this.pQueue.isEmpty()) return
+    if (this.pQueue.isEmpty()) {
+      return
+    }
 
     let partner = this.pQueue.pop()
     let out
@@ -122,7 +122,6 @@ module.exports = class PeerRequestQueue {
       partner.requests --
       break
     }
-    // log('pop, out', partner.taskQueue.isEmpty(), out)
     this.pQueue.push(partner)
     return out
   }
@@ -137,7 +136,9 @@ module.exports = class PeerRequestQueue {
       t.trash = true
 
       // having canceled a block, we now account for that in the given partner
-      this.partners.get(peerId.toB58String()).requests --
+      const p = this.partners.get(peerId.toB58String())
+      p.requests --
+      this.pQueue.update(p)
     }
 
     log('taskMap', Array.from(this.taskMap.values()).map((v) => {

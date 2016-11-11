@@ -46,7 +46,9 @@ module.exports = class Wantmanager {
         }
       }),
       pull.collect((err, entries) => {
-        if (err) throw err
+        if (err) {
+          throw err
+        }
         // broadcast changes
         for (let p of this.peers.values()) {
           p.addEntries(entries, false)
@@ -108,7 +110,6 @@ module.exports = class Wantmanager {
 
   // cancel wanting all of the given keys
   cancelWants (keys) {
-    log('keys', keys)
     log('cancel wants: ', keys.map((k) => mh.toB58String(k)))
     this._addEntries(keys, true)
   }
