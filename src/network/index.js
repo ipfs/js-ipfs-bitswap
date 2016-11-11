@@ -3,10 +3,13 @@
 const debug = require('debug')
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
+const pushable = require('pull-pushable')
+const setImmediate = require('async/setImmediate')
 
 const Message = require('../message')
 const cs = require('../constants')
 const log = debug('bitswap:network')
+log.error = debug('bitswap:network:error')
 
 const PROTOCOL_IDENTIFIER = '/ipfs/bitswap/1.0.0'
 
@@ -15,6 +18,7 @@ module.exports = class Network {
     this.libp2p = libp2p
     this.peerBook = peerBook
     this.bitswap = bitswap
+    this.conns = new Map()
 
     // increase event listener max
     this.libp2p.swarm.setMaxListeners(cs.maxListeners)
@@ -29,7 +33,6 @@ module.exports = class Network {
     this.libp2p.handle(PROTOCOL_IDENTIFIER, this._onConnection)
 
     this.libp2p.swarm.on('peer-mux-established', this._onPeerMux)
-
     this.libp2p.swarm.on('peer-mux-closed', this._onPeerMuxClosed)
 
     // All existing connections are like new ones for us
@@ -46,26 +49,24 @@ module.exports = class Network {
     this.libp2p.swarm.removeListener('peer-mux-closed', this._onPeerMuxClosed)
   }
 
-  _onConnection (conn) {
-    log('incomming new bitswap connection')
+  _onConnection (protocol, conn) {
+    log('incomming new bitswap connection: %s', protocol)
     pull(
       conn,
       lp.decode(),
-      pull.through((data) => {
-        let msg
-        try {
-          msg = Message.fromProto(data)
-        } catch (err) {
-          return this.bitswap._receiveError(err)
-        }
+      pull.asyncMap((data, cb) => Message.fromProto(data, cb)),
+      pull.asyncMap((msg, cb) => {
         conn.getPeerInfo((err, peerInfo) => {
           if (err) {
-            return this.bitswap._receiveError(err)
+            return cb(err)
           }
+          log('data from', peerInfo.id.toB58String())
           this.bitswap._receiveMessage(peerInfo.id, msg)
+          cb()
         })
       }),
       pull.onEnd((err) => {
+        log('ending connection')
         if (err) {
           return this.bitswap._receiveError(err)
         }
@@ -97,8 +98,8 @@ module.exports = class Network {
 
   // Send the given msg (instance of Message) to the given peer
   sendMessage (peerId, msg, cb) {
-    log('sendMessage to %s', peerId.toB58String())
-    log('msg', msg)
+    const stringId = peerId.toB58String()
+    log('sendMessage to %s', stringId)
     let peerInfo
     try {
       peerInfo = this.peerBook.getByMultihash(peerId.toBytes())
@@ -106,16 +107,37 @@ module.exports = class Network {
       return cb(err)
     }
 
+    if (this.conns.has(stringId)) {
+      log('connection exists')
+      this.conns.get(stringId).push(msg.toProto())
+      return cb()
+    }
+
+    log('dialByPeerInfo')
     this.libp2p.dialByPeerInfo(peerInfo, PROTOCOL_IDENTIFIER, (err, conn) => {
       log('dialed %s', peerInfo.id.toB58String(), err)
       if (err) {
         return cb(err)
       }
+
+      const msgQueue = pushable()
+      msgQueue.push(msg.toProto())
+
+      this.conns.set(stringId, msgQueue)
+
       pull(
-        pull.values([msg.toProto()]),
+        msgQueue,
         lp.encode(),
-        conn
+        conn,
+        pull.onEnd((err) => {
+          if (err) {
+            log.error(err)
+          }
+          msgQueue.end()
+          this.conns.delete(stringId)
+        })
       )
+
       cb()
     })
   }

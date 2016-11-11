@@ -3,7 +3,10 @@
 const debug = require('debug')
 const mh = require('multihashes')
 const pull = require('pull-stream')
-const generate = require('pull-generate')
+const whilst = require('async/whilst')
+const setImmediate = require('async/setImmediate')
+const each = require('async/each')
+const debounce = require('lodash.debounce')
 
 const log = debug('bitswap:engine')
 log.error = debug('bitswap:engine:error')
@@ -26,37 +29,45 @@ module.exports = class Engine {
     this.peerRequestQueue = new PeerRequestQueue()
 
     this._running = false
+
+    this._outbox = debounce(this._outboxExec.bind(this), 100)
   }
 
   _sendBlock (env, cb) {
     const msg = new Message(false)
-    msg.addBlock(env.block)
-
-    log('Sending block to %s', env.peer.toB58String(), env.block.data.toString())
-
-    this.network.sendMessage(env.peer, msg, (err) => {
+    msg.addBlock(env.block, (err) => {
       if (err) {
-        log('sendblock error: %s', err.message)
+        return cb(err)
       }
-      cb(null, 'done')
+
+      log('Sending block to %s', env.peer.toB58String(), env.block.data.toString())
+
+      this.network.sendMessage(env.peer, msg, (err) => {
+        if (err) {
+          log('sendblock error: %s', err.message)
+        }
+        cb(null, 'done')
+      })
     })
   }
 
-  _outbox () {
-    if (!this._running) return
+  _outboxExec () {
+    let nextTask
+    log('outbox')
 
-    const doIt = (cb) => pull(
-      generate(null, (state, cb) => {
-        log('generating', this._running)
+    whilst(
+      () => {
         if (!this._running) {
-          return cb(true)
+          return
         }
 
-        const nextTask = this.peerRequestQueue.pop()
+        nextTask = this.peerRequestQueue.pop()
+        log('check', this._running && nextTask)
+        return Boolean(nextTask)
+      },
+      (next) => {
+        log('generating')
         log('got task', nextTask)
-        if (!nextTask) {
-          return cb(true)
-        }
 
         pull(
           this.blockstore.getStream(nextTask.entry.key),
@@ -65,31 +76,20 @@ module.exports = class Engine {
             const block = blocks[0]
             if (err || !block) {
               nextTask.done()
-              return cb(null, false)
+              return next()
             }
 
-            cb(null, {
+            this._sendBlock({
               peer: nextTask.target,
               block: block,
-              sent: () => {
+              sent () {
                 nextTask.done()
               }
-            })
+            }, next)
           })
         )
-      }),
-      pull.filter(Boolean),
-      pull.asyncMap(this._sendBlock.bind(this)),
-      pull.onEnd(cb)
+      }
     )
-
-    if (!this._timer) {
-      this._timer = setTimeout(() => {
-        doIt(() => {
-          this._timer = null
-        })
-      }, 50)
-    }
   }
 
   wantlistForPeer (peerId) {
@@ -118,20 +118,25 @@ module.exports = class Engine {
       ledger.wantlist = new Wantlist()
     }
 
-    this._processBlocks(msg.blocks, ledger)
-    log('wantlist', Array.from(msg.wantlist.values()).map((e) => e.toString()))
+    this._processBlocks(msg.blocks, ledger, (err) => {
+      if (err) {
+        log.error(`failed to process blocks: ${err.message}`)
+      }
 
-    pull(
-      pull.values(Array.from(msg.wantlist.values())),
-      pull.asyncMap((entry, cb) => {
-        this._processWantlist(ledger, peerId, entry, cb)
-      }),
-      pull.onEnd((err) => {
-        if (err) return cb(err)
-        this._outbox()
-        cb()
-      })
-    )
+      log('wantlist', Array.from(msg.wantlist.values()).map((e) => e.toString()))
+
+      pull(
+        pull.values(Array.from(msg.wantlist.values())),
+        pull.asyncMap((entry, cb) => {
+          this._processWantlist(ledger, peerId, entry, cb)
+        }),
+        pull.onEnd((err) => {
+          if (err) return cb(err)
+          this._outbox()
+          cb()
+        })
+      )
+    })
   }
 
   receivedBlock (key) {
@@ -173,23 +178,36 @@ module.exports = class Engine {
     }
   }
 
-  _processBlocks (blocks, ledger) {
-    for (let block of blocks.values()) {
-      log('got block %s (%s bytes)', mh.toB58String(block.key), block.data.length)
-      ledger.receivedBytes(block.data.length)
+  _processBlocks (blocks, ledger, callback) {
+    each(blocks.values(), (block, cb) => {
+      block.key((err, key) => {
+        if (err) {
+          return cb(err)
+        }
+        log('got block %s (%s bytes)', mh.toB58String(key), block.data.length)
+        ledger.receivedBytes(block.data.length)
 
-      this.receivedBlock(block.key)
-    }
+        this.receivedBlock(key)
+        cb()
+      })
+    }, callback)
   }
 
   // Clear up all accounting things after message was sent
-  messageSent (peerId, msg) {
+  messageSent (peerId, msg, callback) {
     const ledger = this._findOrCreate(peerId)
-    for (let block of msg.blocks.values()) {
+    each(msg.blocks.values(), (block, cb) => {
       ledger.sentBytes(block.data.length)
-      ledger.wantlist.remove(block.key)
-      this.peerRequestQueue.remove(block.key, peerId)
-    }
+      block.key((err, key) => {
+        if (err) {
+          return cb(err)
+        }
+
+        ledger.wantlist.remove(key)
+        this.peerRequestQueue.remove(key, peerId)
+        cb()
+      })
+    }, callback)
   }
 
   numBytesSentTo (peerId) {

@@ -59,13 +59,14 @@ Cancel previously requested keys.
 ### `putStream()`
 
 Returns a duplex `pull-stream` that emits an object `{key: Multihash}` for every written block when it was stored.
+Objects passed into here should be of the form `{data: Buffer, key: Multihash}`
 
-### `put(block, cb)`
+### `put(blockAndKey, cb)`
 
-- `block: IpfsBlock`
+- `blockAndKey: {data: Buffer, key: Multihash}`
 - `cb: Function`
 
-Announce that the current node now has the `block`. This will store it
+Announce that the current node now has the block containing `data`. This will store it
 in the local database and attempt to serve it to all peers that are known
  to have requested it. The callback is called when we are sure that the block
  is stored.
