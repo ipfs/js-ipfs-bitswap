@@ -162,7 +162,6 @@ module.exports = class Bitwap {
   }
 
   getStream (keys) {
-    log('getStream', keys.length)
     if (!Array.isArray(keys)) {
       return this._getStreamSingle(keys)
     }
@@ -180,7 +179,6 @@ module.exports = class Bitwap {
   }
 
   _getStreamSingle (key) {
-    log('getStreamSingle', mh.toB58String(key))
     const unwantListeners = {}
     const blockListeners = {}
     const unwantEvent = (key) => `unwant:${key}`

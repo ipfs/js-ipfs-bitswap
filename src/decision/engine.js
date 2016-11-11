@@ -66,7 +66,7 @@ module.exports = class Engine {
         return Boolean(nextTask)
       },
       (next) => {
-        log('got task', nextTask)
+        log('got task')
 
         pull(
           this.blockstore.getStream(nextTask.entry.key),
@@ -121,18 +121,19 @@ module.exports = class Engine {
         log.error(`failed to process blocks: ${err.message}`)
       }
 
-      log('wantlist', Array.from(msg.wantlist.values()).map((e) => e.toString()))
+      const arrayWantlist = Array.from(msg.wantlist.values())
+      log('wantlist', arrayWantlist.map((e) => e.toString()))
+
+      if (arrayWantlist.length === 0) {
+        return cb()
+      }
 
       pull(
-        pull.values(Array.from(msg.wantlist.values())),
+        pull.values(arrayWantlist),
         pull.asyncMap((entry, cb) => {
           this._processWantlist(ledger, peerId, entry, cb)
         }),
-        pull.onEnd((err) => {
-          if (err) return cb(err)
-          this._outbox()
-          cb()
-        })
+        pull.onEnd(cb)
       )
     })
   }
@@ -146,7 +147,6 @@ module.exports = class Engine {
     // Check all connected peers if they want the block we received
     for (let l of this.ledgerMap.values()) {
       const entry = l.wantlistContains(key)
-
       if (entry) {
         this.peerRequestQueue.push(entry, l.partner)
       }
@@ -170,6 +170,7 @@ module.exports = class Engine {
         } else if (exists) {
           log('has want %s', mh.toB58String(entry.key))
           this.peerRequestQueue.push(entry.entry, peerId)
+          this._outbox()
         }
         cb()
       })
