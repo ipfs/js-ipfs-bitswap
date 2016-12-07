@@ -6,7 +6,10 @@ module.exports = `
   message Message {
     message Wantlist {
       message Entry {
-        optional string block = 1;      // the block cid (cidV0 in bitswap 1.0.0, cidV1 in bitswap 1.1.0)
+        // changed from string to bytes,
+        // because it makes a difference
+        // in JavaScript
+        optional bytes block = 1;      // the block cid (cidV0 in bitswap 1.0.0, cidV1 in bitswap 1.1.0)
         optional int32 priority = 2;    // the priority (normalized). default to 1
         optional bool cancel = 3;       // whether this revokes an entry
       }
