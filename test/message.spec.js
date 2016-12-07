@@ -188,8 +188,7 @@ describe.only('BitswapMessage', () => {
 
       BitswapMessage.deserialize(goEncoded, (err, res) => {
         expect(err).to.not.exist
-        expect(res).to.be.eql(msg)
-
+        expect(res).to.eql(msg)
         expect(msg.serializeToBitswap100()).to.eql(goEncoded)
         done()
       })

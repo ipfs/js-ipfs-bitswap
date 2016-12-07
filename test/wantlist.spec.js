@@ -169,5 +169,20 @@ describe.only('Wantlist', () => {
     })
   })
 
-  it.skip('with cidV1', (done) => {})
+  it('with cidV1', (done) => {
+    const b = blocks[0]
+    b.key((err, key) => {
+      expect(err).to.not.exist
+      const cid = new CID(1, 'dag-pb', key)
+      wm.add(cid, 2)
+
+      expect(
+        Array.from(wm.entries())
+      ).to.be.eql([[
+        cid.toBaseEncodedString(),
+        new Wantlist.Entry(cid, 2)
+      ]])
+      done()
+    })
+  })
 })
