@@ -140,6 +140,35 @@ Get the wantlist for a given peer.
 
 Get stats about about the current state of the bitswap instance.
 
+## Development
+
+### Code Structure
+
+```sh
+» tree src
+src
+├── constants.js
+├── decision             #
+│   ├── engine.js
+│   ├── index.js
+│   ├── ledger.js
+│   ├── peer-request-queue.js
+│   └── pq.js
+├── index.js
+├── message              # (Type) message that is put in the wire
+│   ├── entry.js
+│   ├── index.js
+│   └── message.proto.js
+├── network              # Handles peerSet and open new conns
+│   └── index.js
+├── wantlist             # (Type) track wanted blocks
+│   ├── entry.js
+│   └── index.js
+└── wantmanager          # Keeps track of all blocks the peer wants (not the others which it is connected)
+    ├── index.js
+    └── msg-queue.js
+```
+
 ## Contribute
 
 Feel free to join in. All welcome. Open an [issue](https://github.com/ipfs/js-ipfs-bitswap/issues)!
