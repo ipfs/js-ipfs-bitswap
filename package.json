@@ -60,7 +60,6 @@
     "ipfs-block": "^0.5.1",
     "lodash.debounce": "^4.0.8",
     "lodash.isequalwith": "^4.4.0",
-    "lodash.isundefined": "^3.0.1",
     "multihashes": "^0.3.0",
     "protocol-buffers": "^3.2.1",
     "pull-defer": "^0.2.2",

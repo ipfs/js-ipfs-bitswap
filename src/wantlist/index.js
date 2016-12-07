@@ -1,7 +1,5 @@
 'use strict'
 
-const mh = require('multihashes')
-
 const Entry = require('./entry')
 
 class Wantlist {
@@ -13,33 +11,39 @@ class Wantlist {
     return this.set.size
   }
 
-  add (key, priority) {
-    const e = this.set.get(mh.toB58String(key))
+  add (cid, priority) {
+    const cidStr = cid.toBaseEncodedString()
+    const entry = this.set.get(cidStr)
 
-    if (e) {
-      e.inc()
-      e.priority = priority
+    if (entry) {
+      entry.inc()
+      entry.priority = priority
     } else {
-      this.set.set(mh.toB58String(key), new Entry(key, priority))
+      this.set.set(cidStr, new Entry(cid, priority))
     }
   }
 
-  remove (key) {
-    const e = this.set.get(mh.toB58String(key))
+  remove (cid) {
+    const cidStr = cid.toBaseEncodedString()
+    const entry = this.set.get(cidStr)
 
-    if (!e) return
+    if (!entry) {
+      return
+    }
 
-    e.dec()
+    entry.dec()
 
     // only delete when no refs are held
-    if (e.hasRefs()) return
+    if (entry.hasRefs()) {
+      return
+    }
 
-    this.set.delete(mh.toB58String(key))
+    this.set.delete(cidStr)
   }
 
-  removeForce (key) {
-    if (this.set.has(key)) {
-      this.set.delete(key)
+  removeForce (cidStr) {
+    if (this.set.has(cidStr)) {
+      this.set.delete(cidStr)
     }
   }
 
@@ -51,8 +55,9 @@ class Wantlist {
     return new Map(Array.from(this.set.entries()).sort())
   }
 
-  contains (key) {
-    return this.set.get(mh.toB58String(key))
+  contains (cid) {
+    const cidStr = cid.toBaseEncodedString()
+    return !!this.set.get(cidStr)
   }
 }
 

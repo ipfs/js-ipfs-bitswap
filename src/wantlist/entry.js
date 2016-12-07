@@ -1,17 +1,17 @@
 'use strict'
 
 const assert = require('assert')
-const isUndefined = require('lodash.isundefined')
-const mh = require('multihashes')
+const CID = require('cids')
 
-module.exports = class WantlistEntry {
-  constructor (key, priority) {
-    assert(Buffer.isBuffer(key), 'key must be a buffer')
+class WantListEntry {
+  constructor (cid, priority) {
+    assert(CID.isCID(cid), 'must be valid CID')
+
     // Keep track of how many requests we have for this key
     this._refCounter = 1
 
-    this.key = key
-    this.priority = isUndefined(priority) ? 1 : priority
+    this.cid = cid
+    this.priority = priority || 1
   }
 
   inc () {
@@ -26,8 +26,10 @@ module.exports = class WantlistEntry {
     return this._refCounter > 0
   }
 
+  // So that console.log prints a nice description of this object
   get [Symbol.toStringTag] () {
-    return `WantlistEntry <key: ${mh.toB58String(this.key)}, priority: ${this.priority}, refs: ${this._refCounter}>`
+    const cidStr = this.cid.toBaseEncodedString()
+    return `WantlistEntry <key: ${cidStr}, priority: ${this.priority}, refs: ${this._refCounter}>`
   }
 
   equals (other) {
@@ -36,3 +38,5 @@ module.exports = class WantlistEntry {
       this.priority === other.priority
   }
 }
+
+module.exports = WantListEntry

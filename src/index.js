@@ -18,9 +18,9 @@ const Network = require('./network')
 const decision = require('./decision')
 
 module.exports = class Bitwap {
-  constructor (p, libp2p, blockstore, peerBook) {
+  constructor (id, libp2p, blockstore, peerBook) {
     // the ID of the peer to act on behalf of
-    this.self = p
+    this.self = id
 
     // the network delivers messages
     this.network = new Network(libp2p, peerBook, this)
@@ -57,7 +57,6 @@ module.exports = class Bitwap {
       }
 
       // quickly send out cancels, reduces chances of duplicate block receives
-
       pull(
         pull.values(iblocks),
         pull.asyncMap((block, cb) => block.key(cb)),
@@ -332,6 +331,9 @@ function blockToStore (b, cb) {
     if (err) {
       return cb(err)
     }
-    cb(null, {data: b.data, key: key})
+    cb(null, {
+      data: b.data,
+      key: key
+    })
   })
 }
