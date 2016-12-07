@@ -13,7 +13,7 @@ const BitswapMessage = require('../src/message')
 
 describe('BitswapMessage', () => {
   let blocks
-  let keys
+  let cids
 
   before((done) => {
     const data = [
@@ -31,26 +31,7 @@ describe('BitswapMessage', () => {
     })
   })
 
-  it('go interop', (done) => {
-    const goEncoded = new Buffer('CioKKAoiEiAs8k26X7CjDiboOyrFueKeGxYeXB+nQl5zBDNik4uYJBAKGAA=', 'base64')
-
-    const m = new BitswapMessage(false)
-    m.addEntry(mh.fromB58String('QmRN6wdp1S2A5EtjW9A3M1vKSBuQQGcgvuhoMUoEz4iiT5'), 10)
-
-    BitswapMessage.fromProto(goEncoded, (err, res) => {
-      expect(err).to.not.exist
-      expect(res).to.be.eql(m)
-
-      expect(
-        m.toProto()
-      ).to.be.eql(
-        goEncoded
-      )
-      done()
-    })
-  })
-
-  it('append wanted', () => {
+  it('.addEntry - want block', () => {
     const key = keys[1]
     const m = new BitswapMessage(true)
     m.addEntry(key, 1)
@@ -221,5 +202,28 @@ describe('BitswapMessage', () => {
       expect(entry.entry.key.equals(new Buffer('world')))
       expect(entry.entry).to.have.property('priority', 2)
     })
+  })
+
+  describe('go interop', () => {
+    it('bitswap 1.0.0 message', (done) => {
+      const goEncoded = new Buffer('CioKKAoiEiAs8k26X7CjDiboOyrFueKeGxYeXB+nQl5zBDNik4uYJBAKGAA=', 'base64')
+
+      const m = new BitswapMessage(false)
+      m.addEntry(mh.fromB58String('QmRN6wdp1S2A5EtjW9A3M1vKSBuQQGcgvuhoMUoEz4iiT5'), 10)
+
+      BitswapMessage.fromProto(goEncoded, (err, res) => {
+        expect(err).to.not.exist
+        expect(res).to.be.eql(m)
+
+        expect(
+          m.toProto()
+        ).to.be.eql(
+          goEncoded
+        )
+        done()
+      })
+    })
+
+    it.skip('bitswap 1.1.0 message', (done) => {})
   })
 })

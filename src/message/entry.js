@@ -1,21 +1,22 @@
 'use strict'
 
-const mh = require('multihashes')
-
 const WantlistEntry = require('../wantlist').Entry
+const CID = require('cids')
+const assert = require('assert')
 
 module.exports = class BitswapMessageEntry {
-  constructor (key, priority, cancel) {
-    this.entry = new WantlistEntry(key, priority)
+  constructor (cid, priority, cancel) {
+    assert(CID.isCID(cid), 'needs valid cid')
+    this.entry = new WantlistEntry(cid, priority)
     this.cancel = Boolean(cancel)
   }
 
-  get key () {
-    return this.entry.key
+  get cid () {
+    return this.entry.cid
   }
 
-  set key (val) {
-    this.entry.key = val
+  set cid (cid) {
+    this.entry.cid = cid
   }
 
   get priority () {
@@ -27,10 +28,13 @@ module.exports = class BitswapMessageEntry {
   }
 
   get [Symbol.toStringTag] () {
-    return `BitswapMessageEntry ${mh.toB58String(this.key)} <cancel: ${this.cancel}, priority: ${this.priority}>`
+    const cidStr = this.cid.toBaseEncodedString()
+
+    return `BitswapMessageEntry ${cidStr} <cancel: ${this.cancel}, priority: ${this.priority}>`
   }
 
   equals (other) {
-    return (this.cancel === other.cancel) && this.entry.equals(other.entry)
+    return (this.cancel === other.cancel) &&
+           this.entry.equals(other.entry)
   }
 }

@@ -3,9 +3,9 @@
 const protobuf = require('protocol-buffers')
 const Block = require('ipfs-block')
 const isEqualWith = require('lodash.isequalwith')
-const mh = require('multihashes')
 const assert = require('assert')
 const map = require('async/map')
+const CID = require('cids')
 
 const pbm = protobuf(require('./message.proto'))
 const Entry = require('./entry')
@@ -18,51 +18,54 @@ class BitswapMessage {
   }
 
   get empty () {
-    return this.blocks.size === 0 && this.wantlist.size === 0
+    return this.blocks.size === 0 &&
+           this.wantlist.size === 0
   }
 
-  addEntry (key, priority, cancel) {
-    assert(Buffer.isBuffer(key), 'key must be a buffer')
+  addEntry (cid, priority, cancel) {
+    assert(CID.isCID(cid), 'must be a valid cid')
+    const cidStr = cid.toBaseEncodedString()
 
-    const e = this.wantlist.get(mh.toB58String(key))
+    const entry = this.wantlist.get(cidStr)
 
-    if (e) {
-      e.priority = priority
-      e.cancel = Boolean(cancel)
+    if (entry) {
+      entry.priority = priority
+      entry.cancel = Boolean(cancel)
     } else {
-      this.wantlist.set(mh.toB58String(key), new Entry(key, priority, cancel))
+      this.wantlist.set(cidStr, new Entry(cid, priority, cancel))
     }
   }
 
-  addBlock (block, cb) {
-    block.key((err, key) => {
-      if (err) {
-        return cb(err)
-      }
-
-      this.blocks.set(mh.toB58String(key), block)
-      cb()
-    })
+  addBlock (cid, block) {
+    assert(CID.isCID(cid), 'must be a valid cid')
+    const cidStr = cid.toBaseEncodedString()
+    this.blocks.set(cidStr, block)
   }
 
-  cancel (key) {
-    this.wantlist.delete(mh.toB58String(key))
-    this.addEntry(key, 0, true)
+  cancel (cid) {
+    assert(CID.isCID(cid), 'must be a valid cid')
+    const cidStr = cid.toBaseEncodedString()
+    this.wantlist.delete(cidStr)
+    this.addEntry(cid, 0, true)
   }
 
-  toProto () {
+  /*
+   * Serializes to Bitswap Message protobuf of
+   * version 1.0.0
+   */
+  serializeToBitswap100 () {
     const msg = {
       wantlist: {
-        entries: Array.from(this.wantlist.values()).map((e) => {
+        entries: Array.from(this.wantlist.values()).map((entry) => {
           return {
-            block: e.key,
-            priority: Number(e.priority),
-            cancel: Boolean(e.cancel)
+            block: entry.key, // cidStr
+            priority: Number(entry.priority),
+            cancel: Boolean(entry.cancel)
           }
         })
       },
       blocks: Array.from(this.blocks.values())
-        .map((b) => b.data)
+        .map((block) => block.data)
     }
 
     if (this.full) {
@@ -70,6 +73,14 @@ class BitswapMessage {
     }
 
     return pbm.Message.encode(msg)
+  }
+
+  /*
+   * Serializes to Bitswap Message protobuf of
+   * version 1.1.0
+   */
+  serializeToBitswap110 () {
+    // TODO
   }
 
   equals (other) {
@@ -96,19 +107,32 @@ class BitswapMessage {
   }
 }
 
-BitswapMessage.fromProto = (raw, callback) => {
-  const dec = pbm.Message.decode(raw)
-  const m = new BitswapMessage(dec.wantlist.full)
+BitswapMessage.deserialize = (raw, callback) => {
+  const decoded = pbm.Message.decode(raw)
+  const msg = new BitswapMessage(decoded.wantlist.full)
 
-  dec.wantlist.entries.forEach((e) => {
-    m.addEntry(e.block, e.priority, e.cancel)
+  decoded.wantlist.entries.forEach((entry) => {
+    // note: entry.block is the CID here
+    const cid = new CID(entry.block)
+    msg.addEntry(cid, entry.priority, entry.cancel)
   })
 
-  map(dec.blocks, (b, cb) => m.addBlock(new Block(b), cb), (err) => {
+  // decoded.blocks are just the byte arrays
+  map(decoded.blocks, (b, cb) => {
+    const block = new Block(b)
+    block.key((err, key) => {
+      if (err) {
+        return cb(err)
+      }
+      const cid = new CID(key)
+      msg.addBlock(cid, block)
+      cb()
+    })
+  }, (err) => {
     if (err) {
       return callback(err)
     }
-    callback(null, m)
+    callback(null, msg)
   })
 }
 
