@@ -7,6 +7,8 @@ const assert = require('assert')
 const pull = require('pull-stream')
 const series = require('async/series')
 const crypto = require('crypto')
+const CID = require('cids')
+
 const utils = require('../test/utils')
 
 const suite = new Benchmark.Suite('put-get')
@@ -64,7 +66,7 @@ function put (blocks, bs, callback) {
         if (err) {
           return cb(err)
         }
-        cb(null, {key: key, data: b.data})
+        cb(null, {cid: new CID(key), block: b})
       })
     }),
     bs.putStream(),
@@ -76,7 +78,7 @@ function get (blocks, bs, callback) {
   pull(
     pull.values(blocks),
     pull.asyncMap((b, cb) => b.key(cb)),
-    pull.map((k) => bs.getStream(k)),
+    pull.map((k) => bs.getStream(new CID(k))),
     pull.flatten(),
     pull.collect((err, res) => {
       if (err) {

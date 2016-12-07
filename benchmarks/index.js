@@ -11,6 +11,7 @@ const Block = require('ipfs-block')
 const pull = require('pull-stream')
 const assert = require('assert')
 const crypto = require('crypto')
+const CID = require('cids')
 
 const utils = require('../test/utils')
 
@@ -54,6 +55,7 @@ function round (nodeArr, blockFactor, n, cb) {
     if (err) {
       return cb(err)
     }
+    const cids = keys.map((k) => new CID(k))
     let d
     series([
       // put blockFactor amount of blocks per node
@@ -63,8 +65,8 @@ function round (nodeArr, blockFactor, n, cb) {
         const data = _.map(_.range(blockFactor), (j) => {
           const index = i * blockFactor + j
           return {
-            data: blocks[index].data,
-            key: keys[index]
+            block: blocks[index],
+            cid: cids[index]
           }
         })
         each(
@@ -80,7 +82,7 @@ function round (nodeArr, blockFactor, n, cb) {
       // fetch all blocks on every node
       (cb) => parallel(_.map(nodeArr, (node, i) => (callback) => {
         pull(
-          node.bitswap.getStream(keys),
+          node.bitswap.getStream(cids),
           pull.collect((err, res) => {
             if (err) {
               return callback(err)
