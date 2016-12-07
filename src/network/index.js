@@ -83,9 +83,9 @@ module.exports = class Network {
   }
 
   // Connect to the given peer
-  connectTo (peerId, cb) {
+  connectTo (peerId, callback) {
     log('connecting to %s', peerId.toB58String())
-    const done = (err) => setImmediate(() => cb(err))
+    const done = (err) => setImmediate(() => callback(err))
     // NOTE: For now, all this does is ensure that we are
     // connected. Once we have Peer Routing, we will be able
     // to find the Peer
@@ -97,27 +97,27 @@ module.exports = class Network {
   }
 
   // Send the given msg (instance of Message) to the given peer
-  sendMessage (peerId, msg, cb) {
+  sendMessage (peerId, msg, callback) {
     const stringId = peerId.toB58String()
     log('sendMessage to %s', stringId)
     let peerInfo
     try {
       peerInfo = this.peerBook.getByMultihash(peerId.toBytes())
     } catch (err) {
-      return cb(err)
+      return callback(err)
     }
 
     if (this.conns.has(stringId)) {
       log('connection exists')
       this.conns.get(stringId).push(msg.toProto())
-      return cb()
+      return callback()
     }
 
     log('dialByPeerInfo')
     this.libp2p.dialByPeerInfo(peerInfo, PROTOCOL_IDENTIFIER, (err, conn) => {
       log('dialed %s', peerInfo.id.toB58String(), err)
       if (err) {
-        return cb(err)
+        return callback(err)
       }
 
       const msgQueue = pushable()
@@ -138,7 +138,7 @@ module.exports = class Network {
         })
       )
 
-      cb()
+      callback()
     })
   }
 }
