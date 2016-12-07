@@ -58,7 +58,7 @@ class BitswapMessage {
       wantlist: {
         entries: Array.from(this.wantlist.values()).map((entry) => {
           return {
-            block: entry.key, // cidStr
+            block: entry.cid.buffer, // cid
             priority: Number(entry.priority),
             cancel: Boolean(entry.cancel)
           }

@@ -34,7 +34,7 @@ class WantListEntry {
 
   equals (other) {
     return (this._refCounter === other._refCounter) &&
-      this.key.equals(other.key) &&
+      this.cid.equals(other.cid) &&
       this.priority === other.priority
   }
 }
