@@ -12,25 +12,26 @@ const Wantmanager = require('../../src/wantmanager')
 
 const mockNetwork = require('../utils').mockNetwork
 
-describe('Wantmanager', () => {
+describe.only('Wantmanager', () => {
   it('sends wantlist to all connected peers', (done) => {
     parallel([
       (cb) => PeerId.create(cb),
       (cb) => PeerId.create(cb)
-    ], (err, peers) => {
+    ], (err, peerIds) => {
       if (err) {
         return done(err)
       }
 
-      const peer1 = peers[0]
-      const peer2 = peers[1]
+      const peer1 = peerIds[0]
+      const peer2 = peerIds[1]
 
       let wm
+
       const network = mockNetwork(6, (calls) => {
         expect(calls.connects).to.have.length(6)
         const m1 = new Message(true)
         m1.addEntry(new Buffer('hello'), cs.kMaxPriority)
-        m1.addEntry(new Buffer('world'), cs.kMaxPriority - 1)
+        m1.addEntry(ew Buffer('world'), cs.kMaxPriority - 1)
 
         const m2 = new Message(false)
         m2.cancel(new Buffer('world'))
