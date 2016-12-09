@@ -10,7 +10,7 @@ const PeerInfo = require('peer-info')
 // const PeerBook = require('peer-book')
 const multiaddr = require('multiaddr')
 const Bitswap = require('../src')
-const libp2p = require('libp2p-ipfs')
+const Node = require('libp2p-ipfs-nodejs')
 const os = require('os')
 const Repo = require('ipfs-repo')
 const Store = require('interface-pull-blob-store')
@@ -117,7 +117,7 @@ exports.genBitswapNetwork = (n, callback) => {
       //                       '/ipfs/' + p.id.toB58String())
       // p.multiaddr.add(mh2)
 
-      const l = new libp2p.Node(p)
+      const l = new Node(p)
       netArray.push({peerInfo: p, libp2p: l})
     })
 

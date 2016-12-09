@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 'use strict'
 
-const libp2p = require('libp2p-ipfs')
+const Node = require('libp2p-ipfs-nodejs')
 const PeerInfo = require('peer-info')
 const multiaddr = require('multiaddr')
 const expect = require('chai').expect
@@ -49,9 +49,9 @@ describe('network', () => {
       peerBookA.put(peerInfoB)
       peerBookB.put(peerInfoA)
 
-      libp2pNodeA = new libp2p.Node(peerInfoA, peerBookA)
+      libp2pNodeA = new Node(peerInfoA, peerBookA)
       libp2pNodeA.start(started)
-      libp2pNodeB = new libp2p.Node(peerInfoB, peerBookB)
+      libp2pNodeB = new Node(peerInfoB, peerBookB)
       libp2pNodeB.start(started)
 
       function started () {
