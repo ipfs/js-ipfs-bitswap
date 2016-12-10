@@ -4,7 +4,7 @@
 const expect = require('chai').expect
 const PeerId = require('peer-id')
 
-const Ledger = require('../../src/decision/ledger')
+const Ledger = require('../../src/components/decision/ledger')
 
 describe('Ledger', () => {
   let p

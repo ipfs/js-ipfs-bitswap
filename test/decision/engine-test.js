@@ -13,8 +13,8 @@ const eachSeries = require('async/eachSeries')
 const pull = require('pull-stream')
 const paramap = require('pull-paramap')
 
-const Message = require('../../src/message')
-const Engine = require('../../src/decision/engine')
+const Message = require('../../src/types/message')
+const Engine = require('../../src/components/decision/engine')
 
 const mockNetwork = require('../utils').mockNetwork
 

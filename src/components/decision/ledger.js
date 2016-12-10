@@ -1,8 +1,8 @@
 'use strict'
 
-const Wantlist = require('../wantlist')
+const Wantlist = require('../../types/wantlist')
 
-module.exports = class Ledger {
+class Ledger {
   constructor (peerId) {
     this.partner = peerId
     this.wantlist = new Wantlist()
@@ -40,3 +40,5 @@ module.exports = class Ledger {
     return this.wantlist.contains(key)
   }
 }
+
+module.exports = Ledger

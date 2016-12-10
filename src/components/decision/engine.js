@@ -11,8 +11,8 @@ const debounce = require('lodash.debounce')
 const log = debug('bitswap:engine')
 log.error = debug('bitswap:engine:error')
 
-const Message = require('../message')
-const Wantlist = require('../wantlist')
+const Message = require('../../types/message')
+const Wantlist = require('../../types/wantlist')
 const PeerRequestQueue = require('./peer-request-queue')
 const Ledger = require('./ledger')
 

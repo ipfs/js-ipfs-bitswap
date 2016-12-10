@@ -16,7 +16,7 @@ const mh = require('multihashes')
 const PeerBook = require('peer-book')
 const pull = require('pull-stream')
 
-const Message = require('../src/message')
+const Message = require('../src/types/message')
 const Bitswap = require('../src')
 
 const utils = require('./utils')

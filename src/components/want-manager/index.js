@@ -3,9 +3,9 @@
 const debug = require('debug')
 const pull = require('pull-stream')
 
-const Message = require('../message')
-const Wantlist = require('../wantlist')
-const cs = require('../constants')
+const Message = require('../../types/message')
+const Wantlist = require('../../types/wantlist')
+const CONSTANTS = require('../../constants')
 const MsgQueue = require('./msg-queue')
 
 const log = debug('bitswap:wantmanager')
@@ -29,7 +29,7 @@ module.exports = class WantManager {
       pull.values(cids),
       pull.map((cid) => {
         i++
-        return new Message.Entry(cid, cs.kMaxPriority - i, cancel)
+        return new Message.Entry(cid, CONSTANTS.kMaxPriority - i, cancel)
       }),
       pull.through((entry) => {
         // add changes to our wantlist

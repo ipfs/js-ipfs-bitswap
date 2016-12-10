@@ -11,19 +11,19 @@ const each = require('async/each')
 const waterfall = require('async/waterfall')
 const parallel = require('async/parallel')
 
-const hash = (data, cb) => {
+const WantlistEntry = require('../../src/types/wantlist').Entry
+const PeerRequestQueue = require('../../src/components/decision/peer-request-queue')
+
+const hash = (data, callback) => {
   const block = new Block(data)
   block.key((err, key) => {
     if (err) {
-      return cb(err)
+      return callback(err)
     }
 
-    cb(null, key)
+    callback(null, key)
   })
 }
-
-const WantlistEntry = require('../../src/wantlist').Entry
-const PeerRequestQueue = require('../../src/decision/peer-request-queue')
 
 describe('PeerRequestQueue', () => {
   it('push and pop', (done) => {

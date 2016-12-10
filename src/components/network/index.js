@@ -6,8 +6,8 @@ const pull = require('pull-stream')
 const pushable = require('pull-pushable')
 const setImmediate = require('async/setImmediate')
 
-const Message = require('../message')
-const cs = require('../constants')
+const Message = require('../../types/message')
+const CONSTANTS = require('../../constants')
 const log = debug('bitswap:network')
 log.error = debug('bitswap:network:error')
 
@@ -21,7 +21,7 @@ module.exports = class Network {
     this.conns = new Map()
 
     // increase event listener max
-    this.libp2p.swarm.setMaxListeners(cs.maxListeners)
+    this.libp2p.swarm.setMaxListeners(CONSTANTS.maxListeners)
   }
 
   start () {

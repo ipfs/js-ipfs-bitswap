@@ -6,7 +6,7 @@ const Block = require('ipfs-block')
 const map = require('async/map')
 const CID = require('cids')
 
-const Wantlist = require('../src/wantlist')
+const Wantlist = require('../src/types/wantlist')
 
 describe.only('Wantlist', () => {
   let wm

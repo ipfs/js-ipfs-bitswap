@@ -4,12 +4,11 @@
 const expect = require('chai').expect
 const Block = require('ipfs-block')
 const protobuf = require('protocol-buffers')
-// const series = require('async/series')
 const map = require('async/map')
-const pbm = protobuf(require('../src/message/message.proto'))
+const pbm = protobuf(require('../src/types/message/message.proto'))
 const CID = require('cids')
 
-const BitswapMessage = require('../src/message')
+const BitswapMessage = require('../src/types/message')
 
 describe.only('BitswapMessage', () => {
   let blocks

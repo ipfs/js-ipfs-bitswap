@@ -3,12 +3,12 @@
 const queue = require('async/queue')
 const debug = require('debug')
 
-const Message = require('../message')
+const Message = require('../../types/message')
 
 const log = debug('bitswap:wantmanager:queue')
 log.error = debug('bitswap:wantmanager:queue:error')
 
-module.exports = class MsgQueue {
+class MessageQueue {
   constructor (peerId, network) {
     this.peerId = peerId
     this.peerIdStr = peerId.toB58String()
@@ -76,3 +76,5 @@ module.exports = class MsgQueue {
     this.queue.kill()
   }
 }
+
+module.exports = MessageQueue

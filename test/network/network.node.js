@@ -12,8 +12,8 @@ const pull = require('pull-stream')
 const parallel = require('async/parallel')
 const series = require('async/series')
 
-const Network = require('../../src/network')
-const Message = require('../../src/message')
+const Network = require('../../src/components/network')
+const Message = require('../../src/types/message')
 
 describe('network', () => {
   let libp2pNodeA
