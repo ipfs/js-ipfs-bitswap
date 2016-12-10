@@ -8,7 +8,7 @@ const CID = require('cids')
 
 const Wantlist = require('../../src/types/wantlist')
 
-describe.only('Wantlist', () => {
+describe('Wantlist', () => {
   let wm
   let blocks
 

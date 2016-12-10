@@ -4,24 +4,26 @@
 
 const expect = require('chai').expect
 const PeerId = require('peer-id')
-const _ = require('lodash')
 const Block = require('ipfs-block')
+const _includes = require('lodash.includes')
+const _range = require('lodash.range')
 const map = require('async/map')
 const each = require('async/each')
 const waterfall = require('async/waterfall')
 const parallel = require('async/parallel')
+const CID = require('cids')
 
 const WantlistEntry = require('../../../src/types/wantlist').Entry
 const PeerRequestQueue = require('../../../src/components/decision/peer-request-queue')
 
-const hash = (data, callback) => {
+function getBlockCID (data, callback) {
   const block = new Block(data)
   block.key((err, key) => {
     if (err) {
       return callback(err)
     }
 
-    callback(null, key)
+    callback(null, new CID(key))
   })
 }
 
@@ -37,38 +39,37 @@ describe('PeerRequestQueue', () => {
       const vowels = 'aeiou'.split('').sort()
       const vowelsIndex = vowels.map((v) => alphabet.indexOf(v))
       const consonants = alphabet
-        .filter((a) => !_.includes(vowels, a))
+        .filter((a) => !_includes(vowels, a))
         .sort()
         .map((c) => alphabet.indexOf(c))
 
-      map(alphabet, hash, (err, hashes) => {
+      map(alphabet, getBlockCID, (err, cids) => {
         if (err) {
           return done(err)
         }
 
         alphabet.forEach((a, i) => {
-          prq.push(new WantlistEntry(hashes[i], Math.pow(2, 32) - 1 - i), partner)
+          prq.push(new WantlistEntry(cids[i], Math.pow(2, 32) - 1 - i), partner)
         })
 
         consonants.forEach((c) => {
-          prq.remove(hashes[c], partner)
+          prq.remove(cids[c], partner)
         })
 
         const out = []
         alphabet.forEach(() => {
           const rec = prq.pop()
-          if (!rec) return
-          out.push(rec.entry.key)
+          if (!rec) {
+            return
+          }
+          out.push(rec.entry.cid)
         })
 
-        expect(out.length).to.be.eql(vowels.length)
+        expect(out.length).to.eql(vowels.length)
 
         vowelsIndex.forEach((v, i) => {
-          expect(
-            out[i].toString('hex')
-          ).to.be.eql(
-            hashes[v].toString('hex')
-          )
+          expect(out[i].toString('hex'))
+            .to.eql(cids[v].toString('hex'))
         })
         done()
       })
@@ -80,15 +81,15 @@ describe('PeerRequestQueue', () => {
     const prq = new PeerRequestQueue()
 
     waterfall([
-      (cb) => map(_.range(4), (i, cb) => PeerId.create({bits: 1024}, cb), cb),
+      (cb) => map(_range(4), (i, cb) => PeerId.create({bits: 1024}, cb), cb),
       (peers, cb) => {
-        each(_.range(5), (i, cb) => {
-          hash('hello-' + i, (err, digest) => {
+        each(_range(5), (i, cb) => {
+          getBlockCID('hello-' + i, (err, cid) => {
             if (err) {
               return cb(err)
             }
             peers.forEach((peer) => {
-              prq.push(new WantlistEntry(digest), peer)
+              prq.push(new WantlistEntry(cid), peer)
             })
             cb()
           })
@@ -99,7 +100,7 @@ describe('PeerRequestQueue', () => {
           let targets = []
           const tasks = []
 
-          _.range(4).forEach((i) => {
+          _range(4).forEach((i) => {
             const t = prq.pop()
             targets.push(t.target.toHexString())
             tasks.push(t)
@@ -108,13 +109,14 @@ describe('PeerRequestQueue', () => {
           const expected = peers.map((p) => p.toHexString()).sort()
           targets = targets.sort()
 
-          expect(targets).to.be.eql(expected)
+          expect(targets).to.eql(expected)
 
-          // Now, if one of the tasks gets finished, the next task off the queue should
-          // be for the same peer
-          _.range(3).forEach((blockI) => {
-            _.range(3).forEach((i) => {
-              // its okay to mark the same task done multiple times here (JUST FOR TESTING)
+          // Now, if one of the tasks gets finished, the next task
+          // off the queue should be for the same peer
+          _range(3).forEach((blockI) => {
+            _range(3).forEach((i) => {
+              // its okay to mark the same task done multiple
+              // times here (JUST FOR TESTING)
               tasks[i].done()
               const ntask = prq.pop()
               expect(ntask.target).to.be.eql(tasks[i].target)
@@ -130,15 +132,15 @@ describe('PeerRequestQueue', () => {
     const prq = new PeerRequestQueue()
     parallel([
       (cb) => PeerId.create({bits: 1024}, cb),
-      (cb) => hash('hello', cb)
+      (cb) => getBlockCID(new Buffer('hello'), cb)
     ], (err, results) => {
       if (err) {
         return done(err)
       }
       const partner = results[0]
-      const digest = results[1]
-      prq.push(new WantlistEntry(digest), partner)
-      prq.push(new WantlistEntry(digest), partner)
+      const cid = results[1]
+      prq.push(new WantlistEntry(cid), partner)
+      prq.push(new WantlistEntry(cid), partner)
 
       expect(prq.pop()).to.exist
       expect(prq.pop()).to.not.exist

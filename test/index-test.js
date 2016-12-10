@@ -33,7 +33,7 @@ module.exports = (repo) => {
     }
   }
 
-  describe('bitswap', () => {
+  describe.skip('bitswap', () => {
     let store
     let blocks
     let ids

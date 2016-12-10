@@ -15,7 +15,7 @@ const WantManager = require('../../../src/components/want-manager')
 
 const mockNetwork = require('../../utils').mockNetwork
 
-describe.only('WantManager', () => {
+describe('WantManager', () => {
   it('sends wantlist to all connected peers', (done) => {
     let cids
     let blocks

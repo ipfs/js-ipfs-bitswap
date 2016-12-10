@@ -10,7 +10,7 @@ const CID = require('cids')
 
 const BitswapMessage = require('../../src/types/message')
 
-describe.only('BitswapMessage', () => {
+describe('BitswapMessage', () => {
   let blocks
   let cids
 

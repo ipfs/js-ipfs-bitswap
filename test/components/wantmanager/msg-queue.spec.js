@@ -11,7 +11,7 @@ const CID = require('cids')
 const Message = require('../../../src/types/message')
 const MsgQueue = require('../../../src/components/want-manager/msg-queue')
 
-describe.only('MsgQueue', () => {
+describe('MessageQueue', () => {
   let peerId
   let blocks
   let cids

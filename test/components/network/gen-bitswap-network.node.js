@@ -13,7 +13,7 @@ const Buffer = require('safe-buffer').Buffer
 const pull = require('pull-stream')
 const utils = require('../../utils')
 
-describe('gen Bitswap network', function () {
+describe.skip('gen Bitswap network', function () {
   // CI is very slow
   this.timeout(300 * 1000)
 

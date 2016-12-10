@@ -5,7 +5,7 @@ const expect = require('chai').expect
 
 const PriorityQueue = require('../../../src/components/decision/priority-queue')
 
-describe.only('PriorityQueue', () => {
+describe('PriorityQueue', () => {
   it('sorts with a less operator', () => {
     const pq = new PriorityQueue((a, b) => a > b)
     pq.push(1)

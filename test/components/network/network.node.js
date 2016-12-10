@@ -15,7 +15,7 @@ const series = require('async/series')
 const Network = require('../../../src/components/network')
 const Message = require('../../../src/types/message')
 
-describe('network', () => {
+describe.skip('network', () => {
   let libp2pNodeA
   let libp2pNodeB
   let peerInfoA
