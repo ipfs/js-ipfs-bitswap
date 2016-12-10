@@ -142,31 +142,35 @@ Get stats about about the current state of the bitswap instance.
 
 ## Development
 
-### Code Structure
+### Structure
+
+![](/img/architecture.png)
 
 ```sh
 » tree src
 src
+├── components
+│   ├── decision
+│   │   ├── engine.js
+│   │   ├── index.js
+│   │   ├── ledger.js
+│   │   ├── peer-request-queue.js
+│   │   └── pq.js
+│   ├── network             # Handles peerSet and open new conns
+│   │   └── index.js
+│   └── want-manager        # Keeps track of all blocks the peer wants (not the others which it is connected)
+│       ├── index.js
+│       └── msg-queue.js    # Messages to send queue, one per peer
 ├── constants.js
-├── decision             #
-│   ├── engine.js
-│   ├── index.js
-│   ├── ledger.js
-│   ├── peer-request-queue.js
-│   └── pq.js
 ├── index.js
-├── message              # (Type) message that is put in the wire
-│   ├── entry.js
-│   ├── index.js
-│   └── message.proto.js
-├── network              # Handles peerSet and open new conns
-│   └── index.js
-├── wantlist             # (Type) track wanted blocks
-│   ├── entry.js
-│   └── index.js
-└── wantmanager          # Keeps track of all blocks the peer wants (not the others which it is connected)
-    ├── index.js
-    └── msg-queue.js
+└── types
+    ├── message             # (Type) message that is put in the wire
+    │   ├── entry.js
+    │   ├── index.js
+    │   └── message.proto.js
+    └── wantlist            # (Type) track wanted blocks
+        ├── entry.js
+        └── index.js
 ```
 
 ## Contribute
