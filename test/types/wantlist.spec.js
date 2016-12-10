@@ -6,7 +6,7 @@ const Block = require('ipfs-block')
 const map = require('async/map')
 const CID = require('cids')
 
-const Wantlist = require('../src/types/wantlist')
+const Wantlist = require('../../src/types/wantlist')
 
 describe.only('Wantlist', () => {
   let wm
@@ -163,8 +163,8 @@ describe.only('Wantlist', () => {
 
       wm.add(cid1, 2)
 
-      expect(wm.contains(cid1)).to.equal(true)
-      expect(wm.contains(cid2)).to.equal(false)
+      expect(wm.contains(cid1)).to.exist
+      expect(wm.contains(cid2)).to.not.exist
       done()
     })
   })

@@ -57,7 +57,7 @@ class Wantlist {
 
   contains (cid) {
     const cidStr = cid.toBaseEncodedString()
-    return !!this.set.get(cidStr)
+    return this.set.get(cidStr)
   }
 }
 

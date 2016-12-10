@@ -11,7 +11,7 @@ const _ = require('lodash')
 const Block = require('ipfs-block')
 const Buffer = require('safe-buffer').Buffer
 const pull = require('pull-stream')
-const utils = require('../utils')
+const utils = require('../../utils')
 
 describe('gen Bitswap network', function () {
   // CI is very slow

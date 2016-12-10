@@ -9,11 +9,11 @@ const map = require('async/map')
 const Block = require('ipfs-block')
 const CID = require('cids')
 
-const cs = require('../../src/constants')
-const Message = require('../../src/types/message')
-const WantManager = require('../../src/components/want-manager')
+const cs = require('../../../src/constants')
+const Message = require('../../../src/types/message')
+const WantManager = require('../../../src/components/want-manager')
 
-const mockNetwork = require('../utils').mockNetwork
+const mockNetwork = require('../../utils').mockNetwork
 
 describe.only('WantManager', () => {
   it('sends wantlist to all connected peers', (done) => {

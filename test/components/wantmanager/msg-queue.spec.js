@@ -8,8 +8,8 @@ const parallel = require('async/parallel')
 const Block = require('ipfs-block')
 const CID = require('cids')
 
-const Message = require('../../src/types/message')
-const MsgQueue = require('../../src/components/want-manager/msg-queue')
+const Message = require('../../../src/types/message')
+const MsgQueue = require('../../../src/components/want-manager/msg-queue')
 
 describe.only('MsgQueue', () => {
   let peerId
