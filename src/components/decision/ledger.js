@@ -17,27 +17,27 @@ class Ledger {
   }
 
   sentBytes (n) {
-    this.exchangeCount ++
+    this.exchangeCount++
     this.lastExchange = (new Date()).getTime()
     this.accounting.bytesSent += n
   }
 
   receivedBytes (n) {
-    this.exchangeCount ++
+    this.exchangeCount++
     this.lastExchange = (new Date()).getTime()
     this.accounting.bytesRecv += n
   }
 
-  wants (key, priority) {
-    this.wantlist.add(key, priority)
+  wants (cid, priority) {
+    this.wantlist.add(cid, priority)
   }
 
-  cancelWant (key) {
-    this.wantlist.remove(key)
+  cancelWant (cid) {
+    this.wantlist.remove(cid)
   }
 
-  wantlistContains (key) {
-    return this.wantlist.contains(key)
+  wantlistContains (cid) {
+    return this.wantlist.contains(cid)
   }
 }
 

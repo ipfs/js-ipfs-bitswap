@@ -6,22 +6,23 @@ const PeerId = require('peer-id')
 
 const Ledger = require('../../../src/components/decision/ledger')
 
-describe.skip('Ledger', () => {
-  let p
+describe('Ledger', () => {
+  let peerId
   let ledger
 
   before((done) => {
-    PeerId.create((err, id) => {
+    PeerId.create((err, _peerId) => {
       if (err) {
         return done(err)
       }
 
-      p = id
+      peerId = _peerId
       done()
     })
   })
+
   beforeEach(() => {
-    ledger = new Ledger(p)
+    ledger = new Ledger(peerId)
   })
 
   it('accounts', () => {
@@ -30,11 +31,10 @@ describe.skip('Ledger', () => {
     ledger.receivedBytes(223432)
     ledger.receivedBytes(2333)
 
-    expect(
-      ledger.accounting
-    ).to.be.eql({
-      bytesSent: 100 + 12000,
-      bytesRecv: 223432 + 2333
-    })
+    expect(ledger.accounting)
+      .to.eql({
+        bytesSent: 100 + 12000,
+        bytesRecv: 223432 + 2333
+      })
   })
 })
