@@ -4,7 +4,7 @@ const mh = require('multihashes')
 const debug = require('debug')
 const assert = require('assert')
 
-const PriorityQueue = require('./pq')
+const PriorityQueue = require('./priority-queue')
 
 const log = debug('bitswap:peer-request-queue')
 

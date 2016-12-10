@@ -3,24 +3,25 @@
 
 const expect = require('chai').expect
 
-const PriorityQueue = require('../../../src/components/decision/pq')
+const PriorityQueue = require('../../../src/components/decision/priority-queue')
 
-describe('PriorityQueue', () => {
+describe.only('PriorityQueue', () => {
   it('sorts with a less operator', () => {
     const pq = new PriorityQueue((a, b) => a > b)
     pq.push(1)
     pq.push(5)
     pq.push(2)
 
-    expect(pq.pop()).to.be.eql(5)
-    expect(pq.pop()).to.be.eql(2)
-    expect(pq.pop()).to.be.eql(1)
+    expect(pq.pop()).to.eql(5)
+    expect(pq.pop()).to.eql(2)
+    expect(pq.pop()).to.eql(1)
   })
 
   it('updates an element', () => {
     const a = {index: 1}
     const b = {index: 5}
     const c = {index: 2}
+
     const pq = new PriorityQueue((a, b) => a.index > b.index)
 
     pq.push(a)
@@ -29,23 +30,23 @@ describe('PriorityQueue', () => {
     a.index = 10
     pq.update(a)
 
-    expect(pq.pop()).to.be.eql(a)
-    expect(pq.pop()).to.be.eql(b)
-    expect(pq.pop()).to.be.eql(c)
+    expect(pq.pop()).to.eql(a)
+    expect(pq.pop()).to.eql(b)
+    expect(pq.pop()).to.eql(c)
   })
 
   it('isEmpty', () => {
     const pq = new PriorityQueue((a, b) => a > b)
 
-    expect(pq.isEmpty()).to.be.eql(true)
+    expect(pq.isEmpty()).to.eql(true)
 
     pq.push(1)
 
-    expect(pq.isEmpty()).to.be.eql(false)
+    expect(pq.isEmpty()).to.eql(false)
 
     pq.pop()
 
-    expect(pq.isEmpty()).to.be.eql(true)
+    expect(pq.isEmpty()).to.eql(true)
   })
 
   it('correct pop', () => {
@@ -66,7 +67,7 @@ describe('PriorityQueue', () => {
 
     expect(
       priorities
-    ).to.be.eql([
+    ).to.eql([
       0, 3, 4, 6, 9
     ])
   })

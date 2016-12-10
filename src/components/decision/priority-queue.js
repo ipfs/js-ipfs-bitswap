@@ -2,7 +2,7 @@
 
 const Heap = require('heap')
 
-module.exports = class PriorityQueue {
+class PriorityQueue {
   constructor (cmp) {
     this.q = new Heap((a, b) => {
       return cmp(a, b) ? -1 : 1
@@ -29,3 +29,5 @@ module.exports = class PriorityQueue {
     return this.q.empty()
   }
 }
+
+module.exports = PriorityQueue
