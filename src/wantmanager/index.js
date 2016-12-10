@@ -2,7 +2,6 @@
 
 const debug = require('debug')
 const pull = require('pull-stream')
-const mh = require('multihashes')
 
 const Message = require('../message')
 const Wantlist = require('../wantlist')
@@ -12,10 +11,10 @@ const MsgQueue = require('./msg-queue')
 const log = debug('bitswap:wantmanager')
 log.error = debug('bitswap:wantmanager:error')
 
-module.exports = class Wantmanager {
+module.exports = class WantManager {
   constructor (network) {
     this.peers = new Map()
-    this.wl = new Wantlist()
+    this.wantlist = new Wantlist()
 
     this.network = network
   }
@@ -24,25 +23,26 @@ module.exports = class Wantmanager {
     return new MsgQueue(peerId, this.network)
   }
 
-  _addEntries (keys, cancel, force) {
+  _addEntries (cids, cancel, force) {
     let i = -1
     pull(
-      pull.values(keys),
-      pull.map((key) => {
+      pull.values(cids),
+      pull.map((cid) => {
         i++
-        return new Message.Entry(key, cs.kMaxPriority - i, cancel)
+        return new Message.Entry(cid, cs.kMaxPriority - i, cancel)
       }),
-      pull.through((e) => {
+      pull.through((entry) => {
         // add changes to our wantlist
-        if (e.cancel) {
+        if (entry.cancel) {
           if (force) {
-            this.wl.removeForce(e.key)
+            this.wantlist.removeForce(entry.cid)
           } else {
-            this.wl.remove(e.key)
+            this.wantlist.remove(entry.cid)
           }
         } else {
-          log('adding to wl', mh.toB58String(e.key), e.priority)
-          this.wl.add(e.key, e.priority)
+          log('adding to wantlist',
+            entry.cid.toBaseEncodedString(), entry.priority)
+          this.wantlist.add(entry.cid, entry.priority)
         }
       }),
       pull.collect((err, entries) => {
@@ -69,8 +69,9 @@ module.exports = class Wantmanager {
 
     // new peer, give them the full wantlist
     const fullwantlist = new Message(true)
-    for (let entry of this.wl.entries()) {
-      fullwantlist.addEntry(entry[1].key, entry[1].priority)
+
+    for (let entry of this.wantlist.entries()) {
+      fullwantlist.addEntry(entry[1].cid, entry[1].priority)
     }
 
     mq.addMessage(fullwantlist)
@@ -97,21 +98,21 @@ module.exports = class Wantmanager {
   }
 
   // add all the keys to the wantlist
-  wantBlocks (keys) {
-    log('want blocks:', keys.map((k) => mh.toB58String(k)))
-    this._addEntries(keys, false)
+  wantBlocks (cids) {
+    log('want blocks:', cids.map((cid) => cid.toBaseEncodedString()))
+    this._addEntries(cids, false)
   }
 
   // remove blocks of all the given keys without respecting refcounts
-  unwantBlocks (keys) {
-    log('unwant blocks:', keys.map((k) => mh.toB58String(k)))
-    this._addEntries(keys, true, true)
+  unwantBlocks (cids) {
+    log('unwant blocks:', cids.map((cid) => cid.toBaseEncodedString()))
+    this._addEntries(cids, true, true)
   }
 
   // cancel wanting all of the given keys
-  cancelWants (keys) {
-    log('cancel wants: ', keys.map((k) => mh.toB58String(k)))
-    this._addEntries(keys, true)
+  cancelWants (cids) {
+    log('cancel wants: ', cids.map((cid) => cid.toBaseEncodedString()))
+    this._addEntries(cids, true)
   }
 
   // Returns a list of all currently connected peers
@@ -133,7 +134,7 @@ module.exports = class Wantmanager {
     this.timer = setInterval(() => {
       // resend entirew wantlist every so often
       const fullwantlist = new Message(true)
-      for (let entry of this.wl.entries()) {
+      for (let entry of this.wantlist.entries()) {
         fullwantlist.addEntry(entry[1].key, entry[1].priority)
       }
 
