@@ -1,3 +1,5 @@
+'use strict'
+
 function taskKey (peerId, cid) {
   return `${peerId.toB58String()}:${cid.toBaseEncodedString()}`
 }

@@ -45,7 +45,7 @@ module.exports = (repo) => {
     })
   }
 
-  describe.only('Engine', () => {
+  describe('Engine', () => {
     afterEach((done) => {
       repo.remove(done)
     })
@@ -188,7 +188,6 @@ module.exports = (repo) => {
               //   a) want alphabet - cancel vowels
               //   b) want alphabet - cancels everything except vowels
 
-              console.log('round %d', i)
               eachSeries(testCases, (testcase, innerCb) => {
                 const set = testcase[0]
                 const cancels = testcase[1]
@@ -215,7 +214,6 @@ module.exports = (repo) => {
                   (cb) => partnerWants(dEngine, set, partner, cb),
                   (cb) => partnerCancels(dEngine, cancels, partner, cb)
                 ], (err) => {
-                  console.log('messages issued')
                   expect(err).to.not.exist
                 })
               }, cb)

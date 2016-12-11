@@ -5,6 +5,7 @@ const pull = require('pull-stream')
 const whilst = require('async/whilst')
 const setImmediate = require('async/setImmediate')
 const each = require('async/each')
+const waterfall = require('async/waterfall')
 const debounce = require('lodash.debounce')
 const CID = require('cids')
 
@@ -35,20 +36,18 @@ class DecisionEngine {
 
   _sendBlock (env, cb) {
     const msg = new Message(false)
-
-    msg.addBlock(env.block, (err) => {
-      if (err) {
-        return cb(err)
+    waterfall([
+      (cb) => env.block.key(cb),
+      (key, cb) => {
+        msg.addBlock(new CID(key), env.block)
+        log('Sending block to %s', env.peer.toB58String(), env.block.data.toString())
+        this.network.sendMessage(env.peer, msg, cb)
       }
-
-      log('Sending block to %s', env.peer.toB58String(), env.block.data.toString())
-
-      this.network.sendMessage(env.peer, msg, (err) => {
-        if (err) {
-          log('sendblock error: %s', err.message)
-        }
-        cb(null, 'done')
-      })
+    ], (err) => {
+      if (err) {
+        log('sendblock error: %s', err.message)
+      }
+      cb(null, 'done')
     })
   }
 
@@ -70,8 +69,9 @@ class DecisionEngine {
         log('got task')
 
         pull(
-          this.blockstore.getStream(nextTask.entry.cid),
+          this.blockstore.getStream(nextTask.entry.cid.toV0()),
           pull.collect((err, blocks) => {
+            log('collected block', blocks, err)
             const block = blocks[0]
             if (err || !block) {
               nextTask.done()
@@ -133,7 +133,6 @@ class DecisionEngine {
       pull(
         pull.values(arrayWantlist),
         pull.asyncMap((entry, cb) => {
-          console.log('-> 1')
           this._processWantlist(ledger, peerId, entry, cb)
         }),
         pull.onEnd(cb)
@@ -168,9 +167,8 @@ class DecisionEngine {
       ledger.wants(entry.cid, entry.priority)
 
       // If we already have the block, serve it
-      this.blockstore.has(entry.cid, (err, exists) => {
+      this.blockstore.has(entry.cid.toV0(), (err, exists) => {
         if (err) {
-          console.log('ERR')
           log('failed existence check %s', cidStr)
         } else if (exists) {
           log('has want %s', cidStr)

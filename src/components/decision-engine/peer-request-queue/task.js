@@ -1,3 +1,5 @@
+'use strict'
+
 const taskKey = require('./util').taskKey
 
 class PeerRequestTask {

@@ -4,7 +4,7 @@ const debug = require('debug')
 
 const PriorityQueue = require('./../priority-queue')
 const ActivePartner = require('./active-partner')
-const PeerRequestTask = require('./peer-request-task')
+const PeerRequestTask = require('./task')
 const util = require('./util')
 const taskKey = util.taskKey
 const partnerCompare = util.partnerCompare
@@ -20,7 +20,7 @@ class PeerRequestQueue {
 
   // Add a new entry to the queue
   push (entry, toPeerId) {
-    console.log('PeerRequestQueue Task')
+    log('PeerRequestQueue Task')
     const toPeerIdStr = toPeerId.toB58String()
     log('push, to: %s', toPeerIdStr)
     let partner = this.partners.get(toPeerIdStr)
@@ -50,7 +50,7 @@ class PeerRequestQueue {
       this.pQueue.update(partner)
     })
 
-    console.log('task is:', task)
+    log('task is:', task)
     partner.taskQueue.push(task)
     log('taskMap.set', task.key, task.toString())
     this.taskMap.set(task.key, task)
@@ -86,7 +86,7 @@ class PeerRequestQueue {
   // Remove a task from the queue
   remove (cid, peerId) {
     const task = this.taskMap.get(taskKey(peerId, cid))
-    console.log('task', task)
+    log('task', task)
     if (task) {
       // remove the task "lazily" by simply marking it as trash,
       // so it'll be dropped when popped off the queue
