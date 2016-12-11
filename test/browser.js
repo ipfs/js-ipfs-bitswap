@@ -65,4 +65,4 @@ const repo = {
 }
 
 require('./index-test')(repo)
-require('./components/decision/engine-test')(repo)
+require('./components/decision-engine/index-test')(repo)

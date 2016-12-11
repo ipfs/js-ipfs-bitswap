@@ -16,7 +16,7 @@ const Block = require('ipfs-block')
 const CONSTANTS = require('./constants')
 const WantManager = require('./components/want-manager')
 const Network = require('./components/network')
-const decision = require('./components/decision')
+const DecisionEngine = require('./components/decision-engine')
 
 class Bitswap {
   constructor (id, libp2p, blockstore, peerBook) {
@@ -29,7 +29,7 @@ class Bitswap {
     // local database
     this.blockstore = blockstore
 
-    this.engine = new decision.Engine(blockstore, this.network)
+    this.engine = new DecisionEngine(blockstore, this.network)
 
     // handle message sending
     this.wm = new WantManager(this.network)

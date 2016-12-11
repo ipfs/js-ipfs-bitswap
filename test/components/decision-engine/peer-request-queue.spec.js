@@ -14,7 +14,7 @@ const parallel = require('async/parallel')
 const CID = require('cids')
 
 const WantlistEntry = require('../../../src/types/wantlist').Entry
-const PeerRequestQueue = require('../../../src/components/decision/peer-request-queue')
+const PeerRequestQueue = require('../../../src/components/decision-engine/peer-request-queue')
 
 function getBlockCID (data, callback) {
   const block = new Block(data)

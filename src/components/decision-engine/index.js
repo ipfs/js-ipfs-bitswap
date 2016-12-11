@@ -1,12 +1,12 @@
 'use strict'
 
 const debug = require('debug')
-const mh = require('multihashes')
 const pull = require('pull-stream')
 const whilst = require('async/whilst')
 const setImmediate = require('async/setImmediate')
 const each = require('async/each')
 const debounce = require('lodash.debounce')
+const CID = require('cids')
 
 const log = debug('bitswap:engine')
 log.error = debug('bitswap:engine:error')
@@ -16,7 +16,7 @@ const Wantlist = require('../../types/wantlist')
 const PeerRequestQueue = require('./peer-request-queue')
 const Ledger = require('./ledger')
 
-module.exports = class Engine {
+class DecisionEngine {
   constructor (blockstore, network) {
     this.blockstore = blockstore
     this.network = network
@@ -35,6 +35,7 @@ module.exports = class Engine {
 
   _sendBlock (env, cb) {
     const msg = new Message(false)
+
     msg.addBlock(env.block, (err) => {
       if (err) {
         return cb(err)
@@ -69,7 +70,7 @@ module.exports = class Engine {
         log('got task')
 
         pull(
-          this.blockstore.getStream(nextTask.entry.key),
+          this.blockstore.getStream(nextTask.entry.cid),
           pull.collect((err, blocks) => {
             const block = blocks[0]
             if (err || !block) {
@@ -91,11 +92,12 @@ module.exports = class Engine {
   }
 
   wantlistForPeer (peerId) {
-    if (!this.ledgerMap.has(peerId.toB58String())) {
+    const peerIdStr = peerId.toB58String()
+    if (!this.ledgerMap.has(peerIdStr)) {
       return new Map()
     }
 
-    return this.ledgerMap.get(peerId.toB58String()).wantlist.sortedEntries()
+    return this.ledgerMap.get(peerIdStr).wantlist.sortedEntries()
   }
 
   peers () {
@@ -131,6 +133,7 @@ module.exports = class Engine {
       pull(
         pull.values(arrayWantlist),
         pull.asyncMap((entry, cb) => {
+          console.log('-> 1')
           this._processWantlist(ledger, peerId, entry, cb)
         }),
         pull.onEnd(cb)
@@ -138,41 +141,43 @@ module.exports = class Engine {
     })
   }
 
-  receivedBlock (key) {
-    this._processBlock(key)
+  receivedBlock (cid) {
+    this._processBlock(cid)
     this._outbox()
   }
 
-  _processBlock (key) {
+  _processBlock (cid) {
     // Check all connected peers if they want the block we received
     for (let l of this.ledgerMap.values()) {
-      const entry = l.wantlistContains(key)
+      const entry = l.wantlistContains(cid)
       if (entry) {
-        this.peerRequestQueue.push(entry, l.partner)
+        this.peerRequestQueue.push(entry.cid, l.partner)
       }
     }
   }
 
-  _processWantlist (ledger, peerId, entry, cb) {
+  _processWantlist (ledger, peerId, entry, callback) {
+    const cidStr = entry.cid.toBaseEncodedString()
     if (entry.cancel) {
-      log('cancel %s', mh.toB58String(entry.key))
-      ledger.cancelWant(entry.key)
-      this.peerRequestQueue.remove(entry.key, peerId)
-      setImmediate(() => cb())
+      log('cancel %s', cidStr)
+      ledger.cancelWant(entry.cid)
+      this.peerRequestQueue.remove(entry.cid, peerId)
+      setImmediate(() => callback())
     } else {
-      log('wants %s - %s', mh.toB58String(entry.key), entry.priority)
-      ledger.wants(entry.key, entry.priority)
+      log('wants %s - %s', cidStr, entry.priority)
+      ledger.wants(entry.cid, entry.priority)
 
       // If we already have the block, serve it
-      this.blockstore.has(entry.key, (err, exists) => {
+      this.blockstore.has(entry.cid, (err, exists) => {
         if (err) {
-          log('failed existence check %s', mh.toB58String(entry.key))
+          console.log('ERR')
+          log('failed existence check %s', cidStr)
         } else if (exists) {
-          log('has want %s', mh.toB58String(entry.key))
+          log('has want %s', cidStr)
           this.peerRequestQueue.push(entry.entry, peerId)
           this._outbox()
         }
-        cb()
+        callback()
       })
     }
   }
@@ -183,10 +188,11 @@ module.exports = class Engine {
         if (err) {
           return cb(err)
         }
-        log('got block %s (%s bytes)', mh.toB58String(key), block.data.length)
+        const cid = new CID(key)
+        const cidStr = cid.toBaseEncodedString()
+        log('got block %s (%s bytes)', cidStr, block.data.length)
         ledger.receivedBytes(block.data.length)
-
-        this.receivedBlock(key)
+        this.receivedBlock(cid)
         cb()
       })
     }, callback)
@@ -201,9 +207,10 @@ module.exports = class Engine {
         if (err) {
           return cb(err)
         }
+        const cid = new CID(key)
 
-        ledger.wantlist.remove(key)
-        this.peerRequestQueue.remove(key, peerId)
+        ledger.wantlist.remove(cid)
+        this.peerRequestQueue.remove(cid, peerId)
         cb()
       })
     }, callback)
@@ -223,16 +230,18 @@ module.exports = class Engine {
     // }
     //
     // TODO: figure out how to remove all other references
-    // in the peerrequestqueue
+    // in the peer request queue
   }
 
   _findOrCreate (peerId) {
-    if (this.ledgerMap.has(peerId.toB58String())) {
-      return this.ledgerMap.get(peerId.toB58String())
+    const peerIdStr = peerId.toB58String()
+    if (this.ledgerMap.has(peerIdStr)) {
+      return this.ledgerMap.get(peerIdStr)
     }
 
     const l = new Ledger(peerId)
-    this.ledgerMap.set(peerId.toB58String(), l)
+
+    this.ledgerMap.set(peerIdStr, l)
 
     return l
   }
@@ -245,3 +254,5 @@ module.exports = class Engine {
     this._running = false
   }
 }
+
+module.exports = DecisionEngine

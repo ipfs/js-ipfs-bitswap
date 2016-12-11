@@ -12,33 +12,40 @@ const map = require('async/map')
 const eachSeries = require('async/eachSeries')
 const pull = require('pull-stream')
 const paramap = require('pull-paramap')
+const CID = require('cids')
 
 const Message = require('../../../src/types/message')
-const Engine = require('../../../src/components/decision/engine')
+const DecisionEngine = require('../../../src/components/decision-engine')
 
 const mockNetwork = require('../../utils').mockNetwork
 
+function messageToString (m) {
+  return Array.from(m[1].blocks.values())
+    .map((b) => b.data.toString())
+}
+
+function stringifyMessages (messages) {
+  return _.flatten(messages.map(messageToString))
+}
+
 module.exports = (repo) => {
-  function newEngine (id, done) {
+  function newEngine (path, done) {
     parallel([
-      (cb) => repo.create(id, cb),
+      (cb) => repo.create(path, cb),
       (cb) => PeerId.create(cb)
     ], (err, results) => {
       if (err) {
         return done(err)
       }
       const blockstore = results[0].blockstore
-      const engine = new Engine(blockstore, mockNetwork())
+      const engine = new DecisionEngine(blockstore, mockNetwork())
       engine.start()
 
-      done(null, {
-        peer: results[1],
-        engine
-      })
+      done(null, { peer: results[1], engine })
     })
   }
 
-  describe.skip('Engine', () => {
+  describe.only('Engine', () => {
     afterEach((done) => {
       repo.remove(done)
     })
@@ -61,10 +68,12 @@ module.exports = (repo) => {
           }),
           paramap((block, cb) => {
             const m = new Message(false)
-            m.addBlock(block, (err) => {
+            block.key((err, key) => {
               if (err) {
                 return cb(err)
               }
+              const cid = new CID(key)
+              m.addBlock(cid, block)
               sender.engine.messageSent(receiver.peer, m)
               receiver.engine.messageReceived(sender.peer, m, cb)
             })
@@ -72,29 +81,17 @@ module.exports = (repo) => {
           pull.onEnd((err) => {
             expect(err).to.not.exist
 
-            expect(
-              sender.engine.numBytesSentTo(receiver.peer)
-            ).to.be.above(
-              0
-            )
+            expect(sender.engine.numBytesSentTo(receiver.peer))
+              .to.be.above(0)
 
-            expect(
-              sender.engine.numBytesSentTo(receiver.peer)
-            ).to.be.eql(
-              receiver.engine.numBytesReceivedFrom(sender.peer)
-            )
+            expect(sender.engine.numBytesSentTo(receiver.peer))
+              .to.eql(receiver.engine.numBytesReceivedFrom(sender.peer))
 
-            expect(
-              receiver.engine.numBytesSentTo(sender.peer)
-            ).to.be.eql(
-              0
-            )
+            expect(receiver.engine.numBytesSentTo(sender.peer))
+              .to.eql(0)
 
-            expect(
-              sender.engine.numBytesReceivedFrom(receiver.peer)
-            ).to.be.eql(
-              0
-            )
+            expect(sender.engine.numBytesReceivedFrom(receiver.peer))
+              .to.eql(0)
 
             done()
           })
@@ -110,31 +107,21 @@ module.exports = (repo) => {
         expect(err).to.not.exist
 
         const sanfrancisco = res[0]
-        const seatlle = res[1]
+        const seattle = res[1]
 
         const m = new Message(true)
 
-        sanfrancisco.engine.messageSent(seatlle.peer, m)
-        seatlle.engine.messageReceived(sanfrancisco.peer, m, (err) => {
+        sanfrancisco.engine.messageSent(seattle.peer, m)
+        seattle.engine.messageReceived(sanfrancisco.peer, m, (err) => {
           expect(err).to.not.exist
 
-          expect(
-            seatlle.peer.toHexString()
-          ).to.not.be.eql(
-            sanfrancisco.peer.toHexString()
-          )
+          expect(seattle.peer.toHexString())
+            .to.not.eql(sanfrancisco.peer.toHexString())
 
-          expect(
-            sanfrancisco.engine.peers()
-          ).to.include(
-            seatlle.peer
-          )
+          expect(sanfrancisco.engine.peers()).to.include(seattle.peer)
 
-          expect(
-            seatlle.engine.peers()
-          ).to.include(
-            sanfrancisco.peer
-          )
+          expect(seattle.engine.peers())
+            .to.include(sanfrancisco.peer)
           done()
         })
       })
@@ -149,6 +136,35 @@ module.exports = (repo) => {
         [alphabet, _.difference(alphabet, vowels)]
       ]
 
+      function partnerWants (dEngine, values, partner, cb) {
+        const message = new Message(false)
+        const blocks = values.map((k) => new Block(k))
+
+        map(blocks, (b, cb) => b.key(cb), (err, keys) => {
+          expect(err).to.not.exist
+          keys.forEach((key, i) => {
+            const cid = new CID(key)
+            message.addEntry(cid, Math.pow(2, 32) - 1 - i)
+          })
+
+          dEngine.messageReceived(partner, message, cb)
+        })
+      }
+
+      function partnerCancels (dEngine, values, partner, cb) {
+        const message = new Message(false)
+        const blocks = values.map((k) => new Block(k))
+
+        map(blocks, (b, cb) => b.key(cb), (err, keys) => {
+          expect(err).to.not.exist
+          keys.forEach((key) => {
+            const cid = new CID(key)
+            message.cancel(cid)
+          })
+          dEngine.messageReceived(partner, message, cb)
+        })
+      }
+
       repo.create('p', (err, repo) => {
         expect(err).to.not.exist
 
@@ -160,58 +176,33 @@ module.exports = (repo) => {
               if (err) {
                 return cb(err)
               }
-              cb(null, {data: block.data, key: key})
+              cb(null, { data: block.data, key: key })
             })
           }),
           repo.blockstore.putStream(),
           pull.onEnd((err) => {
             expect(err).to.not.exist
 
-            const partnerWants = (e, keys, p, cb) => {
-              const add = new Message(false)
-              const blocks = keys.map((k) => new Block(k))
-              map(blocks, (b, cb) => b.key(cb), (err, keys) => {
-                expect(err).to.not.exist
-                blocks.forEach((b, i) => {
-                  add.addEntry(keys[i], Math.pow(2, 32) - 1 - i)
-                })
-
-                e.messageReceived(p, add, cb)
-              })
-            }
-
-            const partnerCancels = (e, keys, p, cb) => {
-              const cancels = new Message(false)
-              const blocks = keys.map((k) => new Block(k))
-              map(blocks, (b, cb) => b.key(cb), (err, keys) => {
-                expect(err).to.not.exist
-                keys.forEach((k) => cancels.cancel(k))
-                e.messageReceived(p, cancels, cb)
-              })
-            }
-
             eachSeries(_.range(numRounds), (i, cb) => {
+              // 2 test cases
+              //   a) want alphabet - cancel vowels
+              //   b) want alphabet - cancels everything except vowels
+
+              console.log('round %d', i)
               eachSeries(testCases, (testcase, innerCb) => {
                 const set = testcase[0]
                 const cancels = testcase[1]
                 const keeps = _.difference(set, cancels)
 
-                const messageToString = (m) => {
-                  return Array.from(m[1].blocks.values())
-                    .map((b) => b.data.toString())
-                }
-                const stringifyMessages = (messages) => {
-                  return _.flatten(messages.map(messageToString))
-                }
-
                 const network = mockNetwork(keeps.length, (res) => {
                   const msgs = stringifyMessages(res.messages)
-                  expect(msgs).to.be.eql(keeps)
+                  expect(msgs).to.eql(keeps)
                   innerCb()
                 })
 
-                const e = new Engine(repo.blockstore, network)
-                e.start()
+                const dEngine = new DecisionEngine(repo.blockstore, network)
+                dEngine.start()
+
                 let partner
                 series([
                   (cb) => PeerId.create((err, id) => {
@@ -221,10 +212,11 @@ module.exports = (repo) => {
                     partner = id
                     cb()
                   }),
-                  (cb) => partnerWants(e, set, partner, cb),
-                  (cb) => partnerCancels(e, cancels, partner, cb)
+                  (cb) => partnerWants(dEngine, set, partner, cb),
+                  (cb) => partnerCancels(dEngine, cancels, partner, cb)
                 ], (err) => {
-                  if (err) throw err
+                  console.log('messages issued')
+                  expect(err).to.not.exist
                 })
               }, cb)
             }, done)
