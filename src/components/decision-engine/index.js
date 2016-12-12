@@ -69,7 +69,7 @@ class DecisionEngine {
         log('got task')
 
         pull(
-          this.blockstore.getStream(nextTask.entry.cid.toV0()),
+          this.blockstore.getStream(nextTask.entry.cid.multihash),
           pull.collect((err, blocks) => {
             log('collected block', blocks, err)
             const block = blocks[0]
@@ -167,7 +167,7 @@ class DecisionEngine {
       ledger.wants(entry.cid, entry.priority)
 
       // If we already have the block, serve it
-      this.blockstore.has(entry.cid.toV0(), (err, exists) => {
+      this.blockstore.has(entry.cid.multihash, (err, exists) => {
         if (err) {
           log('failed existence check %s', cidStr)
         } else if (exists) {
