@@ -57,7 +57,7 @@
     "cids": "^0.3.4",
     "debug": "^2.3.3",
     "heap": "^0.2.6",
-    "ipfs-block": "^0.5.1",
+    "ipfs-block": "^0.5.2",
     "lodash.debounce": "^4.0.8",
     "lodash.isequalwith": "^4.4.0",
     "lodash.isundefined": "^3.0.1",
