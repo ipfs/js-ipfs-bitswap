@@ -1,7 +1,6 @@
 'use strict'
 
 const debug = require('debug')
-const mh = require('multihashes')
 const pull = require('pull-stream')
 const whilst = require('async/whilst')
 const setImmediate = require('async/setImmediate')
@@ -40,7 +39,7 @@ module.exports = class Engine {
         return cb(err)
       }
 
-      log('Sending block to %s', env.peer.toB58String(), env.block.data.toString())
+      // log('Sending block to %s', env.peer.toB58String(), env.block.data.toString())
 
       this.network.sendMessage(env.peer, msg, (err) => {
         if (err) {
@@ -107,7 +106,7 @@ module.exports = class Engine {
     const ledger = this._findOrCreate(peerId)
 
     if (msg.empty) {
-      log('received empty message from %s', peerId.toB58String())
+      // log('received empty message from %s', peerId.toB58String())
       return cb()
     }
 
@@ -122,7 +121,7 @@ module.exports = class Engine {
       }
 
       const arrayWantlist = Array.from(msg.wantlist.values())
-      log('wantlist', arrayWantlist.map((e) => e.toString()))
+      // log('wantlist', arrayWantlist.map((e) => e.toString()))
 
       if (arrayWantlist.length === 0) {
         return cb()
@@ -155,20 +154,20 @@ module.exports = class Engine {
 
   _processWantlist (ledger, peerId, entry, cb) {
     if (entry.cancel) {
-      log('cancel %s', mh.toB58String(entry.key))
+      log('cancel')
       ledger.cancelWant(entry.key)
       this.peerRequestQueue.remove(entry.key, peerId)
       setImmediate(() => cb())
     } else {
-      log('wants %s - %s', mh.toB58String(entry.key), entry.priority)
+      log('wants')
       ledger.wants(entry.key, entry.priority)
 
       // If we already have the block, serve it
       this.blockstore.has(entry.key, (err, exists) => {
         if (err) {
-          log('failed existence check %s', mh.toB58String(entry.key))
+          log('failed existence check')
         } else if (exists) {
-          log('has want %s', mh.toB58String(entry.key))
+          log('has want')
           this.peerRequestQueue.push(entry.entry, peerId)
           this._outbox()
         }
@@ -183,7 +182,7 @@ module.exports = class Engine {
         if (err) {
           return cb(err)
         }
-        log('got block %s (%s bytes)', mh.toB58String(key), block.data.length)
+        log('got block (%s bytes)', block.data.length)
         ledger.receivedBytes(block.data.length)
 
         this.receivedBlock(key)

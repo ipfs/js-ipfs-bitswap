@@ -1,6 +1,5 @@
 'use strict'
 
-const mh = require('multihashes')
 const debug = require('debug')
 const assert = require('assert')
 
@@ -42,12 +41,12 @@ class ActivePartner {
   }
 
   startTask (key) {
-    this.activeBlocks.set(mh.toB58String(key), 1)
+    this.activeBlocks.set(key.toString(), 1)
     this.active ++
   }
 
   taskDone (key) {
-    const k = mh.toB58String(key)
+    const k = key.toString()
     assert(this.activeBlocks.has(k), 'finishing non existent task')
 
     this.activeBlocks.delete()
@@ -66,7 +65,7 @@ module.exports = class PeerRequestQueue {
 
   // Add a new entry to the queue
   push (entry, to) {
-    log('push, to: %s', to.toB58String())
+    // log('push, to: %s', to.toB58String())
     let partner = this.partners.get(to.toB58String())
 
     if (!partner) {
@@ -148,7 +147,7 @@ module.exports = class PeerRequestQueue {
 }
 
 function taskKey (peerId, key) {
-  return `${peerId.toB58String()}:${mh.toB58String(key)}`
+  return `${peerId.toB58String()}:${key.toString()}`
 }
 
 function partnerCompare (a, b) {

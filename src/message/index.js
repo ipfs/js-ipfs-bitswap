@@ -3,7 +3,6 @@
 const protobuf = require('protocol-buffers')
 const Block = require('ipfs-block')
 const isEqualWith = require('lodash.isequalwith')
-const mh = require('multihashes')
 const assert = require('assert')
 const map = require('async/map')
 
@@ -24,13 +23,13 @@ class BitswapMessage {
   addEntry (key, priority, cancel) {
     assert(Buffer.isBuffer(key), 'key must be a buffer')
 
-    const e = this.wantlist.get(mh.toB58String(key))
+    const e = this.wantlist.get(key.toString())
 
     if (e) {
       e.priority = priority
       e.cancel = Boolean(cancel)
     } else {
-      this.wantlist.set(mh.toB58String(key), new Entry(key, priority, cancel))
+      this.wantlist.set(key.toString(), new Entry(key, priority, cancel))
     }
   }
 
@@ -40,13 +39,13 @@ class BitswapMessage {
         return cb(err)
       }
 
-      this.blocks.set(mh.toB58String(key), block)
+      this.blocks.set(key.toString(), block)
       cb()
     })
   }
 
   cancel (key) {
-    this.wantlist.delete(mh.toB58String(key))
+    this.wantlist.delete(key.toString())
     this.addEntry(key, 0, true)
   }
 

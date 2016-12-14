@@ -22,7 +22,7 @@ module.exports = class MsgQueue {
     if (msg.empty) {
       return
     }
-    log('addMessage: %s', this.p.toB58String(), msg)
+    // log('addMessage: %s', this.p.toB58String(), msg)
     this.queue.push(msg)
   }
 
@@ -41,7 +41,7 @@ module.exports = class MsgQueue {
   }
 
   doWork (wlm, cb) {
-    log('doWork: %s', this.p.toB58String(), wlm)
+    // log('doWork: %s', this.p.toB58String(), wlm)
     if (wlm.empty) return cb()
     this.network.connectTo(this.p, (err) => {
       if (err) {

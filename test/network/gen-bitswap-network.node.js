@@ -99,7 +99,7 @@ describe('gen Bitswap network', function () {
             const blockFactor = 10
             map(_.range(n * blockFactor), (k, cb) => {
               const b = Buffer.alloc(1024)
-              b.fill(k)
+              b.fill(k * Math.random())
               cb(null, new Block(b))
             }, (err, blocks) => {
               if (err) {
@@ -160,6 +160,7 @@ describe('gen Bitswap network', function () {
                   node.libp2p.stop(cb)
                 }), (err2) => {
                   done(err || err2)
+                  if (err || err2) throw err
                 })
               }, 3000)
             }

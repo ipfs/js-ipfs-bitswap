@@ -10,8 +10,17 @@ module.exports = class WantlistEntry {
     // Keep track of how many requests we have for this key
     this._refCounter = 1
 
-    this.key = key
+    this._key = key
     this.priority = isUndefined(priority) ? 1 : priority
+    this._keyB58String = ''
+  }
+
+  get key () {
+    return this._key
+  }
+
+  set key (val) {
+    throw new Error('immutable key')
   }
 
   inc () {
@@ -26,8 +35,16 @@ module.exports = class WantlistEntry {
     return this._refCounter > 0
   }
 
+  toB58String () {
+    if (!this._keyB58String) {
+      this._keyB58String = mh.toB58String(this.key)
+    }
+
+    return this._keyB58String
+  }
+
   get [Symbol.toStringTag] () {
-    return `WantlistEntry <key: ${mh.toB58String(this.key)}, priority: ${this.priority}, refs: ${this._refCounter}>`
+    return `WantlistEntry <key: ${this.toB58String()}, priority: ${this.priority}, refs: ${this._refCounter}>`
   }
 
   equals (other) {

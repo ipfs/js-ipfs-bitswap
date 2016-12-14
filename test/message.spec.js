@@ -100,7 +100,7 @@ describe('BitswapMessage', () => {
       expect(
         Array.from(protoMessage.wantlist)
       ).to.be.eql([
-        [mh.toB58String(new Buffer('hello')), new BitswapMessage.Entry(new Buffer('hello'), 0, false)]
+        [(new Buffer('hello')).toString(), new BitswapMessage.Entry(new Buffer('hello'), 0, false)]
       ])
 
       const b1 = blocks[1]
@@ -111,8 +111,8 @@ describe('BitswapMessage', () => {
       expect(
         Array.from(protoMessage.blocks).map((b) => [b[0], b[1].data])
       ).to.be.eql([
-        [mh.toB58String(k1), b1.data],
-        [mh.toB58String(k2), b2.data]
+        [k1.toString(), b1.data],
+        [k2.toString(), b2.data]
       ])
 
       done()
@@ -214,11 +214,8 @@ describe('BitswapMessage', () => {
       expect(entry.entry).to.have.property('key')
       expect(entry.entry).to.have.property('priority', 5)
 
-      entry.key = new Buffer('world')
       entry.priority = 2
 
-      expect(entry.entry).to.have.property('key')
-      expect(entry.entry.key.equals(new Buffer('world')))
       expect(entry.entry).to.have.property('priority', 2)
     })
   })
