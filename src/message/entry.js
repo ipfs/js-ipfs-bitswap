@@ -1,7 +1,5 @@
 'use strict'
 
-// const mh = require('multihashes')
-
 const WantlistEntry = require('../wantlist').Entry
 
 module.exports = class BitswapMessageEntry {

@@ -221,7 +221,7 @@ module.exports = class Bitwap {
         return d.resolve(pull.error(err))
       }
       if (exists) {
-        // log('already have block', mh.toB58String(key))
+        log('already have block')
         return d.resolve(this.blockstore.getStream(key))
       }
 
@@ -275,7 +275,7 @@ module.exports = class Bitwap {
               if (err) {
                 return cb(err)
               }
-              // log('put block: %s', mh.toB58String(key))
+              log('put block')
               this.notifications.emit(`block:${key.toString()}`, block)
               this.engine.receivedBlock(key)
               cb(null, meta)
