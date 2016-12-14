@@ -214,11 +214,8 @@ describe('BitswapMessage', () => {
       expect(entry.entry).to.have.property('key')
       expect(entry.entry).to.have.property('priority', 5)
 
-      entry.key = new Buffer('world')
       entry.priority = 2
 
-      expect(entry.entry).to.have.property('key')
-      expect(entry.entry.key.equals(new Buffer('world')))
       expect(entry.entry).to.have.property('priority', 2)
     })
   })

@@ -40,4 +40,4 @@ const repo = {
 require('./index-test')(repo)
 require('./decision/engine-test')(repo)
 require('./network/network.node.js')
-// require('./network/gen-bitswap-network.node.js')
+require('./network/gen-bitswap-network.node.js')

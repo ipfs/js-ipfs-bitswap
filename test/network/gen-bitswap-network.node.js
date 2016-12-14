@@ -13,76 +13,76 @@ const Buffer = require('safe-buffer').Buffer
 const pull = require('pull-stream')
 const utils = require('../utils')
 
-// describe('gen Bitswap network', function () {
-//   // CI is very slow
-//   this.timeout(300 * 1000)
+describe('gen Bitswap network', function () {
+  // CI is very slow
+  this.timeout(300 * 1000)
 
-//   it('retrieves local blocks', (done) => {
-//     utils.genBitswapNetwork(1, (err, nodes) => {
-//       expect(err).to.not.exist
+  it('retrieves local blocks', (done) => {
+    utils.genBitswapNetwork(1, (err, nodes) => {
+      expect(err).to.not.exist
 
-//       const node = nodes[0]
-//       let blocks
+      const node = nodes[0]
+      let blocks
 
-//       series([
-//         (cb) => map(_.range(100), (k, cb) => {
-//           const b = Buffer.alloc(1024)
-//           b.fill(k)
-//           cb(null, new Block(b))
-//         }, (err, _blocks) => {
-//           if (err) {
-//             return cb(err)
-//           }
-//           blocks = _blocks
-//           cb()
-//         }),
-//         (cb) => {
-//           pull(
-//             pull.values(blocks),
-//             pull.asyncMap((b, cb) => {
-//               b.key((err, key) => {
-//                 if (err) {
-//                   return cb(err)
-//                 }
+      series([
+        (cb) => map(_.range(100), (k, cb) => {
+          const b = Buffer.alloc(1024)
+          b.fill(k)
+          cb(null, new Block(b))
+        }, (err, _blocks) => {
+          if (err) {
+            return cb(err)
+          }
+          blocks = _blocks
+          cb()
+        }),
+        (cb) => {
+          pull(
+            pull.values(blocks),
+            pull.asyncMap((b, cb) => {
+              b.key((err, key) => {
+                if (err) {
+                  return cb(err)
+                }
 
-//                 cb(null, {data: b.data, key: key})
-//               })
-//             }),
-//             node.bitswap.putStream(),
-//             pull.onEnd(cb)
-//           )
-//         },
-//         (cb) => {
-//           each(_.range(100), (i, cb) => {
-//             map(blocks, (b, cb) => b.key(cb), (err, keys) => {
-//               expect(err).to.not.exist
-//               pull(
-//                 node.bitswap.getStream(keys),
-//                 pull.collect((err, res) => {
-//                   expect(err).to.not.exist
-//                   expect(res).to.have.length(blocks.length)
-//                   cb()
-//                 })
-//               )
-//             })
-//           }, cb)
-//         }
-//       ], (err) => {
-//         expect(err).to.not.exist
-//         setTimeout(() => {
-//           node.bitswap.stop()
-//           node.libp2p.stop(done)
-//         })
-//       })
-//     })
-//   })
+                cb(null, {data: b.data, key: key})
+              })
+            }),
+            node.bitswap.putStream(),
+            pull.onEnd(cb)
+          )
+        },
+        (cb) => {
+          each(_.range(100), (i, cb) => {
+            map(blocks, (b, cb) => b.key(cb), (err, keys) => {
+              expect(err).to.not.exist
+              pull(
+                node.bitswap.getStream(keys),
+                pull.collect((err, res) => {
+                  expect(err).to.not.exist
+                  expect(res).to.have.length(blocks.length)
+                  cb()
+                })
+              )
+            })
+          }, cb)
+        }
+      ], (err) => {
+        expect(err).to.not.exist
+        setTimeout(() => {
+          node.bitswap.stop()
+          node.libp2p.stop(done)
+        })
+      })
+    })
+  })
 
   // const counts = [2, 3, 4, 5, 10]
-  const counts = [4]
+  const counts = [2]
 
-  // describe('distributed blocks', () => {
+  describe('distributed blocks', () => {
     counts.forEach((n) => {
-      // it(`with ${n} nodes`, (done) => {
+      it(`with ${n} nodes`, (done) => {
         utils.genBitswapNetwork(n, (err, nodeArr) => {
           expect(err).to.not.exist
           nodeArr.forEach((node) => {
@@ -154,13 +154,12 @@ const utils = require('../utils')
             (err) => {
               // setTimeout is used to avoid closing the TCP socket while spdy is
               // still sending a ton of signalling data
-              process.exit()
               setTimeout(() => {
                 parallel(nodeArr.map((node) => (cb) => {
                   node.bitswap.stop()
                   node.libp2p.stop(cb)
                 }), (err2) => {
-                  // done(err || err2)
+                  done(err || err2)
                   if (err || err2) throw err
                 })
               }, 3000)
@@ -168,6 +167,6 @@ const utils = require('../utils')
           )
         })
       })
-//     })
-//   })
-// })
+    })
+  })
+})
