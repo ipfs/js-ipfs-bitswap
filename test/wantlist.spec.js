@@ -3,7 +3,6 @@
 
 const expect = require('chai').expect
 const Block = require('ipfs-block')
-const mh = require('multihashes')
 const map = require('async/map')
 
 const Wantlist = require('../src/wantlist')
@@ -101,7 +100,7 @@ describe('Wantlist', () => {
       expect(
         Array.from(wm.entries())
       ).to.be.eql([
-        [mh.toB58String(key), new Wantlist.Entry(key, 2)]
+        [key.toString('hex'), new Wantlist.Entry(key, 2)]
       ])
       done()
     })
@@ -119,8 +118,8 @@ describe('Wantlist', () => {
       expect(
         Array.from(wm.sortedEntries())
       ).to.be.eql([
-        [mh.toB58String(keys[0]), new Wantlist.Entry(keys[0], 1)],
-        [mh.toB58String(keys[1]), new Wantlist.Entry(keys[1], 1)]
+        [keys[0].toString('hex'), new Wantlist.Entry(keys[0], 1)],
+        [keys[1].toString('hex'), new Wantlist.Entry(keys[1], 1)]
       ])
       done()
     })

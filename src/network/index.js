@@ -60,7 +60,7 @@ module.exports = class Network {
           if (err) {
             return cb(err)
           }
-          log('data from', peerInfo.id.toB58String())
+          // log('data from', peerInfo.id.toB58String())
           this.bitswap._receiveMessage(peerInfo.id, msg)
           cb()
         })
@@ -84,7 +84,7 @@ module.exports = class Network {
 
   // Connect to the given peer
   connectTo (peerId, cb) {
-    log('connecting to %s', peerId.toB58String())
+    // log('connecting to %s', peerId.toB58String())
     const done = (err) => setImmediate(() => cb(err))
     // NOTE: For now, all this does is ensure that we are
     // connected. Once we have Peer Routing, we will be able
@@ -102,7 +102,7 @@ module.exports = class Network {
     log('sendMessage to %s', stringId)
     let peerInfo
     try {
-      peerInfo = this.peerBook.getByMultihash(peerId.toBytes())
+      peerInfo = this.peerBook.getByB58String(stringId)
     } catch (err) {
       return cb(err)
     }
@@ -115,7 +115,7 @@ module.exports = class Network {
 
     log('dialByPeerInfo')
     this.libp2p.dialByPeerInfo(peerInfo, PROTOCOL_IDENTIFIER, (err, conn) => {
-      log('dialed %s', peerInfo.id.toB58String(), err)
+      // log('dialed %s', peerInfo.id.toB58String(), err)
       if (err) {
         return cb(err)
       }

@@ -1,0 +1,1581 @@
+Statistical profiling result from isolate-0x102801600-v8.log, (4432 ticks, 510 unaccounted, 0 excluded).
+
+ [Shared libraries]:
+   ticks  total  nonlib   name
+    134    3.0%          /usr/lib/system/libsystem_kernel.dylib
+     88    2.0%          /usr/lib/system/libsystem_malloc.dylib
+     54    1.2%          /usr/lib/system/libsystem_platform.dylib
+     23    0.5%          /usr/lib/system/libsystem_c.dylib
+     10    0.2%          /usr/lib/system/libsystem_pthread.dylib
+      2    0.0%          /usr/lib/libc++abi.dylib
+      1    0.0%          /usr/lib/system/libsystem_m.dylib
+      1    0.0%          /usr/lib/libc++.1.dylib
+
+ [JavaScript]:
+   ticks  total  nonlib   name
+    363    8.2%    8.8%  LazyCompile: *encode /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/base-x/index.js:19:19
+     66    1.5%    1.6%  LazyCompile: *iushrn /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/bn.js/lib/bn.js:1999:41
+     61    1.4%    1.5%  Builtin: CallFunction_ReceiverIsNotNullOrUndefined
+     45    1.0%    1.1%  Builtin: CallFunction_ReceiverIsAny
+     41    0.9%    1.0%  Builtin: CompileLazy
+     23    0.5%    0.6%  Stub: StringAddStub
+     19    0.4%    0.5%  Builtin: Call_ReceiverIsNotNullOrUndefined
+     19    0.4%    0.5%  Builtin: ArgumentsAdaptorTrampoline
+     18    0.4%    0.4%  Stub: FastNewFunctionContextStub
+     18    0.4%    0.4%  LazyCompile: *next /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-cat/index.js:20:21
+     15    0.3%    0.4%  Stub: FastNewClosureStub
+     13    0.3%    0.3%  LazyCompile: *emit events.js:136:44
+     13    0.3%    0.3%  Builtin: CallFunction_ReceiverIsNullOrUndefined
+     10    0.2%    0.2%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-length-prefixed/lib/encode.js:27:27
+     10    0.2%    0.2%  LazyCompile: *<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/readable-stream/lib/_stream_readable.js:604:19
+     10    0.2%    0.2%  KeyedLoadIC: A keyed load IC from the snapshot {1}
+     10    0.2%    0.2%  Builtin: Construct
+      9    0.2%    0.2%  KeyedLoadIC: A keyed load IC from the snapshot
+      9    0.2%    0.2%  Handler: length {1}
+      8    0.2%    0.2%  LazyCompile: ~Socket._writeGeneric net.js:665:42
+      8    0.2%    0.2%  Builtin: Call_ReceiverIsAny
+      7    0.2%    0.2%  Stub: SubStringStub
+      7    0.2%    0.2%  LazyCompile: *writeOrBuffer /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/readable-stream/lib/_stream_writable.js:314:23
+      7    0.2%    0.2%  LazyCompile: *get native collection.js:242:16
+      7    0.2%    0.2%  LazyCompile: *Buffer.concat buffer.js:305:25
+      7    0.2%    0.2%  Handler: An IC handler from the snapshot {1}
+      7    0.2%    0.2%  Builtin: FunctionPrototypeHasInstance
+      6    0.1%    0.1%  Stub: ToBooleanICStub
+      6    0.1%    0.1%  Stub: LoadConstantStub
+      6    0.1%    0.1%  Stub: JSEntryStub {1}
+      6    0.1%    0.1%  Stub: GetPropertyStub
+      6    0.1%    0.1%  LazyCompile: *toArrayLike /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/bn.js/lib/bn.js:524:51
+      6    0.1%    0.1%  LazyCompile: *nextTick internal/process/next_tick.js:134:20
+      6    0.1%    0.1%  LazyCompile: *_updatePriority /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/priority.js:85:66
+      5    0.1%    0.1%  Stub: LoadGlobalICTrampolineStub
+      5    0.1%    0.1%  Stub: CEntryStub
+      5    0.1%    0.1%  LazyCompile: ~get /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/state.js:27:19
+      5    0.1%    0.1%  LazyCompile: *_addListener events.js:210:22
+      5    0.1%    0.1%  LazyCompile: *<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/index.js:101:23
+      5    0.1%    0.1%  Handler: An IC handler from the snapshot {5}
+      5    0.1%    0.1%  Builtin: JSConstructStubGeneric
+      4    0.1%    0.1%  Stub: FastNewStrictArgumentsStub
+      4    0.1%    0.1%  Stub: CallConstructStub
+      4    0.1%    0.1%  LazyCompile: ~runCallback timers.js:643:21
+      4    0.1%    0.1%  LazyCompile: ~mac.digest /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-secio/src/etm.js:49:24
+      4    0.1%    0.1%  LazyCompile: ~fs.readFileSync fs.js:464:27
+      4    0.1%    0.1%  LazyCompile: ~encrypt /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-crypto/src/crypto/aes.js:20:13
+      4    0.1%    0.1%  LazyCompile: ~Module._findPath module.js:148:28
+      4    0.1%    0.1%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/stream-to-pull-stream/index.js:59:27
+      4    0.1%    0.1%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-cat/index.js:28:35
+      4    0.1%    0.1%  LazyCompile: *writeOrBuffer _stream_writable.js:296:23
+      4    0.1%    0.1%  LazyCompile: *reader.read /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/index.js:90:26
+      4    0.1%    0.1%  LazyCompile: *readUInt32LE /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/obuf/index.js:262:60
+      4    0.1%    0.1%  LazyCompile: *onwrite _stream_writable.js:356:17
+      4    0.1%    0.1%  LazyCompile: *normalizeStringPosix path.js:78:30
+      4    0.1%    0.1%  LazyCompile: *Writable.write _stream_writable.js:226:36
+      4    0.1%    0.1%  LazyCompile: *Uint8ArrayConstructByArrayBuffer native typedarray.js:135:42
+      4    0.1%    0.1%  LazyCompile: *Readable.read /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/readable-stream/lib/_stream_readable.js:296:36
+      4    0.1%    0.1%  LazyCompile: *PriorityNode /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/priority.js:9:22
+      4    0.1%    0.1%  Handler: An IC handler from the snapshot {4}
+      4    0.1%    0.1%  Handler: An IC handler from the snapshot
+      4    0.1%    0.1%  Builtin: FunctionPrototypeCall
+      4    0.1%    0.1%  Builtin: Call_ReceiverIsNullOrUndefined
+      3    0.1%    0.1%  Stub: StrictEqualStub
+      3    0.1%    0.1%  Stub: RegExpExecStub
+      3    0.1%    0.1%  Stub: LoadConstantStub {8}
+      3    0.1%    0.1%  Stub: LoadConstantStub {6}
+      3    0.1%    0.1%  Stub: GrowArrayElementsStub {1}
+      3    0.1%    0.1%  Stub: FastCloneShallowArrayStub
+      3    0.1%    0.1%  LazyCompile: ~tryOnImmediate timers.js:618:24
+      3    0.1%    0.1%  LazyCompile: ~take /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/obuf/index.js:129:44
+      3    0.1%    0.1%  LazyCompile: ~join path.js:1205:22
+      3    0.1%    0.1%  LazyCompile: ~insert timers.js:119:16
+      3    0.1%    0.1%  LazyCompile: ~cipher.encrypt /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-secio/src/etm.js:15:29
+      3    0.1%    0.1%  LazyCompile: ~Buffer.concat buffer.js:305:25
+      3    0.1%    0.1%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/throughs/async-map.js:23:29
+      3    0.1%    0.1%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/index.js:55:33
+      3    0.1%    0.1%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-length-prefixed/lib/decode.js:73:29
+      3    0.1%    0.1%  LazyCompile: *source /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-pair/index.js:19:19
+      3    0.1%    0.1%  LazyCompile: *sendMessage /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/network/index.js:100:15
+      3    0.1%    0.1%  LazyCompile: *readableAddChunk /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/readable-stream/lib/_stream_readable.js:189:26
+      3    0.1%    0.1%  LazyCompile: *pull /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/pull.js:3:32
+      3    0.1%    0.1%  LazyCompile: *onwrite /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/readable-stream/lib/_stream_writable.js:366:17
+      3    0.1%    0.1%  LazyCompile: *has /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/state.js:23:19
+      3    0.1%    0.1%  LazyCompile: *getPeerInfo /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/interface-connection/src/connection.js:25:15
+      3    0.1%    0.1%  LazyCompile: *fromString buffer.js:194:20
+      3    0.1%    0.1%  LazyCompile: *from native array.js:1065:19
+      3    0.1%    0.1%  LazyCompile: *_handleFrame /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/connection.js:268:58
+      3    0.1%    0.1%  LazyCompile: *_frame /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/spdy/framer.js:108:42
+      3    0.1%    0.1%  LazyCompile: *Uint8Array native typedarray.js:232:31
+      3    0.1%    0.1%  LazyCompile: *<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/stream-to-pull-stream/index.js:168:19
+      3    0.1%    0.1%  KeyedLoadIC: A keyed load IC from the snapshot {2}
+      3    0.1%    0.1%  Handler: An IC handler from the snapshot {10}
+      3    0.1%    0.1%  Builtin: JSEntryTrampoline
+      2    0.0%    0.0%  Stub: ToBooleanICStub(Undefined,SpecObject)
+      2    0.0%    0.0%  Stub: RecordWriteStub {3}
+      2    0.0%    0.0%  Stub: RecordWriteStub {1}
+      2    0.0%    0.0%  Stub: RecordWriteStub
+      2    0.0%    0.0%  Stub: LoadConstantStub {5}
+      2    0.0%    0.0%  Stub: LoadConstantStub {4}
+      2    0.0%    0.0%  Stub: LoadConstantStub {3}
+      2    0.0%    0.0%  Stub: LoadConstantStub {2}
+      2    0.0%    0.0%  Stub: GrowArrayElementsStub
+      2    0.0%    0.0%  Stub: FastNewObjectStub
+      2    0.0%    0.0%  Stub: CompareICStub {6}
+      2    0.0%    0.0%  Stub: CompareICStub {4}
+      2    0.0%    0.0%  Stub: CompareICStub {2}
+      2    0.0%    0.0%  Stub: CompareICStub
+      2    0.0%    0.0%  Stub: CallApiCallbackStub {1}
+      2    0.0%    0.0%  Stub: CallApiCallbackStub
+      2    0.0%    0.0%  Stub: ArraySingleArgumentConstructorStub
+      2    0.0%    0.0%  LazyCompile: ~setImmediate /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-crypto/src/crypto/hmac.js:13:20
+      2    0.0%    0.0%  LazyCompile: ~realpathSync fs.js:1466:40
+      2    0.0%    0.0%  LazyCompile: ~reader /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/index.js:67:19
+      2    0.0%    0.0%  LazyCompile: ~read.push /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-pushable/index.js:34:24
+      2    0.0%    0.0%  LazyCompile: ~line.toFunction /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/generate-function/index.js:44:29
+      2    0.0%    0.0%  LazyCompile: ~engine.messageReceived /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/index.js:48:51
+      2    0.0%    0.0%  LazyCompile: ~encodeInt /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/asn1.js/lib/asn1/encoders/der.js:185:50
+      2    0.0%    0.0%  LazyCompile: ~drain /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/stream-to-pull-stream/index.js:139:17
+      2    0.0%    0.0%  LazyCompile: ~copyFrom /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/wbuf/index.js:192:44
+      2    0.0%    0.0%  LazyCompile: ~_initArray /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/bn.js/lib/bn.js:143:49
+      2    0.0%    0.0%  LazyCompile: ~PeerInfo /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/peer-info/src/index.js:18:19
+      2    0.0%    0.0%  LazyCompile: ~Module._resolveLookupPaths module.js:315:38
+      2    0.0%    0.0%  LazyCompile: ~Module._load module.js:413:24
+      2    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/throughs/async-map.js:28:32
+      2    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-length-prefixed/lib/decode.js:25:47
+      2    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-cat/index.js:19:19
+      2    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/lodash/_overRest.js:17:18
+      2    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/setImmediate.js:25:24
+      2    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/eachOfLimit.js:31:21
+      2    0.0%    0.0%  LazyCompile: *update crypto.js:140:42
+      2    0.0%    0.0%  LazyCompile: *toB58String /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/peer-id/node_modules/multihashes/lib/index.js:19:43
+      2    0.0%    0.0%  LazyCompile: *select /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/multistream-select/src/select.js:8:17
+      2    0.0%    0.0%  LazyCompile: *read /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/protocol-buffers/node_modules/varint/decode.js:6:14
+      2    0.0%    0.0%  LazyCompile: *ondata /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/readable-stream/lib/_stream_readable.js:543:18
+      2    0.0%    0.0%  LazyCompile: *next /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/stream-to-pull-stream/node_modules/looper/index.js:3:18
+      2    0.0%    0.0%  LazyCompile: *next /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/throughs/async-map.js:11:26
+      2    0.0%    0.0%  LazyCompile: *more /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/index.js:50:17
+      2    0.0%    0.0%  LazyCompile: *getOptions fs.js:39:20
+      2    0.0%    0.0%  LazyCompile: *encodeComposite /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/asn1.js/lib/asn1/encoders/der.js:32:62
+      2    0.0%    0.0%  LazyCompile: *encode /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/multistream-select/src/util.js:15:17
+      2    0.0%    0.0%  LazyCompile: *encode /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/asn1.js/lib/asn1/base/node.js:495:46
+      2    0.0%    0.0%  LazyCompile: *drain /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/stream-to-pull-stream/index.js:139:17
+      2    0.0%    0.0%  LazyCompile: *drain /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/sinks/drain.js:3:33
+      2    0.0%    0.0%  LazyCompile: *drain /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/index.js:32:18
+      2    0.0%    0.0%  LazyCompile: *disabled /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/debug/debug.js:65:20
+      2    0.0%    0.0%  LazyCompile: *digest /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-crypto/src/crypto/hmac.js:9:12
+      2    0.0%    0.0%  LazyCompile: *debug /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/debug/debug.js:62:15
+      2    0.0%    0.0%  LazyCompile: *copyFrom /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/wbuf/index.js:192:44
+      2    0.0%    0.0%  LazyCompile: *alignPool buffer.js:57:19
+      2    0.0%    0.0%  LazyCompile: *_consume /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/base/parser.js:41:46
+      2    0.0%    0.0%  LazyCompile: *__dirname.get /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:23:28
+      2    0.0%    0.0%  LazyCompile: *Uint8ArrayConstructByLength native typedarray.js:175:37
+      2    0.0%    0.0%  LazyCompile: *TransformState.afterTransform /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/readable-stream/lib/_stream_transform.js:57:34
+      2    0.0%    0.0%  LazyCompile: *Socket.write net.js:656:34
+      2    0.0%    0.0%  LazyCompile: *Object.keys.forEach /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-swarm/src/protocol-muxer.js:8:34
+      2    0.0%    0.0%  LazyCompile: *InnerArrayForEach native array.js:777:27
+      2    0.0%    0.0%  LazyCompile: *FastBuffer buffer.js:10:14
+      2    0.0%    0.0%  LazyCompile: *EventEmitter events.js:11:22
+      2    0.0%    0.0%  LazyCompile: *EncoderBuffer /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/asn1.js/lib/asn1/base/buffer.js:65:23
+      2    0.0%    0.0%  LazyCompile: *Buffer buffer.js:75:16
+      2    0.0%    0.0%  LazyCompile: *<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/stream-to-pull-stream/index.js:148:30
+      2    0.0%    0.0%  Handler: writeBuffer
+      2    0.0%    0.0%  Handler: toString {NaN}
+      2    0.0%    0.0%  Handler: symbol("nonexistent_symbol" hash 27f9c056) {1}
+      2    0.0%    0.0%  Handler: digest
+      2    0.0%    0.0%  Handler: An IC handler from the snapshot {7}
+      2    0.0%    0.0%  Function: ~encode :3:25
+      2    0.0%    0.0%  Builtin: ObjectProtoToString
+      2    0.0%    0.0%  Builtin: JSBuiltinsConstructStubForDerived
+      2    0.0%    0.0%  Builtin: ConstructFunction
+      1    0.0%    0.0%  Stub: ToStringStub
+      1    0.0%    0.0%  Stub: ToNameStub
+      1    0.0%    0.0%  Stub: ToIntegerStub
+      1    0.0%    0.0%  Stub: ToBooleanICStub(Undefined,String)
+      1    0.0%    0.0%  Stub: ToBooleanICStub(Undefined,Bool)
+      1    0.0%    0.0%  Stub: ToBooleanICStub(String)
+      1    0.0%    0.0%  Stub: ToBooleanICStub(Smi)
+      1    0.0%    0.0%  Stub: StringEqualStub
+      1    0.0%    0.0%  Stub: StringAddStub_CheckNone_Tenured
+      1    0.0%    0.0%  Stub: StoreFieldStub {6}
+      1    0.0%    0.0%  Stub: StoreFieldStub {5}
+      1    0.0%    0.0%  Stub: StoreFieldStub {4}
+      1    0.0%    0.0%  Stub: StoreFieldStub {3}
+      1    0.0%    0.0%  Stub: StoreFieldStub {2}
+      1    0.0%    0.0%  Stub: StoreFieldStub
+      1    0.0%    0.0%  Stub: StoreFastElementStub
+      1    0.0%    0.0%  Stub: RegExpConstructResultStub
+      1    0.0%    0.0%  Stub: RecordWriteStub {9}
+      1    0.0%    0.0%  Stub: RecordWriteStub {8}
+      1    0.0%    0.0%  Stub: RecordWriteStub {7}
+      1    0.0%    0.0%  Stub: RecordWriteStub {6}
+      1    0.0%    0.0%  Stub: RecordWriteStub {5}
+      1    0.0%    0.0%  Stub: RecordWriteStub {4}
+      1    0.0%    0.0%  Stub: RecordWriteStub {2}
+      1    0.0%    0.0%  Stub: RecordWriteStub {10}
+      1    0.0%    0.0%  Stub: LoadConstantStub {7}
+      1    0.0%    0.0%  Stub: LoadConstantStub {1}
+      1    0.0%    0.0%  Stub: JSEntryStub
+      1    0.0%    0.0%  Stub: InstanceOfStub
+      1    0.0%    0.0%  Stub: FastArrayPushStub
+      1    0.0%    0.0%  Stub: CompareICStub {9}
+      1    0.0%    0.0%  Stub: CompareICStub {8}
+      1    0.0%    0.0%  Stub: CompareICStub {7}
+      1    0.0%    0.0%  Stub: CompareICStub {5}
+      1    0.0%    0.0%  Stub: CompareICStub {3}
+      1    0.0%    0.0%  Stub: CompareICStub {1}
+      1    0.0%    0.0%  Stub: CEntryStub {2}
+      1    0.0%    0.0%  Stub: CEntryStub {1}
+      1    0.0%    0.0%  Stub: BinaryOpICStub {1}
+      1    0.0%    0.0%  Stub: BinaryOpICStub
+      1    0.0%    0.0%  Stub: ArrayConstructorStub {1}
+      1    0.0%    0.0%  Stub: ArrayConstructorStub
+      1    0.0%    0.0%  RegExp: [\\s\\.]+
+      1    0.0%    0.0%  LazyCompile: ~writeUInt32BE /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/wbuf/index.js:276:54
+      1    0.0%    0.0%  LazyCompile: ~write /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/utils.js:60:44
+      1    0.0%    0.0%  LazyCompile: ~toChunks /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/obuf/index.js:22:52
+      1    0.0%    0.0%  LazyCompile: ~tickAsync /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/base/scheduler.js:135:51
+      1    0.0%    0.0%  LazyCompile: ~slowToString buffer.js:428:22
+      1    0.0%    0.0%  LazyCompile: ~slice /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/wbuf/index.js:78:38
+      1    0.0%    0.0%  LazyCompile: ~skip /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/wbuf/index.js:142:36
+      1    0.0%    0.0%  LazyCompile: ~sink /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-pair/index.js:6:17
+      1    0.0%    0.0%  LazyCompile: ~setImmediate /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/ipfs-block/src/index.js:42:27
+      1    0.0%    0.0%  LazyCompile: ~s.write /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream-to-stream/index.js:30:22
+      1    0.0%    0.0%  LazyCompile: ~resolvePromise native promise.js:162:24
+      1    0.0%    0.0%  LazyCompile: ~resolve /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-defer/duplex.js:13:23
+      1    0.0%    0.0%  LazyCompile: ~reserveStream /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/connection.js:604:60
+      1    0.0%    0.0%  LazyCompile: ~replenish /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/eachOfLimit.js:53:27
+      1    0.0%    0.0%  LazyCompile: ~remove /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:130:10
+      1    0.0%    0.0%  LazyCompile: ~released /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/ipfs-repo/src/stores/blockstore.js:74:25
+      1    0.0%    0.0%  LazyCompile: ~reduce /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/sinks/reduce.js:5:34
+      1    0.0%    0.0%  LazyCompile: ~receivedBytes /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/ledger.js:25:17
+      1    0.0%    0.0%  LazyCompile: ~readUInt16BE /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/obuf/index.js:315:60
+      1    0.0%    0.0%  LazyCompile: ~read /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-defer/source.js:5:23
+      1    0.0%    0.0%  LazyCompile: ~read /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/protocol-buffers/node_modules/varint/decode.js:6:14
+      1    0.0%    0.0%  LazyCompile: ~read /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/multiaddr/node_modules/varint/decode.js:6:14
+      1    0.0%    0.0%  LazyCompile: ~pull.collect /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/wantmanager/index.js:48:20
+      1    0.0%    0.0%  LazyCompile: ~pull.asyncMap /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:133:23
+      1    0.0%    0.0%  LazyCompile: ~parseKVs /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/spdy/parser.js:292:46
+      1    0.0%    0.0%  LazyCompile: ~ondata /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/readable-stream/lib/_stream_readable.js:543:18
+      1    0.0%    0.0%  LazyCompile: ~onClose /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/stream-to-pull-stream/index.js:38:20
+      1    0.0%    0.0%  LazyCompile: ~nextTick internal/process/next_tick.js:134:20
+      1    0.0%    0.0%  LazyCompile: ~multihashing /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/ipfs-block/src/index.js:47:39
+      1    0.0%    0.0%  LazyCompile: ~ms.handle /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-swarm/src/dial.js:103:29
+      1    0.0%    0.0%  LazyCompile: ~module.exports /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-handshake/index.js:18:27
+      1    0.0%    0.0%  LazyCompile: ~maybeReadMore_ _stream_readable.js:450:24
+      1    0.0%    0.0%  LazyCompile: ~mac.digest /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-secio/src/etm.js:20:26
+      1    0.0%    0.0%  LazyCompile: ~iushrn /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/bn.js/lib/bn.js:1999:41
+      1    0.0%    0.0%  LazyCompile: ~init /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/bn.js/lib/bn.js:76:38
+      1    0.0%    0.0%  LazyCompile: ~headersToDict /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/spdy/framer.js:29:56
+      1    0.0%    0.0%  LazyCompile: ~fs.readSync fs.js:622:23
+      1    0.0%    0.0%  LazyCompile: ~exports.log.listener /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/multistream-select/src/util.js:62:24
+      1    0.0%    0.0%  LazyCompile: ~exports._unrefActive timers.js:109:32
+      1    0.0%    0.0%  LazyCompile: ~encodeStr /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/asn1.js/lib/asn1/encoders/der.js:62:50
+      1    0.0%    0.0%  LazyCompile: ~encodeObjid /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/asn1.js/lib/asn1/encoders/der.js:97:54
+      1    0.0%    0.0%  LazyCompile: ~encode /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/base-x/index.js:19:19
+      1    0.0%    0.0%  LazyCompile: ~encode /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/asn1.js/lib/asn1/base/node.js:495:46
+      1    0.0%    0.0%  LazyCompile: ~emit events.js:136:44
+      1    0.0%    0.0%  LazyCompile: ~drain /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/index.js:32:18
+      1    0.0%    0.0%  LazyCompile: ~drain /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-paramap/index.js:8:20
+      1    0.0%    0.0%  LazyCompile: ~dirname path.js:1323:28
+      1    0.0%    0.0%  LazyCompile: ~digest /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-crypto/src/crypto/hmac.js:9:12
+      1    0.0%    0.0%  LazyCompile: ~decrypt /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-crypto/src/crypto/aes.js:24:13
+      1    0.0%    0.0%  LazyCompile: ~dec.wantlist.entries.forEach /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/message/index.js:103:32
+      1    0.0%    0.0%  LazyCompile: ~dataFrame /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/spdy/framer.js:326:48
+      1    0.0%    0.0%  LazyCompile: ~conn.getPeerInfo /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/network/index.js:59:26
+      1    0.0%    0.0%  LazyCompile: ~clearBuffer _stream_writable.js:403:21
+      1    0.0%    0.0%  LazyCompile: ~binaryLookup /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/utils.js:116:22
+      1    0.0%    0.0%  LazyCompile: ~afterTransform _stream_transform.js:64:24
+      1    0.0%    0.0%  LazyCompile: ~addEntry /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/message/index.js:24:12
+      1    0.0%    0.0%  LazyCompile: ~add /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/priority.js:124:42
+      1    0.0%    0.0%  LazyCompile: ~_unrefTimer net.js:201:52
+      1    0.0%    0.0%  LazyCompile: ~_processBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:146:17
+      1    0.0%    0.0%  LazyCompile: ~_handleFrame /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/stream.js:109:54
+      1    0.0%    0.0%  LazyCompile: ~_getEncoder /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/asn1.js/lib/asn1/api.js:51:52
+      1    0.0%    0.0%  LazyCompile: ~[Symbol.split] native regexp.js:352:29
+      1    0.0%    0.0%  LazyCompile: ~Writable.cork /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/readable-stream/lib/_stream_writable.js:280:36
+      1    0.0%    0.0%  LazyCompile: ~Window /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/window.js:148:16
+      1    0.0%    0.0%  LazyCompile: ~TransformState.afterTransform _stream_transform.js:53:33
+      1    0.0%    0.0%  LazyCompile: ~SpeciesConstructor native runtime.js:29:28
+      1    0.0%    0.0%  LazyCompile: ~RegExpReplace native regexp.js:526:23
+      1    0.0%    0.0%  LazyCompile: ~Readable.read _stream_readable.js:271:35
+      1    0.0%    0.0%  LazyCompile: ~Readable.on _stream_readable.js:686:33
+      1    0.0%    0.0%  LazyCompile: ~PrepareAlgorithm /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/webcrypto-core/build/base.js:3:26
+      1    0.0%    0.0%  LazyCompile: ~Module._resolveFilename module.js:456:35
+      1    0.0%    0.0%  LazyCompile: ~IterableToArrayLike native typedarray.js:1813:29
+      1    0.0%    0.0%  LazyCompile: ~Duplex /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/readable-stream/lib/_stream_duplex.js:40:16
+      1    0.0%    0.0%  LazyCompile: ~Deflate zlib.js:230:17
+      1    0.0%    0.0%  LazyCompile: ~DLL.push /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/DoublyLinkedList.js:52:31
+      1    0.0%    0.0%  LazyCompile: ~Buffer.write buffer.js:712:34
+      1    0.0%    0.0%  LazyCompile: ~Buffer.toString buffer.js:495:37
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/stream-to-pull-stream/node_modules/looper/index.js:7:31
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/stream.js:641:28
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/stream.js:160:50
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/spdy/parser.js:295:52
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/spdy/parser.js:192:31
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/spdy/framer.js:386:14
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/spdy/framer.js:178:57
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/readable-stream/lib/_stream_readable.js:604:19
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/throughs/take.js:27:29
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/throughs/map.js:11:28
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/sinks/drain.js:16:31
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/index.js:109:51
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/index.js:101:23
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-length-prefixed/lib/encode.js:23:21
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-length-prefixed/lib/decode.js:100:30
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/protocol-buffers/compile.js:195:37
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/multihashing-async/src/to-callback.js:6:19
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/waterfall.js:18:81
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/onlyOnce.js:8:21
+      1    0.0%    0.0%  LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/once.js:8:21
+      1    0.0%    0.0%  LazyCompile: *write /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/wbuf/index.js:171:38
+      1    0.0%    0.0%  LazyCompile: *whilst /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:59:7
+      1    0.0%    0.0%  LazyCompile: *values native collection-iterator.js:100:19
+      1    0.0%    0.0%  LazyCompile: *update /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/window.js:54:40
+      1    0.0%    0.0%  LazyCompile: *tryOnImmediate timers.js:618:24
+      1    0.0%    0.0%  LazyCompile: *tickAsync /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/base/scheduler.js:135:51
+      1    0.0%    0.0%  LazyCompile: *stat module.js:23:14
+      1    0.0%    0.0%  LazyCompile: *split native string.js:244:23
+      1    0.0%    0.0%  LazyCompile: *slice buffer.js:814:40
+      1    0.0%    0.0%  LazyCompile: *skip /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/asn1.js/lib/asn1/base/buffer.js:46:45
+      1    0.0%    0.0%  LazyCompile: *s.source /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream-to-stream/index.js:53:23
+      1    0.0%    0.0%  LazyCompile: *require internal/module.js:17:19
+      1    0.0%    0.0%  LazyCompile: *readableAddChunk _stream_readable.js:147:26
+      1    0.0%    0.0%  LazyCompile: *readUInt24BE /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/obuf/index.js:321:60
+      1    0.0%    0.0%  LazyCompile: *read /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-pushable/index.js:17:17
+      1    0.0%    0.0%  LazyCompile: *read /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-defer/source.js:5:23
+      1    0.0%    0.0%  LazyCompile: *pull.map /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-secio/src/etm.js:72:19
+      1    0.0%    0.0%  LazyCompile: *pull.asyncMap /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-secio/src/etm.js:37:19
+      1    0.0%    0.0%  LazyCompile: *ondata stream.js:29:18
+      1    0.0%    0.0%  LazyCompile: *onFrameBody /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/spdy/parser.js:112:52
+      1    0.0%    0.0%  LazyCompile: *next native collection-iterator.js:65:27
+      1    0.0%    0.0%  LazyCompile: *next /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream-to-stream/index.js:107:30
+      1    0.0%    0.0%  LazyCompile: *muxedConn.on /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-swarm/src/dial.js:167:36
+      1    0.0%    0.0%  LazyCompile: *module.exports.get /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/message/entry.js:29:28
+      1    0.0%    0.0%  LazyCompile: *module.exports /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/index.js:27:27
+      1    0.0%    0.0%  LazyCompile: *module.exports /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-defer/sink.js:1:89
+      1    0.0%    0.0%  LazyCompile: *module.exports /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-identify/src/dialer.js:10:18
+      1    0.0%    0.0%  LazyCompile: *maybeReadMore_ /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/readable-stream/lib/_stream_readable.js:451:24
+      1    0.0%    0.0%  LazyCompile: *map native array.js:833:18
+      1    0.0%    0.0%  LazyCompile: *isBN /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/bn.js/lib/bn.js:57:27
+      1    0.0%    0.0%  LazyCompile: *has /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/ipfs-repo/src/stores/blockstore.js:172:9
+      1    0.0%    0.0%  LazyCompile: *getStream /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/ipfs-repo/src/stores/blockstore.js:59:15
+      1    0.0%    0.0%  LazyCompile: *get pubKey /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/peer-id/src/index.js:29:14
+      1    0.0%    0.0%  LazyCompile: *fs.lstatSync fs.js:899:24
+      1    0.0%    0.0%  LazyCompile: *fromBuffer /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/multiaddr/src/codec.js:181:21
+      1    0.0%    0.0%  LazyCompile: *exports.unmarshalPublicKey /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-crypto/src/index.js:27:30
+      1    0.0%    0.0%  LazyCompile: *exec native regexp.js:113:30
+      1    0.0%    0.0%  LazyCompile: *equals buffer.js:508:42
+      1    0.0%    0.0%  LazyCompile: *encode /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/protocol-buffers/node_modules/varint/encode.js:8:16
+      1    0.0%    0.0%  LazyCompile: *drain /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-pushable/index.js:52:18
+      1    0.0%    0.0%  LazyCompile: *doWrite /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/readable-stream/lib/_stream_writable.js:342:17
+      1    0.0%    0.0%  LazyCompile: *digest crypto.js:79:40
+      1    0.0%    0.0%  LazyCompile: *decodeGeneric /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/asn1.js/lib/asn1/base/node.js:398:55
+      1    0.0%    0.0%  LazyCompile: *decodeFromReader /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-length-prefixed/lib/decode.js:38:26
+      1    0.0%    0.0%  LazyCompile: *decode /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/protocol-buffers/encodings.js:42:25
+      1    0.0%    0.0%  LazyCompile: *decode /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/protocol-buffers/encodings.js:105:25
+      1    0.0%    0.0%  LazyCompile: *decode /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/asn1.js/lib/asn1/base/node.js:272:41
+      1    0.0%    0.0%  LazyCompile: *createImmediate timers.js:701:25
+      1    0.0%    0.0%  LazyCompile: *collect /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/sinks/collect.js:5:35
+      1    0.0%    0.0%  LazyCompile: *checkAborted /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/stream.js:140:22
+      1    0.0%    0.0%  LazyCompile: *afterWrite _stream_writable.js:384:20
+      1    0.0%    0.0%  LazyCompile: *_unrefTimer net.js:201:52
+      1    0.0%    0.0%  LazyCompile: *_split /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/stream.js:204:42
+      1    0.0%    0.0%  LazyCompile: *_resetTimeout /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/base/framer.js:54:56
+      1    0.0%    0.0%  LazyCompile: *_read /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/base/scheduler.js:91:43
+      1    0.0%    0.0%  LazyCompile: *_processBlocks /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:180:18
+      1    0.0%    0.0%  LazyCompile: *_checkEnded /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/stream.js:370:52
+      1    0.0%    0.0%  LazyCompile: *WritableState /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/readable-stream/lib/_stream_writable.js:61:23
+      1    0.0%    0.0%  LazyCompile: *Transform.push /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/readable-stream/lib/_stream_transform.js:121:37
+      1    0.0%    0.0%  LazyCompile: *Stream /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/stream.js:14:16
+      1    0.0%    0.0%  LazyCompile: *Protocols /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/multiaddr/src/protocols.js:7:20
+      1    0.0%    0.0%  LazyCompile: *PeerInfo /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/peer-info/src/index.js:18:19
+      1    0.0%    0.0%  LazyCompile: *PeerBook.getByMultihash /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/peer-book/lib/index.js:36:34
+      1    0.0%    0.0%  LazyCompile: *Muxer.spdy.on /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-spdy/src/muxer.js:31:23
+      1    0.0%    0.0%  LazyCompile: *Multihashing.createHash /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/multihashing-async/src/index.js:63:36
+      1    0.0%    0.0%  LazyCompile: *Module._nodeModulePaths module.js:274:37
+      1    0.0%    0.0%  LazyCompile: *Module._load module.js:413:24
+      1    0.0%    0.0%  LazyCompile: *Hmac crypto.js:87:14
+      1    0.0%    0.0%  LazyCompile: *Encoder.write /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/base32.js/base32.js:222:36
+      1    0.0%    0.0%  LazyCompile: *Encoder.finalize /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/base32.js/base32.js:270:39
+      1    0.0%    0.0%  LazyCompile: *EElistenerCount /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/readable-stream/lib/_stream_readable.js:22:32
+      1    0.0%    0.0%  LazyCompile: *DLL.shift /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/DoublyLinkedList.js:56:32
+      1    0.0%    0.0%  LazyCompile: *Buffer.writeInt32BE buffer.js:1234:41
+      1    0.0%    0.0%  LazyCompile: *Buffer.toString buffer.js:495:37
+      1    0.0%    0.0%  LazyCompile: *Buffer.readInt32BE buffer.js:987:40
+      1    0.0%    0.0%  LazyCompile: *Buffer.alloc buffer.js:132:24
+      1    0.0%    0.0%  LazyCompile: *Block /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/ipfs-block/src/index.js:9:16
+      1    0.0%    0.0%  LazyCompile: *BitswapMessage.fromProto /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/message/index.js:99:28
+      1    0.0%    0.0%  LazyCompile: *<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-length-prefixed/lib/encode.js:23:21
+      1    0.0%    0.0%  LazyCompile: *<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/multistream-select/src/util.js:43:12
+      1    0.0%    0.0%  KeyedStoreIC: A keyed store IC from the snapshot {1}
+      1    0.0%    0.0%  KeyedStoreIC: A keyed store IC from the snapshot
+      1    0.0%    0.0%  Handler: write {1}
+      1    0.0%    0.0%  Handler: write
+      1    0.0%    0.0%  Handler: update
+      1    0.0%    0.0%  Handler: toArray
+      1    0.0%    0.0%  Handler: symbol("nonexistent_symbol" hash 27f9c056) {2}
+      1    0.0%    0.0%  Handler: symbol("nonexistent_symbol" hash 27f9c056)
+      1    0.0%    0.0%  Handler: symbol("Symbol.replace" hash 2251fc1d)
+      1    0.0%    0.0%  Handler: symbol("Symbol.iterator" hash 776e6e)
+      1    0.0%    0.0%  Handler: source
+      1    0.0%    0.0%  Handler: slice
+      1    0.0%    0.0%  Handler: removeListener
+      1    0.0%    0.0%  Handler: readInt32BE
+      1    0.0%    0.0%  Handler: push {1}
+      1    0.0%    0.0%  Handler: push
+      1    0.0%    0.0%  Handler: needReadable
+      1    0.0%    0.0%  Handler: length
+      1    0.0%    0.0%  Handler: indexOf
+      1    0.0%    0.0%  Handler: forEach
+      1    0.0%    0.0%  Handler: error
+      1    0.0%    0.0%  Handler: equals
+      1    0.0%    0.0%  Handler: end
+      1    0.0%    0.0%  Handler: enabled
+      1    0.0%    0.0%  Handler: data
+      1    0.0%    0.0%  Handler: bytes
+      1    0.0%    0.0%  Handler: async
+      1    0.0%    0.0%  Handler: apply
+      1    0.0%    0.0%  Handler: addEntry
+      1    0.0%    0.0%  Handler: aborted
+      1    0.0%    0.0%  Handler: _splitStart
+      1    0.0%    0.0%  Handler: _events
+      1    0.0%    0.0%  Handler: An IC handler from the snapshot {9}
+      1    0.0%    0.0%  Handler: An IC handler from the snapshot {8}
+      1    0.0%    0.0%  Handler: An IC handler from the snapshot {6}
+      1    0.0%    0.0%  Handler: An IC handler from the snapshot {3}
+      1    0.0%    0.0%  Handler: An IC handler from the snapshot {2}
+      1    0.0%    0.0%  Handler: An IC handler from the snapshot {13}
+      1    0.0%    0.0%  Handler: An IC handler from the snapshot {12}
+      1    0.0%    0.0%  Handler: An IC handler from the snapshot {11}
+      1    0.0%    0.0%  Function: ~decode :3:25
+      1    0.0%    0.0%  Function: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/lodash.merge/index.js:1:11
+      1    0.0%    0.0%  Builtin: TypedArrayPrototypeLength
+      1    0.0%    0.0%  Builtin: TypedArrayPrototypeBuffer
+      1    0.0%    0.0%  Builtin: StringPrototypeCharCodeAt
+      1    0.0%    0.0%  Builtin: ObjectHasOwnProperty
+      1    0.0%    0.0%  Builtin: ObjectAssign
+      1    0.0%    0.0%  Builtin: MathMin
+      1    0.0%    0.0%  Builtin: MathMax
+      1    0.0%    0.0%  Builtin: DateNow
+      1    0.0%    0.0%  Builtin: ArrayIsArray
+
+ [C++]:
+   ticks  total  nonlib   name
+    272    6.1%    6.6%  node::Read(v8::FunctionCallbackInfo<v8::Value> const&)
+    160    3.6%    3.9%  void node::StreamBase::JSMethod<node::StreamWrap, &(node::StreamBase::WriteBuffer(v8::FunctionCallbackInfo<v8::Value> const&))>(v8::FunctionCallbackInfo<v8::Value> const&)
+    153    3.5%    3.7%  node::ContextifyScript::New(v8::FunctionCallbackInfo<v8::Value> const&)
+     92    2.1%    2.2%  node::InternalModuleReadFile(v8::FunctionCallbackInfo<v8::Value> const&)
+     81    1.8%    2.0%  node::crypto::Hmac::HmacDigest(v8::FunctionCallbackInfo<v8::Value> const&)
+     36    0.8%    0.9%  v8::internal::Object* v8::internal::VisitWeakList<v8::internal::JSFunction>(v8::internal::Heap*, v8::internal::Object*, v8::internal::WeakObjectRetainer*)
+     28    0.6%    0.7%  v8::internal::Context::RemoveOptimizedFunction(v8::internal::JSFunction*)
+     20    0.5%    0.5%  v8::internal::LookupIterator::State v8::internal::LookupIterator::LookupInRegularHolder<false>(v8::internal::Map*, v8::internal::JSReceiver*)
+     20    0.5%    0.5%  node::DLOpen(v8::FunctionCallbackInfo<v8::Value> const&)
+     19    0.4%    0.5%  v8::internal::Deoptimizer::VisitAllOptimizedFunctionsForContext(v8::internal::Context*, v8::internal::OptimizedFunctionVisitor*)
+     18    0.4%    0.4%  v8::internal::(anonymous namespace)::Invoke(v8::internal::Isolate*, bool, v8::internal::Handle<v8::internal::Object>, v8::internal::Handle<v8::internal::Object>, int, v8::internal::Handle<v8::internal::Object>*, v8::internal::Handle<v8::internal::Object>)
+     17    0.4%    0.4%  v8::internal::IncrementalMarking::Step(long, v8::internal::IncrementalMarking::CompletionAction, v8::internal::IncrementalMarking::ForceMarkingAction, v8::internal::IncrementalMarking::ForceCompletionAction)
+     14    0.3%    0.3%  void v8::internal::BodyDescriptorBase::IterateBodyImpl<v8::internal::IncrementalMarkingMarkingVisitor>(v8::internal::Heap*, v8::internal::HeapObject*, int, int)
+     14    0.3%    0.3%  v8::internal::Object::GetMethod(v8::internal::Handle<v8::internal::JSReceiver>, v8::internal::Handle<v8::internal::Name>)
+     14    0.3%    0.3%  node::crypto::ECDH::ComputeSecret(v8::FunctionCallbackInfo<v8::Value> const&)
+     14    0.3%    0.3%  bool v8::internal::ScavengingVisitor<(v8::internal::MarksHandling)1, (v8::internal::PromotionMode)1, (v8::internal::LoggingAndProfiling)0>::PromoteObject<(v8::internal::ScavengingVisitor<(v8::internal::MarksHandling)1, (v8::internal::PromotionMode)1, (v8::internal::LoggingAndProfiling)0>::ObjectContents)1, (v8::internal::AllocationAlignment)0>(v8::internal::Map*, v8::internal::HeapObject**, v8::internal::HeapObject*, int)
+     13    0.3%    0.3%  v8::internal::Accessors::ReconfigureToDataProperty(v8::Local<v8::Name>, v8::Local<v8::Value>, v8::PropertyCallbackInfo<void> const&)
+     12    0.3%    0.3%  void v8::internal::LookupIterator::NextInternal<false>(v8::internal::Map*, v8::internal::JSReceiver*)
+     12    0.3%    0.3%  v8::internal::JSObjectWalkVisitor<v8::internal::AllocationSiteUsageContext>::StructureWalk(v8::internal::Handle<v8::internal::JSObject>)
+     12    0.3%    0.3%  v8::internal::Heap::IteratePromotedObjectPointers(v8::internal::HeapObject*, unsigned char*, unsigned char*, bool, void (*)(v8::internal::HeapObject**, v8::internal::HeapObject*))
+     11    0.2%    0.3%  void v8::internal::String::WriteToFlat<unsigned char>(v8::internal::String*, unsigned char*, int, int)
+     11    0.2%    0.3%  v8::internal::Scavenger::ScavengeObject(v8::internal::HeapObject**, v8::internal::HeapObject*)
+     11    0.2%    0.3%  sha256_block_data_order_avx2
+     10    0.2%    0.2%  void v8::internal::BodyDescriptorBase::IterateBodyImpl<v8::internal::StaticScavengeVisitor<(v8::internal::PromotionMode)1> >(v8::internal::Heap*, v8::internal::HeapObject*, int, int)
+     10    0.2%    0.2%  v8::internal::ScavengeWeakObjectRetainer::RetainAs(v8::internal::Object*)
+     10    0.2%    0.2%  v8::internal::Scanner::ScanIdentifierOrKeyword()
+     10    0.2%    0.2%  v8::internal::ArrayBufferTracker::ProcessBuffers(v8::internal::Page*, v8::internal::ArrayBufferTracker::ProcessingMode)
+     10    0.2%    0.2%  node::crypto::Hmac::New(v8::FunctionCallbackInfo<v8::Value> const&)
+     10    0.2%    0.2%  int v8::internal::BinarySearch<(v8::internal::SearchMode)1, v8::internal::DescriptorArray>(v8::internal::DescriptorArray*, v8::internal::Name*, int, int*)
+     10    0.2%    0.2%  bool v8::internal::ScavengingVisitor<(v8::internal::MarksHandling)1, (v8::internal::PromotionMode)1, (v8::internal::LoggingAndProfiling)0>::SemiSpaceCopyObject<(v8::internal::AllocationAlignment)0>(v8::internal::Map*, v8::internal::HeapObject**, v8::internal::HeapObject*, int)
+      9    0.2%    0.2%  void node::ZCtx::Write<true>(v8::FunctionCallbackInfo<v8::Value> const&)
+      9    0.2%    0.2%  v8::internal::Factory::NewFunction(v8::internal::Handle<v8::internal::Map>, v8::internal::Handle<v8::internal::SharedFunctionInfo>, v8::internal::Handle<v8::internal::Object>, v8::internal::PretenureFlag)
+      9    0.2%    0.2%  node::Binding(v8::FunctionCallbackInfo<v8::Value> const&)
+      8    0.2%    0.2%  void v8::internal::RelocInfo::Visit<v8::internal::IncrementalMarkingMarkingVisitor>(v8::internal::Heap*)
+      8    0.2%    0.2%  v8::internal::Object::InstanceOf(v8::internal::Isolate*, v8::internal::Handle<v8::internal::Object>, v8::internal::Handle<v8::internal::Object>)
+      8    0.2%    0.2%  v8::internal::LookupIterator::FetchValue() const
+      8    0.2%    0.2%  v8::internal::JsonStringifier::SerializeString(v8::internal::Handle<v8::internal::String>)
+      7    0.2%    0.2%  v8::internal::IteratingStringHasher::VisitConsString(v8::internal::ConsString*)
+      7    0.2%    0.2%  v8::internal::Heap::Scavenge()
+      7    0.2%    0.2%  v8::internal::Heap::AllocateRaw(int, v8::internal::AllocationSpace, v8::internal::AllocationAlignment)
+      7    0.2%    0.2%  v8::internal::Heap::AllocateFixedArray(int, v8::internal::PretenureFlag)
+      7    0.2%    0.2%  v8::External::Value() const
+      7    0.2%    0.2%  node::crypto::Hmac::HmacUpdate(v8::FunctionCallbackInfo<v8::Value> const&)
+      7    0.2%    0.2%  node::Buffer::Copy(v8::FunctionCallbackInfo<v8::Value> const&)
+      6    0.1%    0.1%  void v8::internal::Heap::UpdateAllocationSite<(v8::internal::Heap::UpdateAllocationSiteMode)0>(v8::internal::HeapObject*, v8::base::TemplateHashMapImpl<v8::base::DefaultAllocationPolicy>*)
+      6    0.1%    0.1%  v8::internal::StringTable::LookupKey(v8::internal::Isolate*, v8::internal::HashTableKey*)
+      6    0.1%    0.1%  v8::internal::String::SlowEquals(v8::internal::String*)
+      6    0.1%    0.1%  v8::internal::StoreBuffer::MoveEntriesToRememberedSet()
+      6    0.1%    0.1%  v8::internal::Scavenger::ScavengeObjectSlow(v8::internal::HeapObject**, v8::internal::HeapObject*)
+      6    0.1%    0.1%  v8::internal::LCodeGenBase::DefineDeoptimizationLiteral(v8::internal::Handle<v8::internal::Object>)
+      6    0.1%    0.1%  v8::internal::AstTyper::NarrowType(v8::internal::Expression*, v8::internal::Bounds)
+      6    0.1%    0.1%  node::Buffer::Utf8Slice(v8::FunctionCallbackInfo<v8::Value> const&)
+      5    0.1%    0.1%  void v8::internal::JSFunction::BodyDescriptorImpl<(v8::internal::JSFunction::BodyVisitingPolicy)1>::IterateBody<v8::internal::IncrementalMarkingMarkingVisitor>(v8::internal::HeapObject*, int)
+      5    0.1%    0.1%  void v8::internal::FixedBodyDescriptor<24, 40, 40>::IterateBody<v8::internal::StaticScavengeVisitor<(v8::internal::PromotionMode)1> >(v8::internal::HeapObject*)
+      5    0.1%    0.1%  v8::internal::TransitionArray::Search(v8::internal::PropertyKind, v8::internal::Name*, v8::internal::PropertyAttributes, int*)
+      5    0.1%    0.1%  v8::internal::String::ToCString(v8::internal::AllowNullsFlag, v8::internal::RobustnessFlag, int, int, int*)
+      5    0.1%    0.1%  v8::internal::Scanner::Scan()
+      5    0.1%    0.1%  v8::internal::Object::GetProperty(v8::internal::LookupIterator*)
+      5    0.1%    0.1%  v8::internal::MaybeHandle<v8::internal::Object> v8::internal::(anonymous namespace)::HandleApiCallHelper<false>(v8::internal::Isolate*, v8::internal::Handle<v8::internal::HeapObject>, v8::internal::Handle<v8::internal::HeapObject>, v8::internal::Handle<v8::internal::FunctionTemplateInfo>, v8::internal::Handle<v8::internal::Object>, v8::internal::BuiltinArguments)
+      5    0.1%    0.1%  v8::internal::LGapResolver::BuildInitialMoveList(v8::internal::LParallelMove*)
+      5    0.1%    0.1%  v8::internal::LCodeGen::WriteTranslation(v8::internal::LEnvironment*, v8::internal::Translation*)
+      5    0.1%    0.1%  v8::internal::JSObject::MigrateToMap(v8::internal::Handle<v8::internal::JSObject>, v8::internal::Handle<v8::internal::Map>, int)
+      5    0.1%    0.1%  v8::internal::Heap::CopyJSObject(v8::internal::JSObject*, v8::internal::AllocationSite*)
+      5    0.1%    0.1%  v8::internal::FunctionCallbackArguments::Call(void (*)(v8::FunctionCallbackInfo<v8::Value> const&))
+      5    0.1%    0.1%  v8::internal::FlexibleBodyVisitor<v8::internal::StaticScavengeVisitor<(v8::internal::PromotionMode)1>, v8::internal::JSFunction::BodyDescriptorImpl<(v8::internal::JSFunction::BodyVisitingPolicy)0>, int>::Visit(v8::internal::Map*, v8::internal::HeapObject*)
+      5    0.1%    0.1%  v8::internal::ConsStringIterator::Search(int*)
+      5    0.1%    0.1%  v8::internal::Builtin_Impl_HandleApiCall(v8::internal::BuiltinArguments, v8::internal::Isolate*)
+      5    0.1%    0.1%  v8::internal::AstNumberingVisitor::VisitNoStackOverflowCheck(v8::internal::AstNode*)
+      4    0.1%    0.1%  void v8::internal::LookupIterator::Start<false>()
+      4    0.1%    0.1%  v8::internal::compiler::GraphReducer::ReduceTop()
+      4    0.1%    0.1%  v8::internal::Zone::New(unsigned long)
+      4    0.1%    0.1%  v8::internal::StringTable::LookupString(v8::internal::Isolate*, v8::internal::Handle<v8::internal::String>)
+      4    0.1%    0.1%  v8::internal::String::SlowEquals(v8::internal::Handle<v8::internal::String>, v8::internal::Handle<v8::internal::String>)
+      4    0.1%    0.1%  v8::internal::SharedFunctionInfo::SearchOptimizedCodeMap(v8::internal::Context*, v8::internal::BailoutId)
+      4    0.1%    0.1%  v8::internal::Runtime_KeyedGetProperty(int, v8::internal::Object**, v8::internal::Isolate*)
+      4    0.1%    0.1%  v8::internal::RelocIterator::next()
+      4    0.1%    0.1%  v8::internal::ParserBase<v8::internal::Parser>::ParsePrimaryExpression(v8::internal::ExpressionClassifier<v8::internal::ParserBaseTraits<v8::internal::Parser> >*, bool*, bool*)
+      4    0.1%    0.1%  v8::internal::LCodeGen::RegisterEnvironmentForDeoptimization(v8::internal::LEnvironment*, v8::internal::Safepoint::DeoptMode)
+      4    0.1%    0.1%  v8::internal::LCodeGen::AddToTranslation(v8::internal::LEnvironment*, v8::internal::Translation*, v8::internal::LOperand*, bool, bool, int*, int*)
+      4    0.1%    0.1%  v8::internal::LChunk::MarkEmptyBlocks()
+      4    0.1%    0.1%  v8::internal::JSReceiver::class_name()
+      4    0.1%    0.1%  v8::internal::InnerPointerToCodeCache::GetCacheEntry(unsigned char*)
+      4    0.1%    0.1%  v8::internal::InnerPointerToCodeCache::GcSafeFindCodeForInnerPointer(unsigned char*)
+      4    0.1%    0.1%  v8::internal::ConsStringIterator::NextLeaf(bool*)
+      4    0.1%    0.1%  v8::internal::ConsString* v8::internal::String::VisitFlat<v8::internal::StringComparator::State>(v8::internal::StringComparator::State*, v8::internal::String*, int)
+      4    0.1%    0.1%  v8::internal::ConsString* v8::internal::String::VisitFlat<v8::internal::IteratingStringHasher>(v8::internal::IteratingStringHasher*, v8::internal::String*, int)
+      4    0.1%    0.1%  v8::internal::Code::CopyFrom(v8::internal::CodeDesc const&)
+      4    0.1%    0.1%  v8::internal::Builtin_Impl_ObjectAssign(v8::internal::BuiltinArguments, v8::internal::Isolate*)
+      4    0.1%    0.1%  v8::internal::(anonymous namespace)::FastElementsAccessor<v8::internal::(anonymous namespace)::FastPackedObjectElementsAccessor, v8::internal::(anonymous namespace)::ElementsKindTraits<(v8::internal::ElementsKind)2> >::RemoveElement(v8::internal::Handle<v8::internal::JSArray>, v8::internal::(anonymous namespace)::Where)
+      4    0.1%    0.1%  v8::internal::(anonymous namespace)::CopyObjectToObjectElements(v8::internal::FixedArrayBase*, v8::internal::ElementsKind, unsigned int, v8::internal::FixedArrayBase*, v8::internal::ElementsKind, unsigned int, int)
+      4    0.1%    0.1%  v8::base::TemplateHashMapImpl<v8::base::DefaultAllocationPolicy>::InsertNew(void*, unsigned int, v8::base::DefaultAllocationPolicy)
+      4    0.1%    0.1%  std::__1::__hash_table<std::__1::__hash_value_type<v8::internal::JSArrayBuffer*, unsigned long>, std::__1::__unordered_map_hasher<v8::internal::JSArrayBuffer*, std::__1::__hash_value_type<v8::internal::JSArrayBuffer*, unsigned long>, std::__1::hash<v8::internal::JSArrayBuffer*>, true>, std::__1::__unordered_map_equal<v8::internal::JSArrayBuffer*, std::__1::__hash_value_type<v8::internal::JSArrayBuffer*, unsigned long>, std::__1::equal_to<v8::internal::JSArrayBuffer*>, true>, std::__1::allocator<std::__1::__hash_value_type<v8::internal::JSArrayBuffer*, unsigned long> > >::__node_insert_unique(std::__1::__hash_node<std::__1::__hash_value_type<v8::internal::JSArrayBuffer*, unsigned long>, void*>*)
+      4    0.1%    0.1%  node::crypto::Hash::HashDigest(v8::FunctionCallbackInfo<v8::Value> const&)
+      4    0.1%    0.1%  node::Open(v8::FunctionCallbackInfo<v8::Value> const&)
+      3    0.1%    0.1%  void v8::internal::BodyDescriptorApply<v8::internal::CallIterateBody, void, v8::internal::HeapObject*, int, v8::internal::ObjectVisitor*>(v8::internal::InstanceType, v8::internal::HeapObject*, int, v8::internal::ObjectVisitor*)
+      3    0.1%    0.1%  void node::BaseObject::WeakCallback<node::crypto::Hmac>(v8::WeakCallbackInfo<node::crypto::Hmac> const&)
+      3    0.1%    0.1%  v8::internal::Zone::NewExpand(unsigned long)
+      3    0.1%    0.1%  v8::internal::TypeFeedbackVector::ClearSlotsImpl(v8::internal::SharedFunctionInfo*, bool)
+      3    0.1%    0.1%  v8::internal::StringComparator::State::Advance(int)
+      3    0.1%    0.1%  v8::internal::String::IsOneByteEqualTo(v8::internal::Vector<unsigned char const>)
+      3    0.1%    0.1%  v8::internal::StaticMarkingVisitor<v8::internal::IncrementalMarkingMarkingVisitor>::MarkMapContents(v8::internal::Heap*, v8::internal::Map*)
+      3    0.1%    0.1%  v8::internal::Scope::LookupLocal(v8::internal::AstRawString const*)
+      3    0.1%    0.1%  v8::internal::PrototypeIterator::Advance()
+      3    0.1%    0.1%  v8::internal::ParserBase<v8::internal::Parser>::ParseAssignmentExpression(bool, v8::internal::ExpressionClassifier<v8::internal::ParserBaseTraits<v8::internal::Parser> >*, bool*)
+      3    0.1%    0.1%  v8::internal::Object::SetPropertyInternal(v8::internal::LookupIterator*, v8::internal::Handle<v8::internal::Object>, v8::internal::LanguageMode, v8::internal::Object::StoreFromKeyed, bool*)
+      3    0.1%    0.1%  v8::internal::Object::GetLengthFromArrayLike(v8::internal::Isolate*, v8::internal::Handle<v8::internal::Object>)
+      3    0.1%    0.1%  v8::internal::NameDictionaryBase<v8::internal::NameDictionary, v8::internal::NameDictionaryShape>::FindEntry(v8::internal::Handle<v8::internal::Name>)
+      3    0.1%    0.1%  v8::internal::MaybeHandle<v8::internal::Object> v8::internal::(anonymous namespace)::HandleApiCallHelper<true>(v8::internal::Isolate*, v8::internal::Handle<v8::internal::HeapObject>, v8::internal::Handle<v8::internal::HeapObject>, v8::internal::Handle<v8::internal::FunctionTemplateInfo>, v8::internal::Handle<v8::internal::Object>, v8::internal::BuiltinArguments)
+      3    0.1%    0.1%  v8::internal::Map::RawCopy(v8::internal::Handle<v8::internal::Map>, int)
+      3    0.1%    0.1%  v8::internal::LookupIterator::PropertyOrElement(v8::internal::Isolate*, v8::internal::Handle<v8::internal::Object>, v8::internal::Handle<v8::internal::Object>, bool*, v8::internal::LookupIterator::Configuration)
+      3    0.1%    0.1%  v8::internal::LookupIterator::LookupIterator(v8::internal::Handle<v8::internal::Object>, v8::internal::Handle<v8::internal::Name>, v8::internal::LookupIterator::Configuration)
+      3    0.1%    0.1%  v8::internal::LCodeGenBase::WriteTranslationFrame(v8::internal::LEnvironment*, v8::internal::Translation*)
+      3    0.1%    0.1%  v8::internal::JavaScriptFrameIterator::Advance()
+      3    0.1%    0.1%  v8::internal::Heap::InitializeJSObjectFromMap(v8::internal::JSObject*, v8::internal::FixedArray*, v8::internal::Map*)
+      3    0.1%    0.1%  v8::internal::Heap::InitializeJSObjectBody(v8::internal::JSObject*, v8::internal::Map*, int)
+      3    0.1%    0.1%  v8::internal::HOptimizedGraphBuilder::VisitNoStackOverflowCheck(v8::internal::AstNode*)
+      3    0.1%    0.1%  v8::internal::HInstruction::InsertAfter(v8::internal::HInstruction*)
+      3    0.1%    0.1%  v8::internal::HGraphBuilder::CreateGraph()
+      3    0.1%    0.1%  v8::internal::Factory::NewConsString(v8::internal::Handle<v8::internal::String>, v8::internal::Handle<v8::internal::String>)
+      3    0.1%    0.1%  v8::internal::Dictionary<v8::internal::NameDictionary, v8::internal::NameDictionaryShape, v8::internal::Handle<v8::internal::Name> >::Add(v8::internal::Handle<v8::internal::NameDictionary>, v8::internal::Handle<v8::internal::Name>, v8::internal::Handle<v8::internal::Object>, v8::internal::PropertyDetails, int*)
+      3    0.1%    0.1%  v8::internal::Deoptimizer::DeoptimizeMarkedCodeForContext(v8::internal::Context*)
+      3    0.1%    0.1%  v8::internal::CanonicalHandleScope::Lookup(v8::internal::Object*)
+      3    0.1%    0.1%  v8::internal::Builtin_Impl_ArraySlice(v8::internal::BuiltinArguments, v8::internal::Isolate*)
+      3    0.1%    0.1%  v8::internal::AstValueFactory::GetString(unsigned int, bool, v8::internal::Vector<unsigned char const>)
+      3    0.1%    0.1%  v8::internal::AstValueFactory::GetOneByteStringInternal(v8::internal::Vector<unsigned char const>)
+      3    0.1%    0.1%  v8::internal::AstTyper::NarrowLowerType(v8::internal::Expression*, v8::internal::Type*)
+      3    0.1%    0.1%  v8::internal::Assembler::bind_to(v8::internal::Label*, int)
+      3    0.1%    0.1%  v8::internal::ApiNatives::InstantiateObject(v8::internal::Handle<v8::internal::ObjectTemplateInfo>, v8::internal::Handle<v8::internal::JSReceiver>)
+      3    0.1%    0.1%  v8::Function::NewInstance(v8::Local<v8::Context>, int, v8::Local<v8::Value>*) const
+      3    0.1%    0.1%  v8::ArrayBufferView::ByteLength()
+      3    0.1%    0.1%  v8::ArrayBuffer::GetContents()
+      3    0.1%    0.1%  node::crypto::ECDH::GenerateKeys(v8::FunctionCallbackInfo<v8::Value> const&)
+      3    0.1%    0.1%  node::InternalModuleStat(v8::FunctionCallbackInfo<v8::Value> const&)
+      3    0.1%    0.1%  int v8::internal::FlexibleBodyVisitor<v8::internal::StaticScavengeVisitor<(v8::internal::PromotionMode)1>, v8::internal::FlexibleBodyDescriptor<8>, int>::VisitSpecialized<32>(v8::internal::Map*, v8::internal::HeapObject*)
+      3    0.1%    0.1%  _aes_ctr_cipher
+      2    0.0%    0.0%  void v8::internal::String::WriteToFlat<unsigned short>(v8::internal::String*, unsigned short*, int, int)
+      2    0.0%    0.0%  void v8::internal::MarkCompactCollector::EvacuateVisitorBase::MigrateObject<(v8::internal::MarkCompactCollector::EvacuateVisitorBase::MigrationMode)1>(v8::internal::HeapObject*, v8::internal::HeapObject*, int, v8::internal::AllocationSpace)
+      2    0.0%    0.0%  void v8::internal::LookupIterator::Start<true>()
+      2    0.0%    0.0%  void v8::internal::FlexibleBodyVisitor<v8::internal::IncrementalMarkingMarkingVisitor, v8::internal::FlexibleBodyDescriptor<8>, void>::VisitSpecialized<48>(v8::internal::Map*, v8::internal::HeapObject*)
+      2    0.0%    0.0%  void v8::internal::FlexibleBodyVisitor<v8::internal::IncrementalMarkingMarkingVisitor, v8::internal::FlexibleBodyDescriptor<8>, void>::VisitSpecialized<32>(v8::internal::Map*, v8::internal::HeapObject*)
+      2    0.0%    0.0%  void v8::internal::CallIterateBody::apply<v8::internal::FlexibleBodyDescriptor<16>, v8::internal::ObjectVisitor>(v8::internal::HeapObject*, int, v8::internal::ObjectVisitor*)
+      2    0.0%    0.0%  void v8::internal::BodyDescriptorBase::IterateBodyImpl<v8::internal::StaticScavengeVisitor<(v8::internal::PromotionMode)0> >(v8::internal::Heap*, v8::internal::HeapObject*, int, int)
+      2    0.0%    0.0%  v8::internal::Translation::StoreStackSlot(int)
+      2    0.0%    0.0%  v8::internal::Translation::StoreLiteral(int)
+      2    0.0%    0.0%  v8::internal::TransitionArray::SearchTransition(v8::internal::Map*, v8::internal::PropertyKind, v8::internal::Name*, v8::internal::PropertyAttributes)
+      2    0.0%    0.0%  v8::internal::TransitionArray::GetPrototypeTransition(v8::internal::Handle<v8::internal::Map>, v8::internal::Handle<v8::internal::Object>)
+      2    0.0%    0.0%  v8::internal::StubCache::Set(v8::internal::Name*, v8::internal::Map*, v8::internal::Code*)
+      2    0.0%    0.0%  v8::internal::Statement::IsJump() const
+      2    0.0%    0.0%  v8::internal::StackGuard::HandleInterrupts()
+      2    0.0%    0.0%  v8::internal::Space::AllocationStep(unsigned char*, int)
+      2    0.0%    0.0%  v8::internal::Script::GetPositionInfo(int, v8::internal::Script::PositionInfo*, v8::internal::Script::OffsetFlag)
+      2    0.0%    0.0%  v8::internal::Scope::DeserializeScopeChain(v8::internal::Isolate*, v8::internal::Zone*, v8::internal::Context*, v8::internal::DeclarationScope*, v8::internal::AstValueFactory*, v8::internal::Scope::DeserializationMode)
+      2    0.0%    0.0%  v8::internal::ScavengingVisitor<(v8::internal::MarksHandling)1, (v8::internal::PromotionMode)1, (v8::internal::LoggingAndProfiling)0>::EvacuateShortcutCandidate(v8::internal::Map*, v8::internal::HeapObject**, v8::internal::HeapObject*)
+      2    0.0%    0.0%  v8::internal::Scanner::PeekAhead()
+      2    0.0%    0.0%  v8::internal::Scanner::CurrentSymbol(v8::internal::AstValueFactory*)
+      2    0.0%    0.0%  v8::internal::Runtime_StringToLowerCaseI18N(int, v8::internal::Object**, v8::internal::Isolate*)
+      2    0.0%    0.0%  v8::internal::Runtime_StringReplaceGlobalRegExpWithString(int, v8::internal::Object**, v8::internal::Isolate*)
+      2    0.0%    0.0%  v8::internal::Runtime_NewClosure_Tenured(int, v8::internal::Object**, v8::internal::Isolate*)
+      2    0.0%    0.0%  v8::internal::Runtime_CreateObjectLiteral(int, v8::internal::Object**, v8::internal::Isolate*)
+      2    0.0%    0.0%  v8::internal::Runtime_CreateDataProperty(int, v8::internal::Object**, v8::internal::Isolate*)
+      2    0.0%    0.0%  v8::internal::Runtime_ClassOf(int, v8::internal::Object**, v8::internal::Isolate*)
+      2    0.0%    0.0%  v8::internal::PropertyCallbackArguments::Call(void (*)(v8::Local<v8::Name>, v8::PropertyCallbackInfo<v8::Value> const&), v8::internal::Handle<v8::internal::Name>)
+      2    0.0%    0.0%  v8::internal::PerIsolateAssertScope<(v8::internal::PerIsolateAssertType)0, true>::IsAllowed(v8::internal::Isolate*)
+      2    0.0%    0.0%  v8::internal::ParserBase<v8::internal::Parser>::ParseBinaryExpression(int, bool, v8::internal::ExpressionClassifier<v8::internal::ParserBaseTraits<v8::internal::Parser> >*, bool*)
+      2    0.0%    0.0%  v8::internal::ParserBase<v8::internal::Parser>::BindingPatternUnexpectedToken(v8::internal::ExpressionClassifier<v8::internal::ParserBaseTraits<v8::internal::Parser> >*)
+      2    0.0%    0.0%  v8::internal::Parser::ParseLazy(v8::internal::Isolate*, v8::internal::ParseInfo*)
+      2    0.0%    0.0%  v8::internal::Parser::ParseEagerFunctionBody(v8::internal::AstRawString const*, int, v8::internal::ParserFormalParameters const&, v8::internal::FunctionKind, v8::internal::FunctionLiteral::FunctionType, bool*)
+      2    0.0%    0.0%  v8::internal::PagedSpace::AllocateRaw(int, v8::internal::AllocationAlignment)
+      2    0.0%    0.0%  v8::internal::OrderedHashTableIterator<v8::internal::JSMapIterator, v8::internal::OrderedHashMap>::HasMore()
+      2    0.0%    0.0%  v8::internal::Object::SetPropertyWithAccessor(v8::internal::LookupIterator*, v8::internal::Handle<v8::internal::Object>, v8::internal::Object::ShouldThrow)
+      2    0.0%    0.0%  v8::internal::Object::GetPropertyWithAccessor(v8::internal::LookupIterator*)
+      2    0.0%    0.0%  v8::internal::Object::AddDataProperty(v8::internal::LookupIterator*, v8::internal::Handle<v8::internal::Object>, v8::internal::PropertyAttributes, v8::internal::Object::ShouldThrow, v8::internal::Object::StoreFromKeyed)
+      2    0.0%    0.0%  v8::internal::Name::ToFunctionName(v8::internal::Handle<v8::internal::Name>)
+      2    0.0%    0.0%  v8::internal::Map::WeakCellForMap(v8::internal::Handle<v8::internal::Map>)
+      2    0.0%    0.0%  v8::internal::LookupIterator::ApplyTransitionToDataProperty(v8::internal::Handle<v8::internal::JSObject>)
+      2    0.0%    0.0%  v8::internal::Log::MessageBuilder::Append(char const*, ...)
+      2    0.0%    0.0%  v8::internal::LGapResolver::EmitMove(int)
+      2    0.0%    0.0%  v8::internal::LCodeGenBase::GenerateBody()
+      2    0.0%    0.0%  v8::internal::LCodeGen::GeneratePrologue()
+      2    0.0%    0.0%  v8::internal::LCodeGen::GenerateBodyInstructionPre(v8::internal::LInstruction*)
+      2    0.0%    0.0%  v8::internal::JSTypedArray::type()
+      2    0.0%    0.0%  v8::internal::JSTypedArray::GetBuffer()
+      2    0.0%    0.0%  v8::internal::JSReceiver::ValidateAndApplyPropertyDescriptor(v8::internal::Isolate*, v8::internal::LookupIterator*, bool, v8::internal::PropertyDescriptor*, v8::internal::PropertyDescriptor*, v8::internal::Object::ShouldThrow, v8::internal::Handle<v8::internal::Name>)
+      2    0.0%    0.0%  v8::internal::JSObject::MakePrototypesFast(v8::internal::Handle<v8::internal::Object>, v8::internal::WhereToStart, v8::internal::Isolate*)
+      2    0.0%    0.0%  v8::internal::JSObject::EnsureWritableFastElements(v8::internal::Handle<v8::internal::JSObject>)
+      2    0.0%    0.0%  v8::internal::Isolate::FireCallCompletedCallback()
+      2    0.0%    0.0%  v8::internal::IsUnmodifiedHeapObject(v8::internal::Object**)
+      2    0.0%    0.0%  v8::internal::IncrementalMarking::RecordWriteSlow(v8::internal::HeapObject*, v8::internal::Object**, v8::internal::Object*)
+      2    0.0%    0.0%  v8::internal::Heap::LeftTrimFixedArray(v8::internal::FixedArrayBase*, int)
+      2    0.0%    0.0%  v8::internal::Heap::IteratePromotedObject(v8::internal::HeapObject*, int, bool, void (*)(v8::internal::HeapObject**, v8::internal::HeapObject*))
+      2    0.0%    0.0%  v8::internal::Heap::DoScavenge(v8::internal::ObjectVisitor*, unsigned char*, v8::internal::PromotionMode)
+      2    0.0%    0.0%  v8::internal::Heap::CanMoveObjectStart(v8::internal::HeapObject*)
+      2    0.0%    0.0%  v8::internal::Heap::AllocateMap(v8::internal::InstanceType, int, v8::internal::ElementsKind)
+      2    0.0%    0.0%  v8::internal::Heap::AllocateJSObject(v8::internal::JSFunction*, v8::internal::PretenureFlag, v8::internal::AllocationSite*)
+      2    0.0%    0.0%  v8::internal::Heap::AllocateHeapNumber(double, v8::internal::MutableMode, v8::internal::PretenureFlag)
+      2    0.0%    0.0%  v8::internal::Heap::AllocateFixedTypedArrayWithExternalPointer(int, v8::internal::ExternalArrayType, void*, v8::internal::PretenureFlag)
+      2    0.0%    0.0%  v8::internal::Heap::AllocateByteArray(int, v8::internal::PretenureFlag)
+      2    0.0%    0.0%  v8::internal::Handle<v8::internal::String> v8::internal::JsonParser<true>::ScanJsonString<false>()
+      2    0.0%    0.0%  v8::internal::HOptimizedGraphBuilder::VisitLogicalExpression(v8::internal::BinaryOperation*)
+      2    0.0%    0.0%  v8::internal::HOptimizedGraphBuilder::PropertyAccessInfo::LookupDescriptor(v8::internal::Map*, v8::internal::Name*)
+      2    0.0%    0.0%  v8::internal::HOptimizedGraphBuilder::PropertyAccessInfo::LoadResult(v8::internal::Handle<v8::internal::Map>)
+      2    0.0%    0.0%  v8::internal::HEnvironment::Initialize(v8::internal::HEnvironment const*)
+      2    0.0%    0.0%  v8::internal::FullCodeGenerator::VisitDeclarations(v8::internal::ZoneList<v8::internal::Declaration*>*)
+      2    0.0%    0.0%  v8::internal::FullCodeGenerator::VisitAssignment(v8::internal::Assignment*)
+      2    0.0%    0.0%  v8::internal::FreeList::FindNodeFor(int, int*)
+      2    0.0%    0.0%  v8::internal::DependentCode::Compact()
+      2    0.0%    0.0%  v8::internal::Compiler::FinalizeCompilationJob(v8::internal::CompilationJob*)
+      2    0.0%    0.0%  v8::internal::CompilationDependencies::Rollback()
+      2    0.0%    0.0%  v8::internal::CodeStub::GetCode()
+      2    0.0%    0.0%  v8::internal::Call::GetCallType() const
+      2    0.0%    0.0%  v8::internal::Builtin_Impl_ObjectKeys(v8::internal::BuiltinArguments, v8::internal::Isolate*)
+      2    0.0%    0.0%  v8::internal::Builtin_Impl_ArrayShift(v8::internal::BuiltinArguments, v8::internal::Isolate*)
+      2    0.0%    0.0%  v8::internal::Accessors::FunctionPrototypeGetter(v8::Local<v8::Name>, v8::PropertyCallbackInfo<v8::Value> const&)
+      2    0.0%    0.0%  v8::internal::(anonymous namespace)::UpdateDescriptorForValue(v8::internal::Handle<v8::internal::Map>, int, v8::internal::Handle<v8::internal::Object>)
+      2    0.0%    0.0%  v8::internal::(anonymous namespace)::FastElementsAccessor<v8::internal::(anonymous namespace)::FastPackedObjectElementsAccessor, v8::internal::(anonymous namespace)::ElementsKindTraits<(v8::internal::ElementsKind)2> >::MoveElements(v8::internal::Isolate*, v8::internal::Handle<v8::internal::JSArray>, v8::internal::Handle<v8::internal::FixedArrayBase>, int, int, int, int, int)
+      2    0.0%    0.0%  v8::internal::(anonymous namespace)::EncodeInt(v8::internal::ZoneVector<unsigned char>&, int)
+      2    0.0%    0.0%  v8::Value::IsExternal() const
+      2    0.0%    0.0%  v8::String::WriteUtf8(char*, int, int*, int) const
+      2    0.0%    0.0%  v8::Object::SetPrototype(v8::Local<v8::Context>, v8::Local<v8::Value>)
+      2    0.0%    0.0%  v8::Object::InternalFieldCount()
+      2    0.0%    0.0%  v8::HandleScope::Initialize(v8::Isolate*)
+      2    0.0%    0.0%  node::crypto::Hash::New(v8::FunctionCallbackInfo<v8::Value> const&)
+      2    0.0%    0.0%  node::crypto::ECDH::GetPublicKey(v8::FunctionCallbackInfo<v8::Value> const&)
+      2    0.0%    0.0%  node::TTYWrap::New(v8::FunctionCallbackInfo<v8::Value> const&)
+      2    0.0%    0.0%  node::NeedImmediateCallbackGetter(v8::Local<v8::Name>, v8::PropertyCallbackInfo<v8::Value> const&)
+      2    0.0%    0.0%  node::Exit(v8::FunctionCallbackInfo<v8::Value> const&)
+      2    0.0%    0.0%  node::Buffer::Utf8Write(v8::FunctionCallbackInfo<v8::Value> const&)
+      2    0.0%    0.0%  node::Buffer::ByteLengthUtf8(v8::FunctionCallbackInfo<v8::Value> const&)
+      2    0.0%    0.0%  bool v8::internal::ScavengingVisitor<(v8::internal::MarksHandling)0, (v8::internal::PromotionMode)0, (v8::internal::LoggingAndProfiling)0>::PromoteObject<(v8::internal::ScavengingVisitor<(v8::internal::MarksHandling)0, (v8::internal::PromotionMode)0, (v8::internal::LoggingAndProfiling)0>::ObjectContents)1, (v8::internal::AllocationAlignment)0>(v8::internal::Map*, v8::internal::HeapObject**, v8::internal::HeapObject*, int)
+      2    0.0%    0.0%  _uv__io_poll
+      2    0.0%    0.0%  _aesni_ctr32_encrypt_blocks
+      1    0.0%    0.0%  void v8::internal::ScavengingVisitor<(v8::internal::MarksHandling)1, (v8::internal::PromotionMode)1, (v8::internal::LoggingAndProfiling)0>::EvacuateObject<(v8::internal::ScavengingVisitor<(v8::internal::MarksHandling)1, (v8::internal::PromotionMode)1, (v8::internal::LoggingAndProfiling)0>::ObjectContents)0, (v8::internal::AllocationAlignment)0>(v8::internal::Map*, v8::internal::HeapObject**, v8::internal::HeapObject*, int)
+      1    0.0%    0.0%  void v8::internal::Scanner::Advance<false, true>()
+      1    0.0%    0.0%  void v8::internal::LookupIterator::NextInternal<true>(v8::internal::Map*, v8::internal::JSReceiver*)
+      1    0.0%    0.0%  void v8::internal::FlexibleBodyVisitor<v8::internal::IncrementalMarkingMarkingVisitor, v8::internal::FlexibleBodyDescriptor<8>, void>::VisitSpecialized<40>(v8::internal::Map*, v8::internal::HeapObject*)
+      1    0.0%    0.0%  void v8::internal::FixedBodyDescriptor<24, 40, 40>::IterateBody<v8::internal::StaticScavengeVisitor<(v8::internal::PromotionMode)0> >(v8::internal::HeapObject*)
+      1    0.0%    0.0%  void v8::internal::CallIterateBody::apply<v8::internal::JSFunction::BodyDescriptorImpl<(v8::internal::JSFunction::BodyVisitingPolicy)3>, v8::internal::ObjectVisitor>(v8::internal::HeapObject*, int, v8::internal::ObjectVisitor*)
+      1    0.0%    0.0%  void v8::internal::CallIterateBody::apply<v8::internal::FlexibleBodyDescriptor<8>, v8::internal::ObjectVisitor>(v8::internal::HeapObject*, int, v8::internal::ObjectVisitor*)
+      1    0.0%    0.0%  void v8::internal::BaseDictionaryShape<v8::internal::Handle<v8::internal::Name> >::SetEntry<v8::internal::NameDictionary>(v8::internal::NameDictionary*, int, v8::internal::Handle<v8::internal::Object>, v8::internal::Handle<v8::internal::Object>, v8::internal::PropertyDetails)
+      1    0.0%    0.0%  void v8::internal::BaseDictionaryShape<unsigned int>::SetEntry<v8::internal::UnseededNumberDictionary>(v8::internal::UnseededNumberDictionary*, int, v8::internal::Handle<v8::internal::Object>, v8::internal::Handle<v8::internal::Object>, v8::internal::PropertyDetails)
+      1    0.0%    0.0%  void v8::Utf8WriterVisitor::Visit<unsigned char>(unsigned char const*, int)
+      1    0.0%    0.0%  void std::__1::__tree_balance_after_insert<std::__1::__tree_node_base<void*>*>(std::__1::__tree_node_base<void*>*, std::__1::__tree_node_base<void*>*)
+      1    0.0%    0.0%  void std::__1::__sort<v8::internal::EnumIndexComparator<v8::internal::NameDictionary>&, v8::internal::Smi**>(v8::internal::Smi**, v8::internal::Smi**, v8::internal::EnumIndexComparator<v8::internal::NameDictionary>&)
+      1    0.0%    0.0%  v8::internal::compiler::StateValuesAccess::iterator::operator!=(v8::internal::compiler::StateValuesAccess::iterator&)
+      1    0.0%    0.0%  v8::internal::compiler::RepresentationSelector::PrintTruncation(v8::internal::compiler::Truncation)
+      1    0.0%    0.0%  v8::internal::compiler::ParallelMove::PrepareInsertAfter(v8::internal::compiler::MoveOperands*) const
+      1    0.0%    0.0%  v8::internal::compiler::Node::Kill()
+      1    0.0%    0.0%  v8::internal::compiler::Node::AppendUse(v8::internal::compiler::Node::Use*)
+      1    0.0%    0.0%  v8::internal::compiler::LoopVariableOptimizer::TakeConditionsFromFirstControl(v8::internal::compiler::Node*)
+      1    0.0%    0.0%  v8::internal::compiler::InstructionSelector::VisitBlock(v8::internal::compiler::BasicBlock*)
+      1    0.0%    0.0%  v8::internal::compiler::GapResolver::Resolve(v8::internal::compiler::ParallelMove*) const
+      1    0.0%    0.0%  v8::internal::compiler::DeadCodeElimination::Reduce(v8::internal::compiler::Node*)
+      1    0.0%    0.0%  v8::internal::compiler::CodeGenerator::GenerateCode()
+      1    0.0%    0.0%  v8::internal::compiler::CodeGenerator::AssembleInstruction(v8::internal::compiler::Instruction*, v8::internal::compiler::InstructionBlock const*)
+      1    0.0%    0.0%  v8::internal::compiler::CodeGenerator::AssembleArchInstruction(v8::internal::compiler::Instruction*)
+      1    0.0%    0.0%  v8::internal::compiler::AccessInfoFactory::ComputePropertyAccessInfo(v8::internal::Handle<v8::internal::Map>, v8::internal::Handle<v8::internal::Name>, v8::internal::compiler::AccessMode, v8::internal::compiler::PropertyAccessInfo*)
+      1    0.0%    0.0%  v8::internal::VSNPrintF(v8::internal::Vector<char>, char const*, __va_list_tag*)
+      1    0.0%    0.0%  v8::internal::TypeFeedbackMetadata::SpecDiffersFrom(v8::internal::FeedbackVectorSpec const*) const
+      1    0.0%    0.0%  v8::internal::TranslationIterator::Next()
+      1    0.0%    0.0%  v8::internal::Translation::BeginJSFrame(v8::internal::BailoutId, int, unsigned int)
+      1    0.0%    0.0%  v8::internal::TransitionArray::ExpectedTransitionKey(v8::internal::Handle<v8::internal::Map>)
+      1    0.0%    0.0%  v8::internal::ToBooleanICStub::UpdateStatus(v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::ToBooleanIC::ToBoolean(v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::TestContext::ReturnControl(v8::internal::HControlInstruction*, v8::internal::BailoutId)
+      1    0.0%    0.0%  v8::internal::String::ComputeAndSetHash()
+      1    0.0%    0.0%  v8::internal::StoreIC::Store(v8::internal::Handle<v8::internal::Object>, v8::internal::Handle<v8::internal::Name>, v8::internal::Handle<v8::internal::Object>, v8::internal::Object::StoreFromKeyed)
+      1    0.0%    0.0%  v8::internal::StoreIC::LookupForWrite(v8::internal::LookupIterator*, v8::internal::Handle<v8::internal::Object>, v8::internal::Object::StoreFromKeyed)
+      1    0.0%    0.0%  v8::internal::StaticMarkingVisitor<v8::internal::IncrementalMarkingMarkingVisitor>::VisitSharedFunctionInfoStrongCode(v8::internal::Heap*, v8::internal::HeapObject*)
+      1    0.0%    0.0%  v8::internal::StaticMarkingVisitor<v8::internal::IncrementalMarkingMarkingVisitor>::VisitJSFunction(v8::internal::Map*, v8::internal::HeapObject*)
+      1    0.0%    0.0%  v8::internal::StaticMarkingVisitor<v8::internal::IncrementalMarkingMarkingVisitor>::VisitCode(v8::internal::Map*, v8::internal::HeapObject*)
+      1    0.0%    0.0%  v8::internal::StackFrame::GetCallerState(v8::internal::StackFrame::State*) const
+      1    0.0%    0.0%  v8::internal::SplayTree<v8::internal::EffectsBase<int, -2147483648>::SplayTreeConfig, v8::internal::ZoneAllocationPolicy>::Insert(int const&, v8::internal::SplayTree<v8::internal::EffectsBase<int, -2147483648>::SplayTreeConfig, v8::internal::ZoneAllocationPolicy>::Locator*)
+      1    0.0%    0.0%  v8::internal::SharedFunctionInfo::InitFromFunctionLiteral(v8::internal::Handle<v8::internal::SharedFunctionInfo>, v8::internal::FunctionLiteral*)
+      1    0.0%    0.0%  v8::internal::SerializerDeserializer::Iterate(v8::internal::Isolate*, v8::internal::ObjectVisitor*)
+      1    0.0%    0.0%  v8::internal::SequentialStringKey<unsigned char>::Hash()
+      1    0.0%    0.0%  v8::internal::SeqString::Truncate(v8::internal::Handle<v8::internal::SeqString>, int)
+      1    0.0%    0.0%  v8::internal::ScopeInfo::Create(v8::internal::Isolate*, v8::internal::Zone*, v8::internal::Scope*)
+      1    0.0%    0.0%  v8::internal::ScopeInfo::ContextSlotIndex(v8::internal::Handle<v8::internal::ScopeInfo>, v8::internal::Handle<v8::internal::String>, v8::internal::VariableMode*, v8::internal::InitializationFlag*, v8::internal::MaybeAssignedFlag*)
+      1    0.0%    0.0%  v8::internal::Scope::Snapshot::Snapshot(v8::internal::Scope*)
+      1    0.0%    0.0%  v8::internal::Scope::Scope(v8::internal::Zone*, v8::internal::Scope*, v8::internal::ScopeType)
+      1    0.0%    0.0%  v8::internal::Scope::ResolveVariablesRecursively(v8::internal::ParseInfo*, v8::internal::AstNodeFactory*)
+      1    0.0%    0.0%  v8::internal::Scope::ResolveTo(v8::internal::ParseInfo*, v8::internal::Scope::BindingKind, v8::internal::VariableProxy*, v8::internal::Variable*)
+      1    0.0%    0.0%  v8::internal::Scope::DeclareLocal(v8::internal::AstRawString const*, v8::internal::VariableMode, v8::internal::InitializationFlag, v8::internal::Variable::Kind, v8::internal::MaybeAssignedFlag)
+      1    0.0%    0.0%  v8::internal::Scope::CheckConflictingVarDeclarations()
+      1    0.0%    0.0%  v8::internal::Scope::AllocateVariablesRecursively()
+      1    0.0%    0.0%  v8::internal::ScavengingVisitor<(v8::internal::MarksHandling)1, (v8::internal::PromotionMode)1, (v8::internal::LoggingAndProfiling)0>::ObjectEvacuationStrategy<(v8::internal::ScavengingVisitor<(v8::internal::MarksHandling)1, (v8::internal::PromotionMode)1, (v8::internal::LoggingAndProfiling)0>::ObjectContents)1>::Visit(v8::internal::Map*, v8::internal::HeapObject**, v8::internal::HeapObject*)
+      1    0.0%    0.0%  v8::internal::ScavengingVisitor<(v8::internal::MarksHandling)1, (v8::internal::PromotionMode)1, (v8::internal::LoggingAndProfiling)0>::EvacuateJSFunction(v8::internal::Map*, v8::internal::HeapObject**, v8::internal::HeapObject*)
+      1    0.0%    0.0%  v8::internal::ScavengingVisitor<(v8::internal::MarksHandling)1, (v8::internal::PromotionMode)1, (v8::internal::LoggingAndProfiling)0>::EvacuateFixedTypedArray(v8::internal::Map*, v8::internal::HeapObject**, v8::internal::HeapObject*)
+      1    0.0%    0.0%  v8::internal::ScavengingVisitor<(v8::internal::MarksHandling)1, (v8::internal::PromotionMode)1, (v8::internal::LoggingAndProfiling)0>::EvacuateFixedArray(v8::internal::Map*, v8::internal::HeapObject**, v8::internal::HeapObject*)
+      1    0.0%    0.0%  v8::internal::ScavengingVisitor<(v8::internal::MarksHandling)0, (v8::internal::PromotionMode)0, (v8::internal::LoggingAndProfiling)0>::EvacuateJSFunction(v8::internal::Map*, v8::internal::HeapObject**, v8::internal::HeapObject*)
+      1    0.0%    0.0%  v8::internal::Scanner::ScanNumber(bool)
+      1    0.0%    0.0%  v8::internal::Scanner::Next()
+      1    0.0%    0.0%  v8::internal::Scanner::AddLiteralCharAdvance()
+      1    0.0%    0.0%  v8::internal::SafepointTableBuilder::DefineSafepoint(v8::internal::Assembler*, v8::internal::Safepoint::Kind, int, v8::internal::Safepoint::DeoptMode)
+      1    0.0%    0.0%  v8::internal::Runtime_ToBooleanIC_Miss(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_StringParseInt(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_StringCharCodeAtRT(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_StoreIC_Miss(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_MapIteratorNext(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_MapIteratorInitialize(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_LoadIC_Miss(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_LoadGlobalIC_Miss(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_InstanceOf(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_GetProperty(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_DefineDataPropertyInLiteral(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_CreateRegExpLiteral(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_CreateListFromArrayLike(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_Compare(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::RuntimeProfiler::MarkCandidatesForOptimization()
+      1    0.0%    0.0%  v8::internal::RememberedSet<(v8::internal::PointerDirection)1>::RemoveRange(v8::internal::MemoryChunk*, unsigned char*, unsigned char*)
+      1    0.0%    0.0%  v8::internal::RelocIterator::RelocIterator(v8::internal::Code*, int)
+      1    0.0%    0.0%  v8::internal::RelocInfoWriter::Write(v8::internal::RelocInfo const*)
+      1    0.0%    0.0%  v8::internal::RegExpImpl::SetLastSubject(v8::internal::FixedArray*, v8::internal::String*)
+      1    0.0%    0.0%  v8::internal::PointersUpdatingVisitor::VisitPointers(v8::internal::Object**, v8::internal::Object**)
+      1    0.0%    0.0%  v8::internal::PerIsolateAssertScope<(v8::internal::PerIsolateAssertType)1, false>::IsAllowed(v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::PatchIncrementalMarkingRecordWriteStubs(v8::internal::Heap*, v8::internal::RecordWriteStub::Mode)
+      1    0.0%    0.0%  v8::internal::ParserBaseTraits<v8::internal::Parser>::ShortcutNumericLiteralBinaryExpression(v8::internal::Expression**, v8::internal::Expression*, v8::internal::Token::Value, int, v8::internal::AstNodeFactory*)
+      1    0.0%    0.0%  v8::internal::ParserBase<v8::internal::Parser>::ParsePostfixExpression(v8::internal::ExpressionClassifier<v8::internal::ParserBaseTraits<v8::internal::Parser> >*, bool*)
+      1    0.0%    0.0%  v8::internal::ParserBase<v8::internal::Parser>::ParseMemberWithNewPrefixesExpression(v8::internal::ExpressionClassifier<v8::internal::ParserBaseTraits<v8::internal::Parser> >*, bool*, bool*)
+      1    0.0%    0.0%  v8::internal::ParserBase<v8::internal::Parser>::ParseLeftHandSideExpression(v8::internal::ExpressionClassifier<v8::internal::ParserBaseTraits<v8::internal::Parser> >*, bool*)
+      1    0.0%    0.0%  v8::internal::ParserBase<v8::internal::Parser>::ArrowFormalParametersUnexpectedToken(v8::internal::ExpressionClassifier<v8::internal::ParserBaseTraits<v8::internal::Parser> >*)
+      1    0.0%    0.0%  v8::internal::Parser::ParseStatementList(v8::internal::ZoneList<v8::internal::Statement*>*, int, bool*)
+      1    0.0%    0.0%  v8::internal::Parser::ParseFunctionLiteral(v8::internal::AstRawString const*, v8::internal::Scanner::Location, v8::internal::FunctionNameValidity, v8::internal::FunctionKind, int, v8::internal::FunctionLiteral::FunctionType, v8::internal::LanguageMode, bool*)
+      1    0.0%    0.0%  v8::internal::Parser::ParseBlock(v8::internal::ZoneList<v8::internal::AstRawString const*>*, bool*)
+      1    0.0%    0.0%  v8::internal::ParseInfo::scope() const
+      1    0.0%    0.0%  v8::internal::OptimizingCompileDispatcher::InstallOptimizedFunctions()
+      1    0.0%    0.0%  v8::internal::OptimizedFrame::Summarize(v8::internal::List<v8::internal::FrameSummary, v8::internal::FreeStoreAllocationPolicy>*, v8::internal::FrameSummary::Mode) const
+      1    0.0%    0.0%  v8::internal::Operand::Operand(v8::internal::Register, int)
+      1    0.0%    0.0%  v8::internal::Object::ToNumber(v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::Object::ToInteger(v8::internal::Isolate*, v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::Object::OrdinaryHasInstance(v8::internal::Isolate*, v8::internal::Handle<v8::internal::Object>, v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::Object::IsArray(v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::Object::CreateListFromArrayLike(v8::internal::Isolate*, v8::internal::Handle<v8::internal::Object>, v8::internal::ElementTypes)
+      1    0.0%    0.0%  v8::internal::Object::BooleanValue()
+      1    0.0%    0.0%  v8::internal::NewSpace::EnsureAllocation(int, v8::internal::AllocationAlignment)
+      1    0.0%    0.0%  v8::internal::NamedStoreHandlerCompiler::CompileStoreTransition(v8::internal::Handle<v8::internal::Map>, v8::internal::Handle<v8::internal::Name>)
+      1    0.0%    0.0%  v8::internal::MarkCompactWeakObjectRetainer::RetainAs(v8::internal::Object*)
+      1    0.0%    0.0%  v8::internal::MarkCompactCollector::EvacuateNewSpaceVisitor::AllocateInLab(int, v8::internal::AllocationAlignment)
+      1    0.0%    0.0%  v8::internal::Map::CopyWithField(v8::internal::Handle<v8::internal::Map>, v8::internal::Handle<v8::internal::Name>, v8::internal::Handle<v8::internal::FieldType>, v8::internal::PropertyAttributes, v8::internal::Representation, v8::internal::TransitionFlag)
+      1    0.0%    0.0%  v8::internal::MacroAssembler::Move(v8::internal::Register, v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::MacroAssembler::CheckEnumCache(v8::internal::Label*)
+      1    0.0%    0.0%  v8::internal::LoadICNexus::StateFromFeedback() const
+      1    0.0%    0.0%  v8::internal::LGap::IsRedundant() const
+      1    0.0%    0.0%  v8::internal::LGap::IsGap() const
+      1    0.0%    0.0%  v8::internal::LCodeGenBase::PopulateDeoptimizationData(v8::internal::Handle<v8::internal::Code>)
+      1    0.0%    0.0%  v8::internal::LCodeGenBase::GetNextEmittedBlock() const
+      1    0.0%    0.0%  v8::internal::LCodeGen::RecordSafepoint(v8::internal::LPointerMap*, v8::internal::Safepoint::Kind, int, v8::internal::Safepoint::DeoptMode)
+      1    0.0%    0.0%  v8::internal::LCodeGen::GenerateBodyInstructionPost(v8::internal::LInstruction*)
+      1    0.0%    0.0%  v8::internal::LCodeGen::DoStoreKeyedExternalArray(v8::internal::LStoreKeyed*)
+      1    0.0%    0.0%  v8::internal::LCodeGen::DoLabel(v8::internal::LLabel*)
+      1    0.0%    0.0%  v8::internal::LCodeGen::DoCheckValue(v8::internal::LCheckValue*)
+      1    0.0%    0.0%  v8::internal::LCodeGen::DeoptimizeIf(v8::internal::Condition, v8::internal::LInstruction*, v8::internal::DeoptimizeReason, v8::internal::Deoptimizer::BailoutType)
+      1    0.0%    0.0%  v8::internal::LChunkBuilder::DoBasicBlock(v8::internal::HBasicBlock*, v8::internal::HBasicBlock*)
+      1    0.0%    0.0%  v8::internal::LChunk::LookupDestination(int) const
+      1    0.0%    0.0%  v8::internal::LChunk::IsGapAt(int) const
+      1    0.0%    0.0%  v8::internal::LChunk::CommitDependencies(v8::internal::Handle<v8::internal::Code>) const
+      1    0.0%    0.0%  v8::internal::LChunk::Codegen()
+      1    0.0%    0.0%  v8::internal::LAllocator::TraceAlloc(char const*, ...)
+      1    0.0%    0.0%  v8::internal::LAllocator::ProcessInstructions(v8::internal::HBasicBlock*, v8::internal::BitVector*)
+      1    0.0%    0.0%  v8::internal::LAllocator::PopulatePointerMaps()
+      1    0.0%    0.0%  v8::internal::LAllocator::InactiveToHandled(v8::internal::LiveRange*)
+      1    0.0%    0.0%  v8::internal::KeywordOrIdentifierToken(unsigned char const*, int)
+      1    0.0%    0.0%  v8::internal::JsonStringifier::Result v8::internal::JsonStringifier::Serialize_<true>(v8::internal::Handle<v8::internal::Object>, bool, v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::JsonStringifier::InitializeReplacer(v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::JSReceiver::GetPropertyAttributes(v8::internal::LookupIterator*)
+      1    0.0%    0.0%  v8::internal::JSObject::WriteToField(int, v8::internal::PropertyDetails, v8::internal::Object*)
+      1    0.0%    0.0%  v8::internal::JSObject::SetPrototype(v8::internal::Handle<v8::internal::JSObject>, v8::internal::Handle<v8::internal::Object>, bool, v8::internal::Object::ShouldThrow)
+      1    0.0%    0.0%  v8::internal::JSObject::SetOwnPropertyIgnoreAttributes(v8::internal::Handle<v8::internal::JSObject>, v8::internal::Handle<v8::internal::Name>, v8::internal::Handle<v8::internal::Object>, v8::internal::PropertyAttributes)
+      1    0.0%    0.0%  v8::internal::JSObject::New(v8::internal::Handle<v8::internal::JSFunction>, v8::internal::Handle<v8::internal::JSReceiver>, v8::internal::Handle<v8::internal::AllocationSite>)
+      1    0.0%    0.0%  v8::internal::JSObject::IsExtensible(v8::internal::Handle<v8::internal::JSObject>)
+      1    0.0%    0.0%  v8::internal::JSObject::GetElementsAccessor()
+      1    0.0%    0.0%  v8::internal::JSObject::DefineOwnPropertyIgnoreAttributes(v8::internal::LookupIterator*, v8::internal::Handle<v8::internal::Object>, v8::internal::PropertyAttributes, v8::internal::Object::ShouldThrow, v8::internal::JSObject::AccessorInfoHandling)
+      1    0.0%    0.0%  v8::internal::JSFunction::EnsureHasInitialMap(v8::internal::Handle<v8::internal::JSFunction>)
+      1    0.0%    0.0%  v8::internal::JSDate::SetValue(v8::internal::Object*, bool)
+      1    0.0%    0.0%  v8::internal::JSArrayBuffer::Setup(v8::internal::Handle<v8::internal::JSArrayBuffer>, v8::internal::Isolate*, bool, void*, unsigned long, v8::internal::SharedFlag)
+      1    0.0%    0.0%  v8::internal::IteratePromotedObjectsVisitor::VisitPointers(v8::internal::Object**, v8::internal::Object**)
+      1    0.0%    0.0%  v8::internal::IteratePromotedObjectsVisitor::VisitCodeEntry(unsigned char*)
+      1    0.0%    0.0%  v8::internal::Isolate::use_crankshaft() const
+      1    0.0%    0.0%  v8::internal::Isolate::UpdateArrayProtectorOnSetElement(v8::internal::Handle<v8::internal::JSObject>)
+      1    0.0%    0.0%  v8::internal::Isolate::CaptureSimpleStackTrace(v8::internal::Handle<v8::internal::JSReceiver>, v8::internal::FrameSkipMode, v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::IncrementalMarkingMarkingVisitor::VisitFixedArrayIncremental(v8::internal::Map*, v8::internal::HeapObject*)
+      1    0.0%    0.0%  v8::internal::IncrementalMarking::ShouldActivateEvenWithoutIdleNotification()
+      1    0.0%    0.0%  v8::internal::IncrementalMarking::RecordWriteFromCode(v8::internal::HeapObject*, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::IC::PatchCache(v8::internal::Handle<v8::internal::Name>, v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::IC::ConfigureVectorState(v8::internal::Handle<v8::internal::Name>, v8::internal::Handle<v8::internal::Map>, v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::HeapObject::IterateBody(v8::internal::InstanceType, int, v8::internal::ObjectVisitor*)
+      1    0.0%    0.0%  v8::internal::Heap::AllocateStruct(v8::internal::InstanceType)
+      1    0.0%    0.0%  v8::internal::Heap::AllocateJSObjectFromMap(v8::internal::Map*, v8::internal::PretenureFlag, v8::internal::AllocationSite*)
+      1    0.0%    0.0%  v8::internal::Heap::Allocate(v8::internal::Map*, v8::internal::AllocationSpace, v8::internal::AllocationSite*)
+      1    0.0%    0.0%  v8::internal::Heap::AdjustLiveBytes(v8::internal::HeapObject*, int, v8::internal::Heap::InvocationMode)
+      1    0.0%    0.0%  v8::internal::Handle<v8::internal::String> v8::internal::JsonParser<true>::ScanJsonString<true>()
+      1    0.0%    0.0%  v8::internal::Handle<v8::internal::JSFunction> v8::internal::Factory::New<v8::internal::JSFunction>(v8::internal::Handle<v8::internal::Map>, v8::internal::AllocationSpace)
+      1    0.0%    0.0%  v8::internal::Handle<v8::internal::ConsString> v8::internal::Factory::New<v8::internal::ConsString>(v8::internal::Handle<v8::internal::Map>, v8::internal::AllocationSpace)
+      1    0.0%    0.0%  v8::internal::HType::FromValue(v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::HOptimizedGraphBuilder::VisitVariableProxy(v8::internal::VariableProxy*)
+      1    0.0%    0.0%  v8::internal::HOptimizedGraphBuilder::VisitCallNew(v8::internal::CallNew*)
+      1    0.0%    0.0%  v8::internal::HOptimizedGraphBuilder::TryInlineApiCall(v8::internal::Handle<v8::internal::Object>, v8::internal::HValue*, v8::internal::SmallMapList*, int, v8::internal::BailoutId, v8::internal::HOptimizedGraphBuilder::ApiCallType, v8::internal::TailCallMode)
+      1    0.0%    0.0%  v8::internal::HOptimizedGraphBuilder::PropertyAccessInfo::LoadFieldMaps(v8::internal::Handle<v8::internal::Map>)
+      1    0.0%    0.0%  v8::internal::HOptimizedGraphBuilder::PropertyAccessInfo::CanAccessMonomorphic()
+      1    0.0%    0.0%  v8::internal::HOptimizedGraphBuilder::InliningAstSize(v8::internal::Handle<v8::internal::JSFunction>)
+      1    0.0%    0.0%  v8::internal::HOptimizedGraphBuilder::BuildNamedAccess(v8::internal::PropertyAccessType, v8::internal::BailoutId, v8::internal::BailoutId, v8::internal::Expression*, v8::internal::FeedbackVectorSlot, v8::internal::HValue*, v8::internal::Handle<v8::internal::Name>, v8::internal::HValue*, bool)
+      1    0.0%    0.0%  v8::internal::HOptimizedGraphBuilder::BuildCompareInstruction(v8::internal::Token::Value, v8::internal::HValue*, v8::internal::HValue*, v8::internal::Type*, v8::internal::Type*, v8::internal::Type*, v8::internal::SourcePosition, v8::internal::SourcePosition, v8::internal::HOptimizedGraphBuilder::PushBeforeSimulateBehavior, v8::internal::BailoutId)
+      1    0.0%    0.0%  v8::internal::HOptimizedGraphBuilder::BuildBinaryOperation(v8::internal::BinaryOperation*, v8::internal::HValue*, v8::internal::HValue*, v8::internal::HOptimizedGraphBuilder::PushBeforeSimulateBehavior)
+      1    0.0%    0.0%  v8::internal::HObjectAccess::SetGVNFlags(v8::internal::HValue*, v8::internal::PropertyAccessType)
+      1    0.0%    0.0%  v8::internal::HInstruction::position() const
+      1    0.0%    0.0%  v8::internal::HGraphBuilder::BuildBinaryOperation(v8::internal::Token::Value, v8::internal::HValue*, v8::internal::HValue*, v8::internal::Type*, v8::internal::Type*, v8::internal::Type*, v8::Maybe<int>, v8::internal::HAllocationMode, v8::internal::BailoutId)
+      1    0.0%    0.0%  v8::internal::HGraph::GetConstantHole()
+      1    0.0%    0.0%  v8::internal::HGlobalValueNumberingPhase::AnalyzeGraph()
+      1    0.0%    0.0%  v8::internal::HEnvironment::Initialize(int, int, int)
+      1    0.0%    0.0%  v8::internal::HEnvironment::CopyForInlining(v8::internal::Handle<v8::internal::JSFunction>, int, v8::internal::FunctionLiteral*, v8::internal::HConstant*, v8::internal::InliningKind, v8::internal::TailCallMode) const
+      1    0.0%    0.0%  v8::internal::HDeadCodeEliminationPhase::MarkLive(v8::internal::HValue*, v8::internal::ZoneList<v8::internal::HValue*>*)
+      1    0.0%    0.0%  v8::internal::HConstant::HConstant(v8::internal::Handle<v8::internal::Object>, v8::internal::Representation)
+      1    0.0%    0.0%  v8::internal::HConstant::FinalizeUniqueness()
+      1    0.0%    0.0%  v8::internal::HCompilationJob::PrepareJobImpl()
+      1    0.0%    0.0%  v8::internal::HCompareNumericAndBranch::InferRepresentation(v8::internal::HInferRepresentationPhase*)
+      1    0.0%    0.0%  v8::internal::HCheckMaps::HCheckMaps(v8::internal::HValue*, v8::internal::UniqueSet<v8::internal::Map> const*, v8::internal::HValue*)
+      1    0.0%    0.0%  v8::internal::HBasicBlock::Goto(v8::internal::HBasicBlock*, v8::internal::SourcePosition, v8::internal::FunctionState*, bool)
+      1    0.0%    0.0%  v8::internal::HBasicBlock::AddInstruction(v8::internal::HInstruction*, v8::internal::SourcePosition)
+      1    0.0%    0.0%  v8::internal::GlobalHandles::Node::CollectPhantomCallbackData(v8::internal::Isolate*, v8::internal::List<v8::internal::GlobalHandles::PendingPhantomCallback, v8::internal::FreeStoreAllocationPolicy>*)
+      1    0.0%    0.0%  v8::internal::GetICCounts(v8::internal::JSFunction*, int*, int*, int*, int*, int*)
+      1    0.0%    0.0%  v8::internal::FuncNameInferrer::PushVariableName(v8::internal::AstRawString const*)
+      1    0.0%    0.0%  v8::internal::FullCodeGenerator::VisitNoStackOverflowCheck(v8::internal::AstNode*)
+      1    0.0%    0.0%  v8::internal::FullCodeGenerator::VisitForStackValue(v8::internal::Expression*)
+      1    0.0%    0.0%  v8::internal::FullCodeGenerator::VisitCompareOperation(v8::internal::CompareOperation*)
+      1    0.0%    0.0%  v8::internal::FullCodeGenerator::PrepareForBailout(v8::internal::Expression*, v8::internal::Deoptimizer::BailoutState)
+      1    0.0%    0.0%  v8::internal::FullCodeGenerator::EmitNamedPropertyAssignment(v8::internal::Assignment*)
+      1    0.0%    0.0%  v8::internal::FreeList::Free(unsigned char*, int, v8::internal::FreeMode)
+      1    0.0%    0.0%  v8::internal::FlexibleBodyVisitor<v8::internal::StaticScavengeVisitor<(v8::internal::PromotionMode)0>, v8::internal::JSFunction::BodyDescriptorImpl<(v8::internal::JSFunction::BodyVisitingPolicy)0>, int>::Visit(v8::internal::Map*, v8::internal::HeapObject*)
+      1    0.0%    0.0%  v8::internal::FlatStringReader::PostGarbageCollection()
+      1    0.0%    0.0%  v8::internal::FixedBodyVisitor<v8::internal::StaticScavengeVisitor<(v8::internal::PromotionMode)1>, v8::internal::FixedBodyDescriptor<24, 40, 40>, int>::Visit(v8::internal::Map*, v8::internal::HeapObject*)
+      1    0.0%    0.0%  v8::internal::FindStringIndicesDispatch(v8::internal::Isolate*, v8::internal::String*, v8::internal::String*, v8::internal::ZoneList<int>*, unsigned int, v8::internal::Zone*)
+      1    0.0%    0.0%  v8::internal::FieldType::Any(v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::FeedbackVectorSpec::append(v8::internal::FeedbackVectorSlotKind)
+      1    0.0%    0.0%  v8::internal::Factory::ToBoolean(bool)
+      1    0.0%    0.0%  v8::internal::Factory::ObjectLiteralMapFromCache(v8::internal::Handle<v8::internal::Context>, int, bool*)
+      1    0.0%    0.0%  v8::internal::Factory::NumberToString(v8::internal::Handle<v8::internal::Object>, bool)
+      1    0.0%    0.0%  v8::internal::Factory::NewRawOneByteString(int, v8::internal::PretenureFlag)
+      1    0.0%    0.0%  v8::internal::Factory::NewJSTypedArray(v8::internal::ExternalArrayType, v8::internal::Handle<v8::internal::JSArrayBuffer>, unsigned long, unsigned long, v8::internal::PretenureFlag)
+      1    0.0%    0.0%  v8::internal::Factory::NewJSArrayStorage(v8::internal::Handle<v8::internal::JSArray>, int, int, v8::internal::ArrayStorageAllocationMode)
+      1    0.0%    0.0%  v8::internal::Factory::NewJSArrayBuffer(v8::internal::SharedFlag, v8::internal::PretenureFlag)
+      1    0.0%    0.0%  v8::internal::Factory::NewFunctionFromSharedFunctionInfo(v8::internal::Handle<v8::internal::SharedFunctionInfo>, v8::internal::Handle<v8::internal::Context>, v8::internal::PretenureFlag)
+      1    0.0%    0.0%  v8::internal::Factory::NewFunctionFromSharedFunctionInfo(v8::internal::Handle<v8::internal::Map>, v8::internal::Handle<v8::internal::SharedFunctionInfo>, v8::internal::Handle<v8::internal::Object>, v8::internal::PretenureFlag)
+      1    0.0%    0.0%  v8::internal::Factory::InternalizeUtf8String(v8::internal::Vector<char const>)
+      1    0.0%    0.0%  v8::internal::ExpressionClassifier<v8::internal::ParserBaseTraits<v8::internal::Parser> >::Accumulate(v8::internal::ExpressionClassifier<v8::internal::ParserBaseTraits<v8::internal::Parser> >*, unsigned int, bool)
+      1    0.0%    0.0%  v8::internal::Expression::IsMonomorphic() const
+      1    0.0%    0.0%  v8::internal::DuplicateFinder::BackupKey(v8::internal::Vector<unsigned char const>, bool)
+      1    0.0%    0.0%  v8::internal::DoubleToRadixCString(double, int)
+      1    0.0%    0.0%  v8::internal::Dictionary<v8::internal::UnseededNumberDictionary, v8::internal::UnseededNumberDictionaryShape, unsigned int>::AtPut(v8::internal::Handle<v8::internal::UnseededNumberDictionary>, unsigned int, v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::DescriptorArray::CopyFrom(int, v8::internal::DescriptorArray*)
+      1    0.0%    0.0%  v8::internal::DependentCode::IsEmpty(v8::internal::DependentCode::DependencyGroup)
+      1    0.0%    0.0%  v8::internal::DependentCode::Insert(v8::internal::Handle<v8::internal::DependentCode>, v8::internal::DependentCode::DependencyGroup, v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::Deoptimizer::GetDeoptimizationEntry(v8::internal::Isolate*, int, v8::internal::Deoptimizer::BailoutType, v8::internal::Deoptimizer::GetEntryMode)
+      1    0.0%    0.0%  v8::internal::CreateObjectLiteralBoilerplate(v8::internal::Isolate*, v8::internal::Handle<v8::internal::LiteralsArray>, v8::internal::Handle<v8::internal::FixedArray>, bool)
+      1    0.0%    0.0%  v8::internal::Context::AddOptimizedFunction(v8::internal::JSFunction*)
+      1    0.0%    0.0%  v8::internal::ConsString* v8::internal::String::VisitFlat<v8::Utf8WriterVisitor>(v8::Utf8WriterVisitor*, v8::internal::String*, int)
+      1    0.0%    0.0%  v8::internal::ConsString* v8::internal::String::VisitFlat<v8::Utf8LengthHelper::Visitor>(v8::Utf8LengthHelper::Visitor*, v8::internal::String*, int)
+      1    0.0%    0.0%  v8::internal::Compiler::PostInstantiation(v8::internal::Handle<v8::internal::JSFunction>, v8::internal::PretenureFlag)
+      1    0.0%    0.0%  v8::internal::Compiler::ParseAndAnalyze(v8::internal::ParseInfo*)
+      1    0.0%    0.0%  v8::internal::Compiler::NextCompilationTier(v8::internal::JSFunction*)
+      1    0.0%    0.0%  v8::internal::Compiler::GetSharedFunctionInfo(v8::internal::FunctionLiteral*, v8::internal::Handle<v8::internal::Script>, v8::internal::CompilationInfo*)
+      1    0.0%    0.0%  v8::internal::Compiler::Analyze(v8::internal::ParseInfo*)
+      1    0.0%    0.0%  v8::internal::CompilationJob::RegisterWeakObjectsInOptimizedCode(v8::internal::Handle<v8::internal::Code>)
+      1    0.0%    0.0%  v8::internal::CompilationInfo::~CompilationInfo()
+      1    0.0%    0.0%  v8::internal::CompilationDependencies::Set(v8::internal::Handle<v8::internal::Object>, v8::internal::Handle<v8::internal::DependentCode>)
+      1    0.0%    0.0%  v8::internal::CompilationCacheTable::Age()
+      1    0.0%    0.0%  v8::internal::CodeStub::FindCodeInCache(v8::internal::Code**)
+      1    0.0%    0.0%  v8::internal::Code::set_type_feedback_info(v8::internal::Object*, v8::internal::WriteBarrierMode)
+      1    0.0%    0.0%  v8::internal::Code::WeakCellFor(v8::internal::Handle<v8::internal::Code>)
+      1    0.0%    0.0%  v8::internal::CallOptimization::AnalyzePossibleApiFunction(v8::internal::Handle<v8::internal::JSFunction>)
+      1    0.0%    0.0%  v8::internal::Builtin_TypedArrayPrototypeBuffer(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Builtin_JsonStringify(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Builtin_Impl_TypedArrayPrototypeBuffer(v8::internal::BuiltinArguments, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Builtin_Impl_ArraySplice(v8::internal::BuiltinArguments, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Builtin_Impl_ArrayConcat(v8::internal::BuiltinArguments, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Builtin_HandleApiCall(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::BitsetType::Lub(v8::internal::Type*)
+      1    0.0%    0.0%  v8::internal::BitVector::Iterator::Advance()
+      1    0.0%    0.0%  v8::internal::BinaryOpICState::Update(v8::internal::Handle<v8::internal::Object>, v8::internal::Handle<v8::internal::Object>, v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::BinaryOpIC::Transition(v8::internal::Handle<v8::internal::AllocationSite>, v8::internal::Handle<v8::internal::Object>, v8::internal::Handle<v8::internal::Object>)
+      1    0.0%    0.0%  v8::internal::AstValueFactory::AstRawStringCompare(void*, void*)
+      1    0.0%    0.0%  v8::internal::AstValue::Internalize(v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::AstTyper::VisitNoStackOverflowCheck(v8::internal::AstNode*)
+      1    0.0%    0.0%  v8::internal::AstTyper::VisitBinaryOperation(v8::internal::BinaryOperation*)
+      1    0.0%    0.0%  v8::internal::AstTyper::AstTyper(v8::internal::Isolate*, v8::internal::Zone*, v8::internal::Handle<v8::internal::JSFunction>, v8::internal::DeclarationScope*, v8::internal::BailoutId, v8::internal::FunctionLiteral*, v8::internal::AstTypeBounds*)
+      1    0.0%    0.0%  v8::internal::Assembler::pushq(v8::internal::Register)
+      1    0.0%    0.0%  v8::internal::Assembler::j(v8::internal::Condition, v8::internal::Label*, v8::internal::Label::Distance)
+      1    0.0%    0.0%  v8::internal::Assembler::emit_operand(int, v8::internal::Operand const&)
+      1    0.0%    0.0%  v8::internal::Assembler::emit_mov(v8::internal::Register, v8::internal::Operand const&, int)
+      1    0.0%    0.0%  v8::internal::Assembler::emit_mov(v8::internal::Register, v8::internal::Immediate, int)
+      1    0.0%    0.0%  v8::internal::Assembler::call(unsigned char*)
+      1    0.0%    0.0%  v8::internal::AllocationSiteUsageContext::ShouldCreateMemento(v8::internal::Handle<v8::internal::JSObject>)
+      1    0.0%    0.0%  v8::internal::Accessors::ArrayLengthSetter(v8::Local<v8::Name>, v8::Local<v8::Value>, v8::PropertyCallbackInfo<void> const&)
+      1    0.0%    0.0%  v8::internal::Accessors::ArrayLengthGetter(v8::Local<v8::Name>, v8::PropertyCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  v8::internal::(anonymous namespace)::RecordFunctionCompilation(v8::internal::CodeEventListener::LogEventsAndTags, v8::internal::CompilationInfo*)
+      1    0.0%    0.0%  v8::internal::(anonymous namespace)::ProbeInstantiationsCache(v8::internal::Isolate*, int)
+      1    0.0%    0.0%  v8::internal::(anonymous namespace)::GetSimpleHash(v8::internal::Object*)
+      1    0.0%    0.0%  v8::internal::(anonymous namespace)::GetOptimizedCode(v8::internal::Handle<v8::internal::JSFunction>, v8::internal::Compiler::ConcurrencyMode, v8::internal::BailoutId, v8::internal::JavaScriptFrame*)
+      1    0.0%    0.0%  v8::internal::(anonymous namespace)::GenerateUnoptimizedCode(v8::internal::CompilationInfo*)
+      1    0.0%    0.0%  v8::internal::(anonymous namespace)::FastElementsAccessor<v8::internal::(anonymous namespace)::FastHoleyObjectElementsAccessor, v8::internal::(anonymous namespace)::ElementsKindTraits<(v8::internal::ElementsKind)3> >::DeleteCommon(v8::internal::Handle<v8::internal::JSObject>, unsigned int, v8::internal::Handle<v8::internal::FixedArrayBase>)
+      1    0.0%    0.0%  v8::internal::(anonymous namespace)::ElementsAccessorBase<v8::internal::(anonymous namespace)::TypedElementsAccessor<(v8::internal::ElementsKind)11, unsigned char>, v8::internal::(anonymous namespace)::ElementsKindTraits<(v8::internal::ElementsKind)11> >::Get(v8::internal::Handle<v8::internal::JSObject>, unsigned int)
+      1    0.0%    0.0%  v8::internal::(anonymous namespace)::ElementsAccessorBase<v8::internal::(anonymous namespace)::FastPackedObjectElementsAccessor, v8::internal::(anonymous namespace)::ElementsKindTraits<(v8::internal::ElementsKind)2> >::Splice(v8::internal::Handle<v8::internal::JSArray>, unsigned int, unsigned int, v8::internal::Arguments*, unsigned int)
+      1    0.0%    0.0%  v8::internal::(anonymous namespace)::ElementsAccessorBase<v8::internal::(anonymous namespace)::FastPackedObjectElementsAccessor, v8::internal::(anonymous namespace)::ElementsKindTraits<(v8::internal::ElementsKind)2> >::Slice(v8::internal::Handle<v8::internal::JSObject>, unsigned int, unsigned int)
+      1    0.0%    0.0%  v8::internal::(anonymous namespace)::ElementsAccessorBase<v8::internal::(anonymous namespace)::FastPackedObjectElementsAccessor, v8::internal::(anonymous namespace)::ElementsKindTraits<(v8::internal::ElementsKind)2> >::SetLengthImpl(v8::internal::Isolate*, v8::internal::Handle<v8::internal::JSArray>, unsigned int, v8::internal::Handle<v8::internal::FixedArrayBase>)
+      1    0.0%    0.0%  v8::base::TemplateHashMapImpl<v8::base::DefaultAllocationPolicy>::Resize(v8::base::DefaultAllocationPolicy)
+      1    0.0%    0.0%  v8::Value::IsUint8Array() const
+      1    0.0%    0.0%  v8::Value::IsObject() const
+      1    0.0%    0.0%  v8::Value::IsFunction() const
+      1    0.0%    0.0%  v8::V8::GetEternal(v8::Isolate*, int)
+      1    0.0%    0.0%  v8::Uint8Array::New(v8::Local<v8::ArrayBuffer>, unsigned long, unsigned long)
+      1    0.0%    0.0%  v8::Object::Get(v8::Local<v8::Context>, v8::Local<v8::Value>)
+      1    0.0%    0.0%  v8::Isolate::GetCurrentContext()
+      1    0.0%    0.0%  v8::HandleScope::HandleScope(v8::Isolate*)
+      1    0.0%    0.0%  v8::Function::Call(v8::Local<v8::Value>, int, v8::Local<v8::Value>*)
+      1    0.0%    0.0%  v8::Function::Call(v8::Local<v8::Context>, v8::Local<v8::Value>, int, v8::Local<v8::Value>*)
+      1    0.0%    0.0%  v8::Context::Exit()
+      1    0.0%    0.0%  v8::Context::Enter()
+      1    0.0%    0.0%  v8::ArrayBuffer::New(v8::Isolate*, void*, unsigned long, v8::ArrayBufferCreationMode)
+      1    0.0%    0.0%  unibrow::Ecma262UnCanonicalize::Convert(unsigned int, unsigned int, unsigned int*, bool*)
+      1    0.0%    0.0%  std::__1::enable_if<(__is_forward_iterator<unsigned char*>::value) && (is_constructible<unsigned char, std::__1::iterator_traits<unsigned char*>::reference>::value), void>::type std::__1::vector<unsigned char, v8::internal::zone_allocator<unsigned char> >::assign<unsigned char*>(unsigned char*, unsigned char*)
+      1    0.0%    0.0%  node::crypto::Hmac::~Hmac()
+      1    0.0%    0.0%  node::crypto::Hmac::HmacInit(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  node::crypto::CipherBase::Update(char const*, int, unsigned char**, int*)
+      1    0.0%    0.0%  node::StringBytes::Write(v8::Isolate*, char*, unsigned long, v8::Local<v8::Value>, node::encoding, int*)
+      1    0.0%    0.0%  node::StreamWrap::OnReadCommon(uv_stream_s*, long, uv_buf_t const*, uv_handle_type)
+      1    0.0%    0.0%  node::StreamWrap::OnAllocImpl(unsigned long, uv_buf_t*, void*)
+      1    0.0%    0.0%  node::StreamWrap::OnAlloc(uv_handle_s*, unsigned long, uv_buf_t*)
+      1    0.0%    0.0%  node::StreamBase::EmitData(long, v8::Local<v8::Object>, v8::Local<v8::Object>)
+      1    0.0%    0.0%  node::LStat(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  node::FStat(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  node::Environment::PrintSyncTrace() const
+      1    0.0%    0.0%  node::BuildStatsObject(node::Environment*, uv_stat_t const*)
+      1    0.0%    0.0%  node::Buffer::Base64Slice(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  int v8::internal::SlotSet::Iterate<v8::internal::RememberedSet<(v8::internal::PointerDirection)1>::ClearInvalidSlots(v8::internal::Heap*)::'lambda0'(unsigned char*)>(v8::internal::RememberedSet<(v8::internal::PointerDirection)1>::ClearInvalidSlots(v8::internal::Heap*)::'lambda0'(unsigned char*))
+      1    0.0%    0.0%  int v8::internal::FlexibleBodyVisitor<v8::internal::StaticScavengeVisitor<(v8::internal::PromotionMode)1>, v8::internal::FlexibleBodyDescriptor<8>, int>::VisitSpecialized<56>(v8::internal::Map*, v8::internal::HeapObject*)
+      1    0.0%    0.0%  double v8::internal::InternalStringToInt<unsigned char const*, unsigned char const*>(v8::internal::UnicodeCache*, unsigned char const*, unsigned char const*, int)
+      1    0.0%    0.0%  _uv__work_done
+      1    0.0%    0.0%  _uv__stream_io
+      1    0.0%    0.0%  _uv__fs_work
+      1    0.0%    0.0%  _obj_name_LHASH_COMP
+      1    0.0%    0.0%  _getrn
+      1    0.0%    0.0%  _engine_table_select
+      1    0.0%    0.0%  _HMAC_Init_ex
+      1    0.0%    0.0%  _EVP_MD_CTX_init
+      1    0.0%    0.0%  _EVP_CipherUpdate
+      1    0.0%    0.0%  _CRYPTO_ctr128_encrypt_ctr32
+      1    0.0%    0.0%  _BN_usub
+      1    0.0%    0.0%  _BN_num_bits
+      1    0.0%    0.0%  _BN_mod_mul_montgomery
+
+ [Summary]:
+   ticks  total  nonlib   name
+   1513   34.1%   36.7%  JavaScript
+   2096   47.3%   50.9%  C++
+    228    5.1%    5.5%  GC
+    313    7.1%          Shared libraries
+    510   11.5%          Unaccounted
+
+ [C++ entry points]:
+   ticks    cpp   total   name
+    892   44.5%   20.1%  v8::internal::Builtin_HandleApiCall(int, v8::internal::Object**, v8::internal::Isolate*)
+    192    9.6%    4.3%  v8::internal::Runtime_CompileOptimized_Concurrent(int, v8::internal::Object**, v8::internal::Isolate*)
+     94    4.7%    2.1%  v8::internal::Runtime_CompileLazy(int, v8::internal::Object**, v8::internal::Isolate*)
+     91    4.5%    2.1%  v8::internal::Runtime_StackGuard(int, v8::internal::Object**, v8::internal::Isolate*)
+     72    3.6%    1.6%  v8::internal::Runtime_InstanceOf(int, v8::internal::Object**, v8::internal::Isolate*)
+     45    2.2%    1.0%  v8::internal::Runtime_KeyedGetProperty(int, v8::internal::Object**, v8::internal::Isolate*)
+     42    2.1%    0.9%  v8::internal::Runtime_AllocateInNewSpace(int, v8::internal::Object**, v8::internal::Isolate*)
+     28    1.4%    0.6%  v8::internal::Runtime_NotifyDeoptimized(int, v8::internal::Object**, v8::internal::Isolate*)
+     25    1.2%    0.6%  v8::internal::Runtime_StoreIC_Miss(int, v8::internal::Object**, v8::internal::Isolate*)
+     25    1.2%    0.6%  v8::internal::Builtin_JsonStringify(int, v8::internal::Object**, v8::internal::Isolate*)
+     24    1.2%    0.5%  v8::internal::Runtime_AllocateInTargetSpace(int, v8::internal::Object**, v8::internal::Isolate*)
+     23    1.1%    0.5%  v8::internal::Runtime_LoadIC_Miss(int, v8::internal::Object**, v8::internal::Isolate*)
+     23    1.1%    0.5%  v8::internal::Runtime_CreateObjectLiteral(int, v8::internal::Object**, v8::internal::Isolate*)
+     22    1.1%    0.5%  v8::internal::Runtime_DefineDataPropertyInLiteral(int, v8::internal::Object**, v8::internal::Isolate*)
+     21    1.0%    0.5%  v8::internal::Runtime_Interrupt(int, v8::internal::Object**, v8::internal::Isolate*)
+     20    1.0%    0.5%  v8::internal::Runtime_NewClosure_Tenured(int, v8::internal::Object**, v8::internal::Isolate*)
+     20    1.0%    0.5%  v8::internal::Builtin_ArrayShift(int, v8::internal::Object**, v8::internal::Isolate*)
+     17    0.8%    0.4%  v8::internal::Runtime_TryInstallOptimizedCode(int, v8::internal::Object**, v8::internal::Isolate*)
+     17    0.8%    0.4%  v8::internal::Builtin_ArrayBufferConstructor_ConstructStub(int, v8::internal::Object**, v8::internal::Isolate*)
+     16    0.8%    0.4%  v8::internal::Runtime_KeyedStoreIC_Miss(int, v8::internal::Object**, v8::internal::Isolate*)
+     14    0.7%    0.3%  v8::internal::Runtime_StrictEqual(int, v8::internal::Object**, v8::internal::Isolate*)
+     14    0.7%    0.3%  v8::internal::Runtime_GenericHash(int, v8::internal::Object**, v8::internal::Isolate*)
+     13    0.6%    0.3%  v8::internal::Builtin_DateConstructor_ConstructStub(int, v8::internal::Object**, v8::internal::Isolate*)
+     12    0.6%    0.3%  v8::internal::Runtime_GetProperty(int, v8::internal::Object**, v8::internal::Isolate*)
+     11    0.5%    0.2%  v8::internal::Runtime_BinaryOpIC_Miss(int, v8::internal::Object**, v8::internal::Isolate*)
+     11    0.5%    0.2%  sha256_block_data_order_avx2
+      9    0.4%    0.2%  v8::internal::Runtime_SetProperty(int, v8::internal::Object**, v8::internal::Isolate*)
+      9    0.4%    0.2%  v8::internal::Runtime_KeyedLoadIC_Miss(int, v8::internal::Object**, v8::internal::Isolate*)
+      9    0.4%    0.2%  v8::internal::Builtin_JsonParse(int, v8::internal::Object**, v8::internal::Isolate*)
+      8    0.4%    0.2%  v8::internal::Runtime_CreateListFromArrayLike(int, v8::internal::Object**, v8::internal::Isolate*)
+      7    0.3%    0.2%  v8::internal::Builtin_ArraySlice(int, v8::internal::Object**, v8::internal::Isolate*)
+      7    0.3%    0.2%  v8::External::Value() const
+      6    0.3%    0.1%  v8::internal::Runtime_StringReplaceGlobalRegExpWithString(int, v8::internal::Object**, v8::internal::Isolate*)
+      6    0.3%    0.1%  v8::internal::Runtime_NewObject(int, v8::internal::Object**, v8::internal::Isolate*)
+      6    0.3%    0.1%  v8::internal::Runtime_ClassOf(int, v8::internal::Object**, v8::internal::Isolate*)
+      6    0.3%    0.1%  v8::internal::Builtin_ObjectAssign(int, v8::internal::Object**, v8::internal::Isolate*)
+      5    0.2%    0.1%  v8::internal::Runtime_CreateDataProperty(int, v8::internal::Object**, v8::internal::Isolate*)
+      5    0.2%    0.1%  v8::internal::Runtime_Compare(int, v8::internal::Object**, v8::internal::Isolate*)
+      4    0.2%    0.1%  v8::internal::Runtime_StringEqual(int, v8::internal::Object**, v8::internal::Isolate*)
+      4    0.2%    0.1%  v8::internal::Builtin_ErrorConstructor(int, v8::internal::Object**, v8::internal::Isolate*)
+      4    0.2%    0.1%  v8::internal::Builtin_DateNow(int, v8::internal::Object**, v8::internal::Isolate*)
+      4    0.2%    0.1%  v8::internal::Builtin_ArrayConcat(int, v8::internal::Object**, v8::internal::Isolate*)
+      3    0.1%    0.1%  v8::internal::Runtime_ToBooleanIC_Miss(int, v8::internal::Object**, v8::internal::Isolate*)
+      3    0.1%    0.1%  v8::internal::Runtime_StringIndexOf(int, v8::internal::Object**, v8::internal::Isolate*)
+      3    0.1%    0.1%  v8::internal::Runtime_NewArray(int, v8::internal::Object**, v8::internal::Isolate*)
+      3    0.1%    0.1%  v8::internal::Runtime_MapIteratorNext(int, v8::internal::Object**, v8::internal::Isolate*)
+      3    0.1%    0.1%  v8::internal::Runtime_CompareIC_Miss(int, v8::internal::Object**, v8::internal::Isolate*)
+      3    0.1%    0.1%  v8::internal::Builtin_ObjectKeys(int, v8::internal::Object**, v8::internal::Isolate*)
+      3    0.1%    0.1%  v8::ArrayBufferView::ByteLength()
+      3    0.1%    0.1%  v8::ArrayBuffer::GetContents()
+      3    0.1%    0.1%  _aes_ctr_cipher
+      2    0.1%    0.0%  v8::internal::TransitionArray::GetPrototypeTransition(v8::internal::Handle<v8::internal::Map>, v8::internal::Handle<v8::internal::Object>)
+      2    0.1%    0.0%  v8::internal::Runtime_StringToLowerCaseI18N(int, v8::internal::Object**, v8::internal::Isolate*)
+      2    0.1%    0.0%  v8::internal::Runtime_StringParseInt(int, v8::internal::Object**, v8::internal::Isolate*)
+      2    0.1%    0.0%  v8::internal::Runtime_StringCharCodeAtRT(int, v8::internal::Object**, v8::internal::Isolate*)
+      2    0.1%    0.0%  v8::internal::PrototypeIterator::Advance()
+      2    0.1%    0.0%  v8::internal::JSTypedArray::type()
+      2    0.1%    0.0%  v8::internal::JSTypedArray::GetBuffer()
+      2    0.1%    0.0%  v8::internal::Heap::AllocateJSObject(v8::internal::JSFunction*, v8::internal::PretenureFlag, v8::internal::AllocationSite*)
+      2    0.1%    0.0%  v8::internal::Builtin_TypedArrayPrototypeBuffer(int, v8::internal::Object**, v8::internal::Isolate*)
+      2    0.1%    0.0%  v8::internal::Builtin_ObjectDefineProperty(int, v8::internal::Object**, v8::internal::Isolate*)
+      2    0.1%    0.0%  v8::internal::Builtin_NumberPrototypeToString(int, v8::internal::Object**, v8::internal::Isolate*)
+      2    0.1%    0.0%  v8::internal::Builtin_FunctionConstructor(int, v8::internal::Object**, v8::internal::Isolate*)
+      2    0.1%    0.0%  v8::internal::Builtin_ArrayUnshift(int, v8::internal::Object**, v8::internal::Isolate*)
+      2    0.1%    0.0%  v8::internal::Builtin_ArraySplice(int, v8::internal::Object**, v8::internal::Isolate*)
+      2    0.1%    0.0%  v8::Value::IsExternal() const
+      2    0.1%    0.0%  v8::String::WriteUtf8(char*, int, int*, int) const
+      2    0.1%    0.0%  v8::Object::InternalFieldCount()
+      2    0.1%    0.0%  v8::Function::NewInstance(v8::Local<v8::Context>, int, v8::Local<v8::Value>*) const
+      2    0.1%    0.0%  node::Buffer::Copy(v8::FunctionCallbackInfo<v8::Value> const&)
+      2    0.1%    0.0%  _aesni_ctr32_encrypt_blocks
+      1    0.0%    0.0%  void v8::internal::String::WriteToFlat<unsigned char>(v8::internal::String*, unsigned char*, int, int)
+      1    0.0%    0.0%  void v8::Utf8WriterVisitor::Visit<unsigned char>(unsigned char const*, int)
+      1    0.0%    0.0%  v8::internal::String::ToCString(v8::internal::AllowNullsFlag, v8::internal::RobustnessFlag, int, int, int*)
+      1    0.0%    0.0%  v8::internal::Runtime_TransitionStoreIC_MissFromStubFailure(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_StringToNumber(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_StringBuilderJoin(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_StoreCallbackProperty(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_RegExpExec(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_OrdinaryHasInstance(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_NumberToStringSkipCache(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_NotifyStubFailure(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_NewClosure(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_MoveArrayContents(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_MapIteratorInitialize(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_LoadGlobalIC_Miss(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_DeleteProperty_Strict(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_DeleteProperty_Sloppy(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_CreateRegExpLiteral(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Runtime_AllocateHeapNumber(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Object::GetPropertyWithAccessor(v8::internal::LookupIterator*)
+      1    0.0%    0.0%  v8::internal::MaybeHandle<v8::internal::Object> v8::internal::(anonymous namespace)::HandleApiCallHelper<false>(v8::internal::Isolate*, v8::internal::Handle<v8::internal::HeapObject>, v8::internal::Handle<v8::internal::HeapObject>, v8::internal::Handle<v8::internal::FunctionTemplateInfo>, v8::internal::Handle<v8::internal::Object>, v8::internal::BuiltinArguments)
+      1    0.0%    0.0%  v8::internal::LookupIterator::State v8::internal::LookupIterator::LookupInRegularHolder<false>(v8::internal::Map*, v8::internal::JSReceiver*)
+      1    0.0%    0.0%  v8::internal::JSObject::MigrateToMap(v8::internal::Handle<v8::internal::JSObject>, v8::internal::Handle<v8::internal::Map>, int)
+      1    0.0%    0.0%  v8::internal::JSArrayBuffer::Setup(v8::internal::Handle<v8::internal::JSArrayBuffer>, v8::internal::Isolate*, bool, void*, unsigned long, v8::internal::SharedFlag)
+      1    0.0%    0.0%  v8::internal::IncrementalMarking::RecordWriteFromCode(v8::internal::HeapObject*, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Heap::InitializeJSObjectBody(v8::internal::JSObject*, v8::internal::Map*, int)
+      1    0.0%    0.0%  v8::internal::Heap::AllocateFixedTypedArrayWithExternalPointer(int, v8::internal::ExternalArrayType, void*, v8::internal::PretenureFlag)
+      1    0.0%    0.0%  v8::internal::Factory::NewRawOneByteString(int, v8::internal::PretenureFlag)
+      1    0.0%    0.0%  v8::internal::Factory::NewJSTypedArray(v8::internal::ExternalArrayType, v8::internal::Handle<v8::internal::JSArrayBuffer>, unsigned long, unsigned long, v8::internal::PretenureFlag)
+      1    0.0%    0.0%  v8::internal::ConsString* v8::internal::String::VisitFlat<v8::Utf8WriterVisitor>(v8::Utf8WriterVisitor*, v8::internal::String*, int)
+      1    0.0%    0.0%  v8::internal::ConsString* v8::internal::String::VisitFlat<v8::Utf8LengthHelper::Visitor>(v8::Utf8LengthHelper::Visitor*, v8::internal::String*, int)
+      1    0.0%    0.0%  v8::internal::Code::CopyFrom(v8::internal::CodeDesc const&)
+      1    0.0%    0.0%  v8::internal::Builtin_Impl_ArraySplice(v8::internal::BuiltinArguments, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::internal::Builtin_ArrayPop(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    0.0%    0.0%  v8::Value::IsUint8Array() const
+      1    0.0%    0.0%  v8::Value::IsObject() const
+      1    0.0%    0.0%  v8::Object::SetPrototype(v8::Local<v8::Context>, v8::Local<v8::Value>)
+      1    0.0%    0.0%  v8::HandleScope::Initialize(v8::Isolate*)
+      1    0.0%    0.0%  v8::ArrayBuffer::New(v8::Isolate*, void*, unsigned long, v8::ArrayBufferCreationMode)
+      1    0.0%    0.0%  node::crypto::Hmac::HmacInit(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  node::crypto::CipherBase::Update(char const*, int, unsigned char**, int*)
+      1    0.0%    0.0%  node::StringBytes::Write(v8::Isolate*, char*, unsigned long, v8::Local<v8::Value>, node::encoding, int*)
+      1    0.0%    0.0%  node::InternalModuleStat(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  node::Environment::PrintSyncTrace() const
+      1    0.0%    0.0%  node::BuildStatsObject(node::Environment*, uv_stat_t const*)
+      1    0.0%    0.0%  _uv__fs_work
+      1    0.0%    0.0%  _obj_name_LHASH_COMP
+      1    0.0%    0.0%  _getrn
+      1    0.0%    0.0%  _engine_table_select
+      1    0.0%    0.0%  _HMAC_Init_ex
+      1    0.0%    0.0%  _EVP_MD_CTX_init
+      1    0.0%    0.0%  _EVP_CipherUpdate
+      1    0.0%    0.0%  _CRYPTO_ctr128_encrypt_ctr32
+      1    0.0%    0.0%  _BN_usub
+      1    0.0%    0.0%  _BN_num_bits
+      1    0.0%    0.0%  _BN_mod_mul_montgomery
+
+ [Bottom up (heavy) profile]:
+  Note: percentage shows a share of a particular caller in the total
+  amount of its parent calls.
+  Callers occupying less than 2.0% are not shown.
+
+   ticks parent  name
+    510   11.5%  UNKNOWN
+     13    2.5%    LazyCompile: *stat module.js:23:14
+     12   92.3%      LazyCompile: ~Module._findPath module.js:148:28
+      5   41.7%        LazyCompile: ~Module._resolveFilename module.js:456:35
+      5  100.0%          LazyCompile: ~Module._load module.js:413:24
+      5  100.0%            LazyCompile: *Module.require module.js:495:36
+      5   41.7%        LazyCompile: *Module._load module.js:413:24
+      5  100.0%          LazyCompile: *Module.require module.js:495:36
+      5  100.0%            LazyCompile: *require internal/module.js:17:19
+      2   16.7%        LazyCompile: *Module._resolveFilename module.js:456:35
+      2  100.0%          LazyCompile: ~Module._load module.js:413:24
+      2  100.0%            LazyCompile: *Module.require module.js:495:36
+      1    7.7%      LazyCompile: ~tryFile module.js:121:17
+      1  100.0%        LazyCompile: ~tryExtensions module.js:136:23
+      1  100.0%          LazyCompile: ~Module._findPath module.js:148:28
+      1  100.0%            LazyCompile: ~Module._resolveFilename module.js:456:35
+
+    363    8.2%  LazyCompile: *encode /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/base-x/index.js:19:19
+    188   51.8%    LazyCompile: *toB58String /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/multihashes/src/index.js:19:44
+     89   47.3%      LazyCompile: *module.exports.get /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/wantlist/entry.js:29:28
+     89  100.0%        Builtin: ObjectProtoToString
+     87   97.8%          LazyCompile: *__dirname.get /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:23:28
+     87  100.0%            Builtin: ObjectProtoToString
+      2    2.2%          LazyCompile: ~__dirname.get /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:23:28
+      2  100.0%            Builtin: ObjectProtoToString
+     15    8.0%      LazyCompile: *cancel /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/message/index.js:48:10
+     15  100.0%        LazyCompile: ~entries.forEach /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/wantmanager/msg-queue.js:32:21
+     15  100.0%          LazyCompile: *InnerArrayForEach native array.js:777:27
+     15  100.0%            LazyCompile: *forEach native array.js:795:22
+     12    6.4%      LazyCompile: *wantlistContains /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/ledger.js:39:20
+     12  100.0%        LazyCompile: ~_processBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:146:17
+      7   58.3%          LazyCompile: ~receivedBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:141:17
+      5   71.4%            LazyCompile: ~block.key /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:182:17
+      2   28.6%            LazyCompile: ~block.key /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/index.js:276:23
+      5   41.7%          LazyCompile: *receivedBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:141:17
+      4   80.0%            LazyCompile: ~block.key /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:182:17
+      1   20.0%            LazyCompile: ~block.key /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/index.js:276:23
+     11    5.9%      LazyCompile: *taskKey /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:150:18
+      5   45.5%        LazyCompile: ~remove /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:130:10
+      5  100.0%          LazyCompile: ~_processWantlist /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:156:20
+      5  100.0%            LazyCompile: ~pull.asyncMap /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:133:23
+      3   27.3%        LazyCompile: ~push /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:68:8
+      2   66.7%          LazyCompile: ~_processBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:146:17
+      2  100.0%            LazyCompile: ~receivedBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:141:17
+      1   33.3%          LazyCompile: ~blockstore.has /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:167:38
+      1  100.0%            LazyCompile: *exists /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/interface-pull-blob-store/lib/index.js:51:27
+      3   27.3%        LazyCompile: ~get key /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:19:11
+      2   66.7%          LazyCompile: ~push /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:68:8
+      1   50.0%            LazyCompile: ~blockstore.has /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:167:38
+      1   50.0%            LazyCompile: ~_processBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:146:17
+      1   33.3%          LazyCompile: ~pop /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:105:7
+      1  100.0%            LazyCompile: ~whilst /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:59:7
+      7    3.7%      LazyCompile: ~addEntry /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/message/index.js:24:12
+      5   71.4%        LazyCompile: ~dec.wantlist.entries.forEach /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/message/index.js:103:32
+      4   80.0%          LazyCompile: *InnerArrayForEach native array.js:777:27
+      4  100.0%            LazyCompile: *forEach native array.js:795:22
+      1   20.0%          LazyCompile: ~InnerArrayForEach native array.js:777:27
+      1  100.0%            LazyCompile: *forEach native array.js:795:22
+      2   28.6%        LazyCompile: ~entries.forEach /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/wantmanager/msg-queue.js:32:21
+      2  100.0%          LazyCompile: ~InnerArrayForEach native array.js:777:27
+      2  100.0%            LazyCompile: *forEach native array.js:795:22
+      7    3.7%      LazyCompile: *_processWantlist /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:156:20
+      7  100.0%        LazyCompile: ~pull.asyncMap /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:133:23
+      7  100.0%          LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/throughs/async-map.js:23:29
+      7  100.0%            LazyCompile: *<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/sources/values.js:15:19
+      6    3.2%      LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/spdy/framer.js:85:25
+      6  100.0%        LazyCompile: ~dec.wantlist.entries.forEach /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/message/index.js:103:32
+      6  100.0%          LazyCompile: *InnerArrayForEach native array.js:777:27
+      6  100.0%            LazyCompile: *forEach native array.js:795:22
+      5    2.7%      LazyCompile: ~add /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/wantlist/index.js:16:7
+      3   60.0%        LazyCompile: ~wants /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/ledger.js:31:9
+      3  100.0%          LazyCompile: ~_processWantlist /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:156:20
+      3  100.0%            LazyCompile: ~pull.asyncMap /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:133:23
+      2   40.0%        LazyCompile: ~pull.through /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/wantmanager/index.js:35:20
+      2  100.0%          LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/throughs/through.js:16:33
+      2  100.0%            LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/throughs/map.js:11:28
+      4    2.1%      LazyCompile: ~cleanupListener /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/index.js:188:29
+      4  100.0%        LazyCompile: ~blockListeners.(anonymous function) /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/index.js:211:30
+      4  100.0%          LazyCompile: ~g events.js:288:13
+      2   50.0%            LazyCompile: *emit events.js:136:44
+      1   25.0%            LazyCompile: ~emitOne events.js:94:17
+      1   25.0%            LazyCompile: *emitOne events.js:94:17
+      4    2.1%      LazyCompile: *module.exports.get /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/message/entry.js:29:28
+      4  100.0%        Builtin: ObjectProtoToString
+      4  100.0%          LazyCompile: ~arrayWantlist.map /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:125:41
+      4  100.0%            LazyCompile: *map native array.js:833:18
+      4    2.1%      LazyCompile: *addEntry /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/message/index.js:24:12
+      2   50.0%        LazyCompile: ~dec.wantlist.entries.forEach /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/message/index.js:103:32
+      2  100.0%          LazyCompile: ~InnerArrayForEach native array.js:777:27
+      2  100.0%            LazyCompile: *forEach native array.js:795:22
+      1   25.0%        LazyCompile: ~entries.forEach /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/wantmanager/msg-queue.js:32:21
+      1  100.0%          LazyCompile: ~InnerArrayForEach native array.js:777:27
+      1  100.0%            LazyCompile: *forEach native array.js:795:22
+      1   25.0%        LazyCompile: ~cancel /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/message/index.js:48:10
+      1  100.0%          LazyCompile: ~entries.forEach /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/wantmanager/msg-queue.js:32:21
+      1  100.0%            LazyCompile: ~InnerArrayForEach native array.js:777:27
+    143   39.4%    LazyCompile: *toB58String /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/peer-id/node_modules/multihashes/lib/index.js:19:43
+     96   67.1%      LazyCompile: *__dirname.get /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:23:28
+     96  100.0%        Builtin: ObjectProtoToString
+     89   92.7%          LazyCompile: *Array.from.map /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:144:58
+     89  100.0%            LazyCompile: *map native array.js:833:18
+      4    4.2%          LazyCompile: *push /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:68:8
+      4  100.0%            LazyCompile: ~_processBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:146:17
+      2    2.1%          LazyCompile: ~push /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:68:8
+      2  100.0%            LazyCompile: ~_processBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:146:17
+     14    9.8%      LazyCompile: *messageReceived /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:106:19
+     14  100.0%        LazyCompile: *_receiveMessage /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/index.js:45:19
+     14  100.0%          LazyCompile: ~conn.getPeerInfo /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/network/index.js:59:26
+      8   57.1%            LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/once.js:8:21
+      6   42.9%            LazyCompile: *getPeerInfo /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/interface-connection/src/connection.js:25:15
+     10    7.0%      LazyCompile: *connectTo /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/network/index.js:86:13
+     10  100.0%        LazyCompile: *doWork /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/wantmanager/msg-queue.js:43:10
+     10  100.0%          LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/queue.js:8:40
+     10  100.0%            LazyCompile: ~process /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/queue.js:128:27
+      8    5.6%      LazyCompile: *toB58String /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/peer-id/src/index.js:79:15
+      3   37.5%        LazyCompile: ~__dirname.get /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:23:28
+      3  100.0%          Builtin: ObjectProtoToString
+      2   66.7%            LazyCompile: ~push /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:68:8
+      1   33.3%            LazyCompile: ~Array.from.map /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:144:58
+      2   25.0%        LazyCompile: ~sendMessage /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/network/index.js:100:15
+      2  100.0%          LazyCompile: ~network.connectTo /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/wantmanager/msg-queue.js:46:36
+      2  100.0%            LazyCompile: ~setImmediate /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/network/index.js:88:40
+      1   12.5%        LazyCompile: ~taskKey /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:150:18
+      1  100.0%          LazyCompile: ~get key /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:19:11
+      1  100.0%            LazyCompile: ~push /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:68:8
+      1   12.5%        LazyCompile: ~remove /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:130:10
+      1  100.0%          LazyCompile: ~_processWantlist /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:156:20
+      1  100.0%            LazyCompile: ~pull.asyncMap /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:133:23
+      1   12.5%        LazyCompile: ~PeerBook.put /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/peer-book/lib/index.js:16:23
+      1  100.0%          LazyCompile: ~swarm.dial /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p/src/index.js:211:37
+      1  100.0%            LazyCompile: ~ms.select /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-swarm/src/dial.js:187:29
+      7    4.9%      LazyCompile: *taskKey /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:150:18
+      4   57.1%        LazyCompile: ~remove /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:130:10
+      4  100.0%          LazyCompile: ~_processWantlist /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:156:20
+      4  100.0%            LazyCompile: ~pull.asyncMap /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:133:23
+      2   28.6%        LazyCompile: ~push /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:68:8
+      2  100.0%          LazyCompile: ~_processBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:146:17
+      2  100.0%            LazyCompile: ~receivedBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:141:17
+      1   14.3%        LazyCompile: ~get key /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:19:11
+      1  100.0%          LazyCompile: ~pop /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:105:7
+      1  100.0%            LazyCompile: ~whilst /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:59:7
+      5    3.5%      LazyCompile: *push /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:68:8
+      4   80.0%        LazyCompile: ~_processBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:146:17
+      4  100.0%          LazyCompile: ~receivedBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:141:17
+      3   75.0%            LazyCompile: ~block.key /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/index.js:276:23
+      1   25.0%            LazyCompile: ~block.key /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:182:17
+      1   20.0%        LazyCompile: *_processBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:146:17
+      1  100.0%          LazyCompile: *receivedBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:141:17
+      1  100.0%            LazyCompile: ~block.key /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/index.js:276:23
+     17    4.7%    LazyCompile: *sendMessage /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/network/index.js:100:15
+     13   76.5%      LazyCompile: ~network.connectTo /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/wantmanager/msg-queue.js:46:36
+     13  100.0%        LazyCompile: ~setImmediate /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/network/index.js:88:40
+     13  100.0%          LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/setImmediate.js:25:24
+      8   61.5%            LazyCompile: ~runCallback timers.js:643:21
+      5   38.5%            LazyCompile: *runCallback timers.js:643:21
+      4   23.5%      LazyCompile: ~msg.addBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:38:29
+      4  100.0%        LazyCompile: ~block.key /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/message/index.js:38:15
+      4  100.0%          LazyCompile: ~multihashing /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/ipfs-block/src/index.js:47:39
+      4  100.0%            LazyCompile: ~Multihashing.Multihashing.digest /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/multihashing-async/src/index.js:18:42
+
+    272    6.1%  node::Read(v8::FunctionCallbackInfo<v8::Value> const&)
+    272  100.0%    v8::internal::Builtin_HandleApiCall(int, v8::internal::Object**, v8::internal::Isolate*)
+    272  100.0%      LazyCompile: ~fs.readSync fs.js:622:23
+    208   76.5%        LazyCompile: *tryReadSync fs.js:452:21
+    208  100.0%          LazyCompile: ~fs.readFileSync fs.js:464:27
+    111   53.4%            LazyCompile: ~Module._extensions..js module.js:578:37
+     97   46.6%            LazyCompile: *Module._extensions..js module.js:578:37
+     64   23.5%        LazyCompile: ~tryReadSync fs.js:452:21
+     64  100.0%          LazyCompile: ~fs.readFileSync fs.js:464:27
+     64  100.0%            LazyCompile: ~Module._extensions..js module.js:578:37
+
+    160    3.6%  void node::StreamBase::JSMethod<node::StreamWrap, &(node::StreamBase::WriteBuffer(v8::FunctionCallbackInfo<v8::Value> const&))>(v8::FunctionCallbackInfo<v8::Value> const&)
+    160  100.0%    v8::internal::Builtin_HandleApiCall(int, v8::internal::Object**, v8::internal::Isolate*)
+    160  100.0%      LazyCompile: ~createWriteReq net.js:737:24
+    160  100.0%        LazyCompile: ~Socket._writeGeneric net.js:665:42
+    155   96.9%          LazyCompile: *Socket._write net.js:733:35
+    148   95.5%            LazyCompile: *writeOrBuffer _stream_writable.js:296:23
+      7    4.5%            LazyCompile: *doWrite _stream_writable.js:326:17
+      5    3.1%          LazyCompile: ~Socket._write net.js:733:35
+      3   60.0%            LazyCompile: *doWrite _stream_writable.js:326:17
+      2   40.0%            LazyCompile: ~doWrite _stream_writable.js:326:17
+
+    153    3.5%  node::ContextifyScript::New(v8::FunctionCallbackInfo<v8::Value> const&)
+    153  100.0%    v8::internal::Builtin_HandleApiCall(int, v8::internal::Object**, v8::internal::Isolate*)
+     98   64.1%      LazyCompile: *exports.runInThisContext vm.js:77:36
+     98  100.0%        LazyCompile: ~Module._compile module.js:511:37
+     52   53.1%          LazyCompile: ~Module._extensions..js module.js:578:37
+     52  100.0%            LazyCompile: ~Module.load module.js:479:33
+     46   46.9%          LazyCompile: *Module._extensions..js module.js:578:37
+     31   67.4%            LazyCompile: ~Module.load module.js:479:33
+     15   32.6%            LazyCompile: *Module.load module.js:479:33
+     33   21.6%      LazyCompile: ~runInThisContext bootstrap_node.js:429:28
+     33  100.0%        LazyCompile: ~NativeModule.compile bootstrap_node.js:511:44
+     33  100.0%          LazyCompile: ~NativeModule.require bootstrap_node.js:445:34
+      6   18.2%            Function: ~<anonymous> module.js:1:11
+      4   12.1%            Function: ~<anonymous> http.js:1:11
+      3    9.1%            Function: ~<anonymous> tls.js:1:11
+      2    6.1%            LazyCompile: ~startup bootstrap_node.js:12:19
+      2    6.1%            LazyCompile: ~setupGlobalVariables bootstrap_node.js:192:32
+      2    6.1%            Function: ~<anonymous> util.js:1:11
+      2    6.1%            Function: ~<anonymous> tty.js:1:11
+      2    6.1%            Function: ~<anonymous> stream.js:1:11
+      1    3.0%            LazyCompile: ~setupGlobalTimeouts bootstrap_node.js:226:31
+      1    3.0%            LazyCompile: ~lookupAndListen net.js:1391:25
+      1    3.0%            LazyCompile: ~listen net.js:1292:16
+      1    3.0%            LazyCompile: ~get bootstrap_node.js:248:20
+      1    3.0%            LazyCompile: ~Module._load module.js:413:24
+      1    3.0%            Function: ~<anonymous> timers.js:1:11
+      1    3.0%            Function: ~<anonymous> internal/url.js:1:11
+      1    3.0%            Function: ~<anonymous> child_process.js:1:11
+      1    3.0%            Function: ~<anonymous> buffer.js:1:11
+      1    3.0%            Function: ~<anonymous> _http_outgoing.js:1:11
+     22   14.4%      LazyCompile: ~exports.runInThisContext vm.js:77:36
+     22  100.0%        LazyCompile: ~Module._compile module.js:511:37
+     22  100.0%          LazyCompile: ~Module._extensions..js module.js:578:37
+     22  100.0%            LazyCompile: ~Module.load module.js:479:33
+
+    134    3.0%  /usr/lib/system/libsystem_kernel.dylib
+     24   17.9%    LazyCompile: *fs.closeSync fs.js:525:24
+     24  100.0%      LazyCompile: ~fs.readFileSync fs.js:464:27
+     16   66.7%        LazyCompile: ~Module._extensions..js module.js:578:37
+     16  100.0%          LazyCompile: ~Module.load module.js:479:33
+     10   62.5%            LazyCompile: *tryModuleLoad module.js:444:23
+      6   37.5%            LazyCompile: ~tryModuleLoad module.js:444:23
+      8   33.3%        LazyCompile: *Module._extensions..js module.js:578:37
+      6   75.0%          LazyCompile: ~Module.load module.js:479:33
+      6  100.0%            LazyCompile: *tryModuleLoad module.js:444:23
+      2   25.0%          LazyCompile: *Module.load module.js:479:33
+      2  100.0%            LazyCompile: *tryModuleLoad module.js:444:23
+     21   15.7%    LazyCompile: *fs.lstatSync fs.js:899:24
+     21  100.0%      LazyCompile: ~realpathSync fs.js:1466:40
+     17   81.0%        LazyCompile: *toRealPath module.js:129:20
+     11   64.7%          LazyCompile: *tryFile module.js:121:17
+     10   90.9%            LazyCompile: ~tryExtensions module.js:136:23
+      1    9.1%            LazyCompile: ~tryPackage module.js:101:20
+      3   17.6%          LazyCompile: ~Module._findPath module.js:148:28
+      1   33.3%            LazyCompile: ~Module._resolveFilename module.js:456:35
+      1   33.3%            LazyCompile: *Module._resolveFilename module.js:456:35
+      1   33.3%            LazyCompile: *Module._load module.js:413:24
+      3   17.6%          LazyCompile: *tryPackage module.js:101:20
+      3  100.0%            LazyCompile: ~Module._findPath module.js:148:28
+      4   19.0%        LazyCompile: ~toRealPath module.js:129:20
+      4  100.0%          LazyCompile: ~tryFile module.js:121:17
+      3   75.0%            LazyCompile: ~tryExtensions module.js:136:23
+      1   25.0%            LazyCompile: ~tryPackage module.js:101:20
+     12    9.0%    v8::internal::Runtime_CompileLazy(int, v8::internal::Object**, v8::internal::Isolate*)
+      2   16.7%      LazyCompile: ~startup bootstrap_node.js:12:19
+      2  100.0%        Function: ~<anonymous> bootstrap_node.js:10:10
+      1    8.3%      LazyCompile: ~whilst /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/whilst.js:57:16
+      1  100.0%        LazyCompile: ~m.digest /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-crypto/src/key-stretcher.js:45:20
+      1  100.0%          LazyCompile: ~setImmediate /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-crypto/src/crypto/hmac.js:13:20
+      1  100.0%            LazyCompile: ~runCallback timers.js:643:21
+      1    8.3%      LazyCompile: ~series /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/test/network/gen-bitswap-network.node.js:154:13
+      1  100.0%        LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/parallel.js:34:17
+      1  100.0%          LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/once.js:8:21
+      1  100.0%            LazyCompile: ~replenish /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/eachOfLimit.js:53:27
+      1    8.3%      LazyCompile: ~remove /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/wantlist/index.js:27:10
+      1  100.0%        LazyCompile: ~pull.through /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/wantmanager/index.js:35:20
+      1  100.0%          LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/throughs/through.js:16:33
+      1  100.0%            LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/throughs/map.js:11:28
+      1    8.3%      LazyCompile: ~nextTask /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/waterfall.js:13:22
+      1  100.0%        LazyCompile: ~exports.default /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/waterfall.js:7:28
+      1  100.0%          LazyCompile: ~exports.generateKeys /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-secio/src/handshake/crypto.js:151:24
+      1  100.0%            LazyCompile: ~waterfall /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-secio/src/handshake/exchange.js:28:5
+      1    8.3%      LazyCompile: ~module.exports /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-identify/src/listener.js:8:18
+      1  100.0%        LazyCompile: ~swarm.handle /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-swarm/src/connection.js:73:41
+      1  100.0%          LazyCompile: ~matcher /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/multistream-select/src/listener/select-handler.js:29:38
+      1  100.0%            LazyCompile: ~some /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/multistream-select/src/listener/select-handler.js:67:5
+      1    8.3%      LazyCompile: ~module.exports /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-crypto/src/key-stretcher.js:23:18
+      1  100.0%        LazyCompile: ~waterfall /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-secio/src/handshake/crypto.js:156:5
+      1  100.0%          LazyCompile: ~nextTask /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/waterfall.js:13:22
+      1  100.0%            LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/waterfall.js:18:81
+      1    8.3%      LazyCompile: ~TransformState.afterTransform _stream_transform.js:53:33
+      1  100.0%        LazyCompile: ~callback zlib.js:562:20
+      1    8.3%      LazyCompile: ~InnerArraySome native array.js:801:24
+      1  100.0%        LazyCompile: ~some native array.js:811:19
+      1  100.0%          LazyCompile: ~PeerInfo.multiaddr.rm /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/peer-info/src/index.js:66:23
+      1  100.0%            LazyCompile: ~existing.forEach /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/peer-info/src/index.js:84:22
+      1    8.3%      LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/doParallel.js:15:21
+      1  100.0%        LazyCompile: ~exports.genBitswapNetwork /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/test/utils.js:101:29
+      1  100.0%          LazyCompile: ~counts.forEach /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/test/network/gen-bitswap-network.node.js:84:20
+      1  100.0%            LazyCompile: ~InnerArrayForEach native array.js:777:27
+      1    8.3%      Function: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/lodash.filter/index.js:1:11
+      1  100.0%        LazyCompile: ~Module._compile module.js:511:37
+      1  100.0%          LazyCompile: ~Module._extensions..js module.js:578:37
+      1  100.0%            LazyCompile: ~Module.load module.js:479:33
+     11    8.2%    v8::internal::Runtime_CompileOptimized_Concurrent(int, v8::internal::Object**, v8::internal::Isolate*)
+      1    9.1%      LazyCompile: ~read /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-defer/source.js:5:23
+      1  100.0%        LazyCompile: *<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/index.js:101:23
+      1  100.0%          LazyCompile: ~read /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-defer/source.js:5:23
+      1  100.0%            LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/index.js:14:19
+      1    9.1%      LazyCompile: ~newStream /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-spdy/src/muxer.js:39:13
+      1  100.0%        LazyCompile: ~conn.getPeerInfo /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-swarm/src/connection.js:34:30
+      1  100.0%          LazyCompile: *getPeerInfo /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/interface-connection/src/connection.js:25:15
+      1  100.0%            LazyCompile: *getPeerInfo /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/interface-connection/src/connection.js:25:15
+      1    9.1%      LazyCompile: ~lp.decodeFromReader /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/multistream-select/src/listener/select-handler.js:22:32
+      1  100.0%        LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-length-prefixed/lib/decode.js:86:45
+      1  100.0%          LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-length-prefixed/lib/decode.js:100:30
+      1  100.0%            LazyCompile: *drain /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/index.js:32:18
+      1    9.1%      LazyCompile: ~get flags native regexp.js:772:24
+      1  100.0%        LazyCompile: ~[Symbol.split] native regexp.js:352:29
+      1  100.0%          LazyCompile: *split native string.js:244:23
+      1  100.0%            LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/spdy/parser.js:295:52
+      1    9.1%      LazyCompile: ~exports.setTimeout timers.js:325:30
+      1  100.0%        LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/index.js:14:19
+      1  100.0%          LazyCompile: *more /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/index.js:50:17
+      1  100.0%            LazyCompile: ~reader /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-reader/index.js:67:19
+      1    9.1%      LazyCompile: ~_handleData /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/stream.js:263:52
+      1  100.0%        LazyCompile: ~_handleFrame /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/stream.js:109:54
+      1  100.0%          LazyCompile: ~_handleFrame /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/connection.js:268:58
+      1  100.0%            LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/connection.js:157:35
+      1    9.1%      LazyCompile: *tryModuleLoad module.js:444:23
+      1  100.0%        LazyCompile: ~Module._load module.js:413:24
+      1  100.0%          LazyCompile: *Module.require module.js:495:36
+      1  100.0%            LazyCompile: *require internal/module.js:17:19
+      1    9.1%      LazyCompile: *iterator /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/iterator.js:50:18
+      1  100.0%        LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/eachOfLimit.js:31:21
+      1  100.0%          LazyCompile: ~eachOfLimit /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/eachOfLimit.js:36:21
+      1  100.0%            LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/doLimit.js:8:21
+      1    9.1%      LazyCompile: *fs.lstatSync fs.js:899:24
+      1  100.0%        LazyCompile: ~realpathSync fs.js:1466:40
+      1  100.0%          LazyCompile: ~toRealPath module.js:129:20
+      1  100.0%            LazyCompile: ~tryFile module.js:121:17
+      1    9.1%      LazyCompile: *Module._load module.js:413:24
+      1  100.0%        LazyCompile: *Module.require module.js:495:36
+      1  100.0%          LazyCompile: *require internal/module.js:17:19
+      1  100.0%            LazyCompile: *encode /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-length-prefixed/lib/encode.js:9:16
+      1    9.1%      Function: ~encode :3:25
+      1  100.0%        Function: ~encode :3:25
+      1  100.0%          LazyCompile: ~toProto /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/message/index.js:53:11
+      1  100.0%            LazyCompile: ~sendMessage /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/network/index.js:100:15
+      8    6.0%    LazyCompile: *Zlib._processChunk zlib.js:506:40
+      8  100.0%      LazyCompile: *Zlib._transform zlib.js:475:37
+      8  100.0%        LazyCompile: *Transform._read _stream_transform.js:162:37
+      8  100.0%          LazyCompile: *Transform._write _stream_transform.js:145:38
+      6   75.0%            LazyCompile: *writeOrBuffer _stream_writable.js:296:23
+      2   25.0%            LazyCompile: *doWrite _stream_writable.js:326:17
+      5    3.7%    v8::internal::Runtime_StackGuard(int, v8::internal::Object**, v8::internal::Isolate*)
+      2   40.0%      LazyCompile: *encode /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/base-x/index.js:19:19
+      1   50.0%        LazyCompile: *toB58String /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/peer-id/node_modules/multihashes/lib/index.js:19:43
+      1  100.0%          LazyCompile: *toB58String /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/peer-id/src/index.js:79:15
+      1  100.0%            LazyCompile: ~PeerBook.put /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/peer-book/lib/index.js:16:23
+      1   50.0%        LazyCompile: *sendMessage /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/network/index.js:100:15
+      1  100.0%          LazyCompile: ~network.connectTo /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/wantmanager/msg-queue.js:46:36
+      1  100.0%            LazyCompile: ~setImmediate /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/network/index.js:88:40
+      1   20.0%      LazyCompile: ~WritableState.onwrite _stream_writable.js:89:26
+      1  100.0%        LazyCompile: ~Socket._writeGeneric net.js:665:42
+      1  100.0%          LazyCompile: ~Socket._write net.js:733:35
+      1  100.0%            LazyCompile: ~doWrite _stream_writable.js:326:17
+      1   20.0%      LazyCompile: ~Writable.write _stream_writable.js:226:36
+      1  100.0%        LazyCompile: ~write /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/utils.js:60:44
+      1  100.0%          LazyCompile: ~headersToDict /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/spdy/framer.js:29:56
+      1  100.0%            LazyCompile: ~responseFrame /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/spdy-transport/lib/spdy-transport/protocol/spdy/framer.js:227:56
+      1   20.0%      LazyCompile: *Buffer.writeInt32BE buffer.js:1234:41
+      1  100.0%        LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-length-prefixed/lib/encode.js:27:27
+      1  100.0%          LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/throughs/async-map.js:28:32
+      1  100.0%            LazyCompile: ~mac.digest /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/libp2p-secio/src/etm.js:20:26
+      5    3.7%    v8::internal::Builtin_DateConstructor_ConstructStub(int, v8::internal::Object**, v8::internal::Isolate*)
+      3   60.0%      LazyCompile: ~receivedBytes /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/ledger.js:25:17
+      3  100.0%        LazyCompile: ~block.key /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:182:17
+      3  100.0%          LazyCompile: ~setImmediate /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/ipfs-block/src/index.js:42:27
+      3  100.0%            LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/async/internal/setImmediate.js:25:24
+      1   20.0%      LazyCompile: ~PeerRequestTask /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:12:15
+      1  100.0%        LazyCompile: ~push /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:68:8
+      1  100.0%          LazyCompile: ~blockstore.has /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:167:38
+      1  100.0%            LazyCompile: *has /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/ipfs-repo/src/stores/blockstore.js:172:9
+      1   20.0%      LazyCompile: *PeerRequestTask /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:12:15
+      1  100.0%        LazyCompile: ~push /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/peer-request-queue.js:68:8
+      1  100.0%          LazyCompile: ~_processBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:146:17
+      1  100.0%            LazyCompile: ~receivedBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:141:17
+      4    3.0%    LazyCompile: *fs.openSync fs.js:554:23
+      4  100.0%      LazyCompile: ~fs.readFileSync fs.js:464:27
+      4  100.0%        LazyCompile: ~Module._extensions..js module.js:578:37
+      4  100.0%          LazyCompile: ~Module.load module.js:479:33
+      4  100.0%            LazyCompile: *tryModuleLoad module.js:444:23
+      3    2.2%    v8::internal::Runtime_LoadIC_Miss(int, v8::internal::Object**, v8::internal::Isolate*)
+      1   33.3%      LazyCompile: ~assertLength /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/chai/lib/chai/core/assertions.js:1039:25
+      1  100.0%        LazyCompile: ~assert /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/chai/lib/chai/utils/addChainableMethod.js:80:37
+      1  100.0%          LazyCompile: ~pull.collect /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/test/network/gen-bitswap-network.node.js:135:38
+      1  100.0%            LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/pull-stream/sinks/reduce.js:9:15
+      1   33.3%      LazyCompile: ~PrepareData /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/webcrypto-core/build/base.js:17:21
+      1  100.0%        LazyCompile: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/webcrypto-core/build/subtle.js:70:37
+      1  100.0%          LazyCompile: ~Promise native promise.js:47:23
+      1  100.0%            LazyCompile: ~SubtleCrypto.sign /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/webcrypto-core/build/subtle.js:69:44
+      1   33.3%      LazyCompile: ~NativeModule.require bootstrap_node.js:445:34
+      1  100.0%        LazyCompile: ~setupGlobalVariables bootstrap_node.js:192:32
+      1  100.0%          LazyCompile: ~startup bootstrap_node.js:12:19
+      1  100.0%            Function: ~<anonymous> bootstrap_node.js:10:10
+      3    2.2%    v8::internal::Runtime_BinaryOpIC_Miss(int, v8::internal::Object**, v8::internal::Isolate*)
+      1   33.3%      LazyCompile: ~normalize path.js:1176:32
+      1  100.0%        LazyCompile: ~join path.js:1205:22
+      1  100.0%          LazyCompile: ~module.exports.evaluate /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/node-pre-gyp/lib/util/versioning.js:259:35
+      1  100.0%            LazyCompile: ~exports.find /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/node-pre-gyp/lib/pre-binding.js:15:24
+      1   33.3%      Function: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/semver/semver.js:1:11
+      1  100.0%        LazyCompile: ~Module._compile module.js:511:37
+      1  100.0%          LazyCompile: *Module._extensions..js module.js:578:37
+      1  100.0%            LazyCompile: ~Module.load module.js:479:33
+      1   33.3%      Function: ~<anonymous> /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/lodash.padstart/index.js:1:11
+      1  100.0%        LazyCompile: ~Module._compile module.js:511:37
+      1  100.0%          LazyCompile: ~Module._extensions..js module.js:578:37
+      1  100.0%            LazyCompile: ~Module.load module.js:479:33
+      3    2.2%    v8::internal::Builtin_DateNow(int, v8::internal::Object**, v8::internal::Isolate*)
+      2   66.7%      LazyCompile: *now /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/lodash.debounce/index.js:73:19
+      1   50.0%        LazyCompile: ~timerExpired /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/lodash.debounce/index.js:192:24
+      1  100.0%          LazyCompile: ~ontimeout timers.js:361:19
+      1  100.0%            LazyCompile: ~tryOnTimeout timers.js:233:22
+      1   50.0%        LazyCompile: ~debounced /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/lodash.debounce/index.js:225:21
+      1  100.0%          LazyCompile: ~receivedBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:141:17
+      1  100.0%            LazyCompile: ~block.key /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:182:17
+      1   33.3%      LazyCompile: ~now /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/lodash.debounce/index.js:73:19
+      1  100.0%        LazyCompile: ~debounced /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/node_modules/lodash.debounce/index.js:225:21
+      1  100.0%          LazyCompile: ~receivedBlock /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/decision/engine.js:141:17
+      1  100.0%            LazyCompile: ~block.key /Users/dignifiedquire/opensource/ipfs/js-ipfs-lerna/packages/js-ipfs-bitswap/src/index.js:276:23
+
+     92    2.1%  node::InternalModuleReadFile(v8::FunctionCallbackInfo<v8::Value> const&)
+     92  100.0%    v8::internal::Builtin_HandleApiCall(int, v8::internal::Object**, v8::internal::Isolate*)
+     66   71.7%      LazyCompile: *readPackage module.js:79:21
+     66  100.0%        LazyCompile: *tryPackage module.js:101:20
+     66  100.0%          LazyCompile: ~Module._findPath module.js:148:28
+     39   59.1%            LazyCompile: *Module._load module.js:413:24
+     21   31.8%            LazyCompile: ~Module._resolveFilename module.js:456:35
+      6    9.1%            LazyCompile: *Module._resolveFilename module.js:456:35
+     26   28.3%      LazyCompile: ~readPackage module.js:79:21
+     26  100.0%        LazyCompile: ~tryPackage module.js:101:20
+     26  100.0%          LazyCompile: ~Module._findPath module.js:148:28
+     18   69.2%            LazyCompile: ~Module._resolveFilename module.js:456:35
+      8   30.8%            LazyCompile: *Module._resolveFilename module.js:456:35
+

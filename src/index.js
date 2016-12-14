@@ -6,7 +6,6 @@ const debug = require('debug')
 const log = debug('bitswap')
 log.error = debug('bitswap:error')
 const EventEmitter = require('events').EventEmitter
-const mh = require('multihashes')
 const pull = require('pull-stream')
 const paramap = require('pull-paramap')
 const defer = require('pull-defer/source')
@@ -44,7 +43,7 @@ module.exports = class Bitwap {
   // handle messages received through the network
   _receiveMessage (peerId, incoming, cb) {
     cb = cb || (() => {})
-    log('receiving message from %s', peerId.toB58String())
+    // log('receiving message from %s', peerId.toB58String())
     this.engine.messageReceived(peerId, incoming, (err) => {
       if (err) {
         log('failed to receive message', incoming)
@@ -87,7 +86,7 @@ module.exports = class Bitwap {
           return cb()
         }
 
-        log('got block from %s', peerId.toB58String(), block.data.length)
+        // log('got block from %s', peerId.toB58String(), block.data.length)
         cb()
       }),
       (cb) => block.key((err, key) => {
@@ -181,41 +180,40 @@ module.exports = class Bitwap {
   _getStreamSingle (key) {
     const unwantListeners = {}
     const blockListeners = {}
-    const unwantEvent = (key) => `unwant:${key}`
-    const blockEvent = (key) => `block:${key}`
+    const keyS = key.toString('hex')
+
+    const unwantEvent = () => `unwant:${keyS}`
+    const blockEvent = () => `block:${keyS}`
     const d = defer()
 
-    const cleanupListener = (key) => {
-      const keyS = mh.toB58String(key)
-
+    const cleanupListener = () => {
       if (unwantListeners[keyS]) {
-        this.notifications.removeListener(unwantEvent(keyS), unwantListeners[keyS])
+        this.notifications.removeListener(unwantEvent(), unwantListeners[keyS])
         delete unwantListeners[keyS]
       }
 
       if (blockListeners[keyS]) {
-        this.notifications.removeListener(blockEvent(keyS), blockListeners[keyS])
+        this.notifications.removeListener(blockEvent(), blockListeners[keyS])
         delete blockListeners[keyS]
       }
     }
 
-    const addListener = (key) => {
-      const keyS = mh.toB58String(key)
+    const addListener = () => {
       unwantListeners[keyS] = () => {
         log(`manual unwant: ${keyS}`)
-        cleanupListener(key)
+        cleanupListener()
         this.wm.cancelWants([key])
         d.resolve(pull.empty())
       }
 
       blockListeners[keyS] = (block) => {
         this.wm.cancelWants([key])
-        cleanupListener(key)
+        cleanupListener()
         d.resolve(pull.values([block]))
       }
 
-      this.notifications.once(unwantEvent(keyS), unwantListeners[keyS])
-      this.notifications.once(blockEvent(keyS), blockListeners[keyS])
+      this.notifications.once(unwantEvent(), unwantListeners[keyS])
+      this.notifications.once(blockEvent(), blockListeners[keyS])
     }
 
     this.blockstore.has(key, (err, exists) => {
@@ -223,11 +221,11 @@ module.exports = class Bitwap {
         return d.resolve(pull.error(err))
       }
       if (exists) {
-        log('already have block', mh.toB58String(key))
+        // log('already have block', mh.toB58String(key))
         return d.resolve(this.blockstore.getStream(key))
       }
 
-      addListener(key)
+      addListener()
       this.wm.wantBlocks([key])
     })
 
@@ -242,7 +240,7 @@ module.exports = class Bitwap {
 
     this.wm.unwantBlocks(keys)
     keys.forEach((key) => {
-      this.notifications.emit(`unwant:${mh.toB58String(key)}`)
+      this.notifications.emit(`unwant:${key.toString('hex')}`)
     })
   }
 
@@ -277,8 +275,8 @@ module.exports = class Bitwap {
               if (err) {
                 return cb(err)
               }
-              log('put block: %s', mh.toB58String(key))
-              this.notifications.emit(`block:${mh.toB58String(key)}`, block)
+              // log('put block: %s', mh.toB58String(key))
+              this.notifications.emit(`block:${key.toString('hex')}`, block)
               this.engine.receivedBlock(key)
               cb(null, meta)
             })
