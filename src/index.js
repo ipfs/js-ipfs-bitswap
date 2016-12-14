@@ -180,7 +180,7 @@ module.exports = class Bitwap {
   _getStreamSingle (key) {
     const unwantListeners = {}
     const blockListeners = {}
-    const keyS = key.toString('hex')
+    const keyS = key.toString()
 
     const unwantEvent = () => `unwant:${keyS}`
     const blockEvent = () => `block:${keyS}`
@@ -240,7 +240,7 @@ module.exports = class Bitwap {
 
     this.wm.unwantBlocks(keys)
     keys.forEach((key) => {
-      this.notifications.emit(`unwant:${key.toString('hex')}`)
+      this.notifications.emit(`unwant:${key.toString()}`)
     })
   }
 
@@ -276,7 +276,7 @@ module.exports = class Bitwap {
                 return cb(err)
               }
               // log('put block: %s', mh.toB58String(key))
-              this.notifications.emit(`block:${key.toString('hex')}`, block)
+              this.notifications.emit(`block:${key.toString()}`, block)
               this.engine.receivedBlock(key)
               cb(null, meta)
             })

@@ -100,7 +100,7 @@ describe('BitswapMessage', () => {
       expect(
         Array.from(protoMessage.wantlist)
       ).to.be.eql([
-        [(new Buffer('hello')).toString('hex'), new BitswapMessage.Entry(new Buffer('hello'), 0, false)]
+        [(new Buffer('hello')).toString(), new BitswapMessage.Entry(new Buffer('hello'), 0, false)]
       ])
 
       const b1 = blocks[1]
@@ -111,8 +111,8 @@ describe('BitswapMessage', () => {
       expect(
         Array.from(protoMessage.blocks).map((b) => [b[0], b[1].data])
       ).to.be.eql([
-        [k1.toString('hex'), b1.data],
-        [k2.toString('hex'), b2.data]
+        [k1.toString(), b1.data],
+        [k2.toString(), b2.data]
       ])
 
       done()

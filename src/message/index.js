@@ -23,13 +23,13 @@ class BitswapMessage {
   addEntry (key, priority, cancel) {
     assert(Buffer.isBuffer(key), 'key must be a buffer')
 
-    const e = this.wantlist.get(key.toString('hex'))
+    const e = this.wantlist.get(key.toString())
 
     if (e) {
       e.priority = priority
       e.cancel = Boolean(cancel)
     } else {
-      this.wantlist.set(key.toString('hex'), new Entry(key, priority, cancel))
+      this.wantlist.set(key.toString(), new Entry(key, priority, cancel))
     }
   }
 
@@ -39,13 +39,13 @@ class BitswapMessage {
         return cb(err)
       }
 
-      this.blocks.set(key.toString('hex'), block)
+      this.blocks.set(key.toString(), block)
       cb()
     })
   }
 
   cancel (key) {
-    this.wantlist.delete(key.toString('hex'))
+    this.wantlist.delete(key.toString())
     this.addEntry(key, 0, true)
   }
 

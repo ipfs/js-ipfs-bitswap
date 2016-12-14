@@ -41,12 +41,12 @@ class ActivePartner {
   }
 
   startTask (key) {
-    this.activeBlocks.set(key.toString('hex'), 1)
+    this.activeBlocks.set(key.toString(), 1)
     this.active ++
   }
 
   taskDone (key) {
-    const k = key.toString('hex')
+    const k = key.toString()
     assert(this.activeBlocks.has(k), 'finishing non existent task')
 
     this.activeBlocks.delete()
@@ -147,7 +147,7 @@ module.exports = class PeerRequestQueue {
 }
 
 function taskKey (peerId, key) {
-  return `${peerId.toB58String()}:${key.toString('hex')}`
+  return `${peerId.toB58String()}:${key.toString()}`
 }
 
 function partnerCompare (a, b) {

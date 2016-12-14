@@ -125,8 +125,8 @@ module.exports = (repo) => {
 
             const wl = bs.wantlistForPeer(other)
 
-            expect(wl.has(keys[0].toString('hex'))).to.be.eql(true)
-            expect(wl.has(keys[1].toString('hex'))).to.be.eql(true)
+            expect(wl.has(keys[0].toString())).to.be.eql(true)
+            expect(wl.has(keys[1].toString())).to.be.eql(true)
 
             done()
           })

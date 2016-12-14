@@ -100,7 +100,7 @@ describe('Wantlist', () => {
       expect(
         Array.from(wm.entries())
       ).to.be.eql([
-        [key.toString('hex'), new Wantlist.Entry(key, 2)]
+        [key.toString(), new Wantlist.Entry(key, 2)]
       ])
       done()
     })
@@ -118,8 +118,8 @@ describe('Wantlist', () => {
       expect(
         Array.from(wm.sortedEntries())
       ).to.be.eql([
-        [keys[0].toString('hex'), new Wantlist.Entry(keys[0], 1)],
-        [keys[1].toString('hex'), new Wantlist.Entry(keys[1], 1)]
+        [keys[0].toString(), new Wantlist.Entry(keys[0], 1)],
+        [keys[1].toString(), new Wantlist.Entry(keys[1], 1)]
       ])
       done()
     })
