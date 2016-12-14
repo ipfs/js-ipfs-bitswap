@@ -1,7 +1,5 @@
 'use strict'
 
-const mh = require('multihashes')
-
 const Entry = require('./entry')
 
 class Wantlist {
@@ -14,18 +12,18 @@ class Wantlist {
   }
 
   add (key, priority) {
-    const e = this.set.get(mh.toB58String(key))
+    const e = this.set.get(key.toString())
 
     if (e) {
       e.inc()
       e.priority = priority
     } else {
-      this.set.set(mh.toB58String(key), new Entry(key, priority))
+      this.set.set(key.toString(), new Entry(key, priority))
     }
   }
 
   remove (key) {
-    const e = this.set.get(mh.toB58String(key))
+    const e = this.set.get(key.toString())
 
     if (!e) return
 
@@ -34,12 +32,12 @@ class Wantlist {
     // only delete when no refs are held
     if (e.hasRefs()) return
 
-    this.set.delete(mh.toB58String(key))
+    this.set.delete(key.toString())
   }
 
   removeForce (key) {
-    if (this.set.has(key)) {
-      this.set.delete(key)
+    if (this.set.has(key.toString())) {
+      this.set.delete(key.toString())
     }
   }
 
@@ -52,7 +50,7 @@ class Wantlist {
   }
 
   contains (key) {
-    return this.set.get(mh.toB58String(key))
+    return this.set.get(key.toString())
   }
 }
 

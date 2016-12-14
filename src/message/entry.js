@@ -1,7 +1,5 @@
 'use strict'
 
-const mh = require('multihashes')
-
 const WantlistEntry = require('../wantlist').Entry
 
 module.exports = class BitswapMessageEntry {
@@ -27,7 +25,11 @@ module.exports = class BitswapMessageEntry {
   }
 
   get [Symbol.toStringTag] () {
-    return `BitswapMessageEntry ${mh.toB58String(this.key)} <cancel: ${this.cancel}, priority: ${this.priority}>`
+    return `BitswapMessageEntry ${this.toB58String()} <cancel: ${this.cancel}, priority: ${this.priority}>`
+  }
+
+  toB58String () {
+    return this.entry.toB58String()
   }
 
   equals (other) {

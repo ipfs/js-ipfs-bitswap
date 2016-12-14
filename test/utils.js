@@ -166,23 +166,17 @@ exports.genBitswapNetwork = (n, callback) => {
               to.peerInfo.id.toB58String()) {
             return cbJ()
           }
+
           from.libp2p.dialByPeerInfo(to.peerInfo, cbJ)
-        }, (err) => {
-          if (err) {
-            throw err
-          }
-          cbI()
-        })
-      }, (err) => {
-        if (err) {
-          throw err
-        }
-        finish()
-      })
+        }, cbI)
+      }, finish)
     }
 
     // callback with netArray
-    function finish () {
+    function finish (err) {
+      if (err) {
+        throw err
+      }
       callback(null, netArray)
     }
   })

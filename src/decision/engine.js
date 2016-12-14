@@ -1,19 +1,22 @@
 'use strict'
 
 const debug = require('debug')
-const mh = require('multihashes')
 const pull = require('pull-stream')
-const whilst = require('async/whilst')
-const setImmediate = require('async/setImmediate')
 const each = require('async/each')
+const map = require('async/map')
+const waterfall = require('async/waterfall')
 const debounce = require('lodash.debounce')
+const uniqWith = require('lodash.uniqwith')
+const find = require('lodash.find')
+const values = require('lodash.values')
+const groupBy = require('lodash.groupby')
+const pullAllWith = require('lodash.pullallwith')
 
 const log = debug('bitswap:engine')
 log.error = debug('bitswap:engine:error')
 
 const Message = require('../message')
 const Wantlist = require('../wantlist')
-const PeerRequestQueue = require('./peer-request-queue')
 const Ledger = require('./ledger')
 
 module.exports = class Engine {
@@ -23,71 +26,82 @@ module.exports = class Engine {
 
     // A list of of ledgers by their partner id
     this.ledgerMap = new Map()
-
-    // A priority queue of requests received from different
-    // peers.
-    this.peerRequestQueue = new PeerRequestQueue()
-
     this._running = false
 
-    this._outbox = debounce(this._outboxExec.bind(this), 100)
+    // List of tasks to be processed
+    this._tasks = []
+
+    this._outbox = debounce(this._processTasks.bind(this), 100)
   }
 
-  _sendBlock (env, cb) {
+  _sendBlocks (env, cb) {
     const msg = new Message(false)
-    msg.addBlock(env.block, (err) => {
+    env.blocks.forEach((block) => {
+      msg.addBlockWithKey(block.block, block.key)
+    })
+
+    // console.log('sending %s blocks', msg.blocks.size)
+    this.network.sendMessage(env.peer, msg, (err) => {
       if (err) {
-        return cb(err)
+        log('sendblock error: %s', err.message)
       }
-
-      log('Sending block to %s', env.peer.toB58String(), env.block.data.toString())
-
-      this.network.sendMessage(env.peer, msg, (err) => {
-        if (err) {
-          log('sendblock error: %s', err.message)
-        }
-        cb(null, 'done')
-      })
+      cb()
     })
   }
 
-  _outboxExec () {
-    let nextTask
-    log('outbox')
+  _processTasks () {
+    if (!this._running || !this._tasks.length) {
+      return
+    }
 
-    whilst(
-      () => {
-        if (!this._running) {
-          return
-        }
+    const tasks = this._tasks
+    this._tasks = []
+    const entries = tasks.map((t) => t.entry)
+    const keys = entries.map((e) => e.key)
+    const uniqKeys = uniqWith(keys, (a, b) => a.equals(b))
+    const groupedTasks = groupBy(tasks, (task) => task.target.toB58String())
 
-        nextTask = this.peerRequestQueue.pop()
-        log('check', this._running && nextTask)
-        return Boolean(nextTask)
-      },
-      (next) => {
-        log('got task')
-
+    waterfall([
+      (cb) => map(uniqKeys, (k, cb) => {
         pull(
-          this.blockstore.getStream(nextTask.entry.key),
+          this.blockstore.getStream(k),
           pull.collect((err, blocks) => {
-            const block = blocks[0]
-            if (err || !block) {
-              nextTask.done()
-              return next()
+            if (err) {
+              return cb(err)
             }
-
-            this._sendBlock({
-              peer: nextTask.target,
-              block: block,
-              sent () {
-                nextTask.done()
-              }
-            }, next)
+            cb(null, {
+              key: k,
+              block: blocks[0]
+            })
           })
         )
+      }, cb),
+      (blocks, cb) => each(values(groupedTasks), (tasks, cb) => {
+        // all tasks have the same target
+        const peer = tasks[0].target
+        const blockList = keys.map((k) => {
+          return find(blocks, (b) => b.key.equals(k))
+        })
+
+        this._sendBlocks({
+          peer: peer,
+          blocks: blockList
+        }, (err) => {
+          if (err) {
+            log.error('failed to send', err)
+          }
+          blockList.forEach((block) => {
+            this.messageSent(peer, block.block, block.key)
+          })
+          cb()
+        })
+      })
+    ], (err) => {
+      this._tasks = []
+      if (err) {
+        log.error(err)
       }
-    )
+    })
   }
 
   wantlistForPeer (peerId) {
@@ -102,12 +116,31 @@ module.exports = class Engine {
     return Array.from(this.ledgerMap.values()).map((l) => l.partner)
   }
 
+  receivedBlocks (keys) {
+    if (!keys.length) {
+      return
+    }
+    // Check all connected peers if they want the block we received
+    for (let l of this.ledgerMap.values()) {
+      keys
+        .map((k) => l.wantlistContains(k))
+        .filter(Boolean)
+        .forEach((e) => {
+          // this.peerRequestQueue.push(e, l.partner)
+          this._tasks.push({
+            entry: e,
+            target: l.partner
+          })
+        })
+    }
+    this._outbox()
+  }
+
   // Handle incoming messages
   messageReceived (peerId, msg, cb) {
     const ledger = this._findOrCreate(peerId)
 
     if (msg.empty) {
-      log('received empty message from %s', peerId.toB58String())
       return cb()
     }
 
@@ -121,92 +154,85 @@ module.exports = class Engine {
         log.error(`failed to process blocks: ${err.message}`)
       }
 
-      const arrayWantlist = Array.from(msg.wantlist.values())
-      log('wantlist', arrayWantlist.map((e) => e.toString()))
-
-      if (arrayWantlist.length === 0) {
+      if (msg.wantlist.size === 0) {
         return cb()
       }
 
-      pull(
-        pull.values(arrayWantlist),
-        pull.asyncMap((entry, cb) => {
-          this._processWantlist(ledger, peerId, entry, cb)
-        }),
-        pull.onEnd(cb)
-      )
+      let cancels = []
+      let wants = []
+      for (let entry of msg.wantlist.values()) {
+        if (entry.cancel) {
+          ledger.cancelWant(entry.key)
+          cancels.push(entry)
+        } else {
+          ledger.wants(entry.key, entry.priority)
+          wants.push(entry)
+        }
+      }
+
+      this._cancelWants(ledger, peerId, cancels)
+      this._addWants(ledger, peerId, wants, cb)
     })
   }
 
-  receivedBlock (key) {
-    this._processBlock(key)
-    this._outbox()
+  _cancelWants (ledger, peerId, entries) {
+    const id = peerId.toB58String()
+
+    pullAllWith(this._tasks, entries, (t, e) => {
+      const sameTarget = t.target.toB58String() === id
+      const sameKey = t.entry.key.equals(e.key)
+      return sameTarget && sameKey
+    })
   }
 
-  _processBlock (key) {
-    // Check all connected peers if they want the block we received
-    for (let l of this.ledgerMap.values()) {
-      const entry = l.wantlistContains(key)
-      if (entry) {
-        this.peerRequestQueue.push(entry, l.partner)
-      }
-    }
-  }
-
-  _processWantlist (ledger, peerId, entry, cb) {
-    if (entry.cancel) {
-      log('cancel %s', mh.toB58String(entry.key))
-      ledger.cancelWant(entry.key)
-      this.peerRequestQueue.remove(entry.key, peerId)
-      setImmediate(() => cb())
-    } else {
-      log('wants %s - %s', mh.toB58String(entry.key), entry.priority)
-      ledger.wants(entry.key, entry.priority)
-
+  _addWants (ledger, peerId, entries, cb) {
+    each(entries, (entry, cb) => {
       // If we already have the block, serve it
       this.blockstore.has(entry.key, (err, exists) => {
         if (err) {
-          log('failed existence check %s', mh.toB58String(entry.key))
+          log.error('failed existence check')
         } else if (exists) {
-          log('has want %s', mh.toB58String(entry.key))
-          this.peerRequestQueue.push(entry.entry, peerId)
-          this._outbox()
+          this._tasks.push({
+            entry: entry.entry,
+            target: peerId
+          })
         }
         cb()
       })
-    }
+    }, () => {
+      this._outbox()
+      cb()
+    })
   }
 
   _processBlocks (blocks, ledger, callback) {
-    each(blocks.values(), (block, cb) => {
+    map(blocks.values(), (block, cb) => {
       block.key((err, key) => {
         if (err) {
           return cb(err)
         }
-        log('got block %s (%s bytes)', mh.toB58String(key), block.data.length)
+        log('got block (%s bytes)', block.data.length)
         ledger.receivedBytes(block.data.length)
 
-        this.receivedBlock(key)
-        cb()
+        cb(null, key)
       })
-    }, callback)
+    }, (err, keys) => {
+      if (err) {
+        return callback(err)
+      }
+
+      this.receivedBlocks(keys)
+      callback()
+    })
   }
 
   // Clear up all accounting things after message was sent
-  messageSent (peerId, msg, callback) {
+  messageSent (peerId, block, key) {
     const ledger = this._findOrCreate(peerId)
-    each(msg.blocks.values(), (block, cb) => {
-      ledger.sentBytes(block.data.length)
-      block.key((err, key) => {
-        if (err) {
-          return cb(err)
-        }
-
-        ledger.wantlist.remove(key)
-        this.peerRequestQueue.remove(key, peerId)
-        cb()
-      })
-    }, callback)
+    ledger.sentBytes(block ? block.data.length : 0)
+    if (key) {
+      ledger.wantlist.remove(key)
+    }
   }
 
   numBytesSentTo (peerId) {

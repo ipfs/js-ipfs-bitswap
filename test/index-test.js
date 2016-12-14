@@ -12,7 +12,6 @@ const _ = require('lodash')
 const expect = require('chai').expect
 const PeerId = require('peer-id')
 const Block = require('ipfs-block')
-const mh = require('multihashes')
 const PeerBook = require('peer-book')
 const pull = require('pull-stream')
 
@@ -126,8 +125,8 @@ module.exports = (repo) => {
 
             const wl = bs.wantlistForPeer(other)
 
-            expect(wl.has(mh.toB58String(keys[0]))).to.be.eql(true)
-            expect(wl.has(mh.toB58String(keys[1]))).to.be.eql(true)
+            expect(wl.has(keys[0].toString())).to.be.eql(true)
+            expect(wl.has(keys[1].toString())).to.be.eql(true)
 
             done()
           })

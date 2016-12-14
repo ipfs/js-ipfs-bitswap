@@ -11,6 +11,7 @@ const _ = require('lodash')
 const Block = require('ipfs-block')
 const Buffer = require('safe-buffer').Buffer
 const pull = require('pull-stream')
+const crypto = require('crypto')
 const utils = require('../utils')
 
 describe('gen Bitswap network', function () {
@@ -69,103 +70,99 @@ describe('gen Bitswap network', function () {
         }
       ], (err) => {
         expect(err).to.not.exist
-        setTimeout(() => {
-          node.bitswap.stop()
-          node.libp2p.stop(done)
-        })
+        node.bitswap.stop()
+        node.libp2p.stop(done)
       })
     })
   })
 
-  // const counts = [2, 3, 4, 5, 10]
-  const counts = [2]
-
   describe('distributed blocks', () => {
-    counts.forEach((n) => {
-      it(`with ${n} nodes`, (done) => {
-        utils.genBitswapNetwork(n, (err, nodeArr) => {
-          expect(err).to.not.exist
-          nodeArr.forEach((node) => {
-            expect(node.bitswap).to.exist
-            expect(node.libp2p).to.exist
-            expect(Object.keys(node.libp2p.swarm.conns).length).to.equal(0)
-            expect(Object.keys(node.libp2p.swarm.muxedConns).length).to.equal(n - 1)
-            expect(node.repo).to.exist
-          })
+    it('with 2 nodes', (done) => {
+      const n = 2
+      utils.genBitswapNetwork(n, (err, nodeArr) => {
+        expect(err).to.not.exist
+        nodeArr.forEach((node) => {
+          expect(
+            Object.keys(node.libp2p.swarm.conns)
+          ).to.be.empty
 
-          // -- actual test
+          expect(
+            Object.keys(node.libp2p.swarm.muxedConns)
+          ).to.have.length(n - 1)
+        })
 
-          const round = (j, cb) => {
-            const blockFactor = 10
-            map(_.range(n * blockFactor), (k, cb) => {
-              const b = Buffer.alloc(1024)
-              b.fill(k)
-              cb(null, new Block(b))
-            }, (err, blocks) => {
-              if (err) {
-                return cb(err)
-              }
-
-              const d = (new Date()).getTime()
-
-              parallel(_.map(nodeArr, (node, i) => (callback) => {
-                node.bitswap.start()
-                parallel([
-                  (finish) => pull(
-                    pull.values(
-                      _.range(blockFactor)
-                    ),
-                    pull.map((j) => blocks[i * blockFactor + j]),
-                    pull.asyncMap((b, cb) => {
-                      b.key((err, key) => {
-                        if (err) {
-                          return cb(err)
-                        }
-                        cb(null, {data: b.data, key: key})
-                      })
-                    }),
-                    node.bitswap.putStream(),
-                    pull.onEnd(finish)
-                  ),
-                  (finish) => {
-                    map(blocks, (b, cb) => b.key(cb), (err, keys) => {
-                      expect(err).to.not.exist
-                      pull(
-                        node.bitswap.getStream(keys),
-                        pull.collect((err, res) => {
-                          expect(err).to.not.exist
-                          expect(res).to.have.length(blocks.length)
-                          finish()
-                        })
-                      )
-                    })
-                  }
-                ], callback)
-              }), (err) => {
-                expect(err).to.not.exist
-                console.log('  time -- %s', (new Date()).getTime() - d)
-                cb()
-              })
-            })
+        // -- actual test
+        round(nodeArr, n, (err) => {
+          if (err) {
+            return done(err)
           }
 
-          series(
-            _.range(2).map((i) => (cb) => round(i, cb)),
-            (err) => {
-              // setTimeout is used to avoid closing the TCP socket while spdy is
-              // still sending a ton of signalling data
-              setTimeout(() => {
-                parallel(nodeArr.map((node) => (cb) => {
-                  node.bitswap.stop()
-                  node.libp2p.stop(cb)
-                }), (err2) => {
-                  done(err || err2)
-                })
-              }, 3000)
-            }
-          )
+          each(nodeArr, (node, cb) => {
+            node.bitswap.stop()
+            node.libp2p.stop(cb)
+          }, done)
         })
       })
     })
   })
 })
+
+function round (nodeArr, n, cb) {
+  const blockFactor = 10
+  const blocks = createBlocks(n, blockFactor)
+  map(blocks, (b, cb) => b.key(cb), (err, keys) => {
+    if (err) {
+      return cb(err)
+    }
+    let d
+    series([
+      // put blockFactor amount of blocks per node
+      (cb) => parallel(_.map(nodeArr, (node, i) => (callback) => {
+        node.bitswap.start()
+
+        const data = _.map(_.range(blockFactor), (j) => {
+          const index = i * blockFactor + j
+          return {
+            data: blocks[index].data,
+            key: keys[index]
+          }
+        })
+        each(
+          data,
+          (d, cb) => node.bitswap.put(d, cb),
+          callback
+        )
+      }), cb),
+      (cb) => {
+        d = (new Date()).getTime()
+        cb()
+      },
+      // fetch all blocks on every node
+      (cb) => parallel(_.map(nodeArr, (node, i) => (callback) => {
+        pull(
+          node.bitswap.getStream(keys),
+          pull.collect((err, res) => {
+            if (err) {
+              return callback(err)
+            }
+
+            expect(res).to.have.length(blocks.length)
+            callback()
+          })
+        )
+      }), cb)
+    ], (err) => {
+      if (err) {
+        return cb(err)
+      }
+      console.log('  time -- %s', (new Date()).getTime() - d)
+      cb()
+    })
+  })
+}
+
+function createBlocks (n, blockFactor) {
+  return _.map(_.range(n * blockFactor), (k) => {
+    return new Block(crypto.randomBytes(n * blockFactor))
+  })
+}
