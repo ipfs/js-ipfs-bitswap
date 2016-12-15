@@ -77,11 +77,9 @@ describe('gen Bitswap network', function () {
     })
   })
 
-  // const counts = [2, 3, 4, 5, 10]
-  const counts = [2, 5]//, 10]
-
-  describe('distributed blocks', () => counts.forEach((n) => {
-    it(`with ${n} nodes`, (done) => {
+  describe('distributed blocks', () => {
+    it('with 2 nodes', (done) => {
+      const n = 2
       utils.genBitswapNetwork(n, (err, nodeArr) => {
         expect(err).to.not.exist
         nodeArr.forEach((node) => {
@@ -115,7 +113,7 @@ describe('gen Bitswap network', function () {
         })
       })
     })
-  }))
+  })
 })
 
 function round (nodeArr, n, cb) {
