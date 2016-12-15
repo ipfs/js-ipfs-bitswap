@@ -72,7 +72,6 @@ describe('MsgQueue', () => {
         new Message.Entry(new Buffer('bar'), 2, true)
       ]
 
-      mq.run()
       mq.addEntries(batch1)
       mq.addEntries(batch2)
       mq.addMessage(msg)

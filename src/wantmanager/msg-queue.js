@@ -60,10 +60,4 @@ module.exports = class MsgQueue {
       })
     })
   }
-
-  run () {
-  }
-
-  stop () {
-  }
 }

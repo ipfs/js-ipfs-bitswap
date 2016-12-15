@@ -62,7 +62,6 @@ module.exports = class Wantmanager {
     mq.addMessage(fullwantlist)
 
     this.peers.set(peerId.toB58String(), mq)
-    mq.run()
     return mq
   }
 
@@ -78,7 +77,6 @@ module.exports = class Wantmanager {
       return
     }
 
-    mq.stop()
     this.peers.delete(peerId.toB58String())
   }
 
