@@ -55,9 +55,9 @@ module.exports = (repo) => {
 
         pull(
           pull.values(_.range(1000)),
-          paramap((i, cb) => {
+          pull.map((i) => {
             const content = `this is message ${i}`
-            cb(null, new Block(content))
+            return new Block(content)
           }),
           paramap((block, cb) => {
             const m = new Message(false)
@@ -65,8 +65,13 @@ module.exports = (repo) => {
               if (err) {
                 return cb(err)
               }
-              sender.engine.messageSent(receiver.peer, m)
-              receiver.engine.messageReceived(sender.peer, m, cb)
+              block.key((err, key) => {
+                if (err) {
+                  return cb(err)
+                }
+                sender.engine.messageSent(receiver.peer, block, key)
+                receiver.engine.messageReceived(sender.peer, m, cb)
+              })
             })
           }, 100),
           pull.onEnd((err) => {
@@ -113,8 +118,7 @@ module.exports = (repo) => {
         const seatlle = res[1]
 
         const m = new Message(true)
-
-        sanfrancisco.engine.messageSent(seatlle.peer, m)
+        sanfrancisco.engine.messageSent(seatlle.peer)
         seatlle.engine.messageReceived(sanfrancisco.peer, m, (err) => {
           expect(err).to.not.exist
 
@@ -206,7 +210,7 @@ module.exports = (repo) => {
 
                 const network = mockNetwork(keeps.length, (res) => {
                   const msgs = stringifyMessages(res.messages)
-                  expect(msgs).to.be.eql(keeps)
+                  expect(msgs.sort()).to.be.eql(keeps.sort())
                   innerCb()
                 })
 

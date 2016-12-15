@@ -1,7 +1,6 @@
 'use strict'
 
 const debug = require('debug')
-const pull = require('pull-stream')
 
 const Message = require('../message')
 const Wantlist = require('../wantlist')
@@ -19,41 +18,29 @@ module.exports = class Wantmanager {
     this.network = network
   }
 
-  _newMsgQueue (peerId) {
-    return new MsgQueue(peerId, this.network)
-  }
-
   _addEntries (keys, cancel, force) {
-    let i = -1
-    pull(
-      pull.values(keys),
-      pull.map((key) => {
-        i++
-        return new Message.Entry(key, cs.kMaxPriority - i, cancel)
-      }),
-      pull.through((e) => {
-        // add changes to our wantlist
-        if (e.cancel) {
-          if (force) {
-            this.wl.removeForce(e.key)
-          } else {
-            this.wl.remove(e.key)
-          }
+    const entries = keys.map((key, i) => {
+      return new Message.Entry(key, cs.kMaxPriority - i, cancel)
+    })
+
+    entries.forEach((e) => {
+      // add changes to our wantlist
+      if (e.cancel) {
+        if (force) {
+          this.wl.removeForce(e.key)
         } else {
-          log('adding to wl')
-          this.wl.add(e.key, e.priority)
+          this.wl.remove(e.key)
         }
-      }),
-      pull.collect((err, entries) => {
-        if (err) {
-          throw err
-        }
-        // broadcast changes
-        for (let p of this.peers.values()) {
-          p.addEntries(entries, false)
-        }
-      })
-    )
+      } else {
+        log('adding to wl')
+        this.wl.add(e.key, e.priority)
+      }
+    })
+
+    // broadcast changes
+    for (let p of this.peers.values()) {
+      p.addEntries(entries)
+    }
   }
 
   _startPeerHandler (peerId) {
@@ -64,7 +51,7 @@ module.exports = class Wantmanager {
       return
     }
 
-    mq = this._newMsgQueue(peerId)
+    mq = new MsgQueue(peerId, this.network)
 
     // new peer, give them the full wantlist
     const fullwantlist = new Message(true)
@@ -97,7 +84,6 @@ module.exports = class Wantmanager {
 
   // add all the keys to the wantlist
   wantBlocks (keys) {
-    log('want blocks: %s', keys.length)
     this._addEntries(keys, false)
   }
 
@@ -119,12 +105,10 @@ module.exports = class Wantmanager {
   }
 
   connected (peerId) {
-    // log('peer connected: %s', peerId.toB58String())
     this._startPeerHandler(peerId)
   }
 
   disconnected (peerId) {
-    // log('peer disconnected: %s', peerId.toB58String())
     this._stopPeerHandler(peerId)
   }
 
@@ -144,7 +128,7 @@ module.exports = class Wantmanager {
 
   stop () {
     for (let mq of this.peers.values()) {
-      this.disconnected(mq.p)
+      this.disconnected(mq.id)
     }
     clearInterval(this.timer)
   }

@@ -43,7 +43,6 @@ module.exports = class Bitwap {
   // handle messages received through the network
   _receiveMessage (peerId, incoming, cb) {
     cb = cb || (() => {})
-    // log('receiving message from %s', peerId.toB58String())
     this.engine.messageReceived(peerId, incoming, (err) => {
       if (err) {
         log('failed to receive message', incoming)
@@ -86,7 +85,6 @@ module.exports = class Bitwap {
           return cb()
         }
 
-        // log('got block from %s', peerId.toB58String(), block.data.length)
         cb()
       }),
       (cb) => block.key((err, key) => {
@@ -277,7 +275,7 @@ module.exports = class Bitwap {
               }
               log('put block')
               this.notifications.emit(`block:${key.toString()}`, block)
-              this.engine.receivedBlock(key)
+              this.engine.receivedBlocks([key])
               cb(null, meta)
             })
           })
