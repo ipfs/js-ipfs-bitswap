@@ -3,6 +3,7 @@
 const series = require('async/series')
 const retry = require('async/retry')
 const debug = require('debug')
+
 const log = debug('bitswap')
 log.error = debug('bitswap:error')
 const EventEmitter = require('events').EventEmitter
@@ -12,15 +13,15 @@ const paramap = require('pull-paramap')
 const defer = require('pull-defer/source')
 const Block = require('ipfs-block')
 
-const cs = require('./constants')
-const WantManager = require('./wantmanager')
-const Network = require('./network')
-const decision = require('./decision')
+const CONSTANTS = require('./constants')
+const WantManager = require('./components/want-manager')
+const Network = require('./components/network')
+const DecisionEngine = require('./components/decision-engine')
 
-module.exports = class Bitwap {
-  constructor (p, libp2p, blockstore, peerBook) {
+class Bitswap {
+  constructor (id, libp2p, blockstore, peerBook) {
     // the ID of the peer to act on behalf of
-    this.self = p
+    this.self = id
 
     // the network delivers messages
     this.network = new Network(libp2p, peerBook, this)
@@ -28,7 +29,7 @@ module.exports = class Bitwap {
     // local database
     this.blockstore = blockstore
 
-    this.engine = new decision.Engine(blockstore, this.network)
+    this.engine = new DecisionEngine(blockstore, this.network)
 
     // handle message sending
     this.wm = new WantManager(this.network)
@@ -38,7 +39,7 @@ module.exports = class Bitwap {
     this.dupDataRecvd = 0
 
     this.notifications = new EventEmitter()
-    this.notifications.setMaxListeners(cs.maxListeners)
+    this.notifications.setMaxListeners(CONSTANTS.maxListeners)
   }
 
   // handle messages received through the network
@@ -57,7 +58,6 @@ module.exports = class Bitwap {
       }
 
       // quickly send out cancels, reduces chances of duplicate block receives
-
       pull(
         pull.values(iblocks),
         pull.asyncMap((block, cb) => block.key(cb)),
@@ -327,11 +327,16 @@ module.exports = class Bitwap {
 }
 
 // Helper method, to add a cid to a block before storing it in the ipfs-repo/blockstore
-function blockToStore (b, cb) {
+function blockToStore (b, callback) {
   b.key((err, key) => {
     if (err) {
-      return cb(err)
+      return callback(err)
     }
-    cb(null, {data: b.data, key: key})
+    callback(null, {
+      data: b.data,
+      key: key
+    })
   })
 }
+
+module.exports = Bitswap

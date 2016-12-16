@@ -38,6 +38,6 @@ const repo = {
 }
 
 require('./index-test')(repo)
-require('./decision/engine-test')(repo)
-require('./network/network.node.js')
-require('./network/gen-bitswap-network.node.js')
+require('./components/decision-engine/index-test')(repo)
+require('./components/network/network.node.js')
+require('./components/network/gen-bitswap-network.node.js')
