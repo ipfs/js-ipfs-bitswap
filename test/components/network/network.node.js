@@ -141,7 +141,7 @@ describe('network', () => {
     })
   })
 
-  it('._receiveMessage success', (done) => {
+  it('._receiveMessage success from Bitswap 1.0.0', (done) => {
     const msg = new Message(true)
     const b1 = blocks[0]
     const b2 = blocks[1]
@@ -183,6 +183,10 @@ describe('network', () => {
       })
     })
   })
+
+  it.skip('._receiveMessage success from Bitswap 1.1.0', (done) => {})
+  it.skip('._sendMessage on Bitswap 1.0.0', (done) => {})
+  it.skip('._sendMessage on Bitswap 1.1.0', (done) => {})
 
   it('.sendMessage', (done) => {
     const msg = new Message(true)

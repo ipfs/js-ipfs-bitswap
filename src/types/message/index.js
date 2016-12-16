@@ -81,6 +81,32 @@ class BitswapMessage {
    */
   serializeToBitswap110 () {
     // TODO
+    const msg = {
+      wantlist: {
+        entries: Array.from(this.wantlist.values()).map((entry) => {
+          return {
+            block: entry.cid.buffer, // cid
+            priority: Number(entry.priority),
+            cancel: Boolean(entry.cancel)
+          }
+        })
+      },
+      payload: []
+    }
+
+    if (this.full) {
+      msg.wantlist.full = true
+    }
+
+    this.blocks.forEach((cidStr, block) => {
+      const cid = new CID(cidStr)
+      msg.payload.push({
+        prefix: cid.prefix,
+        data: block.data
+      })
+    })
+
+    return pbm.Message.encode(msg)
   }
 
   equals (other) {
@@ -108,32 +134,63 @@ class BitswapMessage {
 }
 
 BitswapMessage.deserialize = (raw, callback) => {
-  const decoded = pbm.Message.decode(raw)
-  const msg = new BitswapMessage(decoded.wantlist.full)
+  let decoded
+  try {
+    decoded = pbm.Message.decode(raw)
+  } catch (err) {
+    return setImmediate(() => callback(err))
+  }
 
-  decoded.wantlist.entries.forEach((entry) => {
-    // note: entry.block is the CID here
-    const cid = new CID(entry.block)
-    msg.addEntry(cid, entry.priority, entry.cancel)
-  })
+  const isFull = (decoded.wantlist && decoded.wantlist.full) || false
+  const msg = new BitswapMessage(isFull)
 
+  if (decoded.wantlist) {
+    decoded.wantlist.entries.forEach((entry) => {
+      // note: entry.block is the CID here
+      const cid = new CID(entry.block)
+      msg.addEntry(cid, entry.priority, entry.cancel)
+    })
+  }
+
+  // Bitswap 1.0.0
   // decoded.blocks are just the byte arrays
-  map(decoded.blocks, (b, cb) => {
-    const block = new Block(b)
-    block.key((err, key) => {
+  if (decoded.blocks.length > 0) {
+    map(decoded.blocks, (b, cb) => {
+      const block = new Block(b)
+      block.key((err, key) => {
+        if (err) {
+          return cb(err)
+        }
+        const cid = new CID(key)
+        msg.addBlock(cid, block)
+        cb()
+      })
+    }, (err) => {
       if (err) {
-        return cb(err)
+        return callback(err)
       }
-      const cid = new CID(key)
+      callback(null, msg)
+    })
+    return
+  }
+
+  // Bitswap 1.1.0
+  if (decoded.payload.length > 0) {
+    map(decoded.payload, (p, cb) => {
+      // TODO
+      // parse by varint
+      // TODO
       msg.addBlock(cid, block)
       cb()
+    }, (err) => {
+      if (err) {
+        return callback(err)
+      }
+      callback(null, msg)
     })
-  }, (err) => {
-    if (err) {
-      return callback(err)
-    }
-    callback(null, msg)
-  })
+    return
+  }
+  callback(null, msg)
 }
 
 BitswapMessage.Entry = Entry

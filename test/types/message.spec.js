@@ -8,6 +8,11 @@ const map = require('async/map')
 const pbm = protobuf(require('../../src/types/message/message.proto'))
 const CID = require('cids')
 
+const loadFixture = require('aegir/fixtures')
+const testDataPath = '../test-data/serialized-from-go'
+const rawMessageFullWantlist = loadFixture(__dirname, testDataPath + '/bitswap110-message-full-wantlist')
+const rawMessageOneBlock = loadFixture(__dirname, testDataPath + '/bitswap110-message-one-block')
+
 const BitswapMessage = require('../../src/types/message')
 
 describe('BitswapMessage', () => {
@@ -49,7 +54,9 @@ describe('BitswapMessage', () => {
     done()
   })
 
-  it('.deserialize', (done) => {
+  it.skip('.serializeToBitswap110', (done) => {})
+
+  it('.deserialize a Bitswap100 Message', (done) => {
     const cid = cids[0]
     const raw = pbm.Message.encode({
       wantlist: {
@@ -88,6 +95,8 @@ describe('BitswapMessage', () => {
       done()
     })
   })
+
+  it.skip('.deserialize a Bitswap100 Message', (done) => {})
 
   it('duplicates', (done) => {
     const b = blocks[0]
@@ -193,6 +202,20 @@ describe('BitswapMessage', () => {
       })
     })
 
-    it.skip('bitswap 1.1.0 message', (done) => {})
+    describe('bitswap 1.1.0 message', () => {
+      it('full wantlist message', (done) => {
+        BitswapMessage.deserialize(rawMessageFullWantlist, (err, message) => {
+          expect(err).to.not.exist
+          done()
+        })
+      })
+
+      it('one block message', (done) => {
+        BitswapMessage.deserialize(rawMessageOneBlock, (err, message) => {
+          expect(err).to.not.exist
+          done()
+        })
+      })
+    })
   })
 })
