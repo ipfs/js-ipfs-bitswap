@@ -10,6 +10,8 @@ const debounce = require('lodash.debounce')
 const uniqWith = require('lodash.uniqwith')
 const filter = require('lodash.filter')
 const find = require('lodash.find')
+const values = require('lodash.values')
+const groupBy = require('lodash.groupby')
 
 const log = debug('bitswap:engine')
 log.error = debug('bitswap:engine:error')
@@ -33,10 +35,13 @@ module.exports = class Engine {
     this._outbox = debounce(this._processTasks.bind(this), 100)
   }
 
-  _sendBlock (env, cb) {
+  _sendBlocks (env, cb) {
     const msg = new Message(false)
-    msg.addBlockWithKey(env.block, env.key)
+    env.blocks.forEach((block) => {
+      msg.addBlockWithKey(block.block, block.key)
+    })
 
+    // console.log('sending %s blocks', msg.blocks.size)
     this.network.sendMessage(env.peer, msg, (err) => {
       if (err) {
         log('sendblock error: %s', err.message)
@@ -46,13 +51,16 @@ module.exports = class Engine {
   }
 
   _processTasks () {
-    if (!this._running || !this._tasks.length) return
+    if (!this._running || !this._tasks.length) {
+      return
+    }
 
     const tasks = this._tasks
     this._tasks = []
     const entries = tasks.map((t) => t.entry)
     const keys = entries.map((e) => e.key)
     const uniqKeys = uniqWith(keys, (a, b) => a.equals(b))
+    const groupedTasks = groupBy(tasks, (task) => task.target.toB58String())
 
     waterfall([
       (cb) => map(uniqKeys, (k, cb) => {
@@ -69,18 +77,23 @@ module.exports = class Engine {
           })
         )
       }, cb),
-      (blocks, cb) => each(tasks, (task, cb) => {
-        const key = task.entry.key
-        const block = find(blocks, (b) => b.key.equals(key))
-        this._sendBlock({
-          peer: task.target,
-          block: block.block,
-          key: key
+      (blocks, cb) => each(values(groupedTasks), (tasks, cb) => {
+        // all tasks have the same target
+        const peer = tasks[0].target
+        const blockList = keys.map((k) => {
+          return find(blocks, (b) => b.key.equals(k))
+        })
+
+        this._sendBlocks({
+          peer: peer,
+          blocks: blockList
         }, (err) => {
           if (err) {
             log.error('failed to send', err)
           }
-          this.messageSent(task.target, block.block, key)
+          blockList.forEach((block) => {
+            this.messageSent(peer, block.block, block.key)
+          })
           cb()
         })
       })

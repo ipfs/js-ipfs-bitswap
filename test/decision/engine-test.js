@@ -208,7 +208,7 @@ module.exports = (repo) => {
                   return _.flatten(messages.map(messageToString))
                 }
 
-                const network = mockNetwork(keeps.length, (res) => {
+                const network = mockNetwork(1, (res) => {
                   const msgs = stringifyMessages(res.messages)
                   expect(msgs.sort()).to.be.eql(keeps.sort())
                   innerCb()
