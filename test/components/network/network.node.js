@@ -10,12 +10,12 @@ const Block = require('ipfs-block')
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
 const parallel = require('async/parallel')
-const series = require('async/series')
+const CID = require('cids')
 
 const Network = require('../../../src/components/network')
 const Message = require('../../../src/types/message')
 
-describe.skip('network', () => {
+describe('network', () => {
   let libp2pNodeA
   let libp2pNodeB
   let peerInfoA
@@ -141,21 +141,25 @@ describe.skip('network', () => {
     })
   })
 
-  it('_receiveMessage success', (done) => {
+  it('._receiveMessage success', (done) => {
     const msg = new Message(true)
-    const b = blocks[0]
+    const b1 = blocks[0]
+    const b2 = blocks[1]
 
-    b.key((err, key) => {
+    b1.key((err, key1) => {
       expect(err).to.not.exist
-      msg.addEntry(key, 0, false)
+      const cid1 = new CID(key1)
+      msg.addEntry(cid1, 0, false)
+      msg.addBlock(cid1, b1)
 
-      series([
-        (cb) => msg.addBlock(b, cb),
-        (cb) => msg.addBlock(blocks[1], cb)
-      ], (err) => {
+      b2.key((err, key2) => {
         expect(err).to.not.exist
+        const cid2 = new CID(key2)
+
+        msg.addBlock(cid2, b2)
+
         bitswapMockB._receiveMessage = (peerId, msgReceived) => {
-          expect(msg).to.deep.equal(msgReceived)
+          expect(msg).to.eql(msgReceived)
           bitswapMockB._receiveMessage = () => {}
           bitswapMockB._receiveError = () => {}
           done()
@@ -169,7 +173,9 @@ describe.skip('network', () => {
           expect(err).to.not.exist
 
           pull(
-            pull.values([msg.toProto()]),
+            pull.values([
+              msg.serializeToBitswap100()
+            ]),
             lp.encode(),
             conn
           )
@@ -178,20 +184,32 @@ describe.skip('network', () => {
     })
   })
 
-  it('sendMessage', (done) => {
+  it('.sendMessage', (done) => {
     const msg = new Message(true)
-    blocks[0].key((err, key) => {
+    const b1 = blocks[0]
+    const b2 = blocks[1]
+
+    b1.key((err, key1) => {
       expect(err).to.not.exist
-      msg.addEntry(key, 0, false)
-      series([
-        (cb) => msg.addBlock(blocks[0], cb),
-        (cb) => msg.addBlock(blocks[1], cb)
-      ], (err) => {
+      const cid1 = new CID(key1)
+      msg.addEntry(cid1, 0, false)
+      msg.addBlock(cid1, b1)
+
+      b2.key((err, key2) => {
         expect(err).to.not.exist
+        const cid2 = new CID(key2)
+
+        msg.addBlock(cid2, b2)
+
         bitswapMockB._receiveMessage = (peerId, msgReceived) => {
-          expect(msg).to.deep.equal(msgReceived)
+          expect(msg).to.eql(msgReceived)
           bitswapMockB._receiveMessage = () => {}
+          bitswapMockB._receiveError = () => {}
           done()
+        }
+
+        bitswapMockB._receiveError = (err) => {
+          expect(err).to.not.exist
         }
 
         networkA.sendMessage(peerInfoB.id, msg, (err) => {

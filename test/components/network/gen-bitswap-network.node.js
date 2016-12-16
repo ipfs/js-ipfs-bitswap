@@ -12,6 +12,7 @@ const Block = require('ipfs-block')
 const Buffer = require('safe-buffer').Buffer
 const pull = require('pull-stream')
 const utils = require('../../utils')
+const CID = require('cids')
 
 describe.skip('gen Bitswap network', function () {
   // CI is very slow
@@ -39,13 +40,16 @@ describe.skip('gen Bitswap network', function () {
         (cb) => {
           pull(
             pull.values(blocks),
-            pull.asyncMap((b, cb) => {
-              b.key((err, key) => {
+            pull.asyncMap((block, cb) => {
+              block.key((err, key) => {
                 if (err) {
                   return cb(err)
                 }
 
-                cb(null, {data: b.data, key: key})
+                cb(null, {
+                  data: block.data,
+                  cid: new CID(key)
+                })
               })
             }),
             node.bitswap.putStream(),
@@ -54,10 +58,11 @@ describe.skip('gen Bitswap network', function () {
         },
         (cb) => {
           each(_.range(100), (i, cb) => {
-            map(blocks, (b, cb) => b.key(cb), (err, keys) => {
+            map(blocks, (block, cb) => block.key(cb), (err, keys) => {
+              const cids = keys.map((key) => new CID(key))
               expect(err).to.not.exist
               pull(
-                node.bitswap.getStream(keys),
+                node.bitswap.getStream(cids),
                 pull.collect((err, res) => {
                   expect(err).to.not.exist
                   expect(res).to.have.length(blocks.length)
@@ -121,7 +126,10 @@ describe.skip('gen Bitswap network', function () {
                         if (err) {
                           return cb(err)
                         }
-                        cb(null, {data: b.data, key: key})
+                        cb(null, {
+                          data: b.data,
+                          key: new CID(key)
+                        })
                       })
                     }),
                     node.bitswap.putStream(),
@@ -130,8 +138,9 @@ describe.skip('gen Bitswap network', function () {
                   (finish) => {
                     map(blocks, (b, cb) => b.key(cb), (err, keys) => {
                       expect(err).to.not.exist
+                      const cids = keys.map((key) => new CID(key))
                       pull(
-                        node.bitswap.getStream(keys),
+                        node.bitswap.getStream(cids),
                         pull.collect((err, res) => {
                           expect(err).to.not.exist
                           expect(res).to.have.length(blocks.length)
@@ -152,8 +161,8 @@ describe.skip('gen Bitswap network', function () {
           series(
             _.range(2).map((i) => (cb) => round(i, cb)),
             (err) => {
-              // setTimeout is used to avoid closing the TCP socket while spdy is
-              // still sending a ton of signalling data
+              // setTimeout is used to avoid closing the TCP socket while
+              // spdy is still sending a ton of signalling data
               setTimeout(() => {
                 parallel(nodeArr.map((node) => (cb) => {
                   node.bitswap.stop()
