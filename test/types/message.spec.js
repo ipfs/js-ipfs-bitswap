@@ -8,6 +8,11 @@ const map = require('async/map')
 const pbm = protobuf(require('../../src/types/message/message.proto'))
 const CID = require('cids')
 
+const loadFixture = require('aegir/fixtures')
+const testDataPath = '../test-data/serialized-from-go'
+const rawMessageFullWantlist = loadFixture(__dirname, testDataPath + '/bitswap110-message-full-wantlist')
+const rawMessageOneBlock = loadFixture(__dirname, testDataPath + '/bitswap110-message-one-block')
+
 const BitswapMessage = require('../../src/types/message')
 
 describe('BitswapMessage', () => {
@@ -39,47 +44,103 @@ describe('BitswapMessage', () => {
     })
   })
 
-  it('.serializeToBitswap100', (done) => {
+  it('.serializeToBitswap100', () => {
     const block = blocks[1]
     const cid = cids[1]
-    const m = new BitswapMessage(true)
-    m.addBlock(cid, block)
-    expect(pbm.Message.decode(m.serializeToBitswap100()).blocks)
-      .to.be.eql([block.data])
-    done()
+    const msg = new BitswapMessage(true)
+    msg.addBlock(cid, block)
+    const serialized = msg.serializeToBitswap100()
+    expect(pbm.Message.decode(serialized).blocks).to.eql([block.data])
   })
 
-  it('.deserialize', (done) => {
-    const cid = cids[0]
+  it('.serializeToBitswap110', () => {
+    const block = blocks[1]
+    const cid = cids[1]
+    const msg = new BitswapMessage(true)
+    msg.addBlock(cid, block)
+
+    const serialized = msg.serializeToBitswap110()
+    const decoded = pbm.Message.decode(serialized)
+
+    expect(decoded.payload[0].data).to.eql(block.data)
+  })
+
+  it('.deserialize a Bitswap100 Message', (done) => {
+    const cid0 = cids[0]
+    const cid1 = cids[1]
+    const cid2 = cids[2]
+
+    const b1 = blocks[1]
+    const b2 = blocks[2]
+
     const raw = pbm.Message.encode({
       wantlist: {
         entries: [{
-          block: cid.buffer,
+          block: cid0.buffer,
           cancel: false
         }],
         full: true
       },
       blocks: [
-        new Buffer('hello'),
-        new Buffer('world')
+        b1.data,
+        b2.data
       ]
     })
 
-    BitswapMessage.deserialize(raw, (err, protoMessage) => {
+    BitswapMessage.deserialize(raw, (err, msg) => {
       expect(err).to.not.exist
-      expect(protoMessage.full).to.equal(true)
-      expect(Array.from(protoMessage.wantlist))
-        .to.be.eql([[
-          cid.toBaseEncodedString(),
-          new BitswapMessage.Entry(cid, 0, false)
+      expect(msg.full).to.equal(true)
+      expect(Array.from(msg.wantlist))
+        .to.eql([[
+          cid0.toBaseEncodedString(),
+          new BitswapMessage.Entry(cid0, 0, false)
         ]])
 
-      const b1 = blocks[1]
-      const b2 = blocks[2]
-      const cid1 = cids[1]
-      const cid2 = cids[2]
+      expect(Array.from(msg.blocks).map((b) => [b[0], b[1].data]))
+        .to.eql([
+          [cid1.toBaseEncodedString(), b1.data],
+          [cid2.toBaseEncodedString(), b2.data]
+        ])
 
-      expect(Array.from(protoMessage.blocks).map((b) => [b[0], b[1].data]))
+      done()
+    })
+  })
+
+  it('.deserialize a Bitswap110 Message', (done) => {
+    const cid0 = cids[0]
+    const cid1 = cids[1]
+    const cid2 = cids[2]
+
+    const b1 = blocks[1]
+    const b2 = blocks[2]
+
+    const raw = pbm.Message.encode({
+      wantlist: {
+        entries: [{
+          block: cid0.buffer,
+          cancel: false
+        }],
+        full: true
+      },
+      payload: [{
+        data: b1.data,
+        prefix: cid1.prefix
+      }, {
+        data: b2.data,
+        prefix: cid2.prefix
+      }]
+    })
+
+    BitswapMessage.deserialize(raw, (err, msg) => {
+      expect(err).to.not.exist
+      expect(msg.full).to.equal(true)
+      expect(Array.from(msg.wantlist))
+        .to.eql([[
+          cid0.toBaseEncodedString(),
+          new BitswapMessage.Entry(cid0, 0, false)
+        ]])
+
+      expect(Array.from(msg.blocks).map((b) => [b[0], b[1].data]))
         .to.eql([
           [cid1.toBaseEncodedString(), b1.data],
           [cid2.toBaseEncodedString(), b2.data]
@@ -193,6 +254,27 @@ describe('BitswapMessage', () => {
       })
     })
 
-    it.skip('bitswap 1.1.0 message', (done) => {})
+    describe.skip('bitswap 1.1.0 message', () => {
+      // TODO check with whyrusleeping the quality of the raw protobufs
+      // deserialization is just failing on the first and the second has a
+      // payload but empty
+      it('full wantlist message', (done) => {
+        BitswapMessage.deserialize(rawMessageFullWantlist, (err, message) => {
+          expect(err).to.not.exist
+          // TODO
+          //   check the deserialised message
+          done()
+        })
+      })
+
+      it('one block message', (done) => {
+        BitswapMessage.deserialize(rawMessageOneBlock, (err, message) => {
+          expect(err).to.not.exist
+          // TODO
+          //   check the deserialised message
+          done()
+        })
+      })
+    })
   })
 })

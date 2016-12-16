@@ -6,6 +6,8 @@ const isEqualWith = require('lodash.isequalwith')
 const assert = require('assert')
 const map = require('async/map')
 const CID = require('cids')
+const codecName = require('multicodec/src/name-table')
+const vd = require('varint-decoder')
 
 const pbm = protobuf(require('./message.proto'))
 const Entry = require('./entry')
@@ -23,7 +25,7 @@ class BitswapMessage {
   }
 
   addEntry (cid, priority, cancel) {
-    assert(CID.isCID(cid), 'must be a valid cid')
+    assert(cid && CID.isCID(cid), 'must be a valid cid')
     const cidStr = cid.toBaseEncodedString()
 
     const entry = this.wantlist.get(cidStr)
@@ -80,7 +82,32 @@ class BitswapMessage {
    * version 1.1.0
    */
   serializeToBitswap110 () {
-    // TODO
+    const msg = {
+      wantlist: {
+        entries: Array.from(this.wantlist.values()).map((entry) => {
+          return {
+            block: entry.cid.buffer, // cid
+            priority: Number(entry.priority),
+            cancel: Boolean(entry.cancel)
+          }
+        })
+      },
+      payload: []
+    }
+
+    if (this.full) {
+      msg.wantlist.full = true
+    }
+
+    this.blocks.forEach((block, cidStr) => {
+      const cid = new CID(cidStr)
+      msg.payload.push({
+        prefix: cid.prefix,
+        data: block.data
+      })
+    })
+
+    return pbm.Message.encode(msg)
   }
 
   equals (other) {
@@ -108,32 +135,76 @@ class BitswapMessage {
 }
 
 BitswapMessage.deserialize = (raw, callback) => {
-  const decoded = pbm.Message.decode(raw)
-  const msg = new BitswapMessage(decoded.wantlist.full)
+  let decoded
+  try {
+    decoded = pbm.Message.decode(raw)
+  } catch (err) {
+    return setImmediate(() => callback(err))
+  }
 
-  decoded.wantlist.entries.forEach((entry) => {
-    // note: entry.block is the CID here
-    const cid = new CID(entry.block)
-    msg.addEntry(cid, entry.priority, entry.cancel)
-  })
+  const isFull = (decoded.wantlist && decoded.wantlist.full) || false
+  const msg = new BitswapMessage(isFull)
 
-  // decoded.blocks are just the byte arrays
-  map(decoded.blocks, (b, cb) => {
-    const block = new Block(b)
-    block.key((err, key) => {
-      if (err) {
-        return cb(err)
-      }
-      const cid = new CID(key)
-      msg.addBlock(cid, block)
-      cb()
+  if (decoded.wantlist) {
+    decoded.wantlist.entries.forEach((entry) => {
+      // note: entry.block is the CID here
+      const cid = new CID(entry.block)
+      msg.addEntry(cid, entry.priority, entry.cancel)
     })
-  }, (err) => {
-    if (err) {
-      return callback(err)
-    }
-    callback(null, msg)
-  })
+  }
+
+  // Bitswap 1.0.0
+  // decoded.blocks are just the byte arrays
+  if (decoded.blocks.length > 0) {
+    map(decoded.blocks, (b, cb) => {
+      const block = new Block(b)
+      block.key((err, key) => {
+        if (err) {
+          return cb(err)
+        }
+        const cid = new CID(key)
+        msg.addBlock(cid, block)
+        cb()
+      })
+    }, (err) => {
+      if (err) {
+        return callback(err)
+      }
+      callback(null, msg)
+    })
+    return
+  }
+
+  // Bitswap 1.1.0
+  if (decoded.payload.length > 0) {
+    map(decoded.payload, (p, cb) => {
+      if (!p.prefix || !p.data) {
+        cb()
+      }
+      console.log(p)
+      const values = vd(p.prefix)
+      const cidVersion = values[0]
+      const multicodec = values[1]
+      const hashAlg = values[2]
+      // const hashLen = values[3] // We haven't need to use this so far
+      const block = new Block(p.data)
+      block.key(hashAlg, (err, multihash) => {
+        if (err) {
+          return cb(err)
+        }
+        const cid = new CID(cidVersion, codecName[multicodec.toString('16')], multihash)
+        msg.addBlock(cid, block)
+        cb()
+      })
+    }, (err) => {
+      if (err) {
+        return callback(err)
+      }
+      callback(null, msg)
+    })
+    return
+  }
+  callback(null, msg)
 }
 
 BitswapMessage.Entry = Entry

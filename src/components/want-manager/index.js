@@ -135,7 +135,7 @@ module.exports = class WantManager {
       // resend entirew wantlist every so often
       const fullwantlist = new Message(true)
       for (let entry of this.wantlist.entries()) {
-        fullwantlist.addEntry(entry[1].key, entry[1].priority)
+        fullwantlist.addEntry(entry[1].cid, entry[1].priority)
       }
 
       this.peers.forEach((p) => {
