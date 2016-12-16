@@ -2,16 +2,15 @@
 
 const debug = require('debug')
 const pull = require('pull-stream')
-const setImmediate = require('async/setImmediate')
 const each = require('async/each')
 const map = require('async/map')
 const waterfall = require('async/waterfall')
 const debounce = require('lodash.debounce')
 const uniqWith = require('lodash.uniqwith')
-const filter = require('lodash.filter')
 const find = require('lodash.find')
 const values = require('lodash.values')
 const groupBy = require('lodash.groupby')
+const pullAllWith = require('lodash.pullallwith')
 
 const log = debug('bitswap:engine')
 log.error = debug('bitswap:engine:error')
@@ -159,40 +158,51 @@ module.exports = class Engine {
         return cb()
       }
 
-      each(msg.wantlist.values(), (entry, cb) => {
-        this._processWantlist(ledger, peerId, entry, cb)
-      }, cb)
+      let cancels = []
+      let wants = []
+      for (let entry of msg.wantlist.values()) {
+        if (entry.cancel) {
+          ledger.cancelWant(entry.key)
+          cancels.push(entry)
+        } else {
+          ledger.wants(entry.key, entry.priority)
+          wants.push(entry)
+        }
+      }
+
+      this._cancelWants(ledger, peerId, cancels)
+      this._addWants(ledger, peerId, wants, cb)
     })
   }
 
-  _processWantlist (ledger, peerId, entry, cb) {
-    if (entry.cancel) {
-      log('cancel')
-      ledger.cancelWant(entry.key)
+  _cancelWants (ledger, peerId, entries) {
+    const id = peerId.toB58String()
 
-      this._tasks = filter(this._tasks, (e) => {
-        return !e.entry.key.equals(entry.key) || e.target.toB58String() !== peerId.toB58String()
-      })
-      setImmediate(() => cb())
-    } else {
-      log('wants')
-      ledger.wants(entry.key, entry.priority)
+    pullAllWith(this._tasks, entries, (t, e) => {
+      const sameTarget = t.target.toB58String() === id
+      const sameKey = t.entry.key.equals(e.key)
+      return sameTarget && sameKey
+    })
+  }
 
+  _addWants (ledger, peerId, entries, cb) {
+    each(entries, (entry, cb) => {
       // If we already have the block, serve it
       this.blockstore.has(entry.key, (err, exists) => {
         if (err) {
-          log('failed existence check')
+          log.error('failed existence check')
         } else if (exists) {
-          log('has want')
           this._tasks.push({
             entry: entry.entry,
             target: peerId
           })
-          this._outbox()
         }
         cb()
       })
-    }
+    }, () => {
+      this._outbox()
+      cb()
+    })
   }
 
   _processBlocks (blocks, ledger, callback) {

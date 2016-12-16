@@ -14,7 +14,7 @@ const crypto = require('crypto')
 
 const utils = require('../test/utils')
 
-const nodes = [2, 5, 10]//, 20, 50, 100]
+const nodes = [2, 5, 10, 20]
 const blockFactors = [1, 10, 100]
 
 console.log('-- start')
