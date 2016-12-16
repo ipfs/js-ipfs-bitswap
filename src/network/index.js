@@ -22,9 +22,12 @@ module.exports = class Network {
 
     // increase event listener max
     this.libp2p.swarm.setMaxListeners(cs.maxListeners)
+
+    this._running = false
   }
 
   start () {
+    this._running = true
     // bind event listeners
     this._onConnection = this._onConnection.bind(this)
     this._onPeerMux = this._onPeerMux.bind(this)
@@ -43,6 +46,7 @@ module.exports = class Network {
   }
 
   stop () {
+    this._running = false
     this.libp2p.unhandle(PROTOCOL_IDENTIFIER)
     this.libp2p.swarm.removeListener('peer-mux-established', this._onPeerMux)
 
@@ -50,6 +54,9 @@ module.exports = class Network {
   }
 
   _onConnection (protocol, conn) {
+    if (!this._running) {
+      return
+    }
     log('incomming new bitswap connection: %s', protocol)
     pull(
       conn,
@@ -60,7 +67,7 @@ module.exports = class Network {
           if (err) {
             return cb(err)
           }
-          log('data from', peerInfo.id.toB58String())
+          // log('data from', peerInfo.id.toB58String())
           this.bitswap._receiveMessage(peerInfo.id, msg)
           cb()
         })
@@ -75,17 +82,27 @@ module.exports = class Network {
   }
 
   _onPeerMux (peerInfo) {
+    if (!this._running) {
+      return
+    }
     this.bitswap._onPeerConnected(peerInfo.id)
   }
 
   _onPeerMuxClosed (peerInfo) {
+    if (!this._running) {
+      return
+    }
     this.bitswap._onPeerDisconnected(peerInfo.id)
   }
 
   // Connect to the given peer
   connectTo (peerId, cb) {
-    log('connecting to %s', peerId.toB58String())
     const done = (err) => setImmediate(() => cb(err))
+
+    if (!this._running) {
+      return done(new Error('No running network'))
+    }
+
     // NOTE: For now, all this does is ensure that we are
     // connected. Once we have Peer Routing, we will be able
     // to find the Peer
@@ -98,11 +115,15 @@ module.exports = class Network {
 
   // Send the given msg (instance of Message) to the given peer
   sendMessage (peerId, msg, cb) {
+    if (!this._running) {
+      return cb(new Error('No running network'))
+    }
+
     const stringId = peerId.toB58String()
     log('sendMessage to %s', stringId)
     let peerInfo
     try {
-      peerInfo = this.peerBook.getByMultihash(peerId.toBytes())
+      peerInfo = this.peerBook.getByB58String(stringId)
     } catch (err) {
       return cb(err)
     }
@@ -115,7 +136,7 @@ module.exports = class Network {
 
     log('dialByPeerInfo')
     this.libp2p.dialByPeerInfo(peerInfo, PROTOCOL_IDENTIFIER, (err, conn) => {
-      log('dialed %s', peerInfo.id.toB58String(), err)
+      // log('dialed %s', peerInfo.id.toB58String(), err)
       if (err) {
         return cb(err)
       }

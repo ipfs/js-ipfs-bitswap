@@ -23,26 +23,24 @@ describe('MsgQueue', () => {
       let i = 0
       const finish = () => {
         i++
-        if (i === 3) {
+        if (i === 2) {
           expect(
             connects
           ).to.be.eql([
-            id, id, id
+            id, id
           ])
 
           const m1 = new Message(false)
           m1.addEntry(new Buffer('hello'), 1)
           m1.addEntry(new Buffer('world'), 2)
-          const m2 = new Message(false)
-          m2.cancel(new Buffer('foo'))
-          m2.cancel(new Buffer('bar'))
+          m1.cancel(new Buffer('foo'))
+          m1.cancel(new Buffer('bar'))
 
           expect(
             messages
           ).to.be.eql([
-            [id, m1],
-            [id, m2],
-            [id, msg]
+            [id, msg],
+            [id, m1]
           ])
 
           done()
@@ -74,7 +72,6 @@ describe('MsgQueue', () => {
         new Message.Entry(new Buffer('bar'), 2, true)
       ]
 
-      mq.run()
       mq.addEntries(batch1)
       mq.addEntries(batch2)
       mq.addMessage(msg)

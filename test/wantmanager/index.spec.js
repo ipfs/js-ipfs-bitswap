@@ -58,12 +58,12 @@ describe('Wantmanager', () => {
       wm.connected(peer2)
 
       series([
-        (cb) => setTimeout(cb, 100),
+        (cb) => setTimeout(cb, 200),
         (cb) => {
           wm.cancelWants([new Buffer('world')])
           cb()
         },
-        (cb) => setTimeout(cb, 100)
+        (cb) => setTimeout(cb, 200)
       ], (err) => {
         expect(err).to.not.exist
         wm.wantBlocks([new Buffer('foo')])
