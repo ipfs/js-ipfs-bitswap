@@ -8,13 +8,13 @@ const mapSeries = require('async/mapSeries')
 const each = require('async/each')
 const _ = require('lodash')
 const Block = require('ipfs-block')
-const Buffer = require('safe-buffer').Buffer
 const pull = require('pull-stream')
 const assert = require('assert')
+const crypto = require('crypto')
 
 const utils = require('../test/utils')
 
-const nodes = [2, 5, 10, 20, 50, 100]
+const nodes = [/*2, */5]//, 10, 20, 50, 100]
 const blockFactors = [1, 10, 100]
 
 console.log('-- start')
@@ -42,7 +42,6 @@ mapSeries(nodes, (n, cb) => {
 })
 
 function shutdown (nodeArr, cb) {
-  console.log('    shutdown')
   each(nodeArr, (node, cb) => {
     node.bitswap.stop()
     node.libp2p.stop(cb)
@@ -103,9 +102,7 @@ function round (nodeArr, blockFactor, n, cb) {
 }
 
 function createBlocks (n, blockFactor) {
-  return _.map(_.range(n * blockFactor), (k) => {
-    const b = Buffer.alloc(1024)
-    b.fill(k * Math.ceil(Math.random() * 5))
-    return new Block(b)
+  return _.map(_.range(n * blockFactor), () => {
+    return new Block(crypto.randomBytes(n * blockFactor))
   })
 }

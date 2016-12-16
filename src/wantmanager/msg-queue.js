@@ -52,6 +52,7 @@ module.exports = class MsgQueue {
         return
       }
       log('sending message')
+
       this.network.sendMessage(this.id, msg, (err) => {
         if (err) {
           log.error('send error: %s', err.message)

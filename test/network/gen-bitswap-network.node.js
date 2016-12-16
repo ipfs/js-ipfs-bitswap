@@ -11,6 +11,7 @@ const _ = require('lodash')
 const Block = require('ipfs-block')
 const Buffer = require('safe-buffer').Buffer
 const pull = require('pull-stream')
+const crypto = require('crypto')
 const utils = require('../utils')
 
 describe('gen Bitswap network', function () {
@@ -162,8 +163,6 @@ function round (nodeArr, n, cb) {
 
 function createBlocks (n, blockFactor) {
   return _.map(_.range(n * blockFactor), (k) => {
-    const b = Buffer.alloc(1024)
-    b.fill(k * Math.ceil(Math.random() * 5))
-    return new Block(b)
+    return new Block(crypto.randomBytes(n * blockFactor))
   })
 }

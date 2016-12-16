@@ -1,7 +1,6 @@
 'use strict'
 
 const series = require('async/series')
-const retry = require('async/retry')
 const debug = require('debug')
 const log = debug('bitswap')
 log.error = debug('bitswap:error')
@@ -9,7 +8,6 @@ const EventEmitter = require('events').EventEmitter
 const pull = require('pull-stream')
 const paramap = require('pull-paramap')
 const defer = require('pull-defer/source')
-const Block = require('ipfs-block')
 
 const cs = require('./constants')
 const WantManager = require('./wantmanager')
@@ -123,18 +121,6 @@ module.exports = class Bitwap {
         cb()
       })
     })
-  }
-
-  _tryPutBlock (block, times, cb) {
-    log('trying to put block %s', block.data.toString())
-    retry({times, interval: 400}, (done) => {
-      pull(
-        pull.values([block]),
-        pull.asyncMap(blockToStore),
-        this.blockstore.putStream(),
-        pull.onEnd(done)
-      )
-    }, cb)
   }
 
   // handle errors on the receiving channel
@@ -257,7 +243,7 @@ module.exports = class Bitwap {
           if (err) {
             return cb(err)
           }
-          cb(null, [new Block(blockAndKey.data), exists])
+          cb(null, [blockAndKey, exists])
         })
       }),
       pull.filter((val) => !val[1]),
@@ -266,18 +252,11 @@ module.exports = class Bitwap {
         log('putting block')
         return pull(
           pull.values([block]),
-          pull.asyncMap(blockToStore),
           this.blockstore.putStream(),
-          pull.asyncMap((meta, cb) => {
-            block.key((err, key) => {
-              if (err) {
-                return cb(err)
-              }
-              log('put block')
-              this.notifications.emit(`block:${key.toString()}`, block)
-              this.engine.receivedBlocks([key])
-              cb(null, meta)
-            })
+          pull.through(() => {
+            log('put block')
+            this.notifications.emit(`block:${block.key.toString()}`, block)
+            this.engine.receivedBlocks([block.key])
           })
         )
       }),
@@ -320,14 +299,4 @@ module.exports = class Bitwap {
     this.network.stop()
     this.engine.stop()
   }
-}
-
-// Helper method, to add a cid to a block before storing it in the ipfs-repo/blockstore
-function blockToStore (b, cb) {
-  b.key((err, key) => {
-    if (err) {
-      return cb(err)
-    }
-    cb(null, {data: b.data, key: key})
-  })
 }
