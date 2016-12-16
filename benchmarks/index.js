@@ -26,17 +26,11 @@ mapSeries(nodes, (n, cb) => {
       }
 
       round(nodeArr, blockFactor, n, (err) => {
-        // setTimeout is used to avoid closing the TCP socket while spdy is still sending a ton of signalling data
         if (err) {
           return cb(err)
         }
 
-        setTimeout(() => {
-          series(nodeArr.map((node) => (cb) => {
-            node.bitswap.stop()
-            node.libp2p.stop(cb)
-          }), cb)
-        }, 3000)
+        shutdown(nodeArr, cb)
       })
     })
   }, cb)
@@ -46,6 +40,14 @@ mapSeries(nodes, (n, cb) => {
   }
   console.log('-- finished')
 })
+
+function shutdown (nodeArr, cb) {
+  console.log('    shutdown')
+  each(nodeArr, (node, cb) => {
+    node.bitswap.stop()
+    node.libp2p.stop(cb)
+  }, cb)
+}
 
 function round (nodeArr, blockFactor, n, cb) {
   const blocks = createBlocks(n, blockFactor)

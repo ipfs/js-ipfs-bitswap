@@ -69,10 +69,8 @@ describe('gen Bitswap network', function () {
         }
       ], (err) => {
         expect(err).to.not.exist
-        setTimeout(() => {
-          node.bitswap.stop()
-          node.libp2p.stop(done)
-        })
+        node.bitswap.stop()
+        node.libp2p.stop(done)
       })
     })
   })
@@ -94,22 +92,14 @@ describe('gen Bitswap network', function () {
 
         // -- actual test
         round(nodeArr, n, (err) => {
-          // setTimeout is used to avoid closing the TCP socket while spdy is
-          // still sending a ton of signalling data
           if (err) {
-            console.log(err)
+            return done(err)
           }
-          setTimeout(() => {
-            series(nodeArr.map((node) => (cb) => {
-              node.bitswap.stop()
-              node.libp2p.stop(cb)
-            }), (err) => {
-              if (err) {
-                console.log(err)
-              }
-              done()
-            })
-          }, 3000)
+
+          each(nodeArr, (node, cb) => {
+            node.bitswap.stop()
+            node.libp2p.stop(cb)
+          }, done)
         })
       })
     })

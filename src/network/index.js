@@ -97,7 +97,6 @@ module.exports = class Network {
 
   // Connect to the given peer
   connectTo (peerId, cb) {
-    // log('connecting to %s', peerId.toB58String())
     const done = (err) => setImmediate(() => cb(err))
 
     if (!this._running) {
