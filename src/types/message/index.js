@@ -181,7 +181,6 @@ BitswapMessage.deserialize = (raw, callback) => {
       if (!p.prefix || !p.data) {
         cb()
       }
-      console.log(p)
       const values = vd(p.prefix)
       const cidVersion = values[0]
       const multicodec = values[1]

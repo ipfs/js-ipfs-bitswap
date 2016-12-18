@@ -12,14 +12,15 @@ const log = debug('bitswap:network')
 log.error = debug('bitswap:network:error')
 
 const BITSWAP100 = '/ipfs/bitswap/1.0.0'
-// const BITSWAP110 = '/ipfs/bitswap/1.0.0'
+const BITSWAP110 = '/ipfs/bitswap/1.1.0'
 
 class Network {
-  constructor (libp2p, peerBook, bitswap) {
+  constructor (libp2p, peerBook, bitswap, b100Only) {
     this.libp2p = libp2p
     this.peerBook = peerBook
     this.bitswap = bitswap
     this.conns = new Map()
+    this.b100Only = b100Only || false
 
     // increase event listener max
     this.libp2p.swarm.setMaxListeners(CONSTANTS.maxListeners)
@@ -27,14 +28,14 @@ class Network {
 
   start () {
     // bind event listeners
-    this._onConnectionBitswap100 = this._onConnectionBitswap100.bind(this)
-    // this._onConnectionBitswap110 = this._onConnectionBitswap100.bind(this)
-
     this._onPeerMux = this._onPeerMux.bind(this)
     this._onPeerMuxClosed = this._onPeerMuxClosed.bind(this)
 
-    this.libp2p.handle(BITSWAP100, this._onConnectionBitswap100)
-    // this.libp2p.handle(BITSWAP110, this._onConnectionBitswap110)
+    this._onConnection = this._onConnection.bind(this)
+    this.libp2p.handle(BITSWAP100, this._onConnection)
+    if (!this.b100Only) {
+      this.libp2p.handle(BITSWAP110, this._onConnection)
+    }
 
     this.libp2p.swarm.on('peer-mux-established', this._onPeerMux)
     this.libp2p.swarm.on('peer-mux-closed', this._onPeerMuxClosed)
@@ -48,12 +49,15 @@ class Network {
 
   stop () {
     this.libp2p.unhandle(BITSWAP100)
-    // this.libp2p.unhandle(BITSWAP110)
+    if (!this.b100Only) {
+      this.libp2p.unhandle(BITSWAP110)
+    }
     this.libp2p.swarm.removeListener('peer-mux-established', this._onPeerMux)
     this.libp2p.swarm.removeListener('peer-mux-closed', this._onPeerMuxClosed)
   }
 
-  _onConnectionBitswap100 (protocol, conn) {
+  // Handles both types of bitswap messgages
+  _onConnection (protocol, conn) {
     log('incomming new bitswap connection: %s', protocol)
     pull(
       conn,
@@ -78,10 +82,6 @@ class Network {
     )
   }
 
-  _onConnectionBitswap110 (protocol, conn) {
-
-  }
-
   _onPeerMux (peerInfo) {
     this.bitswap._onPeerConnected(peerInfo.id)
   }
@@ -94,6 +94,7 @@ class Network {
   connectTo (peerId, callback) {
     log('connecting to %s', peerId.toB58String())
     const done = (err) => setImmediate(() => callback(err))
+
     // NOTE: For now, all this does is ensure that we are
     // connected. Once we have Peer Routing, we will be able
     // to find the Peer
@@ -116,26 +117,47 @@ class Network {
     }
 
     if (this.conns.has(stringId)) {
-      log('connection exists')
-      this.conns.get(stringId).push(msg.serializeToBitswap100())
+      this.conns.get(stringId)(msg)
       return callback()
     }
 
-    log('dialByPeerInfo')
-    // TODO
-    //   upgrade to first try BITSWAP110 and then BITSWAP100
-    this.libp2p.dialByPeerInfo(peerInfo, BITSWAP100, (err, conn) => {
-      log('dialed %s', peerInfo.id.toB58String(), err)
+    const self = this
+    const msgQueue = pushable()
+
+     // Attempt Bitswap 1.1.0
+    this.libp2p.dialByPeerInfo(peerInfo, BITSWAP110, (err, conn) => {
       if (err) {
-        return callback(err)
+        // Attempt Bitswap 1.0.0
+        this.libp2p.dialByPeerInfo(peerInfo, BITSWAP100, (err, conn) => {
+          if (err) {
+            return callback(err)
+          }
+          log('dialed %s on Bitswap 1.0.0', peerInfo.id.toB58String())
+
+          this.conns.set(stringId, (msg) => {
+            msgQueue.push(msg.serializeToBitswap100())
+          })
+
+          this.conns.get(stringId)(msg)
+
+          withConn(conn)
+          callback()
+        })
+        return
       }
+      log('dialed %s on Bitswap 1.1.0', peerInfo.id.toB58String())
 
-      // TODO fix: this is not a messageQueue
-      const msgQueue = pushable()
-      msgQueue.push(msg.serializeToBitswap100())
+      this.conns.set(stringId, (msg) => {
+        msgQueue.push(msg.serializeToBitswap110())
+      })
 
-      this.conns.set(stringId, msgQueue)
+      this.conns.get(stringId)(msg)
 
+      withConn(conn)
+      callback()
+    })
+
+    function withConn (conn) {
       pull(
         msgQueue,
         lp.encode(),
@@ -145,12 +167,10 @@ class Network {
             log.error(err)
           }
           msgQueue.end()
-          this.conns.delete(stringId)
+          self.conns.delete(stringId)
         })
       )
-
-      callback()
-    })
+    }
   }
 }
 
