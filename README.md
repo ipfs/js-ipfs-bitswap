@@ -64,17 +64,16 @@ For the documentation see [API.md](API.md).
 
 ### API
 
-#### `new Bitswap(id, libp2p, datastore)`
+#### `new Bitswap(libp2p, blockstore)`
 
-- `id: PeerId`, the id of the local instance.
 - `libp2p: Libp2p`, instance of the local network stack.
-- `blockstore: Datastore`, instance of the local database (`IpfsRepo.blockstore`)
+- `blockstore: Blockstore`, instance of the local database (`IpfsRepo.blockstore`)
 
 Create a new instance.
 
-#### `getStream(key)`
+#### `getStream(cid)`
 
-- `key: Multihash|Array`
+- `cid: CID|Array`
 
 Returns a source `pull-stream`. Values emitted are the received blocks.
 
@@ -83,7 +82,7 @@ Example:
 ```js
 // Single block
 pull(
-  bitswap.getStream(key),
+  bitswap.getStream(cid),
   pull.collect((err, blocks) => {
     // blocks === [block]
   })
@@ -91,7 +90,7 @@ pull(
 
 // Many blocks
 pull(
-  bitswap.getStream([key1, key2, key3]),
+  bitswap.getStream([cid1, cid2, cid3]),
   pull.collect((err, blocks) => {
     // blocks === [block1, block2, block3]
   })
@@ -101,17 +100,17 @@ pull(
 > Note: This is safe guarded so that the network is not asked
 > for blocks that are in the local `datastore`.
 
-#### `unwant(keys)`
+#### `unwant(cids)`
 
-- `keys: Mutlihash|[]Multihash`
+- `cids: CID|[]CID`
 
 Cancel previously requested keys, forcefully. That means they are removed from the
 wantlist independent of how many other resources requested these keys. Callbacks
 attached to `getBlock` are errored with `Error('manual unwant: key')`.
 
-#### `cancelWants(keys)`
+#### `cancelWants(cids)`
 
-- `keys: Multihash|[]Multihash`
+- `cid: CID|[]CID`
 
 Cancel previously requested keys.
 
@@ -120,10 +119,10 @@ Cancel previously requested keys.
 Returns a duplex `pull-stream` that emits an object `{key: Multihash}` for every written block when it was stored.
 Objects passed into here should be of the form `{data: Buffer, key: Multihash}`
 
-#### `put(blockAndKey, cb)`
+#### `put(blockAndCid, callback)`
 
-- `blockAndKey: {data: Buffer, key: Multihash}`
-- `cb: Function`
+- `blockAndKey: {data: Buffer, cid: CID}`
+- `callback: Function`
 
 Announce that the current node now has the block containing `data`. This will store it
 in the local database and attempt to serve it to all peers that are known

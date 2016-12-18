@@ -14,7 +14,7 @@ const pull = require('pull-stream')
 const utils = require('../../utils')
 const CID = require('cids')
 
-describe.skip('gen Bitswap network', function () {
+describe('gen Bitswap network', function () {
   // CI is very slow
   this.timeout(300 * 1000)
 
@@ -47,7 +47,7 @@ describe.skip('gen Bitswap network', function () {
                 }
 
                 cb(null, {
-                  data: block.data,
+                  block: block,
                   cid: new CID(key)
                 })
               })
@@ -127,8 +127,8 @@ describe.skip('gen Bitswap network', function () {
                           return cb(err)
                         }
                         cb(null, {
-                          data: b.data,
-                          key: new CID(key)
+                          block: b,
+                          cid: new CID(key)
                         })
                       })
                     }),

@@ -150,7 +150,7 @@ class DecisionEngine {
     for (let l of this.ledgerMap.values()) {
       const entry = l.wantlistContains(cid)
       if (entry) {
-        this.peerRequestQueue.push(entry.cid, l.partner)
+        this.peerRequestQueue.push(entry, l.partner)
       }
     }
   }

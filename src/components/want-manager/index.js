@@ -146,7 +146,7 @@ module.exports = class WantManager {
 
   stop () {
     for (let mq of this.peers.values()) {
-      this.disconnected(mq.p)
+      this.disconnected(mq.peerId)
     }
     clearInterval(this.timer)
   }
