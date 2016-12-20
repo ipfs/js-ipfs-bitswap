@@ -21,7 +21,7 @@ const mockNetwork = require('../../utils').mockNetwork
 
 function messageToString (m) {
   return Array.from(m[1].blocks.values())
-    .map((b) => b.data.toString())
+    .map((b) => b.block.data.toString())
 }
 
 function stringifyMessages (messages) {

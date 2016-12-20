@@ -26,7 +26,7 @@ class BitswapMessage {
 
   addEntry (cid, priority, cancel) {
     assert(cid && CID.isCID(cid), 'must be a valid cid')
-    const cidStr = cid.toBaseEncodedString()
+    const cidStr = cid.buffer.toString()
 
     const entry = this.wantlist.get(cidStr)
 
@@ -40,13 +40,13 @@ class BitswapMessage {
 
   addBlock (cid, block) {
     assert(CID.isCID(cid), 'must be a valid cid')
-    const cidStr = cid.toBaseEncodedString()
-    this.blocks.set(cidStr, block)
+    const cidStr = cid.buffer.toString()
+    this.blocks.set(cidStr, {block: block, cid: cid})
   }
 
   cancel (cid) {
     assert(CID.isCID(cid), 'must be a valid cid')
-    const cidStr = cid.toBaseEncodedString()
+    const cidStr = cid.buffer.toString()
     this.wantlist.delete(cidStr)
     this.addEntry(cid, 0, true)
   }
@@ -67,7 +67,7 @@ class BitswapMessage {
         })
       },
       blocks: Array.from(this.blocks.values())
-        .map((block) => block.data)
+        .map((block) => block.block.data)
     }
 
     if (this.full) {
@@ -99,11 +99,10 @@ class BitswapMessage {
       msg.wantlist.full = true
     }
 
-    this.blocks.forEach((block, cidStr) => {
-      const cid = new CID(cidStr)
+    this.blocks.forEach((block) => {
       msg.payload.push({
-        prefix: cid.prefix,
-        data: block.data
+        prefix: block.cid.prefix,
+        data: block.block.data
       })
     })
 

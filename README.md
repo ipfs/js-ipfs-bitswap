@@ -104,24 +104,24 @@ pull(
 
 - `cids: CID|[]CID`
 
-Cancel previously requested keys, forcefully. That means they are removed from the
-wantlist independent of how many other resources requested these keys. Callbacks
-attached to `getBlock` are errored with `Error('manual unwant: key')`.
+Cancel previously requested cids, forcefully. That means they are removed from the
+wantlist independent of how many other resources requested these cids. Callbacks
+attached to `getBlock` are errored with `Error('manual unwant: cid)`.
 
 #### `cancelWants(cids)`
 
 - `cid: CID|[]CID`
 
-Cancel previously requested keys.
+Cancel previously requested cids.
 
 #### `putStream()`
 
-Returns a duplex `pull-stream` that emits an object `{key: Multihash}` for every written block when it was stored.
-Objects passed into here should be of the form `{data: Buffer, key: Multihash}`
+Returns a duplex `pull-stream` that emits an object `{cid: CID}` for every written block when it was stored.
+Objects passed into here should be of the form `{data: Buffer, cid: CID}`
 
 #### `put(blockAndCid, callback)`
 
-- `blockAndKey: {data: Buffer, cid: CID}`
+- `blockAndCid: {data: Buffer, cid: CID}`
 - `callback: Function`
 
 Announce that the current node now has the block containing `data`. This will store it
@@ -152,9 +152,7 @@ src
 │   ├── decision
 │   │   ├── engine.js
 │   │   ├── index.js
-│   │   ├── ledger.js
-│   │   ├── peer-request-queue.js
-│   │   └── pq.js
+│   │   └── ledger.js
 │   ├── network             # Handles peerSet and open new conns
 │   │   └── index.js
 │   └── want-manager        # Keeps track of all blocks the peer wants (not the others which it is connected)

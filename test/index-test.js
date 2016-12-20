@@ -439,16 +439,13 @@ module.exports = (repo) => {
 }
 
 function hasBlocks (msg, store, cb) {
-  each(Array.from(msg.blocks.values()), (b, next) => {
-    b.key((err, key) => {
+  each(msg.blocks.values(), (b, next) => {
+    b.block.key((err, key) => {
       if (err) {
         return next(err)
       }
-      if (!b.cancel) {
-        store.has(key, next)
-      } else {
-        next()
-      }
+
+      store.has(key, next)
     })
   }, cb)
 }

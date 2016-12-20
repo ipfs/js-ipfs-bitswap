@@ -11,7 +11,6 @@ const find = require('lodash.find')
 const values = require('lodash.values')
 const groupBy = require('lodash.groupby')
 const pullAllWith = require('lodash.pullallwith')
-const CID = require('cids')
 
 const log = debug('bitswap:engine')
 log.error = debug('bitswap:engine:error')
@@ -124,18 +123,17 @@ class DecisionEngine {
       return
     }
     // Check all connected peers if they want the block we received
-    for (let l of this.ledgerMap.values()) {
+    this.ledgerMap.forEach((ledger) => {
       cids
-        .map((k) => l.wantlistContains(k))
+        .map((cid) => ledger.wantlistContains(cid))
         .filter(Boolean)
-        .forEach((e) => {
-          // this.peerRequestQueue.push(e, l.partner)
+        .forEach((entry) => {
           this._tasks.push({
-            entry: e,
-            target: l.partner
+            entry: entry,
+            target: ledger.partner
           })
         })
-    }
+    })
     this._outbox()
   }
 
@@ -152,30 +150,26 @@ class DecisionEngine {
       ledger.wantlist = new Wantlist()
     }
 
-    this._processBlocks(msg.blocks, ledger, (err) => {
-      if (err) {
-        log.error(`failed to process blocks: ${err.message}`)
-      }
+    this._processBlocks(msg.blocks, ledger)
 
-      if (msg.wantlist.size === 0) {
-        return cb()
-      }
+    if (msg.wantlist.size === 0) {
+      return cb()
+    }
 
-      let cancels = []
-      let wants = []
-      for (let entry of msg.wantlist.values()) {
-        if (entry.cancel) {
-          ledger.cancelWant(entry.cid)
-          cancels.push(entry)
-        } else {
-          ledger.wants(entry.cid, entry.priority)
-          wants.push(entry)
-        }
+    let cancels = []
+    let wants = []
+    msg.wantlist.forEach((entry) => {
+      if (entry.cancel) {
+        ledger.cancelWant(entry.cid)
+        cancels.push(entry)
+      } else {
+        ledger.wants(entry.cid, entry.priority)
+        wants.push(entry)
       }
-
-      this._cancelWants(ledger, peerId, cancels)
-      this._addWants(ledger, peerId, wants, cb)
     })
+
+    this._cancelWants(ledger, peerId, cancels)
+    this._addWants(ledger, peerId, wants, cb)
   }
 
   _cancelWants (ledger, peerId, entries) {
@@ -209,24 +203,14 @@ class DecisionEngine {
   }
 
   _processBlocks (blocks, ledger, callback) {
-    map(blocks.values(), (block, cb) => {
-      block.key((err, key) => {
-        if (err) {
-          return cb(err)
-        }
-        log('got block (%s bytes)', block.data.length)
-        ledger.receivedBytes(block.data.length)
-
-        cb(null, new CID(key))
-      })
-    }, (err, cids) => {
-      if (err) {
-        return callback(err)
-      }
-
-      this.receivedBlocks(cids)
-      callback()
+    const cids = []
+    blocks.forEach((b, cidStr) => {
+      log('got block (%s bytes)', b.block.data.length)
+      ledger.receivedBytes(b.block.data.length)
+      cids.push(b.cid)
     })
+
+    this.receivedBlocks(cids)
   }
 
   // Clear up all accounting things after message was sent

@@ -1,20 +1,20 @@
 'use strict'
 
-const series = require('async/series')
-const debug = require('debug')
-
-const log = debug('bitswap')
-log.error = debug('bitswap:error')
+const waterfall = require('async/waterfall')
+const each = require('async/each')
 const EventEmitter = require('events').EventEmitter
 const pull = require('pull-stream')
 const paramap = require('pull-paramap')
 const defer = require('pull-defer/source')
-const CID = require('cids')
+const debug = require('debug')
 
 const CONSTANTS = require('./constants')
 const WantManager = require('./components/want-manager')
 const Network = require('./components/network')
 const DecisionEngine = require('./components/decision-engine')
+
+const log = debug('bitswap')
+log.error = debug('bitswap:error')
 
 class Bitswap {
   constructor (libp2p, blockstore, peerBook) {
@@ -46,83 +46,53 @@ class Bitswap {
         log('failed to receive message', incoming)
       }
 
-      const cidsAndBlocks = Array
-        .from(incoming.blocks.entries())
-        .map((entry) => {
-          return { cid: new CID(entry[0]), block: entry[1] }
-        })
-
-      if (cidsAndBlocks.length === 0) {
+      if (incoming.blocks.size === 0) {
         return cb()
       }
 
+      const cidsAndBlocks = Array.from(incoming.blocks.values())
+
       // quickly send out cancels, reduces chances of duplicate block receives
-      pull(
-        pull.values(cidsAndBlocks),
-        pull.filter((cidAndBlock) => this.wm.wantlist.contains(cidAndBlock.cid)),
-        pull.collect((err, cidsAndBlocks) => {
-          if (err) {
-            return log.error(err)
-          }
-          const cids = cidsAndBlocks.map((entry) => entry.cid)
+      const toCancel = cidsAndBlocks
+        .filter((b) => this.wm.wantlist.contains(b.cid))
+        .map((b) => b.cid)
 
-          this.wm.cancelWants(cids)
-        })
-      )
+      this.wm.cancelWants(toCancel)
 
-      pull(
-        pull.values(cidsAndBlocks),
-        paramap(this._handleReceivedBlock.bind(this, peerId), 10),
-        pull.onEnd(cb)
+      each(
+        cidsAndBlocks,
+        this._handleReceivedBlock.bind(this, peerId),
+        cb
       )
     })
   }
 
   _handleReceivedBlock (peerId, cidAndBlock, callback) {
-    series([
-      (cb) => this._updateReceiveCounters(cidAndBlock.block, (err) => {
-        if (err) {
-          // ignore, as these have been handled
-          // in _updateReceiveCounters
+    const cid = cidAndBlock.cid
+    const block = cidAndBlock.block
+
+    waterfall([
+      (cb) => this.blockstore.has(cid.multihash, cb),
+      (exists, cb) => {
+        this._updateReceiveCounters(block, exists)
+        log('got block')
+
+        if (exists) {
           return cb()
         }
 
-        log('got block from %s', peerId.toB58String(), cidAndBlock.block.data.length)
-        cb()
-      }),
-      (cb) => {
-        this.put(cidAndBlock, (err) => {
-          if (err) {
-            log.error('receiveMessage put error: %s', err.message)
-          }
-          cb()
-        })
+        this._putBlockStore(cidAndBlock, cb)
       }
     ], callback)
   }
 
-  _updateReceiveCounters (block, callback) {
+  _updateReceiveCounters (block, exists) {
     this.blocksRecvd++
-    block.key((err, key) => {
-      if (err) {
-        return callback(err)
-      }
 
-      this.blockstore.has(key, (err, has) => {
-        if (err) {
-          log('blockstore.has error: %s', err.message)
-          return callback(err)
-        }
-
-        if (has) {
-          this.dupBlocksRecvd ++
-          this.dupDataRecvd += block.data.length
-          return callback(new Error('Already have block'))
-        }
-
-        callback()
-      })
-    })
+    if (exists) {
+      this.dupBlocksRecvd ++
+      this.dupDataRecvd += block.data.length
+    }
   }
 
   // handle errors on the receiving channel
@@ -250,24 +220,35 @@ class Bitswap {
         })
       }),
       pull.filter((val) => !val[1]),
-      pull.map((val) => {
-        const block = val[0].block
-        const cid = val[0].cid
-        log('putting block')
-        return pull(
-          pull.values([{
-            data: block.data,
-            key: cid.multihash
-          }]),
-          this.blockstore.putStream(),
-          pull.through(() => {
-            log('put block')
-            this.notifications.emit(`block:${cid.buffer.toString()}`, block)
-            this.engine.receivedBlocks([cid])
-          })
-        )
-      }),
-      pull.flatten()
+      pull.asyncMap((val, cb) => {
+        this._putBlockStore(val[0], cb)
+      })
+    )
+  }
+
+  _putBlockStore (blockAndCid, callback) {
+    const block = blockAndCid.block
+    const cid = blockAndCid.cid
+    const cidStr = cid.buffer.toString()
+
+    log('putting block')
+
+    pull(
+      pull.values([{
+        data: block.data,
+        key: cid.multihash
+      }]),
+      this.blockstore.putStream(),
+      pull.collect((err, meta) => {
+        if (err) {
+          return callback(err)
+        }
+
+        log('put block')
+        this.notifications.emit(`block:${cidStr}`, block)
+        this.engine.receivedBlocks([cid])
+        callback(null, meta)
+      })
     )
   }
 
