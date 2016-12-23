@@ -59,7 +59,7 @@ exports.createMockNet = (repo, count, cb) => {
     const ids = results[1]
 
     const hexIds = ids.map((id) => id.toHexString())
-    const bitswaps = _.range(count).map((i) => new Bitswap(ids[i], {}, stores[i]))
+    const bitswaps = _.range(count).map((i) => new Bitswap({}, stores[i]))
     const networks = _.range(count).map((i) => {
       return {
         connectTo (id, cb) {
@@ -153,7 +153,7 @@ exports.genBitswapNetwork = (n, callback) => {
     // create every BitSwap
     function createBitswaps () {
       netArray.forEach((net) => {
-        net.bitswap = new Bitswap(net.peerInfo, net.libp2p, net.repo.blockstore, net.peerBook)
+        net.bitswap = new Bitswap(net.libp2p, net.repo.blockstore, net.peerBook)
       })
       establishLinks()
     }
@@ -166,23 +166,17 @@ exports.genBitswapNetwork = (n, callback) => {
               to.peerInfo.id.toB58String()) {
             return cbJ()
           }
+
           from.libp2p.dialByPeerInfo(to.peerInfo, cbJ)
-        }, (err) => {
-          if (err) {
-            throw err
-          }
-          cbI()
-        })
-      }, (err) => {
-        if (err) {
-          throw err
-        }
-        finish()
-      })
+        }, cbI)
+      }, finish)
     }
 
     // callback with netArray
-    function finish () {
+    function finish (err) {
+      if (err) {
+        throw err
+      }
       callback(null, netArray)
     }
   })

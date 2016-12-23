@@ -31,13 +31,13 @@
 ### npm
 
 ```sh
-> npm i ipfs-bitswap
+> npm install ipfs-bitswap --save
 ```
 
 ### Use in Node.js
 
 ```js
-const bitswap = require('ipfs-bitswap')
+const Bitswap = require('ipfs-bitswap')
 ```
 
 ### Use in a browser with browserify, webpack or any other bundler
@@ -45,7 +45,7 @@ const bitswap = require('ipfs-bitswap')
 The code published to npm that gets loaded on require is in fact a ES5 transpiled version with the right shims added. This means that you can require it and use with your favourite bundler without having to adjust asset management process.
 
 ```js
-const bitswap = require('ipfs-bitswap')
+const Bitswap = require('ipfs-bitswap')
 ```
 
 ### Use in a browser using a script tag
@@ -61,6 +61,114 @@ Loading this module through a script tag will make the `IpfsBitswap` object avai
 ## Usage
 
 For the documentation see [API.md](API.md).
+
+### API
+
+#### `new Bitswap(libp2p, blockstore)`
+
+- `libp2p: Libp2p`, instance of the local network stack.
+- `blockstore: Blockstore`, instance of the local database (`IpfsRepo.blockstore`)
+
+Create a new instance.
+
+#### `getStream(cid)`
+
+- `cid: CID|Array`
+
+Returns a source `pull-stream`. Values emitted are the received blocks.
+
+Example:
+
+```js
+// Single block
+pull(
+  bitswap.getStream(cid),
+  pull.collect((err, blocks) => {
+    // blocks === [block]
+  })
+)
+
+// Many blocks
+pull(
+  bitswap.getStream([cid1, cid2, cid3]),
+  pull.collect((err, blocks) => {
+    // blocks === [block1, block2, block3]
+  })
+)
+```
+
+> Note: This is safe guarded so that the network is not asked
+> for blocks that are in the local `datastore`.
+
+#### `unwant(cids)`
+
+- `cids: CID|[]CID`
+
+Cancel previously requested cids, forcefully. That means they are removed from the
+wantlist independent of how many other resources requested these cids. Callbacks
+attached to `getBlock` are errored with `Error('manual unwant: cid)`.
+
+#### `cancelWants(cids)`
+
+- `cid: CID|[]CID`
+
+Cancel previously requested cids.
+
+#### `putStream()`
+
+Returns a duplex `pull-stream` that emits an object `{cid: CID}` for every written block when it was stored.
+Objects passed into here should be of the form `{data: Buffer, cid: CID}`
+
+#### `put(blockAndCid, callback)`
+
+- `blockAndCid: {data: Buffer, cid: CID}`
+- `callback: Function`
+
+Announce that the current node now has the block containing `data`. This will store it
+in the local database and attempt to serve it to all peers that are known
+ to have requested it. The callback is called when we are sure that the block
+ is stored.
+
+#### `wantlistForPeer(peerId)`
+
+- `peerId: PeerId`
+
+Get the wantlist for a given peer.
+
+#### `stat()`
+
+Get stats about about the current state of the bitswap instance.
+
+## Development
+
+### Structure
+
+![](/img/architecture.png)
+
+```sh
+» tree src
+src
+├── components
+│   ├── decision
+│   │   ├── engine.js
+│   │   ├── index.js
+│   │   └── ledger.js
+│   ├── network             # Handles peerSet and open new conns
+│   │   └── index.js
+│   └── want-manager        # Keeps track of all blocks the peer wants (not the others which it is connected)
+│       ├── index.js
+│       └── msg-queue.js    # Messages to send queue, one per peer
+├── constants.js
+├── index.js
+└── types
+    ├── message             # (Type) message that is put in the wire
+    │   ├── entry.js
+    │   ├── index.js
+    │   └── message.proto.js
+    └── wantlist            # (Type) track wanted blocks
+        ├── entry.js
+        └── index.js
+```
 
 ## Contribute
 

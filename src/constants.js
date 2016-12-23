@@ -1,13 +1,13 @@
 'use strict'
 
-const second = 1000
+const SECOND = 1000
 
 module.exports = {
   maxProvidersPerRequest: 3,
-  providerRequestTimeout: 10 * second,
-  hasBlockTimeout: 15 * second,
-  provideTimeout: 15 * second,
+  providerRequestTimeout: 10 * SECOND,
+  hasBlockTimeout: 15 * SECOND,
+  provideTimeout: 15 * SECOND,
   kMaxPriority: Math.pow(2, 31) - 1,
-  rebroadcastDelay: 10 * second,
+  rebroadcastDelay: 10 * SECOND,
   maxListeners: 1000
 }
