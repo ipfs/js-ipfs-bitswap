@@ -57,7 +57,7 @@
   "dependencies": {
     "async": "^2.1.4",
     "cids": "^0.3.5",
-    "debug": "^2.5.1",
+    "debug": "^2.5.2",
     "heap": "^0.2.6",
     "ipfs-block": "^0.5.4",
     "lodash.debounce": "^4.0.8",
