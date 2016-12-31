@@ -45,7 +45,7 @@
     "interface-pull-blob-store": "^0.6.0",
     "ipfs-repo": "^0.11.2",
     "libp2p-ipfs-nodejs": "^0.17.1",
-    "lodash": "^4.17.2",
+    "lodash": "^4.17.4",
     "multiaddr": "^2.1.1",
     "ncp": "^2.0.0",
     "peer-book": "^0.3.0",
