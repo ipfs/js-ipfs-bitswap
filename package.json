@@ -56,7 +56,7 @@
   },
   "dependencies": {
     "async": "^2.1.4",
-    "cids": "^0.3.5",
+    "cids": "^0.4.0",
     "debug": "^2.5.1",
     "heap": "^0.2.6",
     "ipfs-block": "^0.5.4",
