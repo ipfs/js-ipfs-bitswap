@@ -8,9 +8,10 @@ const protobuf = require('protocol-buffers')
 const map = require('async/map')
 const pbm = protobuf(require('../../src/types/message/message.proto'))
 const CID = require('cids')
+const isNode = require('detect-node')
 
 const loadFixture = require('aegir/fixtures')
-const testDataPath = '../test-data/serialized-from-go'
+const testDataPath = (isNode ? '../' : '') + 'test-data/serialized-from-go'
 const rawMessageFullWantlist = loadFixture(__dirname, testDataPath + '/bitswap110-message-full-wantlist')
 const rawMessageOneBlock = loadFixture(__dirname, testDataPath + '/bitswap110-message-one-block')
 
