@@ -1,3 +1,13 @@
+<a name="0.9.3"></a>
+## [0.9.3](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.9.2...v0.9.3) (2017-02-09)
+
+
+### Features
+
+* change window to self for webworker support ([ad972fe](https://github.com/ipfs/js-ipfs-bitswap/commit/ad972fe))
+
+
+
 <a name="0.9.2"></a>
 ## [0.9.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.9.1...v0.9.2) (2017-01-29)
 
