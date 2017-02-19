@@ -3,6 +3,7 @@
 const debug = require('debug')
 const pull = require('pull-stream')
 const each = require('async/each')
+const eachSeries = require('async/eachSeries')
 const waterfall = require('async/waterfall')
 const map = require('async/map')
 const debounce = require('lodash.debounce')
@@ -18,6 +19,8 @@ log.error = debug('bitswap:engine:error')
 const Message = require('../../types/message')
 const Wantlist = require('../../types/wantlist')
 const Ledger = require('./ledger')
+
+const MAX_MESSAGE_SIZE = 512 * 1024
 
 class DecisionEngine {
   constructor (blockstore, network) {
@@ -35,14 +38,42 @@ class DecisionEngine {
   }
 
   _sendBlocks (env, cb) {
+    // split into messges of max 512 * 1024 bytes
+    const blocks = env.blocks
+    const total = blocks.reduce((acc, b) => {
+      return acc + b.block.data.byteLength
+    }, 0)
+
+    if (total < MAX_MESSAGE_SIZE) {
+      return this._sendSafeBlocks(env.peer, blocks, cb)
+    }
+
+    let size = 0
+    let batch = []
+
+    eachSeries(blocks, (b, cb) => {
+      batch.push(b)
+      size += b.block.data.byteLength
+
+      if (size >= MAX_MESSAGE_SIZE) {
+        const nextBatch = batch.slice()
+        batch = []
+        this._sendSafeBlocks(env.peer, nextBatch, cb)
+      } else {
+        cb()
+      }
+    }, cb)
+  }
+
+  _sendSafeBlocks (peer, blocks, cb) {
     const msg = new Message(false)
 
-    env.blocks.forEach((b) => {
+    blocks.forEach((b) => {
       msg.addBlock(b.cid, b.block)
     })
 
     // console.log('sending %s blocks', msg.blocks.size)
-    this.network.sendMessage(env.peer, msg, (err) => {
+    this.network.sendMessage(peer, msg, (err) => {
       if (err) {
         log('sendblock error: %s', err.message)
       }
