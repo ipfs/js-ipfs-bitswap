@@ -161,22 +161,27 @@ class Network {
   }
 
   _dialPeer (peerInfo, callback) {
+    // dialByPeerInfo throws if no network is there
+    try {
      // Attempt Bitswap 1.1.0
-    this.libp2p.dialByPeerInfo(peerInfo, BITSWAP110, (err, conn) => {
-      if (err) {
-        // Attempt Bitswap 1.0.0
-        this.libp2p.dialByPeerInfo(peerInfo, BITSWAP100, (err, conn) => {
-          if (err) {
-            return callback(err)
-          }
+      this.libp2p.dialByPeerInfo(peerInfo, BITSWAP110, (err, conn) => {
+        if (err) {
+          // Attempt Bitswap 1.0.0
+          this.libp2p.dialByPeerInfo(peerInfo, BITSWAP100, (err, conn) => {
+            if (err) {
+              return callback(err)
+            }
 
-          callback(null, conn, BITSWAP100)
-        })
-        return
-      }
+            callback(null, conn, BITSWAP100)
+          })
+          return
+        }
 
-      callback(null, conn, BITSWAP110)
-    })
+        callback(null, conn, BITSWAP110)
+      })
+    } catch (err) {
+      return callback(err)
+    }
   }
 }
 
