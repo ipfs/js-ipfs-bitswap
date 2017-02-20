@@ -135,6 +135,32 @@ class Network {
       return callback(err)
     }
 
+    this._dialPeer(peerInfo, (err, conn, protocol) => {
+      if (err) {
+        return callback(err)
+      }
+
+      let serialized
+      switch (protocol) {
+        case BITSWAP100:
+          serialized = msg.serializeToBitswap100()
+          break
+        case BITSWAP110:
+          serialized = msg.serializeToBitswap110()
+          break
+        default:
+          return callback(new Error('Unkown protocol: ' + protocol))
+      }
+      writeMessage(conn, serialized, (err) => {
+        if (err) {
+          log(err)
+        }
+      })
+      callback()
+    })
+  }
+
+  _dialPeer (peerInfo, callback) {
      // Attempt Bitswap 1.1.0
     this.libp2p.dialByPeerInfo(peerInfo, BITSWAP110, (err, conn) => {
       if (err) {
@@ -143,32 +169,24 @@ class Network {
           if (err) {
             return callback(err)
           }
-          log('dialed %s on Bitswap 1.0.0', peerInfo.id.toB58String())
 
-          withConn(conn, msg.serializeToBitswap100())
-          callback()
+          callback(null, conn, BITSWAP100)
         })
         return
       }
-      log('dialed %s on Bitswap 1.1.0', peerInfo.id.toB58String())
 
-      withConn(conn, msg.serializeToBitswap110())
-      callback()
+      callback(null, conn, BITSWAP110)
     })
-
-    function withConn (conn, msg) {
-      pull(
-        pull.values([msg]),
-        lp.encode(),
-        conn,
-        pull.onEnd((err) => {
-          if (err) {
-            log.error(err)
-          }
-        })
-      )
-    }
   }
+}
+
+function writeMessage (conn, msg, callback) {
+  pull(
+    pull.values([msg]),
+    lp.encode(),
+    conn,
+    pull.onEnd(callback)
+  )
 }
 
 module.exports = Network
