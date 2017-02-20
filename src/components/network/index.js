@@ -3,7 +3,6 @@
 const debug = require('debug')
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
-const pushable = require('pull-pushable')
 const setImmediate = require('async/setImmediate')
 
 const Message = require('../../types/message')
@@ -19,7 +18,6 @@ class Network {
     this.libp2p = libp2p
     this.peerBook = peerBook
     this.bitswap = bitswap
-    this.conns = new Map()
     this.b100Only = b100Only || false
 
     // increase event listener max
@@ -129,20 +127,13 @@ class Network {
     }
 
     const stringId = peerId.toB58String()
-    log('sendMessage to %s', stringId)
+    log('sendMessage to %s', stringId, msg)
     let peerInfo
     try {
       peerInfo = this.peerBook.getByB58String(stringId)
     } catch (err) {
       return callback(err)
     }
-
-    if (this.conns.has(stringId)) {
-      this.conns.get(stringId)(msg)
-      return callback()
-    }
-
-    const msgQueue = pushable()
 
      // Attempt Bitswap 1.1.0
     this.libp2p.dialByPeerInfo(peerInfo, BITSWAP110, (err, conn) => {
@@ -154,40 +145,26 @@ class Network {
           }
           log('dialed %s on Bitswap 1.0.0', peerInfo.id.toB58String())
 
-          this.conns.set(stringId, (msg) => {
-            msgQueue.push(msg.serializeToBitswap100())
-          })
-
-          this.conns.get(stringId)(msg)
-
-          withConn(this.conns, conn)
+          withConn(conn, msg.serializeToBitswap100())
           callback()
         })
         return
       }
       log('dialed %s on Bitswap 1.1.0', peerInfo.id.toB58String())
 
-      this.conns.set(stringId, (msg) => {
-        msgQueue.push(msg.serializeToBitswap110())
-      })
-
-      this.conns.get(stringId)(msg)
-
-      withConn(this.conns, conn)
+      withConn(conn, msg.serializeToBitswap110())
       callback()
     })
 
-    function withConn (conns, conn) {
+    function withConn (conn, msg) {
       pull(
-        msgQueue,
+        pull.values([msg]),
         lp.encode(),
         conn,
         pull.onEnd((err) => {
           if (err) {
             log.error(err)
           }
-          msgQueue.end()
-          conns.delete(stringId)
         })
       )
     }
