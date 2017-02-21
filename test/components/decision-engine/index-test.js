@@ -29,7 +29,7 @@ function stringifyMessages (messages) {
 }
 
 module.exports = (repo) => {
-  function newEngine (path, done) {
+  function newEngine (path, done, net) {
     parallel([
       (cb) => repo.create(path, cb),
       (cb) => PeerId.create(cb)
@@ -38,7 +38,7 @@ module.exports = (repo) => {
         return done(err)
       }
       const blockstore = results[0].blockstore
-      const engine = new DecisionEngine(blockstore, mockNetwork())
+      const engine = new DecisionEngine(blockstore, net || mockNetwork())
       engine.start()
 
       done(null, { peer: results[1], engine })
@@ -217,6 +217,50 @@ module.exports = (repo) => {
                 })
               }, cb)
             }, done)
+          })
+        )
+      })
+    })
+
+    it('splits large block messages', (done) => {
+      const data = _.range(10).map((i) => {
+        const b = new Buffer(1024 * 256)
+        b.fill(i)
+        return b
+      })
+      const blocks = _.range(10).map((i) => {
+        return new Block(data[i])
+      })
+
+      const net = mockNetwork(5, (res) => {
+        expect(res.messages).to.have.length(5)
+        done()
+      })
+
+      parallel([
+        (cb) => newEngine('sf', cb, net),
+        (cb) => map(blocks, (b, cb) => b.key(cb), cb)
+      ], (err, res) => {
+        expect(err).to.not.exist
+        const sf = res[0].engine
+        const cids = res[1].map((c) => new CID(c))
+        const id = res[0].peer
+
+        pull(
+          pull.values(blocks.map((b, i) => ({
+            data: b.data, key: cids[i].multihash
+          }))),
+          sf.blockstore.putStream(),
+          pull.onEnd((err) => {
+            expect(err).to.not.exist
+            const msg = new Message(false)
+            cids.forEach((c, i) => {
+              msg.addEntry(c, Math.pow(2, 32) - 1 - i)
+            })
+
+            sf.messageReceived(id, msg, (err) => {
+              expect(err).to.not.exist
+            })
           })
         )
       })

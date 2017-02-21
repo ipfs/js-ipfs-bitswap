@@ -3,7 +3,6 @@
 const debug = require('debug')
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
-const pushable = require('pull-pushable')
 const setImmediate = require('async/setImmediate')
 
 const Message = require('../../types/message')
@@ -19,7 +18,6 @@ class Network {
     this.libp2p = libp2p
     this.peerBook = peerBook
     this.bitswap = bitswap
-    this.conns = new Map()
     this.b100Only = b100Only || false
 
     // increase event listener max
@@ -129,7 +127,7 @@ class Network {
     }
 
     const stringId = peerId.toB58String()
-    log('sendMessage to %s', stringId)
+    log('sendMessage to %s', stringId, msg)
     let peerInfo
     try {
       peerInfo = this.peerBook.getByB58String(stringId)
@@ -137,61 +135,63 @@ class Network {
       return callback(err)
     }
 
-    if (this.conns.has(stringId)) {
-      this.conns.get(stringId)(msg)
-      return callback()
-    }
-
-    const msgQueue = pushable()
-
-     // Attempt Bitswap 1.1.0
-    this.libp2p.dialByPeerInfo(peerInfo, BITSWAP110, (err, conn) => {
+    this._dialPeer(peerInfo, (err, conn, protocol) => {
       if (err) {
-        // Attempt Bitswap 1.0.0
-        this.libp2p.dialByPeerInfo(peerInfo, BITSWAP100, (err, conn) => {
-          if (err) {
-            return callback(err)
-          }
-          log('dialed %s on Bitswap 1.0.0', peerInfo.id.toB58String())
-
-          this.conns.set(stringId, (msg) => {
-            msgQueue.push(msg.serializeToBitswap100())
-          })
-
-          this.conns.get(stringId)(msg)
-
-          withConn(this.conns, conn)
-          callback()
-        })
-        return
+        return callback(err)
       }
-      log('dialed %s on Bitswap 1.1.0', peerInfo.id.toB58String())
 
-      this.conns.set(stringId, (msg) => {
-        msgQueue.push(msg.serializeToBitswap110())
+      let serialized
+      switch (protocol) {
+        case BITSWAP100:
+          serialized = msg.serializeToBitswap100()
+          break
+        case BITSWAP110:
+          serialized = msg.serializeToBitswap110()
+          break
+        default:
+          return callback(new Error('Unkown protocol: ' + protocol))
+      }
+      writeMessage(conn, serialized, (err) => {
+        if (err) {
+          log(err)
+        }
       })
-
-      this.conns.get(stringId)(msg)
-
-      withConn(this.conns, conn)
       callback()
     })
+  }
 
-    function withConn (conns, conn) {
-      pull(
-        msgQueue,
-        lp.encode(),
-        conn,
-        pull.onEnd((err) => {
-          if (err) {
-            log.error(err)
-          }
-          msgQueue.end()
-          conns.delete(stringId)
-        })
-      )
+  _dialPeer (peerInfo, callback) {
+    // dialByPeerInfo throws if no network is there
+    try {
+     // Attempt Bitswap 1.1.0
+      this.libp2p.dialByPeerInfo(peerInfo, BITSWAP110, (err, conn) => {
+        if (err) {
+          // Attempt Bitswap 1.0.0
+          this.libp2p.dialByPeerInfo(peerInfo, BITSWAP100, (err, conn) => {
+            if (err) {
+              return callback(err)
+            }
+
+            callback(null, conn, BITSWAP100)
+          })
+          return
+        }
+
+        callback(null, conn, BITSWAP110)
+      })
+    } catch (err) {
+      return callback(err)
     }
   }
+}
+
+function writeMessage (conn, msg, callback) {
+  pull(
+    pull.values([msg]),
+    lp.encode(),
+    conn,
+    pull.onEnd(callback)
+  )
 }
 
 module.exports = Network
