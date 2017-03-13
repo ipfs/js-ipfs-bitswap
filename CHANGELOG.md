@@ -1,3 +1,8 @@
+<a name="0.9.5"></a>
+## [0.9.5](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.9.4...v0.9.5) (2017-03-13)
+
+
+
 <a name="0.9.4"></a>
 ## [0.9.4](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.9.3...v0.9.4) (2017-02-21)
 
