@@ -23,6 +23,7 @@
   - [Use in a browser with browserify, webpack or any other bundler](#use-in-a-browser-with-browserify-webpack-or-any-other-bundler)
   - [Use in a browser using a script tag](#use-in-a-browser-using-a-script-tag)
 - [Usage](#usage)
+- [API](#api)
 - [Contribute](#contribute)
 - [License](#license)
 
@@ -30,8 +31,8 @@
 
 ### npm
 
-```sh
-> npm install ipfs-bitswap --save
+```bash
+> npm install ipfs-bitswap
 ```
 
 ### Use in Node.js
@@ -41,8 +42,6 @@ const Bitswap = require('ipfs-bitswap')
 ```
 
 ### Use in a browser with browserify, webpack or any other bundler
-
-The code published to npm that gets loaded on require is in fact a ES5 transpiled version with the right shims added. This means that you can require it and use with your favourite bundler without having to adjust asset management process.
 
 ```js
 const Bitswap = require('ipfs-bitswap')
@@ -60,84 +59,11 @@ Loading this module through a script tag will make the `IpfsBitswap` object avai
 
 ## Usage
 
-For the documentation see [API.md](API.md).
+See https://ipfs.github.io/js-ipfs-bitswap
 
-### API
+## API
 
-#### `new Bitswap(libp2p, blockstore)`
-
-- `libp2p: Libp2p`, instance of the local network stack.
-- `blockstore: Blockstore`, instance of the local database (`IpfsRepo.blockstore`)
-
-Create a new instance.
-
-#### `getStream(cid)`
-
-- `cid: CID|Array`
-
-Returns a source `pull-stream`. Values emitted are the received blocks.
-
-Example:
-
-```js
-// Single block
-pull(
-  bitswap.getStream(cid),
-  pull.collect((err, blocks) => {
-    // blocks === [block]
-  })
-)
-
-// Many blocks
-pull(
-  bitswap.getStream([cid1, cid2, cid3]),
-  pull.collect((err, blocks) => {
-    // blocks === [block1, block2, block3]
-  })
-)
-```
-
-> Note: This is safe guarded so that the network is not asked
-> for blocks that are in the local `datastore`.
-
-#### `unwant(cids)`
-
-- `cids: CID|[]CID`
-
-Cancel previously requested cids, forcefully. That means they are removed from the
-wantlist independent of how many other resources requested these cids. Callbacks
-attached to `getBlock` are errored with `Error('manual unwant: cid)`.
-
-#### `cancelWants(cids)`
-
-- `cid: CID|[]CID`
-
-Cancel previously requested cids.
-
-#### `putStream()`
-
-Returns a duplex `pull-stream` that emits an object `{cid: CID}` for every written block when it was stored.
-Objects passed into here should be of the form `{data: Buffer, cid: CID}`
-
-#### `put(blockAndCid, callback)`
-
-- `blockAndCid: {data: Buffer, cid: CID}`
-- `callback: Function`
-
-Announce that the current node now has the block containing `data`. This will store it
-in the local database and attempt to serve it to all peers that are known
- to have requested it. The callback is called when we are sure that the block
- is stored.
-
-#### `wantlistForPeer(peerId)`
-
-- `peerId: PeerId`
-
-Get the wantlist for a given peer.
-
-#### `stat()`
-
-Get stats about about the current state of the bitswap instance.
+See https://ipfs.github.io/js-ipfs-bitswap
 
 ## Development
 

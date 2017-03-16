@@ -57,7 +57,6 @@ module.exports = class MsgQueue {
       this.network.sendMessage(this.peerId, msg, (err) => {
         if (err) {
           log.error('send error: %s', err.message)
-          return
         }
       })
     })

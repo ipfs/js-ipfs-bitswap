@@ -1,179 +1,126 @@
 /* eslint-env mocha */
 'use strict'
 
-const expect = require('chai').expect
-const Block = require('ipfs-block')
+const chai = require('chai')
+chai.use(require('dirty-chai'))
+const expect = chai.expect
 const map = require('async/map')
 const CID = require('cids')
+const _ = require('lodash')
+const multihashing = require('multihashing-async')
 
 const Wantlist = require('../../src/types/wantlist')
+const utils = require('../utils')
 
 describe('Wantlist', () => {
   let wm
   let blocks
 
   before((done) => {
-    const data = ['hello', 'world']
-    blocks = data.map((d) => new Block(d))
-    done()
+    map(_.range(2), (i, cb) => utils.makeBlock(cb), (err, res) => {
+      expect(err).to.not.exist()
+      blocks = res
+      done()
+    })
   })
 
   beforeEach(() => {
     wm = new Wantlist()
   })
 
-  it('length', (done) => {
+  it('length', () => {
     const b1 = blocks[0]
     const b2 = blocks[1]
 
-    map([
-      b1,
-      b2
-    ],
-    (b, cb) => b.key(cb),
-    (err, keys) => {
-      expect(err).to.not.exist
-      wm.add(new CID(keys[0]), 2)
-      wm.add(new CID(keys[1]), 1)
-      expect(wm).to.have.length(2)
-      done()
-    })
+    wm.add(b1.cid, 2)
+    wm.add(b2.cid, 1)
+    expect(wm).to.have.length(2)
   })
 
   describe('remove', () => {
-    it('removes with a single ref', (done) => {
+    it('removes with a single ref', () => {
       const b = blocks[0]
 
-      b.key((err, key) => {
-        expect(err).to.not.exist
-        wm.add(new CID(key), 1)
-        wm.remove(new CID(key))
-        expect(wm).to.have.length(0)
-        done()
-      })
+      wm.add(b.cid, 1)
+      wm.remove(b.cid)
+      expect(wm).to.have.length(0)
     })
 
-    it('removes with multiple refs', (done) => {
+    it('removes with multiple refs', () => {
       const b1 = blocks[0]
       const b2 = blocks[1]
 
-      map([
-        b1,
-        b2
-      ],
-      (b, cb) => b.key(cb),
-      (err, keys) => {
-        expect(err).to.not.exist
-        const cid1 = new CID(keys[0])
-        const cid2 = new CID(keys[1])
+      wm.add(b1.cid, 1)
+      wm.add(b2.cid, 2)
 
-        wm.add(cid1, 1)
-        wm.add(cid2, 2)
+      expect(wm).to.have.length(2)
 
-        expect(wm).to.have.length(2)
+      wm.remove(b2.cid)
 
-        wm.remove(cid2)
+      expect(wm).to.have.length(1)
 
-        expect(wm).to.have.length(1)
+      wm.add(b1.cid, 2)
+      wm.remove(b1.cid)
 
-        wm.add(cid1, 2)
-        wm.remove(cid1)
+      expect(wm).to.have.length(1)
 
-        expect(wm).to.have.length(1)
-
-        wm.remove(cid1)
-        expect(wm).to.have.length(0)
-        done()
-      })
+      wm.remove(b1.cid)
+      expect(wm).to.have.length(0)
     })
 
-    it('ignores non existing removes', (done) => {
+    it('ignores non existing removes', () => {
       const b = blocks[0]
 
-      b.key((err, key) => {
-        expect(err).to.not.exist
-        const cid = new CID(key)
-        wm.add(cid, 1)
-        wm.remove(cid)
-        wm.remove(cid)
+      wm.add(b.cid, 1)
+      wm.remove(b.cid)
+      wm.remove(b.cid)
 
-        expect(wm).to.have.length(0)
-        done()
-      })
+      expect(wm).to.have.length(0)
     })
   })
 
-  it('entries', (done) => {
+  it('entries', () => {
     const b = blocks[0]
-    b.key((err, key) => {
-      expect(err).to.not.exist
-      const cid = new CID(key)
-      wm.add(cid, 2)
 
-      expect(
-        Array.from(wm.entries())
-      ).to.be.eql([[
-        cid.buffer.toString(),
-        new Wantlist.Entry(cid, 2)
-      ]])
-      done()
-    })
+    wm.add(b.cid, 2)
+    expect(
+      Array.from(wm.entries())
+    ).to.be.eql([[
+      b.cid.buffer.toString(),
+      new Wantlist.Entry(b.cid, 2)
+    ]])
   })
 
-  it('sortedEntries', (done) => {
+  it('sortedEntries', () => {
     const b1 = blocks[0]
     const b2 = blocks[1]
 
-    map([
-      b1,
-      b2
-    ],
-    (b, cb) => b.key(cb),
-    (err, keys) => {
-      expect(err).to.not.exist
-      const cid1 = new CID(keys[0])
-      const cid2 = new CID(keys[1])
+    wm.add(b1.cid, 1)
+    wm.add(b2.cid, 1)
 
-      wm.add(cid1, 1)
-      wm.add(cid2, 1)
-
-      expect(
-        Array.from(wm.sortedEntries())
-      ).to.be.eql([
-        [cid1.buffer.toString(), new Wantlist.Entry(cid1, 1)],
-        [cid2.buffer.toString(), new Wantlist.Entry(cid2, 1)]
-      ])
-      done()
-    })
+    expect(
+      Array.from(wm.sortedEntries())
+    ).to.be.eql([
+      [b1.cid.buffer.toString(), new Wantlist.Entry(b1.cid, 1)],
+      [b2.cid.buffer.toString(), new Wantlist.Entry(b2.cid, 1)]
+    ])
   })
 
-  it('contains', (done) => {
+  it('contains', () => {
     const b1 = blocks[0]
     const b2 = blocks[1]
 
-    map([
-      b1,
-      b2
-    ],
-    (b, cb) => b.key(cb),
-    (err, keys) => {
-      expect(err).to.not.exist
-      const cid1 = new CID(keys[0])
-      const cid2 = new CID(keys[1])
+    wm.add(b1.cid, 2)
 
-      wm.add(cid1, 2)
-
-      expect(wm.contains(cid1)).to.exist
-      expect(wm.contains(cid2)).to.not.exist
-      done()
-    })
+    expect(wm.contains(b1.cid)).to.exist()
+    expect(wm.contains(b2.cid)).to.not.exist()
   })
 
   it('with cidV1', (done) => {
     const b = blocks[0]
-    b.key((err, key) => {
-      expect(err).to.not.exist
-      const cid = new CID(1, 'dag-pb', key)
+    multihashing(b.data, 'sha2-256', (err, hash) => {
+      expect(err).to.not.exist()
+      const cid = new CID(1, 'dag-pb', hash)
       wm.add(cid, 2)
 
       expect(

@@ -4,13 +4,16 @@
 const Node = require('libp2p-ipfs-nodejs')
 const PeerInfo = require('peer-info')
 const multiaddr = require('multiaddr')
-const expect = require('chai').expect
+const chai = require('chai')
+chai.use(require('dirty-chai'))
+const expect = chai.expect
 const PeerBook = require('peer-book')
-const Block = require('ipfs-block')
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
 const parallel = require('async/parallel')
-const CID = require('cids')
+const map = require('async/map')
+const _ = require('lodash')
+const utils = require('../../utils')
 
 const Network = require('../../../src/components/network')
 const Message = require('../../../src/types/message')
@@ -38,7 +41,8 @@ describe('network', () => {
     parallel([
       (cb) => PeerInfo.create(cb),
       (cb) => PeerInfo.create(cb),
-      (cb) => PeerInfo.create(cb)
+      (cb) => PeerInfo.create(cb),
+      (cb) => map(_.range(2), (i, cb) => utils.makeBlock(cb), cb)
     ], (err, results) => {
       if (err) {
         return done(err)
@@ -48,7 +52,7 @@ describe('network', () => {
       peerInfoB = results[1]
       peerInfoC = results[2]
 
-      blocks = ['hello', 'world'].map((b) => new Block(b))
+      blocks = results[3]
 
       const maA = multiaddr('/ip4/127.0.0.1/tcp/10100/ipfs/' + peerInfoA.id.toB58String())
       const maB = multiaddr('/ip4/127.0.0.1/tcp/10300/ipfs/' + peerInfoB.id.toB58String())
@@ -126,9 +130,9 @@ describe('network', () => {
     // only bitswap100
     networkC = new Network(libp2pNodeC, peerBookC, bitswapMockC, true)
 
-    expect(networkA).to.exist
-    expect(networkB).to.exist
-    expect(networkC).to.exist
+    expect(networkA).to.exist()
+    expect(networkB).to.exist()
+    expect(networkC).to.exist()
 
     networkA.start()
     networkB.start()
@@ -139,7 +143,7 @@ describe('network', () => {
 
   it('connectTo fail', (done) => {
     networkA.connectTo(peerInfoB.id, (err) => {
-      expect(err).to.exist
+      expect(err).to.exist()
       done()
     })
   })
@@ -162,7 +166,7 @@ describe('network', () => {
     }
 
     libp2pNodeA.dialByPeerInfo(peerInfoB, (err) => {
-      expect(err).to.not.exist
+      expect(err).to.not.exist()
     })
 
     function finish () {
@@ -174,7 +178,7 @@ describe('network', () => {
 
   it('connectTo success', (done) => {
     networkA.connectTo(peerInfoB.id, (err) => {
-      expect(err).to.not.exist
+      expect(err).to.not.exist()
       done()
     })
   })
@@ -184,41 +188,31 @@ describe('network', () => {
     const b1 = blocks[0]
     const b2 = blocks[1]
 
-    b1.key((err, key1) => {
-      expect(err).to.not.exist
-      const cid1 = new CID(key1)
-      msg.addEntry(cid1, 0, false)
-      msg.addBlock(cid1, b1)
+    msg.addEntry(b1.cid, 0, false)
+    msg.addBlock(b1)
+    msg.addBlock(b2)
 
-      b2.key((err, key2) => {
-        expect(err).to.not.exist
-        const cid2 = new CID(key2)
+    bitswapMockB._receiveMessage = (peerId, msgReceived) => {
+      expect(msg).to.eql(msgReceived)
+      bitswapMockB._receiveMessage = () => {}
+      bitswapMockB._receiveError = () => {}
+      done()
+    }
 
-        msg.addBlock(cid2, b2)
+    bitswapMockB._receiveError = (err) => {
+      expect(err).to.not.exist()
+    }
 
-        bitswapMockB._receiveMessage = (peerId, msgReceived) => {
-          expect(msg).to.eql(msgReceived)
-          bitswapMockB._receiveMessage = () => {}
-          bitswapMockB._receiveError = () => {}
-          done()
-        }
+    libp2pNodeA.dialByPeerInfo(peerInfoB, '/ipfs/bitswap/1.0.0', (err, conn) => {
+      expect(err).to.not.exist()
 
-        bitswapMockB._receiveError = (err) => {
-          expect(err).to.not.exist
-        }
-
-        libp2pNodeA.dialByPeerInfo(peerInfoB, '/ipfs/bitswap/1.0.0', (err, conn) => {
-          expect(err).to.not.exist
-
-          pull(
-            pull.values([
-              msg.serializeToBitswap100()
-            ]),
-            lp.encode(),
-            conn
-          )
-        })
-      })
+      pull(
+        pull.values([
+          msg.serializeToBitswap100()
+        ]),
+        lp.encode(),
+        conn
+      )
     })
   })
 
@@ -227,41 +221,31 @@ describe('network', () => {
     const b1 = blocks[0]
     const b2 = blocks[1]
 
-    b1.key((err, key1) => {
-      expect(err).to.not.exist
-      const cid1 = new CID(key1)
-      msg.addEntry(cid1, 0, false)
-      msg.addBlock(cid1, b1)
+    msg.addEntry(b1.cid, 0, false)
+    msg.addBlock(b1)
+    msg.addBlock(b2)
 
-      b2.key((err, key2) => {
-        expect(err).to.not.exist
-        const cid2 = new CID(key2)
+    bitswapMockB._receiveMessage = (peerId, msgReceived) => {
+      expect(msg).to.eql(msgReceived)
+      bitswapMockB._receiveMessage = () => {}
+      bitswapMockB._receiveError = () => {}
+      done()
+    }
 
-        msg.addBlock(cid2, b2)
+    bitswapMockB._receiveError = (err) => {
+      expect(err).to.not.exist()
+    }
 
-        bitswapMockB._receiveMessage = (peerId, msgReceived) => {
-          expect(msg).to.eql(msgReceived)
-          bitswapMockB._receiveMessage = () => {}
-          bitswapMockB._receiveError = () => {}
-          done()
-        }
+    libp2pNodeA.dialByPeerInfo(peerInfoB, '/ipfs/bitswap/1.1.0', (err, conn) => {
+      expect(err).to.not.exist()
 
-        bitswapMockB._receiveError = (err) => {
-          expect(err).to.not.exist
-        }
-
-        libp2pNodeA.dialByPeerInfo(peerInfoB, '/ipfs/bitswap/1.1.0', (err, conn) => {
-          expect(err).to.not.exist
-
-          pull(
-            pull.values([
-              msg.serializeToBitswap110()
-            ]),
-            lp.encode(),
-            conn
-          )
-        })
-      })
+      pull(
+        pull.values([
+          msg.serializeToBitswap110()
+        ]),
+        lp.encode(),
+        conn
+      )
     })
   })
 
@@ -270,33 +254,23 @@ describe('network', () => {
     const b1 = blocks[0]
     const b2 = blocks[1]
 
-    b1.key((err, key1) => {
-      expect(err).to.not.exist
-      const cid1 = new CID(key1)
-      msg.addEntry(cid1, 0, false)
-      msg.addBlock(cid1, b1)
+    msg.addEntry(b1.cid, 0, false)
+    msg.addBlock(b1)
+    msg.addBlock(b2)
 
-      b2.key((err, key2) => {
-        expect(err).to.not.exist
-        const cid2 = new CID(key2)
+    bitswapMockB._receiveMessage = (peerId, msgReceived) => {
+      expect(msg).to.eql(msgReceived)
+      bitswapMockB._receiveMessage = () => {}
+      bitswapMockB._receiveError = () => {}
+      done()
+    }
 
-        msg.addBlock(cid2, b2)
+    bitswapMockB._receiveError = (err) => {
+      expect(err).to.not.exist()
+    }
 
-        bitswapMockB._receiveMessage = (peerId, msgReceived) => {
-          expect(msg).to.eql(msgReceived)
-          bitswapMockB._receiveMessage = () => {}
-          bitswapMockB._receiveError = () => {}
-          done()
-        }
-
-        bitswapMockB._receiveError = (err) => {
-          expect(err).to.not.exist
-        }
-
-        networkA.sendMessage(peerInfoB.id, msg, (err) => {
-          expect(err).to.not.exist
-        })
-      })
+    networkA.sendMessage(peerInfoB.id, msg, (err) => {
+      expect(err).to.not.exist()
     })
   })
 
@@ -318,7 +292,7 @@ describe('network', () => {
     }
 
     libp2pNodeA.dialByPeerInfo(peerInfoC, (err) => {
-      expect(err).to.not.exist
+      expect(err).to.not.exist()
     })
 
     function finish () {
@@ -333,33 +307,23 @@ describe('network', () => {
     const b1 = blocks[0]
     const b2 = blocks[1]
 
-    b1.key((err, key1) => {
-      expect(err).to.not.exist
-      const cid1 = new CID(key1)
-      msg.addEntry(cid1, 0, false)
-      msg.addBlock(cid1, b1)
+    msg.addEntry(b1.cid, 0, false)
+    msg.addBlock(b1)
+    msg.addBlock(b2)
 
-      b2.key((err, key2) => {
-        expect(err).to.not.exist
-        const cid2 = new CID(key2)
+    bitswapMockC._receiveMessage = (peerId, msgReceived) => {
+      expect(msg).to.eql(msgReceived)
+      bitswapMockC._receiveMessage = () => {}
+      bitswapMockC._receiveError = () => {}
+      done()
+    }
 
-        msg.addBlock(cid2, b2)
+    bitswapMockC._receiveError = (err) => {
+      expect(err).to.not.exist()
+    }
 
-        bitswapMockC._receiveMessage = (peerId, msgReceived) => {
-          expect(msg).to.eql(msgReceived)
-          bitswapMockC._receiveMessage = () => {}
-          bitswapMockC._receiveError = () => {}
-          done()
-        }
-
-        bitswapMockC._receiveError = (err) => {
-          expect(err).to.not.exist
-        }
-
-        networkA.sendMessage(peerInfoC.id, msg, (err) => {
-          expect(err).to.not.exist
-        })
-      })
+    networkA.sendMessage(peerInfoC.id, msg, (err) => {
+      expect(err).to.not.exist()
     })
   })
 })

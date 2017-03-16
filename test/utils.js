@@ -4,16 +4,20 @@ const each = require('async/each')
 const eachSeries = require('async/eachSeries')
 const map = require('async/map')
 const parallel = require('async/parallel')
+const series = require('async/series')
 const _ = require('lodash')
 const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
 // const PeerBook = require('peer-book')
 const multiaddr = require('multiaddr')
-const Bitswap = require('../src')
 const Node = require('libp2p-ipfs-nodejs')
 const os = require('os')
 const Repo = require('ipfs-repo')
-const Store = require('interface-pull-blob-store')
+const multihashing = require('multihashing-async')
+const CID = require('cids')
+const Block = require('ipfs-block')
+
+const Bitswap = require('../src')
 
 exports.mockNetwork = (calls, done) => {
   done = done || (() => {})
@@ -137,19 +141,35 @@ exports.genBitswapNetwork = (n, callback) => {
     const tmpDir = os.tmpdir()
     netArray.forEach((net, i) => {
       const repoPath = tmpDir + '/' + net.peerInfo.id.toB58String()
-      net.repo = new Repo(repoPath, { stores: Store })
+      net.repo = new Repo(repoPath)
     })
 
-    // start every libp2pNode
     each(netArray, (net, cb) => {
-      net.libp2p.start(cb)
+      const repoPath = tmpDir + '/' + net.peerInfo.id.toB58String()
+      net.repo = new Repo(repoPath)
+
+      series([
+        (cb) => net.repo.init({}, cb),
+        (cb) => net.repo.open(cb)
+      ], cb)
     }, (err) => {
       if (err) {
         throw err
       }
-      createBitswaps()
+      startLibp2p()
     })
 
+    function startLibp2p () {
+      // start every libp2pNode
+      each(netArray, (net, cb) => {
+        net.libp2p.start(cb)
+      }, (err) => {
+        if (err) {
+          throw err
+        }
+        createBitswaps()
+      })
+    }
     // create every BitSwap
     function createBitswaps () {
       netArray.forEach((net) => {
@@ -179,5 +199,15 @@ exports.genBitswapNetwork = (n, callback) => {
       }
       callback(null, netArray)
     }
+  })
+}
+
+exports.makeBlock = (cb) => {
+  const data = new Buffer(`hello world ${Math.random()}`)
+  multihashing(data, 'sha2-256', (err, hash) => {
+    if (err) {
+      return cb(err)
+    }
+    cb(null, new Block(data, new CID(hash)))
   })
 }

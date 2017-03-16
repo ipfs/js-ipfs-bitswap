@@ -2,17 +2,20 @@
 /* eslint-env mocha */
 'use strict'
 
-const expect = require('chai').expect
+const chai = require('chai')
+chai.use(require('dirty-chai'))
+const expect = chai.expect
 const PeerId = require('peer-id')
 const _ = require('lodash')
 const Block = require('ipfs-block')
 const parallel = require('async/parallel')
 const series = require('async/series')
 const map = require('async/map')
+const each = require('async/each')
+const waterfall = require('async/waterfall')
 const eachSeries = require('async/eachSeries')
-const pull = require('pull-stream')
-const paramap = require('pull-paramap')
 const CID = require('cids')
+const multihashing = require('multihashing-async')
 
 const Message = require('../../../src/types/message')
 const DecisionEngine = require('../../../src/components/decision-engine')
@@ -21,7 +24,7 @@ const mockNetwork = require('../../utils').mockNetwork
 
 function messageToString (m) {
   return Array.from(m[1].blocks.values())
-    .map((b) => b.block.data.toString())
+    .map((b) => b.data.toString())
 }
 
 function stringifyMessages (messages) {
@@ -55,47 +58,38 @@ module.exports = (repo) => {
         (cb) => newEngine('Ernie', cb),
         (cb) => newEngine('Bert', cb)
       ], (err, res) => {
-        expect(err).to.not.exist
+        expect(err).to.not.exist()
 
         const sender = res[0]
         const receiver = res[1]
 
-        pull(
-          pull.values(_.range(1000)),
-          pull.map((i) => {
-            const content = `this is message ${i}`
-            return new Block(content)
-          }),
-          paramap((block, cb) => {
+        map(_.range(1000), (i, cb) => {
+          const data = new Buffer(`this is message ${i}`)
+          multihashing(data, 'sha2-256', (err, hash) => {
+            expect(err).to.not.exist()
+
             const m = new Message(false)
-            block.key((err, key) => {
-              if (err) {
-                return cb(err)
-              }
-              const cid = new CID(key)
-              m.addBlock(cid, block)
-              sender.engine.messageSent(receiver.peer, block, cid)
-              receiver.engine.messageReceived(sender.peer, m, cb)
-            })
-          }, 100),
-          pull.onEnd((err) => {
-            expect(err).to.not.exist
-
-            expect(sender.engine.numBytesSentTo(receiver.peer))
-              .to.be.above(0)
-
-            expect(sender.engine.numBytesSentTo(receiver.peer))
-              .to.eql(receiver.engine.numBytesReceivedFrom(sender.peer))
-
-            expect(receiver.engine.numBytesSentTo(sender.peer))
-              .to.eql(0)
-
-            expect(sender.engine.numBytesReceivedFrom(receiver.peer))
-              .to.eql(0)
-
-            done()
+            const block = new Block(data, new CID(hash))
+            m.addBlock(block)
+            sender.engine.messageSent(receiver.peer, block)
+            receiver.engine.messageReceived(sender.peer, m, cb)
           })
-        )
+        }, (err) => {
+          expect(err).to.not.exist()
+          expect(sender.engine.numBytesSentTo(receiver.peer))
+            .to.be.above(0)
+
+          expect(sender.engine.numBytesSentTo(receiver.peer))
+            .to.eql(receiver.engine.numBytesReceivedFrom(sender.peer))
+
+          expect(receiver.engine.numBytesSentTo(sender.peer))
+            .to.eql(0)
+
+          expect(sender.engine.numBytesReceivedFrom(receiver.peer))
+            .to.eql(0)
+
+          done()
+        })
       })
     })
 
@@ -104,7 +98,7 @@ module.exports = (repo) => {
         (cb) => newEngine('sf', cb),
         (cb) => newEngine('sea', cb)
       ], (err, res) => {
-        expect(err).to.not.exist
+        expect(err).to.not.exist()
 
         const sanfrancisco = res[0]
         const seattle = res[1]
@@ -112,7 +106,7 @@ module.exports = (repo) => {
         const m = new Message(true)
         sanfrancisco.engine.messageSent(seattle.peer)
         seattle.engine.messageReceived(sanfrancisco.peer, m, (err) => {
-          expect(err).to.not.exist
+          expect(err).to.not.exist()
 
           expect(seattle.peer.toHexString())
             .to.not.eql(sanfrancisco.peer.toHexString())
@@ -137,13 +131,11 @@ module.exports = (repo) => {
 
       function partnerWants (dEngine, values, partner, cb) {
         const message = new Message(false)
-        const blocks = values.map((k) => new Block(k))
 
-        map(blocks, (b, cb) => b.key(cb), (err, keys) => {
-          expect(err).to.not.exist
-          keys.forEach((key, i) => {
-            const cid = new CID(key)
-            message.addEntry(cid, Math.pow(2, 32) - 1 - i)
+        map(values, (v, cb) => multihashing(new Buffer(v), 'sha2-256', cb), (err, hashes) => {
+          expect(err).to.not.exist()
+          hashes.forEach((hash, i) => {
+            message.addEntry(new CID(hash), Math.pow(2, 32) - 1 - i)
           })
 
           dEngine.messageReceived(partner, message, cb)
@@ -152,73 +144,68 @@ module.exports = (repo) => {
 
       function partnerCancels (dEngine, values, partner, cb) {
         const message = new Message(false)
-        const blocks = values.map((k) => new Block(k))
 
-        map(blocks, (b, cb) => b.key(cb), (err, keys) => {
-          expect(err).to.not.exist
-          keys.forEach((key) => {
-            const cid = new CID(key)
-            message.cancel(cid)
+        map(values, (v, cb) => multihashing(new Buffer(v), 'sha2-256', cb), (err, hashes) => {
+          expect(err).to.not.exist()
+          hashes.forEach((hash) => {
+            message.cancel(new CID(hash))
           })
           dEngine.messageReceived(partner, message, cb)
         })
       }
 
       repo.create('p', (err, repo) => {
-        expect(err).to.not.exist
+        expect(err).to.not.exist()
 
-        pull(
-          pull.values(alphabet),
-          pull.asyncMap((l, cb) => {
-            const block = new Block(l)
-            block.key((err, key) => {
-              if (err) {
-                return cb(err)
-              }
-              cb(null, { data: block.data, key: key })
-            })
-          }),
-          repo.blockstore.putStream(),
-          pull.onEnd((err) => {
-            expect(err).to.not.exist
+        waterfall([
+          (cb) => map(
+            alphabet,
+            (v, cb) => multihashing(new Buffer(v), 'sha2-256', cb),
+            cb
+          ),
+          (hashes, cb) => each(
+            hashes.map((h, i) => {
+              return new Block(new Buffer(alphabet[i]), new CID(h))
+            }),
+            (b, cb) => repo.blockstore.put(b, cb),
+            cb
+          ),
+          (cb) => eachSeries(_.range(numRounds), (i, cb) => {
+            // 2 test cases
+            //   a) want alphabet - cancel vowels
+            //   b) want alphabet - cancels everything except vowels
 
-            eachSeries(_.range(numRounds), (i, cb) => {
-              // 2 test cases
-              //   a) want alphabet - cancel vowels
-              //   b) want alphabet - cancels everything except vowels
+            eachSeries(testCases, (testcase, innerCb) => {
+              const set = testcase[0]
+              const cancels = testcase[1]
+              const keeps = _.difference(set, cancels)
 
-              eachSeries(testCases, (testcase, innerCb) => {
-                const set = testcase[0]
-                const cancels = testcase[1]
-                const keeps = _.difference(set, cancels)
+              const network = mockNetwork(1, (res) => {
+                const msgs = stringifyMessages(res.messages)
+                expect(msgs.sort()).to.eql(keeps.sort())
+                innerCb()
+              })
 
-                const network = mockNetwork(1, (res) => {
-                  const msgs = stringifyMessages(res.messages)
-                  expect(msgs.sort()).to.eql(keeps.sort())
-                  innerCb()
-                })
+              const dEngine = new DecisionEngine(repo.blockstore, network)
+              dEngine.start()
 
-                const dEngine = new DecisionEngine(repo.blockstore, network)
-                dEngine.start()
-
-                let partner
-                series([
-                  (cb) => PeerId.create((err, id) => {
-                    if (err) {
-                      return cb(err)
-                    }
-                    partner = id
-                    cb()
-                  }),
-                  (cb) => partnerWants(dEngine, set, partner, cb),
-                  (cb) => partnerCancels(dEngine, cancels, partner, cb)
-                ], (err) => {
-                  expect(err).to.not.exist
-                })
-              }, cb)
-            }, done)
-          })
-        )
+              let partner
+              series([
+                (cb) => PeerId.create((err, id) => {
+                  if (err) {
+                    return cb(err)
+                  }
+                  partner = id
+                  cb()
+                }),
+                (cb) => partnerWants(dEngine, set, partner, cb),
+                (cb) => partnerCancels(dEngine, cancels, partner, cb)
+              ], (err) => {
+                expect(err).to.not.exist()
+              })
+            }, cb)
+          }, cb)
+        ], done)
       })
     })
 
@@ -228,9 +215,6 @@ module.exports = (repo) => {
         b.fill(i)
         return b
       })
-      const blocks = _.range(10).map((i) => {
-        return new Block(data[i])
-      })
 
       const net = mockNetwork(5, (res) => {
         expect(res.messages).to.have.length(5)
@@ -239,30 +223,29 @@ module.exports = (repo) => {
 
       parallel([
         (cb) => newEngine('sf', cb, net),
-        (cb) => map(blocks, (b, cb) => b.key(cb), cb)
+        (cb) => map(data, (d, cb) => multihashing(d, 'sha2-256', (err, hash) => {
+          expect(err).to.not.exist()
+          cb(null, new Block(d, new CID(hash)))
+        }), cb)
       ], (err, res) => {
-        expect(err).to.not.exist
+        expect(err).to.not.exist()
         const sf = res[0].engine
-        const cids = res[1].map((c) => new CID(c))
         const id = res[0].peer
 
-        pull(
-          pull.values(blocks.map((b, i) => ({
-            data: b.data, key: cids[i].multihash
-          }))),
-          sf.blockstore.putStream(),
-          pull.onEnd((err) => {
-            expect(err).to.not.exist
-            const msg = new Message(false)
-            cids.forEach((c, i) => {
-              msg.addEntry(c, Math.pow(2, 32) - 1 - i)
-            })
+        const blocks = res[1]
+        const cids = blocks.map((b) => b.cid)
 
-            sf.messageReceived(id, msg, (err) => {
-              expect(err).to.not.exist
-            })
+        each(blocks, (b, cb) => sf.blockstore.put(b, cb), (err) => {
+          expect(err).to.not.exist()
+          const msg = new Message(false)
+          cids.forEach((c, i) => {
+            msg.addEntry(c, Math.pow(2, 32) - 1 - i)
           })
-        )
+
+          sf.messageReceived(id, msg, (err) => {
+            expect(err).to.not.exist()
+          })
+        })
       })
     })
   })

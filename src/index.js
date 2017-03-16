@@ -1,11 +1,9 @@
 'use strict'
 
 const waterfall = require('async/waterfall')
+const reject = require('async/reject')
 const each = require('async/each')
 const EventEmitter = require('events').EventEmitter
-const pull = require('pull-stream')
-const paramap = require('pull-paramap')
-const defer = require('pull-defer/source')
 const debug = require('debug')
 
 const CONSTANTS = require('./constants')
@@ -16,7 +14,18 @@ const DecisionEngine = require('./components/decision-engine')
 const log = debug('bitswap')
 log.error = debug('bitswap:error')
 
+/**
+ *
+ */
 class Bitswap {
+  /**
+   * Create a new bitswap instance.
+   *
+   * @param {Libp2p} libp2p
+   * @param {Blockstore} blockstore
+   * @param {PeerBook} peerBook
+   * @returns {Bitswap}
+   */
   constructor (libp2p, blockstore, peerBook) {
     this.libp2p = libp2p
     // the network delivers messages
@@ -39,49 +48,45 @@ class Bitswap {
   }
 
   // handle messages received through the network
-  _receiveMessage (peerId, incoming, cb) {
-    cb = cb || (() => {})
+  _receiveMessage (peerId, incoming, callback) {
     this.engine.messageReceived(peerId, incoming, (err) => {
       if (err) {
         log('failed to receive message', incoming)
       }
 
       if (incoming.blocks.size === 0) {
-        return cb()
+        return callback()
       }
 
-      const cidsAndBlocks = Array.from(incoming.blocks.values())
+      const blocks = Array.from(incoming.blocks.values())
 
       // quickly send out cancels, reduces chances of duplicate block receives
-      const toCancel = cidsAndBlocks
+      const toCancel = blocks
         .filter((b) => this.wm.wantlist.contains(b.cid))
         .map((b) => b.cid)
 
       this.wm.cancelWants(toCancel)
 
       each(
-        cidsAndBlocks,
-        this._handleReceivedBlock.bind(this, peerId),
-        cb
+        blocks,
+        (b, cb) => this._handleReceivedBlock(peerId, b, cb),
+        callback
       )
     })
   }
 
-  _handleReceivedBlock (peerId, cidAndBlock, callback) {
-    const cid = cidAndBlock.cid
-    const block = cidAndBlock.block
+  _handleReceivedBlock (peerId, block, callback) {
+    log('received block')
 
     waterfall([
-      (cb) => this.blockstore.has(cid.multihash, cb),
-      (exists, cb) => {
-        this._updateReceiveCounters(block, exists)
-        log('got block')
-
-        if (exists) {
+      (cb) => this.blockstore.has(block.cid, cb),
+      (has, cb) => {
+        this._updateReceiveCounters(block, has)
+        if (has) {
           return cb()
         }
 
-        this._putBlockStore(cidAndBlock, cb)
+        this._putBlock(block, cb)
       }
     ], callback)
   }
@@ -111,37 +116,47 @@ class Bitswap {
     this.engine.peerDisconnected(peerId)
   }
 
-  // return the current wantlist for a given `peerId`
+  _putBlock (block, callback) {
+    this.blockstore.put(block, (err) => {
+      if (err) {
+        return callback(err)
+      }
+
+      this.notifications.emit(
+        `block:${block.cid.buffer.toString()}`,
+        block
+      )
+      this.engine.receivedBlocks([block.cid])
+      callback()
+    })
+  }
+
+  /**
+   * Return the current wantlist for a given `peerId`
+   *
+   * @param {PeerId} peerId
+   * @returns {Wantlist}
+   */
   wantlistForPeer (peerId) {
     return this.engine.wantlistForPeer(peerId)
   }
 
-  getStream (cids) {
-    if (!Array.isArray(cids)) {
-      return this._getStreamSingle(cids)
-    }
-
-    return pull(
-      pull.values(cids),
-      paramap((cid, cb) => {
-        pull(
-          this._getStreamSingle(cid),
-          pull.collect(cb)
-        )
-      }),
-      pull.flatten()
-    )
-  }
-
-  _getStreamSingle (cid) {
+  /**
+   * Fetch a given block by cid. If the block is in the local
+   * blockstore it is returned, otherwise the block is added to the wantlist and returned once another node sends it to us.
+   *
+   * @param {CID} cid
+   * @param {function(Error, Block)} callback
+   * @returns {void}
+   */
+  get (cid, callback) {
     const unwantListeners = {}
     const blockListeners = {}
     const cidStr = cid.buffer.toString()
     const unwantEvent = `unwant:${cidStr}`
     const blockEvent = `block:${cidStr}`
 
-    const d = defer()
-
+    log('get: %s', cidStr)
     const cleanupListener = () => {
       if (unwantListeners[cidStr]) {
         this.notifications.removeListener(unwantEvent, unwantListeners[cidStr])
@@ -159,33 +174,32 @@ class Bitswap {
         log(`manual unwant: ${cidStr}`)
         cleanupListener()
         this.wm.cancelWants([cid])
-        d.resolve(pull.empty())
+        callback()
       }
 
       blockListeners[cidStr] = (block) => {
         this.wm.cancelWants([cid])
         cleanupListener(cid)
-        d.resolve(pull.values([block]))
+        callback(null, block)
       }
 
       this.notifications.once(unwantEvent, unwantListeners[cidStr])
       this.notifications.once(blockEvent, blockListeners[cidStr])
     }
 
-    this.blockstore.has(cid.multihash, (err, exists) => {
+    this.blockstore.has(cid, (err, has) => {
       if (err) {
-        return d.resolve(pull.error(err))
+        return callback(err)
       }
-      if (exists) {
+
+      if (has) {
         log('already have block: %s', cidStr)
-        return d.resolve(this.blockstore.getStream(cid.multihash))
+        return this.blockstore.get(cid, callback)
       }
 
       addListener()
       this.wm.wantBlocks([cid])
     })
-
-    return d
   }
 
   // removes the given cids from the wantlist independent of any ref counts
@@ -208,63 +222,73 @@ class Bitswap {
     this.wm.cancelWants(cids)
   }
 
-  putStream () {
-    return pull(
-      pull.asyncMap((blockAndCid, cb) => {
-        this.blockstore.has(blockAndCid.cid.multihash, (err, exists) => {
-          if (err) {
-            return cb(err)
-          }
-
-          cb(null, [blockAndCid, exists])
-        })
-      }),
-      pull.filter((val) => !val[1]),
-      pull.asyncMap((val, cb) => {
-        this._putBlockStore(val[0], cb)
-      })
-    )
-  }
-
-  _putBlockStore (blockAndCid, callback) {
-    const block = blockAndCid.block
-    const cid = blockAndCid.cid
-    const cidStr = cid.buffer.toString()
-
+  /**
+   * Put the given block to the underlying blockstore and
+   * send it to nodes that have it in their wantlist.
+   *
+   * @param {Block} block
+   * @param {function(Error)} callback
+   * @returns {void}
+   */
+  put (block, callback) {
     log('putting block')
 
-    pull(
-      pull.values([{
-        data: block.data,
-        key: cid.multihash
-      }]),
-      this.blockstore.putStream(),
-      pull.collect((err, meta) => {
-        if (err) {
-          return callback(err)
+    waterfall([
+      (cb) => this.blockstore.has(block.cid, cb),
+      (has, cb) => {
+        if (has) {
+          return cb()
         }
 
-        log('put block')
-        this.notifications.emit(`block:${cidStr}`, block)
-        this.engine.receivedBlocks([cid])
-        callback(null, meta)
+        this._putBlock(block, cb)
+      }
+    ], callback)
+  }
+
+  /**
+   * Put the given blocks to the underlying blockstore and
+   * send it to nodes that have it them their wantlist.
+   *
+   * @param {Array<Block>} blocks
+   * @param {function(Error)} callback
+   * @returns {void}
+   */
+  putMany (blocks, callback) {
+    waterfall([
+      (cb) => reject(blocks, (b, cb) => {
+        this.blockstore.has(b.cid, cb)
+      }, cb),
+      (newBlocks, cb) => this.blockstore.putMany(newBlocks, (err) => {
+        if (err) {
+          return cb(err)
+        }
+
+        newBlocks.forEach((block) => {
+          this.notifications.emit(
+            `block:${block.cid.buffer.toString()}`,
+            block
+          )
+          this.engine.receivedBlocks([block.cid])
+        })
+        cb()
       })
-    )
+    ], callback)
   }
 
-  // announces the existance of a block to this service
-  put (blockAndCid, callback) {
-    pull(
-      pull.values([blockAndCid]),
-      this.putStream(),
-      pull.onEnd(callback)
-    )
-  }
-
+  /**
+   * Get the current list of wants.
+   *
+   * @returns {Array<WantlistEntry>}
+   */
   getWantlist () {
     return this.wm.wantlist.entries()
   }
 
+  /**
+   * Get stats about the bitswap node.
+   *
+   * @returns {Object}
+   */
   stat () {
     return {
       wantlist: this.getWantlist(),
@@ -275,13 +299,22 @@ class Bitswap {
     }
   }
 
+  /**
+   * Start the bitswap node.
+   *
+   * @returns {void}
+   */
   start () {
     this.wm.run()
     this.network.start()
     this.engine.start()
   }
 
-  // Halt everything
+  /**
+   * Stooop the bitswap node.
+   *
+   * @returns {void}
+   */
   stop () {
     this.wm.stop(this.libp2p.peerInfo.id)
     this.network.stop()

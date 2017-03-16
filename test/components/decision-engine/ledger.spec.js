@@ -1,7 +1,9 @@
 /* eslint-env mocha */
 'use strict'
 
-const expect = require('chai').expect
+const chai = require('chai')
+chai.use(require('dirty-chai'))
+const expect = chai.expect
 const PeerId = require('peer-id')
 
 const Ledger = require('../../../src/components/decision-engine/ledger')

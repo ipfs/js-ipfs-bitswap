@@ -29,3 +29,6 @@ node_modules
 dist
 
 test/test-repo-for*
+docs
+
+test/test-repo/datastore
