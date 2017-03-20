@@ -59,7 +59,7 @@
     "cids": "~0.4.1",
     "debug": "^2.6.2",
     "heap": "^0.2.6",
-    "ipfs-block": "~0.5.5",
+    "ipfs-block": "~0.6.0",
     "lodash.debounce": "^4.0.8",
     "lodash.find": "^4.6.0",
     "lodash.groupby": "^4.6.0",
