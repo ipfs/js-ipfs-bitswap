@@ -1,3 +1,13 @@
+<a name="0.10.0"></a>
+# [0.10.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.9.5...v0.10.0) (2017-03-21)
+
+
+### Features
+
+* migrate to new ipfs-block and repo ([a5115e9](https://github.com/ipfs/js-ipfs-bitswap/commit/a5115e9))
+
+
+
 <a name="0.9.5"></a>
 ## [0.9.5](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.9.4...v0.9.5) (2017-03-13)
 
