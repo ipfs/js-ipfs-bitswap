@@ -7,13 +7,13 @@
     "libp2p-ipfs-nodejs": false
   },
   "scripts": {
-    "test": "aegir-test",
-    "test:browser": "aegir-test browser",
+    "test": "aegir-test --dom",
+    "test:browser": "aegir-test browser --dom",
     "test:node": "aegir-test node",
     "lint": "aegir-lint",
-    "release": "aegir-release --docs",
-    "release-minor": "aegir-release --type minor --docs",
-    "release-major": "aegir-release --type major --docs",
+    "release": "aegir-release --docs --dom",
+    "release-minor": "aegir-release --type minor --docs --dom",
+    "release-major": "aegir-release --type major --docs --dom",
     "bench": "node benchmarks/index",
     "build": "aegir-build",
     "coverage": "aegir-coverage",
