@@ -2,7 +2,9 @@
 /* eslint-env mocha */
 'use strict'
 
-const expect = require('chai').expect
+const chai = require('chai')
+chai.use(require('dirty-chai'))
+const expect = chai.expect
 const series = require('async/series')
 const parallel = require('async/parallel')
 const map = require('async/map')
@@ -10,10 +12,11 @@ const each = require('async/each')
 const _ = require('lodash')
 const Block = require('ipfs-block')
 const Buffer = require('safe-buffer').Buffer
-const pull = require('pull-stream')
 const crypto = require('crypto')
-const utils = require('../../utils')
 const CID = require('cids')
+const multihashing = require('multihashing-async')
+
+const utils = require('../../utils')
 
 describe('gen Bitswap network', function () {
   // CI is very slow
@@ -21,7 +24,7 @@ describe('gen Bitswap network', function () {
 
   it('retrieves local blocks', (done) => {
     utils.genBitswapNetwork(1, (err, nodes) => {
-      expect(err).to.not.exist
+      expect(err).to.not.exist()
 
       const node = nodes[0]
       let blocks
@@ -30,51 +33,30 @@ describe('gen Bitswap network', function () {
         (cb) => map(_.range(100), (k, cb) => {
           const b = Buffer.alloc(1024)
           b.fill(k)
-          cb(null, new Block(b))
+          multihashing(b, 'sha2-256', (err, hash) => {
+            expect(err).to.not.exist()
+            const cid = new CID(hash)
+            cb(null, new Block(b, cid))
+          })
         }, (err, _blocks) => {
-          if (err) {
-            return cb(err)
-          }
+          expect(err).to.not.exist()
           blocks = _blocks
           cb()
         }),
-        (cb) => {
-          pull(
-            pull.values(blocks),
-            pull.asyncMap((block, cb) => {
-              block.key((err, key) => {
-                if (err) {
-                  return cb(err)
-                }
-
-                cb(null, {
-                  block: block,
-                  cid: new CID(key)
-                })
-              })
-            }),
-            node.bitswap.putStream(),
-            pull.onEnd(cb)
-          )
-        },
-        (cb) => {
-          each(_.range(100), (i, cb) => {
-            map(blocks, (block, cb) => block.key(cb), (err, keys) => {
-              const cids = keys.map((key) => new CID(key))
-              expect(err).to.not.exist
-              pull(
-                node.bitswap.getStream(cids),
-                pull.collect((err, res) => {
-                  expect(err).to.not.exist
-                  expect(res).to.have.length(blocks.length)
-                  cb()
-                })
-              )
-            })
-          }, cb)
-        }
+        (cb) => each(
+          blocks,
+          (b, cb) => node.bitswap.put(b, cb),
+          cb
+        ),
+        (cb) => map(_.range(100), (i, cb) => {
+          node.bitswap.get(blocks[i].cid, cb)
+        }, (err, res) => {
+          expect(err).to.not.exist()
+          expect(res).to.have.length(blocks.length)
+          cb()
+        })
       ], (err) => {
-        expect(err).to.not.exist
+        expect(err).to.not.exist()
         node.bitswap.stop()
         node.libp2p.stop(done)
       })
@@ -85,11 +67,11 @@ describe('gen Bitswap network', function () {
     it('with 2 nodes', (done) => {
       const n = 2
       utils.genBitswapNetwork(n, (err, nodeArr) => {
-        expect(err).to.not.exist
+        expect(err).to.not.exist()
         nodeArr.forEach((node) => {
           expect(
             Object.keys(node.libp2p.swarm.conns)
-          ).to.be.empty
+          ).to.be.empty()
 
           expect(
             Object.keys(node.libp2p.swarm.muxedConns)
@@ -114,49 +96,40 @@ describe('gen Bitswap network', function () {
 
 function round (nodeArr, n, cb) {
   const blockFactor = 10
-  const blocks = createBlocks(n, blockFactor)
-  map(blocks, (b, cb) => b.key(cb), (err, keys) => {
+  createBlocks(n, blockFactor, (err, blocks) => {
     if (err) {
       return cb(err)
     }
-    const cids = keys.map((k) => new CID(k))
+    const cids = blocks.map((b) => b.cid)
     let d
     series([
       // put blockFactor amount of blocks per node
-      (cb) => parallel(_.map(nodeArr, (node, i) => (callback) => {
+      (cb) => parallel(_.map(nodeArr, (node, i) => (cb) => {
         node.bitswap.start()
 
         const data = _.map(_.range(blockFactor), (j) => {
           const index = i * blockFactor + j
-          return {
-            block: blocks[index],
-            cid: cids[index]
-          }
+          return blocks[index]
         })
-        each(
-          data,
-          (d, cb) => node.bitswap.put(d, cb),
-          callback
-        )
+
+        each(data, (d, cb) => node.bitswap.put(d, cb), cb)
       }), cb),
       (cb) => {
         d = (new Date()).getTime()
-        cb()
-      },
-      // fetch all blocks on every node
-      (cb) => parallel(_.map(nodeArr, (node, i) => (callback) => {
-        pull(
-          node.bitswap.getStream(cids),
-          pull.collect((err, res) => {
+        // fetch all blocks on every node
+        parallel(_.map(nodeArr, (node, i) => (cb) => {
+          map(cids, (cid, cb) => {
+            node.bitswap.get(cid, cb)
+          }, (err, res) => {
             if (err) {
-              return callback(err)
+              return cb(err)
             }
 
             expect(res).to.have.length(blocks.length)
-            callback()
+            cb()
           })
-        )
-      }), cb)
+        }), cb)
+      }
     ], (err) => {
       if (err) {
         return cb(err)
@@ -167,8 +140,15 @@ function round (nodeArr, n, cb) {
   })
 }
 
-function createBlocks (n, blockFactor) {
-  return _.map(_.range(n * blockFactor), (k) => {
-    return new Block(crypto.randomBytes(n * blockFactor))
-  })
+function createBlocks (n, blockFactor, callback) {
+  map(_.map(_.range(n * blockFactor), (k) => {
+    return crypto.randomBytes(n * blockFactor)
+  }), (d, cb) => {
+    multihashing(d, 'sha2-256', (err, hash) => {
+      if (err) {
+        return cb(err)
+      }
+      cb(null, new Block(d, new CID(hash)))
+    })
+  }, callback)
 }

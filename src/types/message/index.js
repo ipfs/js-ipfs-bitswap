@@ -4,10 +4,11 @@ const protobuf = require('protocol-buffers')
 const Block = require('ipfs-block')
 const isEqualWith = require('lodash.isequalwith')
 const assert = require('assert')
-const map = require('async/map')
+const each = require('async/each')
 const CID = require('cids')
 const codecName = require('multicodec/src/name-table')
 const vd = require('varint-decoder')
+const multihashing = require('multihashing-async')
 
 const pbm = protobuf(require('./message.proto'))
 const Entry = require('./entry')
@@ -38,10 +39,10 @@ class BitswapMessage {
     }
   }
 
-  addBlock (cid, block) {
-    assert(CID.isCID(cid), 'must be a valid cid')
-    const cidStr = cid.buffer.toString()
-    this.blocks.set(cidStr, {block: block, cid: cid})
+  addBlock (block) {
+    assert(Block.isBlock(block), 'must be a valid cid')
+    const cidStr = block.cid.buffer.toString()
+    this.blocks.set(cidStr, block)
   }
 
   cancel (cid) {
@@ -67,7 +68,7 @@ class BitswapMessage {
         })
       },
       blocks: Array.from(this.blocks.values())
-        .map((block) => block.block.data)
+        .map((block) => block.data)
     }
 
     if (this.full) {
@@ -102,7 +103,7 @@ class BitswapMessage {
     this.blocks.forEach((block) => {
       msg.payload.push({
         prefix: block.cid.prefix,
-        data: block.block.data
+        data: block.data
       })
     })
 
@@ -155,14 +156,13 @@ BitswapMessage.deserialize = (raw, callback) => {
   // Bitswap 1.0.0
   // decoded.blocks are just the byte arrays
   if (decoded.blocks.length > 0) {
-    map(decoded.blocks, (b, cb) => {
-      const block = new Block(b)
-      block.key((err, key) => {
+    return each(decoded.blocks, (b, cb) => {
+      multihashing(b, 'sha2-256', (err, hash) => {
         if (err) {
           return cb(err)
         }
-        const cid = new CID(key)
-        msg.addBlock(cid, block)
+        const cid = new CID(hash)
+        msg.addBlock(new Block(b, cid))
         cb()
       })
     }, (err) => {
@@ -171,12 +171,11 @@ BitswapMessage.deserialize = (raw, callback) => {
       }
       callback(null, msg)
     })
-    return
   }
 
   // Bitswap 1.1.0
   if (decoded.payload.length > 0) {
-    map(decoded.payload, (p, cb) => {
+    return each(decoded.payload, (p, cb) => {
       if (!p.prefix || !p.data) {
         cb()
       }
@@ -185,13 +184,14 @@ BitswapMessage.deserialize = (raw, callback) => {
       const multicodec = values[1]
       const hashAlg = values[2]
       // const hashLen = values[3] // We haven't need to use this so far
-      const block = new Block(p.data)
-      block.key(hashAlg, (err, multihash) => {
+      multihashing(p.data, hashAlg, (err, hash) => {
         if (err) {
           return cb(err)
         }
-        const cid = new CID(cidVersion, codecName[multicodec.toString('16')], multihash)
-        msg.addBlock(cid, block)
+
+        const cid = new CID(cidVersion, codecName[multicodec.toString('16')], hash)
+
+        msg.addBlock(new Block(p.data, cid))
         cb()
       })
     }, (err) => {
@@ -200,8 +200,8 @@ BitswapMessage.deserialize = (raw, callback) => {
       }
       callback(null, msg)
     })
-    return
   }
+
   callback(null, msg)
 }
 

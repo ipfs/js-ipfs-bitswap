@@ -75,8 +75,7 @@ class Network {
             return cb(err)
           }
           // log('data from', peerInfo.id.toB58String())
-          this.bitswap._receiveMessage(peerInfo.id, msg)
-          cb()
+          this.bitswap._receiveMessage(peerInfo.id, msg, cb)
         })
       }),
       pull.onEnd((err) => {

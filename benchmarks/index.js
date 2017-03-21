@@ -8,10 +8,10 @@ const mapSeries = require('async/mapSeries')
 const each = require('async/each')
 const _ = require('lodash')
 const Block = require('ipfs-block')
-const pull = require('pull-stream')
 const assert = require('assert')
 const crypto = require('crypto')
 const CID = require('cids')
+const multihashing = require('multihashing-async')
 
 const utils = require('../test/utils')
 
@@ -50,12 +50,11 @@ function shutdown (nodeArr, cb) {
 }
 
 function round (nodeArr, blockFactor, n, cb) {
-  const blocks = createBlocks(n, blockFactor)
-  map(blocks, (b, cb) => b.key(cb), (err, keys) => {
+  createBlocks(n, blockFactor, (err, blocks) => {
     if (err) {
       return cb(err)
     }
-    const cids = keys.map((k) => new CID(k))
+    const cids = blocks.map((b) => b.cid)
     let d
     series([
       // put blockFactor amount of blocks per node
@@ -64,10 +63,7 @@ function round (nodeArr, blockFactor, n, cb) {
 
         const data = _.map(_.range(blockFactor), (j) => {
           const index = i * blockFactor + j
-          return {
-            block: blocks[index],
-            cid: cids[index]
-          }
+          return blocks[index]
         })
         each(
           data,
@@ -81,17 +77,14 @@ function round (nodeArr, blockFactor, n, cb) {
       },
       // fetch all blocks on every node
       (cb) => parallel(_.map(nodeArr, (node, i) => (callback) => {
-        pull(
-          node.bitswap.getStream(cids),
-          pull.collect((err, res) => {
-            if (err) {
-              return callback(err)
-            }
+        map(cids, (cid, cb) => node.bitswap.get(cid, cb), (err, res) => {
+          if (err) {
+            return callback(err)
+          }
 
-            assert(res.length === blocks.length)
-            callback()
-          })
-        )
+          assert(res.length === blocks.length)
+          callback()
+        })
       }), cb)
     ], (err) => {
       if (err) {
@@ -103,8 +96,14 @@ function round (nodeArr, blockFactor, n, cb) {
   })
 }
 
-function createBlocks (n, blockFactor) {
-  return _.map(_.range(n * blockFactor), () => {
-    return new Block(crypto.randomBytes(n * blockFactor))
-  })
+function createBlocks (n, blockFactor, callback) {
+  map(_.range(n * blockFactor), (i, cb) => {
+    const data = crypto.randomBytes(n * blockFactor)
+    multihashing(data, 'sha2-256', (err, hash) => {
+      if (err) {
+        return cb(err)
+      }
+      cb(null, new Block(data, new CID(hash)))
+    })
+  }, callback)
 }

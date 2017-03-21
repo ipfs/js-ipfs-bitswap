@@ -1,19 +1,21 @@
 /* eslint-env mocha */
 'use strict'
 
-const expect = require('chai').expect
+const chai = require('chai')
+chai.use(require('dirty-chai'))
+const expect = chai.expect
 const PeerId = require('peer-id')
 const parallel = require('async/parallel')
 const series = require('async/series')
 const map = require('async/map')
-const Block = require('ipfs-block')
-const CID = require('cids')
+const _ = require('lodash')
 
 const cs = require('../../../src/constants')
 const Message = require('../../../src/types/message')
 const WantManager = require('../../../src/components/want-manager')
 
-const mockNetwork = require('../../utils').mockNetwork
+const utils = require('../../utils')
+const mockNetwork = utils.mockNetwork
 
 describe('WantManager', () => {
   it('sends wantlist to all connected peers', (done) => {
@@ -24,13 +26,10 @@ describe('WantManager', () => {
       (cb) => PeerId.create(cb),
       (cb) => PeerId.create(cb),
       (cb) => {
-        const data = ['1', '2', '3']
-        blocks = data.map((d) => new Block(d))
-        map(blocks, (b, cb) => b.key(cb), (err, keys) => {
-          if (err) {
-            return done(err)
-          }
-          cids = keys.map((key) => new CID(key))
+        map(_.range(3), (i, cb) => utils.makeBlock(cb), (err, res) => {
+          expect(err).to.not.exist()
+          blocks = res
+          cids = blocks.map((b) => b.cid)
           cb()
         })
       }
@@ -89,7 +88,7 @@ describe('WantManager', () => {
         },
         (cb) => setTimeout(cb, 200)
       ], (err) => {
-        expect(err).to.not.exist
+        expect(err).to.not.exist()
         wantManager.wantBlocks([cid3])
       })
     })

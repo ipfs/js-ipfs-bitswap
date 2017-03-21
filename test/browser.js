@@ -1,12 +1,7 @@
 'use strict'
 
-const eachSeries = require('async/eachSeries')
-const Store = require('idb-pull-blob-store')
-const _ = require('lodash')
 const IPFSRepo = require('ipfs-repo')
-const pull = require('pull-stream')
-
-const repoContext = require.context('buffer!./test-repo', true)
+const series = require('async/series')
 
 const idb = self.indexedDB ||
         self.mozIndexedDB ||
@@ -17,35 +12,16 @@ const idb = self.indexedDB ||
 let dbs = []
 
 function createRepo (id, done) {
-  const repoData = []
-  repoContext.keys().forEach(function (key) {
-    repoData.push({
-      key: key.replace('./', ''),
-      value: repoContext(key)
-    })
-  })
-
-  const mainBlob = new Store(id)
-  const blocksBlob = new Store(`${id}/blocks`)
-
   dbs.push(id)
 
-  eachSeries(repoData, (file, cb) => {
-    if (_.startsWith(file.key, 'datastore/')) {
-      return cb()
+  const repo = new IPFSRepo(id)
+  series([
+    (cb) => repo.init({}, cb),
+    (cb) => repo.open(cb)
+  ], (err) => {
+    if (err) {
+      return done(err)
     }
-
-    const blocks = _.startsWith(file.key, 'blocks/')
-    const blob = blocks ? blocksBlob : mainBlob
-
-    const key = blocks ? file.key.replace(/^blocks\//, '') : file.key
-
-    pull(
-      pull.values([file.value]),
-      blob.write(key, cb)
-    )
-  }, () => {
-    const repo = new IPFSRepo(id, {stores: Store})
     done(null, repo)
   })
 }

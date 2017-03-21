@@ -1,7 +1,6 @@
 'use strict'
 
 const debug = require('debug')
-const pull = require('pull-stream')
 const each = require('async/each')
 const eachSeries = require('async/eachSeries')
 const waterfall = require('async/waterfall')
@@ -41,7 +40,7 @@ class DecisionEngine {
     // split into messges of max 512 * 1024 bytes
     const blocks = env.blocks
     const total = blocks.reduce((acc, b) => {
-      return acc + b.block.data.byteLength
+      return acc + b.data.byteLength
     }, 0)
 
     if (total < MAX_MESSAGE_SIZE) {
@@ -53,7 +52,7 @@ class DecisionEngine {
 
     eachSeries(blocks, (b, cb) => {
       batch.push(b)
-      size += b.block.data.byteLength
+      size += b.data.byteLength
 
       if (size >= MAX_MESSAGE_SIZE) {
         const nextBatch = batch.slice()
@@ -69,7 +68,7 @@ class DecisionEngine {
     const msg = new Message(false)
 
     blocks.forEach((b) => {
-      msg.addBlock(b.cid, b.block)
+      msg.addBlock(b)
     })
 
     // console.log('sending %s blocks', msg.blocks.size)
@@ -95,18 +94,7 @@ class DecisionEngine {
 
     waterfall([
       (cb) => map(uniqCids, (cid, cb) => {
-        pull(
-          this.blockstore.getStream(cid.multihash),
-          pull.collect((err, blocks) => {
-            if (err) {
-              return cb(err)
-            }
-            cb(null, {
-              cid: cid,
-              block: blocks[0]
-            })
-          })
-        )
+        this.blockstore.get(cid, cb)
       }, cb),
       (blocks, cb) => each(values(groupedTasks), (tasks, cb) => {
         // all tasks have the same target
@@ -123,7 +111,7 @@ class DecisionEngine {
             log.error('failed to send', err)
           }
           blockList.forEach((block) => {
-            this.messageSent(peer, block.block, block.cid)
+            this.messageSent(peer, block)
           })
           cb()
         })
@@ -216,7 +204,7 @@ class DecisionEngine {
   _addWants (ledger, peerId, entries, cb) {
     each(entries, (entry, cb) => {
       // If we already have the block, serve it
-      this.blockstore.has(entry.cid.multihash, (err, exists) => {
+      this.blockstore.has(entry.cid, (err, exists) => {
         if (err) {
           log.error('failed existence check')
         } else if (exists) {
@@ -236,8 +224,8 @@ class DecisionEngine {
   _processBlocks (blocks, ledger, callback) {
     const cids = []
     blocks.forEach((b, cidStr) => {
-      log('got block (%s bytes)', b.block.data.length)
-      ledger.receivedBytes(b.block.data.length)
+      log('got block (%s bytes)', b.data.length)
+      ledger.receivedBytes(b.data.length)
       cids.push(b.cid)
     })
 
@@ -245,11 +233,11 @@ class DecisionEngine {
   }
 
   // Clear up all accounting things after message was sent
-  messageSent (peerId, block, cid) {
+  messageSent (peerId, block) {
     const ledger = this._findOrCreate(peerId)
     ledger.sentBytes(block ? block.data.length : 0)
-    if (cid) {
-      ledger.wantlist.remove(cid)
+    if (block && block.cid) {
+      ledger.wantlist.remove(block.cid)
     }
   }
 

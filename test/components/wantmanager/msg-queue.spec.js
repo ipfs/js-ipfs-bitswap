@@ -1,38 +1,36 @@
 /* eslint-env mocha */
 'use strict'
 
-const expect = require('chai').expect
+const chai = require('chai')
+chai.use(require('dirty-chai'))
+const expect = chai.expect
 const PeerId = require('peer-id')
 const map = require('async/map')
 const parallel = require('async/parallel')
-const Block = require('ipfs-block')
 const CID = require('cids')
+const multihashing = require('multihashing-async')
 
 const Message = require('../../../src/types/message')
 const MsgQueue = require('../../../src/components/want-manager/msg-queue')
 
 describe('MessageQueue', () => {
   let peerId
-  let blocks
   let cids
 
   before((done) => {
     parallel([
       (cb) => {
         PeerId.create((err, _peerId) => {
-          expect(err).to.not.exist
+          expect(err).to.not.exist()
           peerId = _peerId
           cb()
         })
       },
       (cb) => {
-        const data = ['1', '2', '3', '4', '5', '6']
-        blocks = data.map((d) => new Block(d))
-        map(blocks, (b, cb) => b.key(cb), (err, keys) => {
-          if (err) {
-            return done(err)
-          }
-          cids = keys.map((key) => new CID(key))
+        const data = ['1', '2', '3', '4', '5', '6'].map((d) => new Buffer(d))
+        map(data, (d, cb) => multihashing(d, 'sha2-256', cb), (err, hashes) => {
+          expect(err).to.not.exist()
+          cids = hashes.map((h) => new CID(h))
           cb()
         })
       }
