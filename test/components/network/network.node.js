@@ -165,7 +165,7 @@ describe('network', () => {
       }
     }
 
-    libp2pNodeA.dialByPeerInfo(peerInfoB, (err) => {
+    libp2pNodeA.dial(peerInfoB, (err) => {
       expect(err).to.not.exist()
     })
 
@@ -203,7 +203,7 @@ describe('network', () => {
       expect(err).to.not.exist()
     }
 
-    libp2pNodeA.dialByPeerInfo(peerInfoB, '/ipfs/bitswap/1.0.0', (err, conn) => {
+    libp2pNodeA.dial(peerInfoB, '/ipfs/bitswap/1.0.0', (err, conn) => {
       expect(err).to.not.exist()
 
       pull(
@@ -236,7 +236,7 @@ describe('network', () => {
       expect(err).to.not.exist()
     }
 
-    libp2pNodeA.dialByPeerInfo(peerInfoB, '/ipfs/bitswap/1.1.0', (err, conn) => {
+    libp2pNodeA.dial(peerInfoB, '/ipfs/bitswap/1.1.0', (err, conn) => {
       expect(err).to.not.exist()
 
       pull(
@@ -291,7 +291,7 @@ describe('network', () => {
       }
     }
 
-    libp2pNodeA.dialByPeerInfo(peerInfoC, (err) => {
+    libp2pNodeA.dial(peerInfoC, (err) => {
       expect(err).to.not.exist()
     })
 
