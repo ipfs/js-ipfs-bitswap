@@ -163,10 +163,10 @@ class Network {
     // dialByPeerInfo throws if no network is there
     try {
      // Attempt Bitswap 1.1.0
-      this.libp2p.dialByPeerInfo(peerInfo, BITSWAP110, (err, conn) => {
+      this.libp2p.dial(peerInfo, BITSWAP110, (err, conn) => {
         if (err) {
           // Attempt Bitswap 1.0.0
-          this.libp2p.dialByPeerInfo(peerInfo, BITSWAP100, (err, conn) => {
+          this.libp2p.dial(peerInfo, BITSWAP100, (err, conn) => {
             if (err) {
               return callback(err)
             }

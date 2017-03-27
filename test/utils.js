@@ -182,12 +182,11 @@ exports.genBitswapNetwork = (n, callback) => {
     function establishLinks () {
       eachSeries(netArray, (from, cbI) => {
         eachSeries(netArray, (to, cbJ) => {
-          if (from.peerInfo.id.toB58String() ===
-              to.peerInfo.id.toB58String()) {
+          if (from.peerInfo.id.toB58String() === to.peerInfo.id.toB58String()) {
             return cbJ()
           }
 
-          from.libp2p.dialByPeerInfo(to.peerInfo, cbJ)
+          from.libp2p.dial(to.peerInfo, cbJ)
         }, cbI)
       }, finish)
     }
