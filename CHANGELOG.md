@@ -1,3 +1,13 @@
+<a name="0.11.0"></a>
+# [0.11.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.10.0...v0.11.0) (2017-03-27)
+
+
+### Features
+
+* new libp2p API and update deps ([9477b79](https://github.com/ipfs/js-ipfs-bitswap/commit/9477b79))
+
+
+
 <a name="0.10.0"></a>
 # [0.10.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.9.5...v0.10.0) (2017-03-21)
 
