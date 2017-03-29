@@ -28,8 +28,8 @@ class Network {
   start () {
     this._running = true
     // bind event listeners
-    this._onPeerMux = this._onPeerMux.bind(this)
-    this._onPeerMuxClosed = this._onPeerMuxClosed.bind(this)
+    this._onPeerConnect = this._onPeerConnect.bind(this)
+    this._onPeerDisconnect = this._onPeerDisconnect.bind(this)
 
     this._onConnection = this._onConnection.bind(this)
     this.libp2p.handle(BITSWAP100, this._onConnection)
@@ -37,14 +37,12 @@ class Network {
       this.libp2p.handle(BITSWAP110, this._onConnection)
     }
 
-    this.libp2p.swarm.on('peer-mux-established', this._onPeerMux)
-    this.libp2p.swarm.on('peer-mux-closed', this._onPeerMuxClosed)
+    this.libp2p.on('peer:connect', this._onPeerConnect)
+    this.libp2p.on('peer:disconnect', this._onPeerDisconnect)
 
     // All existing connections are like new ones for us
     const pKeys = Object.keys(this.peerBook.getAll())
-    pKeys.forEach((k) => {
-      this._onPeerMux(this.peerBook.getByB58String(k))
-    })
+    pKeys.forEach((k) => this._onPeerConnect(this.peerBook.getByB58String(k)))
   }
 
   stop () {
@@ -55,8 +53,8 @@ class Network {
       this.libp2p.unhandle(BITSWAP110)
     }
 
-    this.libp2p.swarm.removeListener('peer-mux-established', this._onPeerMux)
-    this.libp2p.swarm.removeListener('peer-mux-closed', this._onPeerMuxClosed)
+    this.libp2p.removeListener('peer:connect', this._onPeerConnect)
+    this.libp2p.removeListener('peer:disconnect', this._onPeerDisconnect)
   }
 
   // Handles both types of bitswap messgages
@@ -87,14 +85,14 @@ class Network {
     )
   }
 
-  _onPeerMux (peerInfo) {
+  _onPeerConnect (peerInfo) {
     if (!this._running) {
       return
     }
     this.bitswap._onPeerConnected(peerInfo.id)
   }
 
-  _onPeerMuxClosed (peerInfo) {
+  _onPeerDisconnect (peerInfo) {
     if (!this._running) {
       return
     }
