@@ -38,9 +38,9 @@ const hasBlocks = (msg, store, cb) => {
 module.exports = (repo) => {
   const libp2pMock = {
     handle: function () {},
+    on () {},
     swarm: {
       muxedConns: {},
-      on () {},
       setMaxListeners () {}
     }
   }
