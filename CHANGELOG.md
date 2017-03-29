@@ -1,3 +1,13 @@
+<a name="0.12.0"></a>
+# [0.12.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.11.0...v0.12.0) (2017-03-29)
+
+
+### Features
+
+* update to new events, yay for simpler APIs ([db5738b](https://github.com/ipfs/js-ipfs-bitswap/commit/db5738b))
+
+
+
 <a name="0.11.0"></a>
 # [0.11.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.10.0...v0.11.0) (2017-03-27)
 
