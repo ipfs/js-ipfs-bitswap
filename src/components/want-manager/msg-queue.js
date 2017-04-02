@@ -53,6 +53,7 @@ module.exports = class MsgQueue {
         log.error('cant connect to peer %s: %s', this.peerId.toB58String(), err.message)
         return
       }
+
       log('sending message')
       this.network.sendMessage(this.peerId, msg, (err) => {
         if (err) {

@@ -45,6 +45,12 @@ exports.mockNetwork = (calls, done) => {
       })
     },
     start () {
+    },
+    findAndConnect (cid, maxProviders, callback) {
+      setImmediate(() => callback)
+    },
+    provide (cid, callback) {
+      setImmediate(() => callback)
     }
   }
 }

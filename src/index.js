@@ -5,6 +5,9 @@ const reject = require('async/reject')
 const each = require('async/each')
 const EventEmitter = require('events').EventEmitter
 const debug = require('debug')
+const series = require('async/series')
+const map = require('async/map')
+const once = require('once')
 
 const CONSTANTS = require('./constants')
 const WantManager = require('./components/want-manager')
@@ -126,6 +129,12 @@ class Bitswap {
         `block:${block.cid.buffer.toString()}`,
         block
       )
+      this.network.provide(block.cid, (err) => {
+        if (err) {
+          log.error('Failed to provide: %s', err.message)
+        }
+      })
+
       this.engine.receivedBlocks([block.cid])
       callback()
     })
@@ -150,26 +159,64 @@ class Bitswap {
    * @returns {void}
    */
   get (cid, callback) {
+    this.getMany([cid], (err, blocks) => {
+      if (err) {
+        return callback(err)
+      }
+
+      if (blocks && blocks.length > 0) {
+        callback(null, blocks[0])
+      } else {
+        // when a unwant happens
+        callback()
+      }
+    })
+  }
+
+  /**
+   * Fetch a a list of blocks by cid. If the blocks are in the local
+   * blockstore they are returned, otherwise the blocks are added to the wantlist and returned once another node sends them to us.
+   *
+   * @param {Array<CID>} cids
+   * @param {function(Error, Blocks)} callback
+   * @returns {void}
+   */
+  getMany (cids, callback) {
+    callback = once(callback)
     const unwantListeners = {}
     const blockListeners = {}
-    const cidStr = cid.buffer.toString()
-    const unwantEvent = `unwant:${cidStr}`
-    const blockEvent = `block:${cidStr}`
+    const unwantEvent = (c) => `unwant:${c}`
+    const blockEvent = (c) => `block:${c}`
+    const retrieved = []
+    const locals = []
+    const missing = []
 
-    log('get: %s', cidStr)
-    const cleanupListener = () => {
+    log('getMany', cids.length)
+    const cleanupListener = (cidStr) => {
       if (unwantListeners[cidStr]) {
-        this.notifications.removeListener(unwantEvent, unwantListeners[cidStr])
+        this.notifications.removeListener(
+          unwantEvent(cidStr),
+          unwantListeners[cidStr]
+        )
         delete unwantListeners[cidStr]
       }
 
       if (blockListeners[cidStr]) {
-        this.notifications.removeListener(blockEvent, blockListeners[cidStr])
+        this.notifications.removeListener(
+          blockEvent(cidStr),
+          blockListeners[cidStr]
+        )
         delete blockListeners[cidStr]
       }
     }
 
-    const addListener = () => {
+    const addListeners = (cids) => {
+      cids.forEach((c) => addListener(c))
+    }
+
+    const addListener = (cid) => {
+      const cidStr = cid.buffer.toString()
+
       unwantListeners[cidStr] = () => {
         log(`manual unwant: ${cidStr}`)
         cleanupListener()
@@ -180,26 +227,61 @@ class Bitswap {
       blockListeners[cidStr] = (block) => {
         this.wm.cancelWants([cid])
         cleanupListener(cid)
-        callback(null, block)
+        retrieved.push(block)
+
+        if (retrieved.length === missing.length) {
+          finish(callback)
+        }
       }
 
-      this.notifications.once(unwantEvent, unwantListeners[cidStr])
-      this.notifications.once(blockEvent, blockListeners[cidStr])
+      this.notifications.once(
+        unwantEvent(cidStr),
+        unwantListeners[cidStr]
+      )
+      this.notifications.once(
+        blockEvent(cidStr),
+        blockListeners[cidStr]
+      )
     }
 
-    this.blockstore.has(cid, (err, has) => {
-      if (err) {
-        return callback(err)
-      }
+    const finish = (cb) => {
+      map(locals, (cid, cb) => {
+        this.blockstore.get(cid, cb)
+      }, (err, localBlocks) => {
+        if (err) {
+          return callback(err)
+        }
 
-      if (has) {
-        log('already have block: %s', cidStr)
-        return this.blockstore.get(cid, callback)
-      }
+        callback(null, localBlocks.concat(retrieved))
+      })
+    }
 
-      addListener()
-      this.wm.wantBlocks([cid])
-    })
+    series([
+      (cb) => each(cids, (cid, cb) => {
+        this.blockstore.has(cid, (err, has) => {
+          if (err) {
+            return cb(err)
+          }
+
+          if (has) {
+            locals.push(cid)
+          } else {
+            missing.push(cid)
+          }
+          cb()
+        })
+      }, cb),
+      (cb) => {
+        if (missing.length > 0) {
+          addListeners(missing)
+          this.wm.wantBlocks(missing)
+
+          this.network.findAndConnect(cids[0], CONSTANTS.maxProvidersPerRequest, cb)
+        } else {
+          cb()
+        }
+      }
+    ], finish)
   }
 
   // removes the given cids from the wantlist independent of any ref counts
@@ -269,6 +351,11 @@ class Bitswap {
             block
           )
           this.engine.receivedBlocks([block.cid])
+          this.network.provide(block.cid, (err) => {
+            if (err) {
+              log.error('Failed to provide: %s', err.message)
+            }
+          })
         })
         cb()
       })
