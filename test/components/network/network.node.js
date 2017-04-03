@@ -3,7 +3,6 @@
 
 const Node = require('libp2p-ipfs-nodejs')
 const PeerInfo = require('peer-info')
-const multiaddr = require('multiaddr')
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
@@ -54,13 +53,13 @@ describe('network', () => {
 
       blocks = results[3]
 
-      const maA = multiaddr('/ip4/127.0.0.1/tcp/10100/ipfs/' + peerInfoA.id.toB58String())
-      const maB = multiaddr('/ip4/127.0.0.1/tcp/10300/ipfs/' + peerInfoB.id.toB58String())
-      const maC = multiaddr('/ip4/127.0.0.1/tcp/10500/ipfs/' + peerInfoC.id.toB58String())
+      const maA = '/ip4/127.0.0.1/tcp/10100/ipfs/' + peerInfoA.id.toB58String()
+      const maB = '/ip4/127.0.0.1/tcp/10300/ipfs/' + peerInfoB.id.toB58String()
+      const maC = '/ip4/127.0.0.1/tcp/10500/ipfs/' + peerInfoC.id.toB58String()
 
-      peerInfoA.multiaddr.add(maA)
-      peerInfoB.multiaddr.add(maB)
-      peerInfoC.multiaddr.add(maC)
+      peerInfoA.multiaddrs.add(maA)
+      peerInfoB.multiaddrs.add(maB)
+      peerInfoC.multiaddrs.add(maC)
 
       peerBookA = new PeerBook()
       peerBookB = new PeerBook()

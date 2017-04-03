@@ -42,7 +42,7 @@ class Network {
 
     // All existing connections are like new ones for us
     const pKeys = Object.keys(this.peerBook.getAll())
-    pKeys.forEach((k) => this._onPeerConnect(this.peerBook.getByB58String(k)))
+    pKeys.forEach((k) => this._onPeerConnect(this.peerBook.get(k)))
   }
 
   stop () {
@@ -127,7 +127,7 @@ class Network {
     log('sendMessage to %s', stringId, msg)
     let peerInfo
     try {
-      peerInfo = this.peerBook.getByB58String(stringId)
+      peerInfo = this.peerBook.get(stringId)
     } catch (err) {
       return callback(err)
     }
