@@ -8,8 +8,6 @@ const series = require('async/series')
 const _ = require('lodash')
 const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
-// const PeerBook = require('peer-book')
-const multiaddr = require('multiaddr')
 const Node = require('libp2p-ipfs-nodejs')
 const os = require('os')
 const Repo = require('ipfs-repo')
@@ -113,16 +111,12 @@ exports.genBitswapNetwork = (n, callback) => {
     }
 
     peers.forEach((p, i) => {
-      const mh1 = multiaddr('/ip4/127.0.0.1/tcp/' + (basePort + i) +
-                            '/ipfs/' + p.id.toB58String())
-      p.multiaddr.add(mh1)
-
-      // const mh2 = multiaddr('/ip4/127.0.0.1/tcp/' + (basePort + i + 2000) + '/ws' +
-      //                       '/ipfs/' + p.id.toB58String())
-      // p.multiaddr.add(mh2)
+      const ma1 = '/ip4/127.0.0.1/tcp/' + (basePort + i) +
+        '/ipfs/' + p.id.toB58String()
+      p.multiaddrs.add(ma1)
 
       const l = new Node(p)
-      netArray.push({peerInfo: p, libp2p: l})
+      netArray.push({ peerInfo: p, libp2p: l })
     })
 
     // create PeerBook and populate peerBook
@@ -161,9 +155,7 @@ exports.genBitswapNetwork = (n, callback) => {
 
     function startLibp2p () {
       // start every libp2pNode
-      each(netArray, (net, cb) => {
-        net.libp2p.start(cb)
-      }, (err) => {
+      each(netArray, (net, cb) => net.libp2p.start(cb), (err) => {
         if (err) {
           throw err
         }
