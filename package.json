@@ -37,12 +37,12 @@
   },
   "homepage": "https://github.com/ipfs/js-ipfs-bitswap#readme",
   "devDependencies": {
-    "aegir": "^11.0.1",
+    "aegir": "^11.0.2",
     "benchmark": "^2.1.4",
     "chai": "^3.5.0",
     "dirty-chai": "^1.2.2",
-    "ipfs-repo": "~0.13.0",
-    "libp2p-ipfs-nodejs": "~0.23.0",
+    "ipfs-repo": "~0.13.1",
+    "libp2p-ipfs-nodejs": "~0.25.2",
     "lodash": "^4.17.4",
     "multiaddr": "^2.3.0",
     "ncp": "^2.0.0",
@@ -53,9 +53,9 @@
     "safe-buffer": "^5.0.1"
   },
   "dependencies": {
-    "async": "^2.3.0",
+    "async": "^2.4.1",
     "cids": "~0.5.0",
-    "debug": "^2.6.3",
+    "debug": "^2.6.8",
     "ipfs-block": "~0.6.0",
     "lodash.debounce": "^4.0.8",
     "lodash.find": "^4.6.0",
@@ -69,9 +69,9 @@
     "multihashing-async": "^0.4.5",
     "protocol-buffers": "^3.2.1",
     "pull-defer": "^0.2.2",
-    "pull-length-prefixed": "^1.2.0",
-    "pull-pushable": "^2.0.1",
-    "pull-stream": "^3.5.0",
+    "pull-length-prefixed": "^1.2.1",
+    "pull-pushable": "^2.1.1",
+    "pull-stream": "^3.6.0",
     "varint-decoder": "^0.1.1"
   },
   "contributors": [
