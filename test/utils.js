@@ -165,7 +165,7 @@ exports.genBitswapNetwork = (n, callback) => {
     // create every BitSwap
     function createBitswaps () {
       netArray.forEach((net) => {
-        net.bitswap = new Bitswap(net.libp2p, net.repo.blockstore, net.peerBook)
+        net.bitswap = new Bitswap(net.libp2p, net.repo.blocks, net.peerBook)
       })
       establishLinks()
     }

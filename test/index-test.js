@@ -60,7 +60,7 @@ module.exports = (repo) => {
           return done(err)
         }
 
-        store = results[0].blockstore
+        store = results[0].blocks
         blocks = results[1]
         ids = results[2]
 
@@ -285,7 +285,7 @@ module.exports = (repo) => {
         waterfall([
           (cb) => repo.create('world', cb),
           (repo, cb) => {
-            store2 = repo.blockstore
+            store2 = repo.blocks
             bs2 = new Bitswap(libp2pMock, store2, new PeerBook())
             utils.applyNetwork(bs2, n2)
             bs2.start()

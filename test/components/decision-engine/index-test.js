@@ -40,7 +40,7 @@ module.exports = (repo) => {
       if (err) {
         return done(err)
       }
-      const blockstore = results[0].blockstore
+      const blockstore = results[0].blocks
       const engine = new DecisionEngine(blockstore, net || mockNetwork())
       engine.start()
 
@@ -167,7 +167,7 @@ module.exports = (repo) => {
             hashes.map((h, i) => {
               return new Block(new Buffer(alphabet[i]), new CID(h))
             }),
-            (b, cb) => repo.blockstore.put(b, cb),
+            (b, cb) => repo.blocks.put(b, cb),
             cb
           ),
           (cb) => eachSeries(_.range(numRounds), (i, cb) => {
@@ -186,7 +186,7 @@ module.exports = (repo) => {
                 innerCb()
               })
 
-              const dEngine = new DecisionEngine(repo.blockstore, network)
+              const dEngine = new DecisionEngine(repo.blocks, network)
               dEngine.start()
 
               let partner
