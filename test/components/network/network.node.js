@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 'use strict'
 
-const Node = require('libp2p-ipfs-nodejs')
+const Node = require('../../libp2p-bundle')
 const PeerInfo = require('peer-info')
 const chai = require('chai')
 chai.use(require('dirty-chai'))

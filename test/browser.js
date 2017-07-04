@@ -1,12 +1,13 @@
+/* global self */
 'use strict'
 
 const IPFSRepo = require('ipfs-repo')
 const series = require('async/series')
 
 const idb = self.indexedDB ||
-        self.mozIndexedDB ||
-        self.webkitIndexedDB ||
-        self.msIndexedDB
+  self.mozIndexedDB ||
+  self.webkitIndexedDB ||
+  self.msIndexedDB
 
 // book keeping
 let dbs = []
