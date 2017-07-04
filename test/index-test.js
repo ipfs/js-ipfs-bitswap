@@ -337,12 +337,12 @@ module.exports = (repo) => {
 
         bs.get(b.cid, (err, res) => {
           expect(err).to.not.exist()
-          expect(res).to.be.empty()
+          expect(res).to.not.exist()
           finish()
         })
         bs.get(b.cid, (err, res) => {
           expect(err).to.not.exist()
-          expect(res).to.be.empty()
+          expect(res).to.not.exist()
           finish()
         })
 

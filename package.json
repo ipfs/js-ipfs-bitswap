@@ -4,7 +4,7 @@
   "description": "Node.js implementation of the Bitswap data exchange protocol used by IPFS",
   "main": "src/index.js",
   "browser": {
-    "libp2p-ipfs-nodejs": false
+    "./test/libp2p-bundle": false
   },
   "scripts": {
     "test": "aegir-test --dom",
@@ -42,7 +42,10 @@
     "chai": "^4.0.2",
     "dirty-chai": "^2.0.0",
     "ipfs-repo": "~0.15.0",
-    "libp2p-ipfs-nodejs": "~301.0.0",
+    "libp2p": "^0.9.1",
+    "libp2p-multiplex": "^0.4.3",
+    "libp2p-secio": "^0.6.8",
+    "libp2p-tcp": "^0.10.1",
     "lodash": "^4.17.4",
     "multiaddr": "^2.3.0",
     "ncp": "^2.0.0",
