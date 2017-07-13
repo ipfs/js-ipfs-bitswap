@@ -10,12 +10,12 @@ const series = require('async/series')
 const map = require('async/map')
 const _ = require('lodash')
 
-const cs = require('../../../src/constants')
-const Message = require('../../../src/types/message')
-const WantManager = require('../../../src/components/want-manager')
+const cs = require('../../src/constants')
+const Message = require('../../src/types/message')
+const WantManager = require('../../src/want-manager')
 
-const utils = require('../../utils')
-const mockNetwork = utils.mockNetwork
+const mockNetwork = require('../utils/mocks').mockNetwork
+const makeBlock = require('../utils/make-block')
 
 describe('WantManager', () => {
   it('sends wantlist to all connected peers', (done) => {
@@ -26,7 +26,7 @@ describe('WantManager', () => {
       (cb) => PeerId.create(cb),
       (cb) => PeerId.create(cb),
       (cb) => {
-        map(_.range(3), (i, cb) => utils.makeBlock(cb), (err, res) => {
+        map(_.range(3), (i, cb) => makeBlock(cb), (err, res) => {
           expect(err).to.not.exist()
           blocks = res
           cids = blocks.map((b) => b.cid)
@@ -74,22 +74,24 @@ describe('WantManager', () => {
 
       wantManager = new WantManager(network)
 
-      wantManager.run()
-      wantManager.wantBlocks([cid1, cid2])
-
-      wantManager.connected(peer1)
-      wantManager.connected(peer2)
-
-      series([
-        (cb) => setTimeout(cb, 200),
-        (cb) => {
-          wantManager.cancelWants([cid2])
-          cb()
-        },
-        (cb) => setTimeout(cb, 200)
-      ], (err) => {
+      wantManager.start((err) => {
         expect(err).to.not.exist()
-        wantManager.wantBlocks([cid3])
+        wantManager.wantBlocks([cid1, cid2])
+
+        wantManager.connected(peer1)
+        wantManager.connected(peer2)
+
+        series([
+          (cb) => setTimeout(cb, 200),
+          (cb) => {
+            wantManager.cancelWants([cid2])
+            cb()
+          },
+          (cb) => setTimeout(cb, 200)
+        ], (err) => {
+          expect(err).to.not.exist()
+          wantManager.wantBlocks([cid3])
+        })
       })
     })
   })

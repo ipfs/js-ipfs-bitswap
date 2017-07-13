@@ -2,7 +2,7 @@
 
 const debug = require('debug')
 const debounce = require('lodash.debounce')
-const Message = require('../../types/message')
+const Message = require('../types/message')
 
 const log = debug('bitswap:wantmanager:queue')
 log.error = debug('bitswap:wantmanager:queue:error')

@@ -10,23 +10,23 @@ const map = require('async/map')
 const CID = require('cids')
 const isNode = require('detect-node')
 const _ = require('lodash')
-
+const Buffer = require('safe-buffer').Buffer
 const loadFixture = require('aegir/fixtures')
-const testDataPath = (isNode ? '../' : '') + 'test-data/serialized-from-go'
+const testDataPath = (isNode ? '../' : '') + 'fixtures/serialized-from-go'
 const rawMessageFullWantlist = loadFixture(__dirname, testDataPath + '/bitswap110-message-full-wantlist')
 const rawMessageOneBlock = loadFixture(__dirname, testDataPath + '/bitswap110-message-one-block')
 
 const pbm = protobuf(require('../../src/types/message/message.proto'))
 
 const BitswapMessage = require('../../src/types/message')
-const utils = require('../utils')
+const makeBlock = require('../utils/make-block')
 
 describe('BitswapMessage', () => {
   let blocks
   let cids
 
   before((done) => {
-    map(_.range(3), (i, cb) => utils.makeBlock(cb), (err, res) => {
+    map(_.range(3), (i, cb) => makeBlock(cb), (err, res) => {
       expect(err).to.not.exist()
       blocks = res
       cids = blocks.map((b) => b.cid)
@@ -243,7 +243,7 @@ describe('BitswapMessage', () => {
 
   describe('go interop', () => {
     it('bitswap 1.0.0 message', (done) => {
-      const goEncoded = new Buffer('CioKKAoiEiAs8k26X7CjDiboOyrFueKeGxYeXB+nQl5zBDNik4uYJBAKGAA=', 'base64')
+      const goEncoded = Buffer.from('CioKKAoiEiAs8k26X7CjDiboOyrFueKeGxYeXB+nQl5zBDNik4uYJBAKGAA=', 'base64')
 
       const msg = new BitswapMessage(false)
       const cid = new CID('QmRN6wdp1S2A5EtjW9A3M1vKSBuQQGcgvuhoMUoEz4iiT5')

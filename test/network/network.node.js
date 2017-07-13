@@ -4,7 +4,7 @@
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const Node = require('../../libp2p-bundle')
+const Node = require('../utils/create-libp2p-node').bundle
 const PeerInfo = require('peer-info')
 const PeerId = require('peer-id')
 const lp = require('pull-length-prefixed')
@@ -13,11 +13,12 @@ const parallel = require('async/parallel')
 const waterfall = require('async/waterfall')
 const map = require('async/map')
 const _ = require('lodash')
-const utils = require('../../utils')
+const makeBlock = require('../utils/make-block')
 
-const Network = require('../../../src/components/network')
-const Message = require('../../../src/types/message')
+const Network = require('../../src/network')
+const Message = require('../../src/types/message')
 
+// TODO send this to utils
 function createP2PNode (multiaddrs, options, callback) {
   if (typeof options === 'function') {
     callback = options
@@ -59,7 +60,7 @@ describe('network', () => {
       (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', { bits: 1024 }, cb),
       (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', { bits: 1024 }, cb),
       (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', { bits: 1024 }, cb),
-      (cb) => map(_.range(2), (i, cb) => utils.makeBlock(cb), cb)
+      (cb) => map(_.range(2), (i, cb) => makeBlock(cb), cb)
     ], (err, results) => {
       expect(err).to.not.exist()
 
@@ -107,20 +108,20 @@ describe('network', () => {
   }
 
   it('instantiate the network obj', (done) => {
-    networkA = new Network(p2pA, p2pA.peerBook, bitswapMockA)
-    networkB = new Network(p2pB, p2pB.peerBook, bitswapMockB)
+    networkA = new Network(p2pA, bitswapMockA)
+    networkB = new Network(p2pB, bitswapMockB)
     // only bitswap100
-    networkC = new Network(p2pC, p2pC.peerBook, bitswapMockC, true)
+    networkC = new Network(p2pC, bitswapMockC, { b100Only: true })
 
     expect(networkA).to.exist()
     expect(networkB).to.exist()
     expect(networkC).to.exist()
 
-    networkA.start()
-    networkB.start()
-    networkC.start()
-
-    done()
+    parallel([
+      (cb) => networkA.start(cb),
+      (cb) => networkB.start(cb),
+      (cb) => networkC.start(cb)
+    ], done)
   })
 
   it('connectTo fail', (done) => {
@@ -161,7 +162,7 @@ describe('network', () => {
   })
 
   it('connectTo success', (done) => {
-    networkA.connectTo(p2pB.peerInfo.id, done)
+    networkA.connectTo(p2pB.peerInfo, done)
   })
 
   it('._receiveMessage success from Bitswap 1.0.0', (done) => {

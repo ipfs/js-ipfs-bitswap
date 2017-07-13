@@ -1,13 +1,14 @@
 'use strict'
 
-const debug = require('debug')
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
 const waterfall = require('async/waterfall')
 const each = require('async/each')
+const setImmediate = require('async/setImmediate')
 
-const Message = require('../../types/message')
-const CONSTANTS = require('../../constants')
+const Message = require('./types/message')
+const CONSTANTS = require('./constants')
+const debug = require('debug')
 const log = debug('bitswap:network')
 log.error = debug('bitswap:network:error')
 
@@ -15,18 +16,19 @@ const BITSWAP100 = '/ipfs/bitswap/1.0.0'
 const BITSWAP110 = '/ipfs/bitswap/1.1.0'
 
 class Network {
-  constructor (libp2p, peerBook, bitswap, b100Only) {
+  constructor (libp2p, bitswap, options) {
+    options = options || {}
     this.libp2p = libp2p
-    this.peerBook = peerBook
     this.bitswap = bitswap
-    this.b100Only = b100Only || false
+    this.b100Only = options.b100Only || false
 
-    // increase event listener max
     this._running = false
-    this.libp2p.swarm.setMaxListeners(CONSTANTS.maxListeners)
+
+    // TODO: move this up to libp2p-swarm
+    // this.libp2p.swarm.setMaxListeners(CONSTANTS.maxListeners)
   }
 
-  start () {
+  start (callback) {
     this._running = true
     // bind event listeners
     this._onPeerConnect = this._onPeerConnect.bind(this)
@@ -34,80 +36,66 @@ class Network {
 
     this._onConnection = this._onConnection.bind(this)
     this.libp2p.handle(BITSWAP100, this._onConnection)
-    if (!this.b100Only) {
-      this.libp2p.handle(BITSWAP110, this._onConnection)
-    }
+    if (!this.b100Only) { this.libp2p.handle(BITSWAP110, this._onConnection) }
 
     this.libp2p.on('peer:connect', this._onPeerConnect)
     this.libp2p.on('peer:disconnect', this._onPeerDisconnect)
 
     // All existing connections are like new ones for us
-    const pKeys = Object.keys(this.peerBook.getAll())
-    pKeys.forEach((k) => this._onPeerConnect(this.peerBook.get(k)))
+    this.libp2p.peerBook
+               .getAllArray()
+               .filter((peer) => peer.isConnected())
+               .forEach((peer) => this._onPeerConnect((peer)))
+
+    setImmediate(() => callback())
   }
 
-  stop () {
+  stop (callback) {
     this._running = false
 
     this.libp2p.unhandle(BITSWAP100)
-    if (!this.b100Only) {
-      this.libp2p.unhandle(BITSWAP110)
-    }
+    if (!this.b100Only) { this.libp2p.unhandle(BITSWAP110) }
 
     this.libp2p.removeListener('peer:connect', this._onPeerConnect)
     this.libp2p.removeListener('peer:disconnect', this._onPeerDisconnect)
+
+    setImmediate(() => callback())
   }
 
   // Handles both types of bitswap messgages
   _onConnection (protocol, conn) {
-    if (!this._running) {
-      return
-    }
+    if (!this._running) { return }
     log('incomming new bitswap connection: %s', protocol)
+
     pull(
       conn,
       lp.decode(),
       pull.asyncMap((data, cb) => Message.deserialize(data, cb)),
       pull.asyncMap((msg, cb) => {
         conn.getPeerInfo((err, peerInfo) => {
-          if (err) {
-            return cb(err)
-          }
+          if (err) { return cb(err) }
+
           // log('data from', peerInfo.id.toB58String())
           this.bitswap._receiveMessage(peerInfo.id, msg, cb)
         })
       }),
       pull.onEnd((err) => {
         log('ending connection')
-        if (err) {
-          return this.bitswap._receiveError(err)
-        }
+        if (err) { return this.bitswap._receiveError(err) }
       })
     )
   }
 
   _onPeerConnect (peerInfo) {
-    if (!this._running) {
-      return
-    }
+    if (!this._running) { return }
 
     this.bitswap._onPeerConnected(peerInfo.id)
   }
 
   _onPeerDisconnect (peerInfo) {
-    if (!this._running) {
-      return
-    }
+    if (!this._running) { return }
 
     this.bitswap._onPeerDisconnected(peerInfo.id)
-  }
-
-  connectTo (peerId, callback) {
-    if (!this._running) {
-      return callback(new Error('No running network'))
-    }
-
-    this.libp2p.dial(peerId, callback)
   }
 
   findProviders (cid, maxProviders, callback) {
@@ -131,61 +119,53 @@ class Network {
 
   // Connect to the given peer
   // Send the given msg (instance of Message) to the given peer
-  sendMessage (peerId, msg, callback) {
-    if (!this._running) {
-      return callback(new Error('No running network'))
-    }
+  sendMessage (peer, msg, callback) {
+    if (!this._running) { return callback(new Error(`network isn't running`)) }
 
-    const stringId = peerId.toB58String()
+    const stringId = peer.toB58String() ? peer.toB58String() : peer.id.toB58String()
     log('sendMessage to %s', stringId, msg)
 
-    this._dialPeer(peerId, (err, conn, protocol) => {
-      if (err) {
-        return callback(err)
-      }
+    this._dialPeer(peer, (err, conn, protocol) => {
+      if (err) { return callback(err) }
 
       let serialized
       switch (protocol) {
-        case BITSWAP100:
-          serialized = msg.serializeToBitswap100()
-          break
-        case BITSWAP110:
-          serialized = msg.serializeToBitswap110()
-          break
-        default:
-          return callback(new Error('Unkown protocol: ' + protocol))
+        case BITSWAP100: serialized = msg.serializeToBitswap100(); break
+        case BITSWAP110: serialized = msg.serializeToBitswap110(); break
+        default: return callback(new Error('Unkown protocol: ' + protocol))
       }
+      // TODO: why doesn't the error get propageted back??
       writeMessage(conn, serialized, (err) => {
-        if (err) {
-          log(err)
-        }
+        if (err) { log(err) }
       })
       callback()
     })
   }
 
+  // TODO: if this method is just to call libp2p.dial, better call libp2p dial
+  connectTo (peer, callback) {
+    if (!this._running) { return callback(new Error(`network isn't running`)) }
+
+    this.libp2p.dial(peer, callback)
+  }
+
+  // Dial to the peer and try to use the most recent Bitswap
   _dialPeer (peer, callback) {
-    // dialByPeerInfo throws if no network is there
-    try {
-     // Attempt Bitswap 1.1.0
-      this.libp2p.dial(peer, BITSWAP110, (err, conn) => {
-        if (err) {
-          // Attempt Bitswap 1.0.0
-          this.libp2p.dial(peer, BITSWAP100, (err, conn) => {
-            if (err) {
-              return callback(err)
-            }
+   // Attempt Bitswap 1.1.0
+    this.libp2p.dial(peer, BITSWAP110, (err, conn) => {
+      if (err) {
+        // Attempt Bitswap 1.0.0
+        this.libp2p.dial(peer, BITSWAP100, (err, conn) => {
+          if (err) { return callback(err) }
 
-            callback(null, conn, BITSWAP100)
-          })
-          return
-        }
+          callback(null, conn, BITSWAP100)
+        })
 
-        callback(null, conn, BITSWAP110)
-      })
-    } catch (err) {
-      return callback(err)
-    }
+        return
+      }
+
+      callback(null, conn, BITSWAP110)
+    })
   }
 }
 

@@ -6,7 +6,7 @@ chai.use(require('dirty-chai'))
 const expect = chai.expect
 const PeerId = require('peer-id')
 
-const Ledger = require('../../../src/components/decision-engine/ledger')
+const Ledger = require('../../src/decision-engine/ledger')
 
 describe('Ledger', () => {
   let peerId

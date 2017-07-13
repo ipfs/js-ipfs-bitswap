@@ -10,29 +10,24 @@ const map = require('async/map')
 const once = require('once')
 
 const CONSTANTS = require('./constants')
-const WantManager = require('./components/want-manager')
-const Network = require('./components/network')
-const DecisionEngine = require('./components/decision-engine')
+const WantManager = require('./want-manager')
+const Network = require('./network')
+const DecisionEngine = require('./decision-engine')
 
 const log = debug('bitswap')
 log.error = debug('bitswap:error')
 
-/**
- *
- */
 class Bitswap {
   /**
    * Create a new bitswap instance.
    *
    * @param {Libp2p} libp2p
    * @param {Blockstore} blockstore
-   * @param {PeerBook} peerBook
    * @returns {Bitswap}
    */
-  constructor (libp2p, blockstore, peerBook) {
-    this.libp2p = libp2p
+  constructor (libp2p, blockstore) {
     // the network delivers messages
-    this.network = new Network(libp2p, peerBook, this)
+    this.network = new Network(libp2p, this)
 
     // local database
     this.blockstore = blockstore
@@ -54,6 +49,7 @@ class Bitswap {
   _receiveMessage (peerId, incoming, callback) {
     this.engine.messageReceived(peerId, incoming, (err) => {
       if (err) {
+        // TODO: Q: why do we just log and not return here?
         log('failed to receive message', incoming)
       }
 
@@ -272,7 +268,8 @@ class Bitswap {
         })
       }, cb),
       (cb) => {
-        if (missing.length > 0) {
+        if (missing.length > 0) {        // TODO: Q: why do we just log and not return here?
+
           addListeners(missing)
           this.wm.wantBlocks(missing)
 
@@ -389,23 +386,31 @@ class Bitswap {
   /**
    * Start the bitswap node.
    *
-   * @returns {void}
-   */
-  start () {
-    this.wm.run()
-    this.network.start()
-    this.engine.start()
-  }
-
-  /**
-   * Stooop the bitswap node.
+   * @param {function(Error)} callback
    *
    * @returns {void}
    */
-  stop () {
-    this.wm.stop(this.libp2p.peerInfo.id)
-    this.network.stop()
-    this.engine.stop()
+  start (callback) {
+    series([
+      (cb) => this.wm.start(cb),
+      (cb) => this.network.start(cb),
+      (cb) => this.engine.start(cb)
+    ], callback)
+  }
+
+  /**
+   * Stop the bitswap node.
+   *
+   * @param {function(Error)} callback
+   *
+   * @returns {void}
+   */
+  stop (callback) {
+    series([
+      (cb) => this.wm.stop(cb),
+      (cb) => this.network.stop(cb),
+      (cb) => this.engine.stop(cb)
+    ], callback)
   }
 }
 

@@ -9,9 +9,10 @@ const map = require('async/map')
 const parallel = require('async/parallel')
 const CID = require('cids')
 const multihashing = require('multihashing-async')
+const Buffer = require('safe-buffer').Buffer
 
-const Message = require('../../../src/types/message')
-const MsgQueue = require('../../../src/components/want-manager/msg-queue')
+const Message = require('../../src/types/message')
+const MsgQueue = require('../../src/want-manager/msg-queue')
 
 describe('MessageQueue', () => {
   let peerId
@@ -27,7 +28,7 @@ describe('MessageQueue', () => {
         })
       },
       (cb) => {
-        const data = ['1', '2', '3', '4', '5', '6'].map((d) => new Buffer(d))
+        const data = ['1', '2', '3', '4', '5', '6'].map((d) => Buffer.from(d))
         map(data, (d, cb) => multihashing(d, 'sha2-256', cb), (err, hashes) => {
           expect(err).to.not.exist()
           cids = hashes.map((h) => new CID(h))

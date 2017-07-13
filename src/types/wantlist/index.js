@@ -48,6 +48,10 @@ class Wantlist {
     }
   }
 
+  forEach (fn) {
+    return this.set.forEach(fn)
+  }
+
   entries () {
     return this.set.entries()
   }

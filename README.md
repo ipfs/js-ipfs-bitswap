@@ -34,13 +34,7 @@
 > npm install ipfs-bitswap
 ```
 
-### Use in Node.js
-
-```js
-const Bitswap = require('ipfs-bitswap')
-```
-
-### Use in a browser with browserify, webpack or any other bundler
+### Use in Node.js or in the browser with browserify, webpack or any other bundler
 
 ```js
 const Bitswap = require('ipfs-bitswap')
@@ -56,10 +50,6 @@ Loading this module through a script tag will make the `IpfsBitswap` object avai
 <script src="https://unpkg.com/ipfs-bitswap/dist/index.js"></script>
 ```
 
-## Usage
-
-See https://ipfs.github.io/js-ipfs-bitswap
-
 ## API
 
 See https://ipfs.github.io/js-ipfs-bitswap
@@ -73,24 +63,21 @@ See https://ipfs.github.io/js-ipfs-bitswap
 ```sh
 » tree src
 src
-├── components
-│   ├── decision
-│   │   ├── engine.js
-│   │   ├── index.js
-│   │   └── ledger.js
-│   ├── network             # Handles peerSet and open new conns
-│   │   └── index.js
-│   └── want-manager        # Keeps track of all blocks the peer wants (not the others which it is connected)
-│       ├── index.js
-│       └── msg-queue.js    # Messages to send queue, one per peer
 ├── constants.js
+├── decision-engine
+│   ├── index.js
+│   └── ledger.js
 ├── index.js
-└── types
-    ├── message             # (Type) message that is put in the wire
+├── network.js             # Handles peerSet and open new conns
+├─── want-manager          # Keeps track of all blocks the peer (self) wants
+│   ├── index.js
+│   └── msg-queue.js       # Messages to send queue, one per peer
+└─── types
+    ├── message            # (Type) message that is put in the wire
     │   ├── entry.js
     │   ├── index.js
     │   └── message.proto.js
-    └── wantlist            # (Type) track wanted blocks
+    └── wantlist           # (Type) track wanted blocks
         ├── entry.js
         └── index.js
 ```

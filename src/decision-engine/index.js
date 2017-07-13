@@ -4,6 +4,8 @@ const debug = require('debug')
 const each = require('async/each')
 const eachSeries = require('async/eachSeries')
 const waterfall = require('async/waterfall')
+const setImmediate = require('async/setImmediate')
+
 const map = require('async/map')
 const debounce = require('lodash.debounce')
 const uniqWith = require('lodash.uniqwith')
@@ -15,8 +17,8 @@ const pullAllWith = require('lodash.pullallwith')
 const log = debug('bitswap:engine')
 log.error = debug('bitswap:engine:error')
 
-const Message = require('../../types/message')
-const Wantlist = require('../../types/wantlist')
+const Message = require('../types/message')
+const Wantlist = require('../types/wantlist')
 const Ledger = require('./ledger')
 
 const MAX_MESSAGE_SIZE = 512 * 1024
@@ -271,12 +273,14 @@ class DecisionEngine {
     return l
   }
 
-  start () {
+  start (callback) {
     this._running = true
+    setImmediate(() => callback())
   }
 
-  stop () {
+  stop (callback) {
     this._running = false
+    setImmediate(() => callback())
   }
 }
 
