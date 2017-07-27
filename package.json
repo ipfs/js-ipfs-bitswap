@@ -7,7 +7,7 @@
     "./test/libp2p-bundle": false
   },
   "scripts": {
-    "test": "aegir-test --dom",
+    "test": "aegir-test",
     "test:browser": "aegir-test browser --dom",
     "test:node": "aegir-test node",
     "lint": "aegir-lint",
