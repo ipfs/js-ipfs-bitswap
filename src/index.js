@@ -3,19 +3,15 @@
 const waterfall = require('async/waterfall')
 const reject = require('async/reject')
 const each = require('async/each')
-const EventEmitter = require('events').EventEmitter
-const debug = require('debug')
 const series = require('async/series')
 const map = require('async/map')
 const once = require('once')
 
-const CONSTANTS = require('./constants')
 const WantManager = require('./want-manager')
 const Network = require('./network')
 const DecisionEngine = require('./decision-engine')
-
-const log = debug('bitswap')
-log.error = debug('bitswap:error')
+const Notifications = require('./notifications')
+const logger = require('./utils').logger
 
 class Bitswap {
   /**
@@ -26,31 +22,39 @@ class Bitswap {
    * @returns {Bitswap}
    */
   constructor (libp2p, blockstore) {
+    this._libp2p = libp2p
+    this._log = logger(this.peerInfo.id)
+
     // the network delivers messages
     this.network = new Network(libp2p, this)
 
     // local database
     this.blockstore = blockstore
 
-    this.engine = new DecisionEngine(blockstore, this.network)
+    this.engine = new DecisionEngine(this.peerInfo.id, blockstore, this.network)
 
     // handle message sending
-    this.wm = new WantManager(this.network)
+    this.wm = new WantManager(this.peerInfo.id, this.network)
 
     this.blocksRecvd = 0
     this.dupBlocksRecvd = 0
     this.dupDataRecvd = 0
 
-    this.notifications = new EventEmitter()
-    this.notifications.setMaxListeners(CONSTANTS.maxListeners)
+    this.notifications = new Notifications(this.peerInfo.id)
+  }
+
+  get peerInfo () {
+    return this._libp2p.peerInfo
   }
 
   // handle messages received through the network
   _receiveMessage (peerId, incoming, callback) {
     this.engine.messageReceived(peerId, incoming, (err) => {
       if (err) {
-        // TODO: Q: why do we just log and not return here?
-        log('failed to receive message', incoming)
+        // Only logging the issue to process as much as possible
+        // of the message. Currently `messageReceived` does not
+        // return any errors, but this could change in the future.
+        this._log('failed to receive message', incoming)
       }
 
       if (incoming.blocks.size === 0) {
@@ -75,7 +79,7 @@ class Bitswap {
   }
 
   _handleReceivedBlock (peerId, block, callback) {
-    log('received block')
+    this._log('received block')
 
     waterfall([
       (cb) => this.blockstore.has(block.cid, cb),
@@ -94,14 +98,14 @@ class Bitswap {
     this.blocksRecvd++
 
     if (exists) {
-      this.dupBlocksRecvd ++
+      this.dupBlocksRecvd++
       this.dupDataRecvd += block.data.length
     }
   }
 
   // handle errors on the receiving channel
   _receiveError (err) {
-    log.error('ReceiveError: %s', err.message)
+    this._log.error('ReceiveError: %s', err.message)
   }
 
   // handle new peers
@@ -121,13 +125,10 @@ class Bitswap {
         return callback(err)
       }
 
-      this.notifications.emit(
-        `block:${block.cid.buffer.toString()}`,
-        block
-      )
+      this.notifications.hasBlock(block)
       this.network.provide(block.cid, (err) => {
         if (err) {
-          log.error('Failed to provide: %s', err.message)
+          this._log.error('Failed to provide: %s', err.message)
         }
       })
 
@@ -178,69 +179,12 @@ class Bitswap {
    * @returns {void}
    */
   getMany (cids, callback) {
-    callback = once(callback)
-    const unwantListeners = {}
-    const blockListeners = {}
-    const unwantEvent = (c) => `unwant:${c}`
-    const blockEvent = (c) => `block:${c}`
     const retrieved = []
     const locals = []
     const missing = []
+    const canceled = []
 
-    log('getMany', cids.length)
-    const cleanupListener = (cidStr) => {
-      if (unwantListeners[cidStr]) {
-        this.notifications.removeListener(
-          unwantEvent(cidStr),
-          unwantListeners[cidStr]
-        )
-        delete unwantListeners[cidStr]
-      }
-
-      if (blockListeners[cidStr]) {
-        this.notifications.removeListener(
-          blockEvent(cidStr),
-          blockListeners[cidStr]
-        )
-        delete blockListeners[cidStr]
-      }
-    }
-
-    const addListeners = (cids) => {
-      cids.forEach((c) => addListener(c))
-    }
-
-    const addListener = (cid) => {
-      const cidStr = cid.buffer.toString()
-
-      unwantListeners[cidStr] = () => {
-        log(`manual unwant: ${cidStr}`)
-        cleanupListener()
-        this.wm.cancelWants([cid])
-        callback()
-      }
-
-      blockListeners[cidStr] = (block) => {
-        this.wm.cancelWants([cid])
-        cleanupListener(cid)
-        retrieved.push(block)
-
-        if (retrieved.length === missing.length) {
-          finish(callback)
-        }
-      }
-
-      this.notifications.once(
-        unwantEvent(cidStr),
-        unwantListeners[cidStr]
-      )
-      this.notifications.once(
-        blockEvent(cidStr),
-        blockListeners[cidStr]
-      )
-    }
-
-    const finish = (cb) => {
+    const finish = once(() => {
       map(locals, (cid, cb) => {
         this.blockstore.get(cid, cb)
       }, (err, localBlocks) => {
@@ -250,35 +194,63 @@ class Bitswap {
 
         callback(null, localBlocks.concat(retrieved))
       })
+    })
+
+    this._log('getMany', cids.length)
+
+    const addListeners = (cids) => {
+      cids.forEach((cid) => {
+        this.notifications.wantBlock(
+          cid,
+          // called on block receive
+          (block) => {
+            this.wm.cancelWants([cid])
+            retrieved.push(block)
+
+            if (retrieved.length === missing.length) {
+              finish()
+            }
+          },
+          // called on unwant
+          () => {
+            this.wm.cancelWants([cid])
+            canceled.push(cid)
+            if (canceled.length + retrieved.length === missing.length) {
+              finish()
+            }
+          }
+        )
+      })
     }
 
-    series([
-      (cb) => each(cids, (cid, cb) => {
-        this.blockstore.has(cid, (err, has) => {
-          if (err) {
-            return cb(err)
-          }
-
-          if (has) {
-            locals.push(cid)
-          } else {
-            missing.push(cid)
-          }
-          cb()
-        })
-      }, cb),
-      (cb) => {
-        if (missing.length > 0) {        // TODO: Q: why do we just log and not return here?
-
-          addListeners(missing)
-          this.wm.wantBlocks(missing)
-
-          this.network.findAndConnect(cids[0], CONSTANTS.maxProvidersPerRequest, cb)
-        } else {
-          cb()
+    each(cids, (cid, cb) => {
+      this.blockstore.has(cid, (err, has) => {
+        if (err) {
+          return cb(err)
         }
+
+        if (has) {
+          locals.push(cid)
+        } else {
+          missing.push(cid)
+        }
+        cb()
+      })
+    }, () => {
+      if (missing.length === 0) {
+        // already finished
+        finish()
       }
-    ], finish)
+
+      addListeners(missing)
+      this.wm.wantBlocks(missing)
+
+      this.network.findAndConnect(cids[0], (err) => {
+        if (err) {
+          this._log.error(err)
+        }
+      })
+    })
   }
 
   // removes the given cids from the wantlist independent of any ref counts
@@ -288,9 +260,7 @@ class Bitswap {
     }
 
     this.wm.unwantBlocks(cids)
-    cids.forEach((cid) => {
-      this.notifications.emit(`unwant:${cid.buffer.toString()}`)
-    })
+    cids.forEach((cid) => this.notifications.unwantBlock(cid))
   }
 
   // removes the given keys from the want list
@@ -310,7 +280,7 @@ class Bitswap {
    * @returns {void}
    */
   put (block, callback) {
-    log('putting block')
+    this._log('putting block')
 
     waterfall([
       (cb) => this.blockstore.has(block.cid, cb),
@@ -343,14 +313,11 @@ class Bitswap {
         }
 
         newBlocks.forEach((block) => {
-          this.notifications.emit(
-            `block:${block.cid.buffer.toString()}`,
-            block
-          )
+          this.notifications.hasBlock(block)
           this.engine.receivedBlocks([block.cid])
           this.network.provide(block.cid, (err) => {
             if (err) {
-              log.error('Failed to provide: %s', err.message)
+              this._log.error('Failed to provide: %s', err.message)
             }
           })
         })

@@ -22,6 +22,7 @@ const applyNetwork = require('./utils/mocks').applyNetwork
 const mockLibp2pNode = require('./utils/mocks').mockLibp2pNode
 const storeHasBlocks = require('./utils/store-has-blocks')
 const makeBlock = require('./utils/make-block')
+const orderedFinish = require('./utils/helpers').orderedFinish
 
 describe('bitswap with mocks', () => {
   let repo
@@ -32,7 +33,7 @@ describe('bitswap with mocks', () => {
     parallel([
       (cb) => createTempRepo(cb),
       (cb) => map(_.range(15), (i, cb) => makeBlock(cb), cb),
-      (cb) => map(_.range(2), (i, cb) => PeerId.create(cb), cb)
+      (cb) => map(_.range(2), (i, cb) => PeerId.create({bits: 1024}, cb), cb)
     ], (err, results) => {
       if (err) {
         return done(err)
@@ -108,7 +109,8 @@ describe('bitswap with mocks', () => {
       })
     })
 
-    it('multi peer', (done) => {
+    it('multi peer', function (done) {
+      this.timeout(40 * 1000)
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
 
       let others
@@ -203,8 +205,8 @@ describe('bitswap with mocks', () => {
       })
     })
 
-    // TODO same issue as the test on test/bitswap.js.
-    it.skip('block is added locally afterwards', (done) => {
+    it('block is added locally afterwards', (done) => {
+      const finish = orderedFinish(2, done)
       const block = blocks[9]
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
       const net = mockNetwork()
@@ -217,15 +219,17 @@ describe('bitswap with mocks', () => {
         bs.get(block.cid, (err, res) => {
           expect(err).to.not.exist()
           expect(res).to.eql(block)
-          done()
+          finish(2)
         })
 
-        setTimeout(() => bs.put(block, () => {}), 200)
+        setTimeout(() => {
+          finish(1)
+          bs.put(block, () => {})
+        }, 200)
       })
     })
 
-    // TODO same issue as the test on test/bitswap.js.
-    it.skip('block is sent after local add', (done) => {
+    it('block is sent after local add', (done) => {
       const me = ids[0]
       const other = ids[1]
       const block = blocks[10]
@@ -253,7 +257,7 @@ describe('bitswap with mocks', () => {
         stop (callback) {
           setImmediate(() => callback())
         },
-        findAndConnect (cid, maxProviders, callback) {
+        findAndConnect (cid, callback) {
           setImmediate(() => callback())
         },
         provide (cid, callback) {
@@ -281,14 +285,14 @@ describe('bitswap with mocks', () => {
         stop (callback) {
           setImmediate(() => callback())
         },
-        findAndConnect (cid, maxProviders, callback) {
+        findAndConnect (cid, callback) {
           setImmediate(() => callback())
         },
         provide (cid, callback) {
           setImmediate(() => callback())
         }
       }
-      bs1 = new Bitswap(mockLibp2pNode, repo.blocks)
+      bs1 = new Bitswap(mockLibp2pNode(), repo.blocks)
       applyNetwork(bs1, n1)
 
       bs1.start((err) => {

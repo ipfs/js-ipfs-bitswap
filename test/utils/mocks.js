@@ -20,11 +20,14 @@ const Bitswap = require('../../src')
  * Create a mock libp2p node
  */
 exports.mockLibp2pNode = () => {
+  const peerInfo = new PeerInfo(PeerId.createFromHexString('122019318b6e5e0cf93a2314bf01269a2cc23cd3dcd452d742cdb9379d8646f6e4a9'))
+
   return {
+    peerInfo: peerInfo,
     handle () {},
     contentRouting: {
       provide: (cid, callback) => callback(),
-      findProviders: (cid, timeout, callback) => callback()
+      findProviders: (cid, timeout, callback) => callback(null, [])
     },
     on () {},
     dial (peer, protocol, callback) {
@@ -71,7 +74,7 @@ exports.mockNetwork = (calls, done) => {
     start (callback) {
       setImmediate(() => callback())
     },
-    findAndConnect (cid, maxProviders, callback) {
+    findAndConnect (cid, callback) {
       setImmediate(() => callback())
     },
     provide (cid, callback) {

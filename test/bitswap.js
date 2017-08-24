@@ -7,7 +7,6 @@ const series = require('async/series')
 const each = require('async/each')
 const parallel = require('async/parallel')
 
-// const setImmediate = require('async/setImmediate')
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
@@ -17,6 +16,7 @@ const Bitswap = require('../src')
 const createTempRepo = require('./utils/create-temp-repo-nodejs')
 const createLibp2pNode = require('./utils/create-libp2p-node')
 const makeBlock = require('./utils/make-block')
+const orderedFinish = require('./utils/helpers').orderedFinish
 
 // Creates a repo + libp2pNode + Bitswap with or without DHT
 function createThing (dht, callback) {
@@ -42,7 +42,9 @@ function createThing (dht, callback) {
   })
 }
 
-describe('bitswap without DHT', () => {
+describe('bitswap without DHT', function () {
+  this.timeout(20 * 1000)
+
   let nodes
 
   before((done) => {
@@ -75,22 +77,24 @@ describe('bitswap without DHT', () => {
     ], done)
   })
 
-  // TODO: this test is currently failing (this is a problem on Bitswap)
-  it.skip('put a block in 2, fail to get it in 0', (done) => {
+  it('put a block in 2, fail to get it in 0', (done) => {
+    const finish = orderedFinish(2, done)
+
     waterfall([
       (cb) => makeBlock(cb),
       (block, cb) => nodes[2].bitswap.put(block, () => cb(null, block))
     ], (err, block) => {
       expect(err).to.not.exist()
       nodes[0].bitswap.get(block.cid, (err, block) => {
-        // TODO: on a cancel, should it yield a error saying it was cancelled?
         expect(err).to.not.exist()
         expect(block).to.not.exist()
-        console.log('--> I have concluded that I cant access the block, it should wait')
-        // done()
+        finish(2)
       })
 
-      // setTimeout(() => nodes[0].bitswap.unwant(block.cid), 2000)
+      setTimeout(() => {
+        finish(1)
+        nodes[0].bitswap.unwant(block.cid)
+      }, 200)
     })
   })
 })
@@ -132,6 +136,7 @@ describe('bitswap with DHT', () => {
     waterfall([
       (cb) => makeBlock(cb),
       (block, cb) => nodes[2].bitswap.put(block, () => cb(null, block)),
+      (block, cb) => setTimeout(() => cb(null, block), 400),
       (block, cb) => nodes[0].bitswap.get(block.cid, (err, blockRetrieved) => {
         expect(err).to.not.exist()
         expect(block.data).to.eql(blockRetrieved.data)

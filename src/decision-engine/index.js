@@ -1,6 +1,5 @@
 'use strict'
 
-const debug = require('debug')
 const each = require('async/each')
 const eachSeries = require('async/eachSeries')
 const waterfall = require('async/waterfall')
@@ -14,17 +13,16 @@ const values = require('lodash.values')
 const groupBy = require('lodash.groupby')
 const pullAllWith = require('lodash.pullallwith')
 
-const log = debug('bitswap:engine')
-log.error = debug('bitswap:engine:error')
-
 const Message = require('../types/message')
 const Wantlist = require('../types/wantlist')
 const Ledger = require('./ledger')
+const logger = require('../utils').logger
 
 const MAX_MESSAGE_SIZE = 512 * 1024
 
 class DecisionEngine {
-  constructor (blockstore, network) {
+  constructor (peerId, blockstore, network) {
+    this._log = logger(peerId, 'engine')
     this.blockstore = blockstore
     this.network = network
 
@@ -38,28 +36,38 @@ class DecisionEngine {
     this._outbox = debounce(this._processTasks.bind(this), 100)
   }
 
-  _sendBlocks (env, cb) {
+  _sendBlocks (peer, blocks, cb) {
     // split into messges of max 512 * 1024 bytes
-    const blocks = env.blocks
     const total = blocks.reduce((acc, b) => {
       return acc + b.data.byteLength
     }, 0)
 
     if (total < MAX_MESSAGE_SIZE) {
-      return this._sendSafeBlocks(env.peer, blocks, cb)
+      return this._sendSafeBlocks(peer, blocks, cb)
     }
 
     let size = 0
     let batch = []
+    let outstanding = blocks.length
 
     eachSeries(blocks, (b, cb) => {
+      outstanding--
       batch.push(b)
       size += b.data.byteLength
 
-      if (size >= MAX_MESSAGE_SIZE) {
+      if (size >= MAX_MESSAGE_SIZE ||
+          // need to ensure the last remaining items get sent
+          outstanding === 0) {
         const nextBatch = batch.slice()
         batch = []
-        this._sendSafeBlocks(env.peer, nextBatch, cb)
+        this._sendSafeBlocks(peer, nextBatch, (err) => {
+          if (err) {
+            this._log('sendblock error: %s', err.message)
+          }
+          // not returning the error, so we send as much as we can
+          // as otherwise `eachSeries` would cancel
+          cb()
+        })
       } else {
         cb()
       }
@@ -68,18 +76,9 @@ class DecisionEngine {
 
   _sendSafeBlocks (peer, blocks, cb) {
     const msg = new Message(false)
+    blocks.forEach((b) => msg.addBlock(b))
 
-    blocks.forEach((b) => {
-      msg.addBlock(b)
-    })
-
-    // console.log('sending %s blocks', msg.blocks.size)
-    this.network.sendMessage(peer, msg, (err) => {
-      if (err) {
-        log('sendblock error: %s', err.message)
-      }
-      cb()
-    })
+    this.network.sendMessage(peer, msg, cb)
   }
 
   _processTasks () {
@@ -105,23 +104,22 @@ class DecisionEngine {
           return find(blocks, (b) => b.cid.equals(cid))
         })
 
-        this._sendBlocks({
-          peer: peer,
-          blocks: blockList
-        }, (err) => {
+        this._sendBlocks(peer, blockList, (err) => {
           if (err) {
-            log.error('failed to send', err)
+            // `_sendBlocks` actually doesn't return any errors
+            this._log.error('should never happen: ', err)
+          } else {
+            blockList.forEach((block) => this.messageSent(peer, block))
           }
-          blockList.forEach((block) => {
-            this.messageSent(peer, block)
-          })
+
           cb()
         })
       })
     ], (err) => {
       this._tasks = []
+
       if (err) {
-        log.error(err)
+        this._log.error(err)
       }
     })
   }
@@ -208,7 +206,7 @@ class DecisionEngine {
       // If we already have the block, serve it
       this.blockstore.has(entry.cid, (err, exists) => {
         if (err) {
-          log.error('failed existence check')
+          this._log.error('failed existence check')
         } else if (exists) {
           this._tasks.push({
             entry: entry.entry,
@@ -226,7 +224,7 @@ class DecisionEngine {
   _processBlocks (blocks, ledger, callback) {
     const cids = []
     blocks.forEach((b, cidStr) => {
-      log('got block (%s bytes)', b.data.length)
+      this._log('got block (%s bytes)', b.data.length)
       ledger.receivedBytes(b.data.length)
       cids.push(b.cid)
     })

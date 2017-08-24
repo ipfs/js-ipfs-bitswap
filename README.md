@@ -69,6 +69,7 @@ src
 │   └── ledger.js
 ├── index.js
 ├── network.js             # Handles peerSet and open new conns
+├── notifications.js       # Handles tracking of incomning blocks and wants/unwants.
 ├─── want-manager          # Keeps track of all blocks the peer (self) wants
 │   ├── index.js
 │   └── msg-queue.js       # Messages to send queue, one per peer

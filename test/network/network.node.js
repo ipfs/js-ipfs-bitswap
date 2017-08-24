@@ -4,7 +4,6 @@
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const Node = require('../utils/create-libp2p-node').bundle
 const PeerInfo = require('peer-info')
 const PeerId = require('peer-id')
 const lp = require('pull-length-prefixed')
@@ -13,8 +12,9 @@ const parallel = require('async/parallel')
 const waterfall = require('async/waterfall')
 const map = require('async/map')
 const _ = require('lodash')
-const makeBlock = require('../utils/make-block')
 
+const Node = require('../utils/create-libp2p-node').bundle
+const makeBlock = require('../utils/make-block')
 const Network = require('../../src/network')
 const Message = require('../../src/types/message')
 

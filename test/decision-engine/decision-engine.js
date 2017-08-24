@@ -36,14 +36,15 @@ function stringifyMessages (messages) {
 function newEngine (network, callback) {
   parallel([
     (cb) => createTempRepo(cb),
-    (cb) => PeerId.create(cb)
+    (cb) => PeerId.create({bits: 1024}, cb)
   ], (err, results) => {
     if (err) {
       return callback(err)
     }
     const blockstore = results[0].blocks
-    const engine = new DecisionEngine(blockstore, network || mockNetwork())
-    engine.start((err) => callback(err, { peer: results[1], engine: engine }))
+    const peerId = results[1]
+    const engine = new DecisionEngine(peerId, blockstore, network || mockNetwork())
+    engine.start((err) => callback(err, { peer: peerId, engine: engine }))
   })
 }
 
@@ -114,7 +115,9 @@ describe('Engine', () => {
     })
   })
 
-  it('partner wants then cancels', (done) => {
+  it('partner wants then cancels', function (done) {
+    this.timeout(40 * 1000)
+
     const numRounds = 10
     const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('')
     const vowels = 'aeiou'.split('')
@@ -179,21 +182,24 @@ describe('Engine', () => {
               innerCb()
             })
 
-            const dEngine = new DecisionEngine(repo.blocks, network)
-            dEngine.start((err) => {
+            PeerId.create({bits: 1024}, (err, id) => {
               expect(err).to.not.exist()
-
-              let partner
-              series([
-                (cb) => PeerId.create((err, id) => {
-                  if (err) { return cb(err) }
-                  partner = id
-                  cb()
-                }),
-                (cb) => partnerWants(dEngine, set, partner, cb),
-                (cb) => partnerCancels(dEngine, cancels, partner, cb)
-              ], (err) => {
+              const dEngine = new DecisionEngine(id, repo.blocks, network)
+              dEngine.start((err) => {
                 expect(err).to.not.exist()
+
+                let partner
+                series([
+                  (cb) => PeerId.create({bits: 1024}, (err, id) => {
+                    if (err) { return cb(err) }
+                    partner = id
+                    cb()
+                  }),
+                  (cb) => partnerWants(dEngine, set, partner, cb),
+                  (cb) => partnerCancels(dEngine, cancels, partner, cb)
+                ], (err) => {
+                  expect(err).to.not.exist()
+                })
               })
             })
           }, cb)

@@ -15,18 +15,16 @@ const Message = require('../../src/types/message')
 const MsgQueue = require('../../src/want-manager/msg-queue')
 
 describe('MessageQueue', () => {
-  let peerId
+  let peerIds
   let cids
 
   before((done) => {
     parallel([
-      (cb) => {
-        PeerId.create((err, _peerId) => {
-          expect(err).to.not.exist()
-          peerId = _peerId
-          cb()
-        })
-      },
+      (cb) => map([0, 1], (i, cb) => PeerId.create({bits: 1024}, cb), (err, res) => {
+        expect(err).to.not.exist()
+        peerIds = res
+        cb()
+      }),
       (cb) => {
         const data = ['1', '2', '3', '4', '5', '6'].map((d) => Buffer.from(d))
         map(data, (d, cb) => multihashing(d, 'sha2-256', cb), (err, hashes) => {
@@ -57,7 +55,7 @@ describe('MessageQueue', () => {
     const finish = () => {
       i++
       if (i === 2) {
-        expect(connects).to.be.eql([peerId, peerId])
+        expect(connects).to.be.eql([peerIds[1], peerIds[1]])
 
         const m1 = new Message(false)
         m1.addEntry(cid3, 1)
@@ -68,8 +66,8 @@ describe('MessageQueue', () => {
         expect(
           messages
         ).to.be.eql([
-          [peerId, msg],
-          [peerId, m1]
+          [peerIds[1], msg],
+          [peerIds[1], m1]
         ])
 
         done()
@@ -88,7 +86,7 @@ describe('MessageQueue', () => {
       }
     }
 
-    const mq = new MsgQueue(peerId, network)
+    const mq = new MsgQueue(peerIds[0], peerIds[1], network)
 
     expect(mq.refcnt).to.equal(1)
 

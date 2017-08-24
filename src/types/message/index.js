@@ -120,7 +120,7 @@ class BitswapMessage {
     if (this.full !== other.full ||
         !isEqualWith(this.wantlist, other.wantlist, cmp) ||
         !isEqualWith(this.blocks, other.blocks, cmp)
-       ) {
+    ) {
       return false
     }
 

@@ -8,18 +8,17 @@
     "./test/utils/create-temp-repo-nodejs.js": "./test/utils/create-temp-repo-browser.js"
   },
   "scripts": {
-    "test": "aegir-test",
-    "test:browser": "aegir-test browser",
-    "test:node": "aegir-test node",
-    "lint": "aegir-lint",
-    "release": "aegir-release --docs",
-    "release-minor": "aegir-release --type minor --docs",
-    "release-major": "aegir-release --type major --docs",
+    "test": "aegir test --target node --target browser",
+    "test:browser": "aegir test --target browser",
+    "test:node": "aegir test --target node",
+    "lint": "aegir lint",
+    "release": "aegir release",
+    "release-minor": "aegir release --type minor",
+    "release-major": "aegir release --type major",
     "bench": "node benchmarks/index",
-    "build": "aegir-build",
-    "coverage": "aegir-coverage",
-    "coverage-publish": "aegir-coverage publish",
-    "docs": "aegir-docs"
+    "build": "aegir build",
+    "coverage": "aegir coverage -u",
+    "docs": "aegir docs"
   },
   "repository": {
     "type": "git",
@@ -38,7 +37,7 @@
   },
   "homepage": "https://github.com/ipfs/js-ipfs-bitswap#readme",
   "devDependencies": {
-    "aegir": "^11.0.2",
+    "aegir": "ipfs/aegir",
     "benchmark": "^2.1.4",
     "chai": "^4.1.1",
     "dirty-chai": "^2.0.1",

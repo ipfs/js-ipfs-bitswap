@@ -1,19 +1,18 @@
 'use strict'
 
-const debug = require('debug')
 const debounce = require('lodash.debounce')
-const Message = require('../types/message')
 
-const log = debug('bitswap:wantmanager:queue')
-log.error = debug('bitswap:wantmanager:queue:error')
+const Message = require('../types/message')
+const logger = require('../utils').logger
 
 module.exports = class MsgQueue {
-  constructor (peerId, network) {
-    this.peerId = peerId
+  constructor (selfPeerId, otherPeerId, network) {
+    this.peerId = otherPeerId
     this.network = network
     this.refcnt = 1
 
     this._entries = []
+    this._log = logger(selfPeerId, 'msgqueue', otherPeerId.toB58String().slice(0, 8))
     this.sendEntries = debounce(this._sendEntries.bind(this), 200)
   }
 
@@ -50,14 +49,14 @@ module.exports = class MsgQueue {
   send (msg) {
     this.network.connectTo(this.peerId, (err) => {
       if (err) {
-        log.error('cant connect to peer %s: %s', this.peerId.toB58String(), err.message)
+        this._log.error('cant connect to peer %s: %s', this.peerId.toB58String(), err.message)
         return
       }
 
-      log('sending message')
+      this._log('sending message')
       this.network.sendMessage(this.peerId, msg, (err) => {
         if (err) {
-          log.error('send error: %s', err.message)
+          this._log.error('send error: %s', err.message)
         }
       })
     })

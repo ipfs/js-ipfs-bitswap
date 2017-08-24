@@ -7,6 +7,7 @@ const libp2p = require('libp2p')
 const KadDHT = require('libp2p-kad-dht')
 const waterfall = require('async/waterfall')
 const PeerInfo = require('peer-info')
+const PeerId = require('peer-id')
 
 class Node extends libp2p {
   constructor (peerInfo, options) {
@@ -29,7 +30,8 @@ function createLibp2pNode (options, callback) {
   let node
 
   waterfall([
-    (cb) => PeerInfo.create(cb),
+    (cb) => PeerId.create({bits: 1024}, cb),
+    (id, cb) => PeerInfo.create(id, cb),
     (peerInfo, cb) => {
       peerInfo.multiaddrs.add('/ip4/0.0.0.0/tcp/0')
       node = new Node(peerInfo, options)
