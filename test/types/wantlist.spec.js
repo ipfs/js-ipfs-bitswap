@@ -10,14 +10,14 @@ const _ = require('lodash')
 const multihashing = require('multihashing-async')
 
 const Wantlist = require('../../src/types/wantlist')
-const utils = require('../utils')
+const makeBlock = require('../utils/make-block')
 
 describe('Wantlist', () => {
   let wm
   let blocks
 
   before((done) => {
-    map(_.range(2), (i, cb) => utils.makeBlock(cb), (err, res) => {
+    map(_.range(2), (i, cb) => makeBlock(cb), (err, res) => {
       expect(err).to.not.exist()
       blocks = res
       done()

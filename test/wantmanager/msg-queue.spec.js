@@ -9,25 +9,24 @@ const map = require('async/map')
 const parallel = require('async/parallel')
 const CID = require('cids')
 const multihashing = require('multihashing-async')
+const Buffer = require('safe-buffer').Buffer
 
-const Message = require('../../../src/types/message')
-const MsgQueue = require('../../../src/components/want-manager/msg-queue')
+const Message = require('../../src/types/message')
+const MsgQueue = require('../../src/want-manager/msg-queue')
 
 describe('MessageQueue', () => {
-  let peerId
+  let peerIds
   let cids
 
   before((done) => {
     parallel([
+      (cb) => map([0, 1], (i, cb) => PeerId.create({bits: 1024}, cb), (err, res) => {
+        expect(err).to.not.exist()
+        peerIds = res
+        cb()
+      }),
       (cb) => {
-        PeerId.create((err, _peerId) => {
-          expect(err).to.not.exist()
-          peerId = _peerId
-          cb()
-        })
-      },
-      (cb) => {
-        const data = ['1', '2', '3', '4', '5', '6'].map((d) => new Buffer(d))
+        const data = ['1', '2', '3', '4', '5', '6'].map((d) => Buffer.from(d))
         map(data, (d, cb) => multihashing(d, 'sha2-256', cb), (err, hashes) => {
           expect(err).to.not.exist()
           cids = hashes.map((h) => new CID(h))
@@ -56,7 +55,7 @@ describe('MessageQueue', () => {
     const finish = () => {
       i++
       if (i === 2) {
-        expect(connects).to.be.eql([peerId, peerId])
+        expect(connects).to.be.eql([peerIds[1], peerIds[1]])
 
         const m1 = new Message(false)
         m1.addEntry(cid3, 1)
@@ -67,8 +66,8 @@ describe('MessageQueue', () => {
         expect(
           messages
         ).to.be.eql([
-          [peerId, msg],
-          [peerId, m1]
+          [peerIds[1], msg],
+          [peerIds[1], m1]
         ])
 
         done()
@@ -87,7 +86,7 @@ describe('MessageQueue', () => {
       }
     }
 
-    const mq = new MsgQueue(peerId, network)
+    const mq = new MsgQueue(peerIds[0], peerIds[1], network)
 
     expect(mq.refcnt).to.equal(1)
 

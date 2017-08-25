@@ -16,14 +16,14 @@ const crypto = require('crypto')
 const CID = require('cids')
 const multihashing = require('multihashing-async')
 
-const utils = require('../../utils')
+const genBitswapNetwork = require('../utils/mocks').genBitswapNetwork
 
 describe('gen Bitswap network', function () {
   // CI is very slow
   this.timeout(300 * 1000)
 
   it('retrieves local blocks', (done) => {
-    utils.genBitswapNetwork(1, (err, nodes) => {
+    genBitswapNetwork(1, (err, nodes) => {
       expect(err).to.not.exist()
 
       const node = nodes[0]
@@ -66,7 +66,7 @@ describe('gen Bitswap network', function () {
   describe('distributed blocks', () => {
     it('with 2 nodes', (done) => {
       const n = 2
-      utils.genBitswapNetwork(n, (err, nodeArr) => {
+      genBitswapNetwork(n, (err, nodeArr) => {
         expect(err).to.not.exist()
         nodeArr.forEach((node) => {
           expect(

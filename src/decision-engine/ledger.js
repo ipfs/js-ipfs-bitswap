@@ -1,6 +1,6 @@
 'use strict'
 
-const Wantlist = require('../../types/wantlist')
+const Wantlist = require('../types/wantlist')
 
 class Ledger {
   constructor (peerId) {

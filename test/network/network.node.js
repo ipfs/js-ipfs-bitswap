@@ -1,105 +1,89 @@
 /* eslint-env mocha */
 'use strict'
 
-const Node = require('../../libp2p-bundle')
-const PeerInfo = require('peer-info')
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const PeerBook = require('peer-book')
+const PeerInfo = require('peer-info')
+const PeerId = require('peer-id')
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
 const parallel = require('async/parallel')
+const waterfall = require('async/waterfall')
 const map = require('async/map')
 const _ = require('lodash')
-const utils = require('../../utils')
 
-const Network = require('../../../src/components/network')
-const Message = require('../../../src/types/message')
+const Node = require('../utils/create-libp2p-node').bundle
+const makeBlock = require('../utils/make-block')
+const Network = require('../../src/network')
+const Message = require('../../src/types/message')
+
+// TODO send this to utils
+function createP2PNode (multiaddrs, options, callback) {
+  if (typeof options === 'function') {
+    callback = options
+    options = {}
+  }
+
+  if (!Array.isArray(multiaddrs)) {
+    multiaddrs = [multiaddrs]
+  }
+
+  waterfall([
+    (cb) => PeerId.create({ bits: 1024 }, cb),
+    (peerId, cb) => PeerInfo.create(peerId, cb),
+    (peerInfo, cb) => {
+      multiaddrs.map((ma) => peerInfo.multiaddrs.add(ma))
+      cb(null, peerInfo)
+    },
+    (peerInfo, cb) => {
+      const node = new Node(peerInfo, undefined, options)
+      cb(null, node)
+    }
+  ], callback)
+}
 
 describe('network', () => {
-  let libp2pNodeA
-  let peerInfoA
-  let peerBookA
+  let p2pA
   let networkA
 
-  let libp2pNodeB
-  let peerInfoB
-  let peerBookB
+  let p2pB
   let networkB
 
-  let libp2pNodeC
-  let peerInfoC
-  let peerBookC
+  let p2pC
   let networkC
 
   let blocks
 
   before((done) => {
-    let counter = 0
     parallel([
-      (cb) => PeerInfo.create(cb),
-      (cb) => PeerInfo.create(cb),
-      (cb) => PeerInfo.create(cb),
-      (cb) => map(_.range(2), (i, cb) => utils.makeBlock(cb), cb)
+      (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', { bits: 1024 }, cb),
+      (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', { bits: 1024 }, cb),
+      (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', { bits: 1024 }, cb),
+      (cb) => map(_.range(2), (i, cb) => makeBlock(cb), cb)
     ], (err, results) => {
-      if (err) {
-        return done(err)
-      }
+      expect(err).to.not.exist()
 
-      peerInfoA = results[0]
-      peerInfoB = results[1]
-      peerInfoC = results[2]
+      p2pA = results[0]
+      p2pB = results[1]
+      p2pC = results[2]
 
       blocks = results[3]
 
-      const maA = '/ip4/127.0.0.1/tcp/10100/ipfs/' + peerInfoA.id.toB58String()
-      const maB = '/ip4/127.0.0.1/tcp/10300/ipfs/' + peerInfoB.id.toB58String()
-      const maC = '/ip4/127.0.0.1/tcp/10500/ipfs/' + peerInfoC.id.toB58String()
-
-      peerInfoA.multiaddrs.add(maA)
-      peerInfoB.multiaddrs.add(maB)
-      peerInfoC.multiaddrs.add(maC)
-
-      peerBookA = new PeerBook()
-      peerBookB = new PeerBook()
-      peerBookC = new PeerBook()
-
-      peerBookA.put(peerInfoB)
-      peerBookA.put(peerInfoC)
-
-      peerBookB.put(peerInfoA)
-      peerBookB.put(peerInfoC)
-
-      peerBookC.put(peerInfoA)
-      peerBookC.put(peerInfoB)
-
-      libp2pNodeA = new Node(peerInfoA, peerBookA)
-      libp2pNodeA.start(started)
-      libp2pNodeB = new Node(peerInfoB, peerBookB)
-      libp2pNodeB.start(started)
-      libp2pNodeC = new Node(peerInfoC, peerBookC)
-      libp2pNodeC.start(started)
-
-      function started () {
-        if (++counter === 3) {
-          done()
-        }
-      }
+      parallel([
+        (cb) => p2pA.start(cb),
+        (cb) => p2pB.start(cb),
+        (cb) => p2pC.start(cb)
+      ], done)
     })
   })
 
   after((done) => {
-    let counter = 0
-    libp2pNodeA.stop(stopped)
-    libp2pNodeB.stop(stopped)
-    libp2pNodeC.stop(stopped)
-
-    function stopped () {
-      if (++counter === 3) {
-        done()
-      }
-    }
+    parallel([
+      (cb) => p2pA.stop(cb),
+      (cb) => p2pB.stop(cb),
+      (cb) => p2pC.stop(cb)
+    ], done)
   })
 
   let bitswapMockA = {
@@ -124,24 +108,24 @@ describe('network', () => {
   }
 
   it('instantiate the network obj', (done) => {
-    networkA = new Network(libp2pNodeA, peerBookA, bitswapMockA)
-    networkB = new Network(libp2pNodeB, peerBookB, bitswapMockB)
+    networkA = new Network(p2pA, bitswapMockA)
+    networkB = new Network(p2pB, bitswapMockB)
     // only bitswap100
-    networkC = new Network(libp2pNodeC, peerBookC, bitswapMockC, true)
+    networkC = new Network(p2pC, bitswapMockC, { b100Only: true })
 
     expect(networkA).to.exist()
     expect(networkB).to.exist()
     expect(networkC).to.exist()
 
-    networkA.start()
-    networkB.start()
-    networkC.start()
-
-    done()
+    parallel([
+      (cb) => networkA.start(cb),
+      (cb) => networkB.start(cb),
+      (cb) => networkC.start(cb)
+    ], done)
   })
 
   it('connectTo fail', (done) => {
-    networkA.connectTo(peerInfoB.id, (err) => {
+    networkA.connectTo(p2pB.peerInfo.id, (err) => {
       expect(err).to.exist()
       done()
     })
@@ -151,20 +135,22 @@ describe('network', () => {
     var counter = 0
 
     bitswapMockA._onPeerConnected = (peerId) => {
-      expect(peerId.toB58String()).to.equal(peerInfoB.id.toB58String())
+      expect(peerId.toB58String()).to.equal(p2pB.peerInfo.id.toB58String())
+
       if (++counter === 2) {
         finish()
       }
     }
 
     bitswapMockB._onPeerConnected = (peerId) => {
-      expect(peerId.toB58String()).to.equal(peerInfoA.id.toB58String())
+      expect(peerId.toB58String()).to.equal(p2pA.peerInfo.id.toB58String())
+
       if (++counter === 2) {
         finish()
       }
     }
 
-    libp2pNodeA.dial(peerInfoB, (err) => {
+    p2pA.dial(p2pB.peerInfo, (err) => {
       expect(err).to.not.exist()
     })
 
@@ -176,10 +162,7 @@ describe('network', () => {
   })
 
   it('connectTo success', (done) => {
-    networkA.connectTo(peerInfoB.id, (err) => {
-      expect(err).to.not.exist()
-      done()
-    })
+    networkA.connectTo(p2pB.peerInfo, done)
   })
 
   it('._receiveMessage success from Bitswap 1.0.0', (done) => {
@@ -193,6 +176,7 @@ describe('network', () => {
 
     bitswapMockB._receiveMessage = (peerId, msgReceived) => {
       expect(msg).to.eql(msgReceived)
+
       bitswapMockB._receiveMessage = () => {}
       bitswapMockB._receiveError = () => {}
       done()
@@ -202,7 +186,7 @@ describe('network', () => {
       expect(err).to.not.exist()
     }
 
-    libp2pNodeA.dial(peerInfoB, '/ipfs/bitswap/1.0.0', (err, conn) => {
+    p2pA.dial(p2pB.peerInfo, '/ipfs/bitswap/1.0.0', (err, conn) => {
       expect(err).to.not.exist()
 
       pull(
@@ -235,7 +219,7 @@ describe('network', () => {
       expect(err).to.not.exist()
     }
 
-    libp2pNodeA.dial(peerInfoB, '/ipfs/bitswap/1.1.0', (err, conn) => {
+    p2pA.dial(p2pB.peerInfo, '/ipfs/bitswap/1.1.0', (err, conn) => {
       expect(err).to.not.exist()
 
       pull(
@@ -268,7 +252,7 @@ describe('network', () => {
       expect(err).to.not.exist()
     }
 
-    networkA.sendMessage(peerInfoB.id, msg, (err) => {
+    networkA.sendMessage(p2pB.peerInfo.id, msg, (err) => {
       expect(err).to.not.exist()
     })
   })
@@ -277,27 +261,27 @@ describe('network', () => {
     let counter = 0
 
     bitswapMockA._onPeerConnected = (peerId) => {
-      expect(peerId.toB58String()).to.equal(peerInfoC.id.toB58String())
+      expect(peerId.toB58String()).to.equal(p2pC.peerInfo.id.toB58String())
       if (++counter === 2) {
         finish()
       }
     }
 
     bitswapMockC._onPeerConnected = (peerId) => {
-      expect(peerId.toB58String()).to.equal(peerInfoA.id.toB58String())
+      expect(peerId.toB58String()).to.equal(p2pA.peerInfo.id.toB58String())
       if (++counter === 2) {
         finish()
       }
     }
 
-    libp2pNodeA.dial(peerInfoC, (err) => {
+    p2pA.dial(p2pC.peerInfo, (err) => {
       expect(err).to.not.exist()
     })
 
     function finish () {
       bitswapMockA._onPeerConnected = () => {}
       bitswapMockC._onPeerConnected = () => {}
-      networkA.connectTo(peerInfoC.id, done)
+      networkA.connectTo(p2pC.peerInfo.id, done)
     }
   })
 
@@ -321,7 +305,7 @@ describe('network', () => {
       expect(err).to.not.exist()
     }
 
-    networkA.sendMessage(peerInfoC.id, msg, (err) => {
+    networkA.sendMessage(p2pC.peerInfo.id, msg, (err) => {
       expect(err).to.not.exist()
     })
   })

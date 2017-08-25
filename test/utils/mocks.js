@@ -4,29 +4,56 @@ const each = require('async/each')
 const eachSeries = require('async/eachSeries')
 const map = require('async/map')
 const parallel = require('async/parallel')
+const setImmediate = require('async/setImmediate')
 const series = require('async/series')
 const _ = require('lodash')
 const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
-const Node = require('./libp2p-bundle')
+const PeerBook = require('peer-book')
+const Node = require('./create-libp2p-node').bundle
 const os = require('os')
 const Repo = require('ipfs-repo')
-const multihashing = require('multihashing-async')
-const CID = require('cids')
-const Block = require('ipfs-block')
 
-const Bitswap = require('../src')
+const Bitswap = require('../../src')
 
+/*
+ * Create a mock libp2p node
+ */
+exports.mockLibp2pNode = () => {
+  const peerInfo = new PeerInfo(PeerId.createFromHexString('122019318b6e5e0cf93a2314bf01269a2cc23cd3dcd452d742cdb9379d8646f6e4a9'))
+
+  return {
+    peerInfo: peerInfo,
+    handle () {},
+    contentRouting: {
+      provide: (cid, callback) => callback(),
+      findProviders: (cid, timeout, callback) => callback(null, [])
+    },
+    on () {},
+    dial (peer, protocol, callback) {
+      setImmediate(() => callback())
+    },
+    swarm: {
+      muxedConns: {},
+      setMaxListeners () {}
+    },
+    peerBook: new PeerBook()
+  }
+}
+
+/*
+ * Create a mock network instance
+ */
 exports.mockNetwork = (calls, done) => {
   done = done || (() => {})
+
   const connects = []
   const messages = []
   let i = 0
 
   const finish = () => {
-    i++
-    if (i === calls) {
-      done({connects, messages})
+    if (++i === calls) {
+      done({ connects: connects, messages: messages })
     }
   }
 
@@ -44,12 +71,22 @@ exports.mockNetwork = (calls, done) => {
         finish()
       })
     },
-    start () {
+    start (callback) {
+      setImmediate(() => callback())
+    },
+    findAndConnect (cid, callback) {
+      setImmediate(() => callback())
+    },
+    provide (cid, callback) {
+      setImmediate(() => callback())
     }
   }
 }
 
-exports.createMockNet = (repo, count, cb) => {
+/*
+ * Create a mock test network
+ */
+exports.createMockTestNet = (repo, count, cb) => {
   parallel([
     (cb) => map(_.range(count), (i, cb) => repo.create(`repo-${i}`), cb),
     (cb) => map(_.range(count), (i, cb) => PeerId.create(cb), cb)
@@ -185,20 +222,8 @@ exports.genBitswapNetwork = (n, callback) => {
 
     // callback with netArray
     function finish (err) {
-      if (err) {
-        throw err
-      }
+      if (err) { throw err }
       callback(null, netArray)
     }
-  })
-}
-
-exports.makeBlock = (cb) => {
-  const data = new Buffer(`hello world ${Math.random()}`)
-  multihashing(data, 'sha2-256', (err, hash) => {
-    if (err) {
-      return cb(err)
-    }
-    cb(null, new Block(data, new CID(hash)))
   })
 }

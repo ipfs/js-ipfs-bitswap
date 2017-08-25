@@ -1,21 +1,22 @@
 'use strict'
 
-const debug = require('debug')
+const setImmediate = require('async/setImmediate')
 
-const Message = require('../../types/message')
-const Wantlist = require('../../types/wantlist')
-const CONSTANTS = require('../../constants')
+const Message = require('../types/message')
+const Wantlist = require('../types/wantlist')
+const CONSTANTS = require('../constants')
 const MsgQueue = require('./msg-queue')
-
-const log = debug('bitswap:wantmanager')
-log.error = debug('bitswap:wantmanager:error')
+const logger = require('../utils').logger
 
 module.exports = class WantManager {
-  constructor (network) {
+  constructor (peerId, network) {
     this.peers = new Map()
     this.wantlist = new Wantlist()
 
     this.network = network
+
+    this._peerId = peerId
+    this._log = logger(peerId, 'want')
   }
 
   _addEntries (cids, cancel, force) {
@@ -32,7 +33,7 @@ module.exports = class WantManager {
           this.wantlist.remove(e.cid)
         }
       } else {
-        log('adding to wl')
+        this._log('adding to wl')
         this.wantlist.add(e.cid, e.priority)
       }
     })
@@ -47,11 +48,11 @@ module.exports = class WantManager {
     let mq = this.peers.get(peerId.toB58String())
 
     if (mq) {
-      mq.refcnt ++
+      mq.refcnt++
       return
     }
 
-    mq = new MsgQueue(peerId, this.network)
+    mq = new MsgQueue(this._peerId, peerId, this.network)
 
     // new peer, give them the full wantlist
     const fullwantlist = new Message(true)
@@ -73,7 +74,7 @@ module.exports = class WantManager {
       return
     }
 
-    mq.refcnt --
+    mq.refcnt--
     if (mq.refcnt > 0) {
       return
     }
@@ -88,13 +89,13 @@ module.exports = class WantManager {
 
   // remove blocks of all the given keys without respecting refcounts
   unwantBlocks (cids) {
-    log('unwant blocks: %s', cids.length)
+    this._log('unwant blocks: %s', cids.length)
     this._addEntries(cids, true, true)
   }
 
   // cancel wanting all of the given keys
   cancelWants (cids) {
-    log('cancel wants: %s', cids.length)
+    this._log('cancel wants: %s', cids.length)
     this._addEntries(cids, true)
   }
 
@@ -111,24 +112,25 @@ module.exports = class WantManager {
     this._stopPeerHandler(peerId)
   }
 
-  run () {
+  start (callback) {
+    // resend entire wantlist every so often
     this.timer = setInterval(() => {
-      // resend entirew wantlist every so often
+      this._log('resend full-wantlist')
       const fullwantlist = new Message(true)
-      for (let entry of this.wantlist.entries()) {
-        fullwantlist.addEntry(entry[1].cid, entry[1].priority)
-      }
-
-      this.peers.forEach((p) => {
-        p.addMessage(fullwantlist)
+      this.wantlist.forEach((entry) => {
+        fullwantlist.addEntry(entry.cid, entry.priority)
       })
-    }, 10 * 1000)
+
+      this.peers.forEach((p) => p.addMessage(fullwantlist))
+    }, 60 * 1000)
+
+    setImmediate(() => callback())
   }
 
-  stop () {
-    for (let mq of this.peers.values()) {
-      this.disconnected(mq.peerId)
-    }
+  stop (callback) {
+    this.peers.forEach((mq) => this.disconnected(mq.peerId))
+
     clearInterval(this.timer)
+    setImmediate(() => callback())
   }
 }

@@ -4,21 +4,21 @@
   "description": "Node.js implementation of the Bitswap data exchange protocol used by IPFS",
   "main": "src/index.js",
   "browser": {
-    "./test/libp2p-bundle": false
+    "./test/utils/create-libp2p-node": false,
+    "./test/utils/create-temp-repo-nodejs.js": "./test/utils/create-temp-repo-browser.js"
   },
   "scripts": {
-    "test": "aegir-test",
-    "test:browser": "aegir-test browser",
-    "test:node": "aegir-test node",
-    "lint": "aegir-lint",
-    "release": "aegir-release --docs",
-    "release-minor": "aegir-release --type minor --docs",
-    "release-major": "aegir-release --type major --docs",
+    "test": "aegir test --target node --target browser",
+    "test:browser": "aegir test --target browser",
+    "test:node": "aegir test --target node",
+    "lint": "aegir lint",
+    "release": "aegir release",
+    "release-minor": "aegir release --type minor",
+    "release-major": "aegir release --type major",
     "bench": "node benchmarks/index",
-    "build": "aegir-build",
-    "coverage": "aegir-coverage",
-    "coverage-publish": "aegir-coverage publish",
-    "docs": "aegir-docs"
+    "build": "aegir build",
+    "coverage": "aegir coverage -u",
+    "docs": "aegir docs"
   },
   "repository": {
     "type": "git",
@@ -37,12 +37,13 @@
   },
   "homepage": "https://github.com/ipfs/js-ipfs-bitswap#readme",
   "devDependencies": {
-    "aegir": "^11.0.2",
+    "aegir": "ipfs/aegir",
     "benchmark": "^2.1.4",
-    "chai": "^4.1.0",
+    "chai": "^4.1.1",
     "dirty-chai": "^2.0.1",
     "ipfs-repo": "~0.17.0",
     "libp2p": "^0.11.0",
+    "libp2p-kad-dht": "^0.4.1",
     "libp2p-multiplex": "^0.4.4",
     "libp2p-secio": "^0.7.1",
     "libp2p-tcp": "^0.10.2",
@@ -58,7 +59,7 @@
   "dependencies": {
     "async": "^2.5.0",
     "cids": "~0.5.1",
-    "debug": "^2.6.8",
+    "debug": "^3.0.0",
     "ipfs-block": "~0.6.0",
     "lodash.debounce": "^4.0.8",
     "lodash.find": "^4.6.0",
@@ -75,6 +76,7 @@
     "pull-length-prefixed": "^1.3.0",
     "pull-pushable": "^2.1.1",
     "pull-stream": "^3.6.0",
+    "safe-buffer": "^5.1.1",
     "varint-decoder": "^0.1.1"
   },
   "contributors": [
