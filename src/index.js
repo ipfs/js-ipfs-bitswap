@@ -13,14 +13,14 @@ const DecisionEngine = require('./decision-engine')
 const Notifications = require('./notifications')
 const logger = require('./utils').logger
 
+/**
+ * JavaScript implementation of the Bitswap 'data exchange' protocol
+ * used by IPFS.
+ *
+ * @param {Libp2p} libp2p
+ * @param {Blockstore} blockstore
+ */
 class Bitswap {
-  /**
-   * Create a new bitswap instance.
-   *
-   * @param {Libp2p} libp2p
-   * @param {Blockstore} blockstore
-   * @returns {Bitswap}
-   */
   constructor (libp2p, blockstore) {
     this._libp2p = libp2p
     this._log = logger(this.peerInfo.id)
