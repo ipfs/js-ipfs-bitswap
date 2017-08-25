@@ -11,6 +11,9 @@ const blockEvent = (c) => `block:${c}`
 /**
  * Internal module used to track events about incoming blocks,
  * wants and unwants.
+ *
+ * @param {PeerId} peerId
+ * @private
  */
 class Notifications extends EventEmitter {
   constructor (peerId) {
