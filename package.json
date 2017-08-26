@@ -59,7 +59,7 @@
   "dependencies": {
     "async": "^2.5.0",
     "cids": "~0.5.1",
-    "debug": "^3.0.0",
+    "debug": "^3.0.1",
     "ipfs-block": "~0.6.0",
     "lodash.debounce": "^4.0.8",
     "lodash.find": "^4.6.0",
