@@ -5,7 +5,7 @@
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const protobuf = require('protocol-buffers')
+const protons = require('protons')
 const map = require('async/map')
 const CID = require('cids')
 const isNode = require('detect-node')
@@ -16,7 +16,7 @@ const testDataPath = (isNode ? '../' : '') + 'fixtures/serialized-from-go'
 const rawMessageFullWantlist = loadFixture(__dirname, testDataPath + '/bitswap110-message-full-wantlist')
 const rawMessageOneBlock = loadFixture(__dirname, testDataPath + '/bitswap110-message-one-block')
 
-const pbm = protobuf(require('../../src/types/message/message.proto'))
+const pbm = protons(require('../../src/types/message/message.proto'))
 
 const BitswapMessage = require('../../src/types/message')
 const makeBlock = require('../utils/make-block')

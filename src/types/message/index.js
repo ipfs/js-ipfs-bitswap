@@ -1,6 +1,6 @@
 'use strict'
 
-const protobuf = require('protocol-buffers')
+const protons = require('protons')
 const Block = require('ipfs-block')
 const isEqualWith = require('lodash.isequalwith')
 const assert = require('assert')
@@ -10,7 +10,7 @@ const codecName = require('multicodec/src/name-table')
 const vd = require('varint-decoder')
 const multihashing = require('multihashing-async')
 
-const pbm = protobuf(require('./message.proto'))
+const pbm = protons(require('./message.proto'))
 const Entry = require('./entry')
 
 class BitswapMessage {
