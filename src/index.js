@@ -21,17 +21,17 @@ const logger = require('./utils').logger
  * @param {Blockstore} blockstore
  */
 class Bitswap {
-  constructor (libp2p, blockstore) {
+  constructor (libp2p, blockstore, options) {
     this._libp2p = libp2p
     this._log = logger(this.peerInfo.id)
-
+    options = options || {}
     // the network delivers messages
     this.network = new Network(libp2p, this)
 
     // local database
     this.blockstore = blockstore
 
-    this.engine = new DecisionEngine(this.peerInfo.id, blockstore, this.network)
+    this.engine = new DecisionEngine(this.peerInfo.id, blockstore, this.network, options)
 
     // handle message sending
     this.wm = new WantManager(this.peerInfo.id, this.network)
