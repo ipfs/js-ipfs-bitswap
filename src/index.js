@@ -16,7 +16,8 @@ const Stats = require('./stats')
 const defaultOptions = {
   statsEnabled: false,
   statsComputeThrottleTimeout: 1000,
-  statsComputeThrottleMaxQueueSize: 1000
+  statsComputeThrottleMaxQueueSize: 1000,
+  maxMessageSize: 512 * 1024
 }
 const statsKeys = [
   'blocksReceived',
@@ -57,7 +58,7 @@ class Bitswap {
     // local database
     this.blockstore = blockstore
 
-    this.engine = new DecisionEngine(this.peerInfo.id, blockstore, this.network, this._stats)
+    this.engine = new DecisionEngine(this.peerInfo.id, blockstore, this.network, this._stats, this._options)
 
     // handle message sending
     this.wm = new WantManager(this.peerInfo.id, this.network, this._stats)
