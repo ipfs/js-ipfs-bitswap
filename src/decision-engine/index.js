@@ -35,6 +35,10 @@ class DecisionEngine {
 
     options = options || {}
     this._maxMessageSize = options.maxMessageSize || MAX_MESSAGE_SIZE
+    // override Max size to 1kb bytes by minimum.
+    if (this._maxMessageSize < 1024) {
+      this._maxMessageSize = 1024
+    }
 
     this._outbox = debounce(this._processTasks.bind(this), 100)
   }
