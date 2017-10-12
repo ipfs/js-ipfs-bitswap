@@ -18,8 +18,15 @@ const createLibp2pNode = require('./utils/create-libp2p-node')
 const makeBlock = require('./utils/make-block')
 const orderedFinish = require('./utils/helpers').orderedFinish
 
+const MAX_MESSAGE_SIZE = 512 * 1024
+
 // Creates a repo + libp2pNode + Bitswap with or without DHT
-function createThing (dht, callback) {
+function createThing (dht, msgSize, callback) {
+  if (!callback) {
+    callback = msgSize
+    msgSize = MAX_MESSAGE_SIZE
+  }
+
   waterfall([
     (cb) => createTempRepo(cb),
     (repo, cb) => {
@@ -28,7 +35,7 @@ function createThing (dht, callback) {
       }, (err, node) => cb(err, repo, node))
     },
     (repo, libp2pNode, cb) => {
-      const bitswap = new Bitswap(libp2pNode, repo.blocks)
+      const bitswap = new Bitswap(libp2pNode, repo.blocks, {maxMessageSize: msgSize})
       bitswap.start((err) => cb(err, repo, libp2pNode, bitswap))
     }
   ], (err, repo, libp2pNode, bitswap) => {
@@ -49,12 +56,13 @@ describe('bitswap without DHT', function () {
 
   before((done) => {
     parallel([
-      (cb) => createThing(false, cb),
-      (cb) => createThing(false, cb),
-      (cb) => createThing(false, cb)
+      (cb) => createThing(false, MAX_MESSAGE_SIZE, cb),
+      (cb) => createThing(false, MAX_MESSAGE_SIZE, cb),
+      (cb) => createThing(false, MAX_MESSAGE_SIZE, cb),
+      (cb) => createThing(false, 32, cb)
     ], (err, results) => {
       expect(err).to.not.exist()
-      expect(results).to.have.length(3)
+      expect(results).to.have.length(4)
       nodes = results
       done()
     })
@@ -74,6 +82,13 @@ describe('bitswap without DHT', function () {
     parallel([
       (cb) => nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerInfo, cb),
       (cb) => nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerInfo, cb)
+    ], done)
+  })
+
+  it('connect 1 -> 3 && 2 -> 3', (done) => {
+    parallel([
+      (cb) => nodes[1].libp2pNode.dial(nodes[3].libp2pNode.peerInfo, cb),
+      (cb) => nodes[2].libp2pNode.dial(nodes[3].libp2pNode.peerInfo, cb)
     ], done)
   })
 
@@ -106,12 +121,13 @@ describe('bitswap with DHT', function () {
 
   before((done) => {
     parallel([
-      (cb) => createThing(true, cb),
-      (cb) => createThing(true, cb),
-      (cb) => createThing(true, cb)
+      (cb) => createThing(true, MAX_MESSAGE_SIZE, cb),
+      (cb) => createThing(true, MAX_MESSAGE_SIZE, cb),
+      (cb) => createThing(true, MAX_MESSAGE_SIZE, cb),
+      (cb) => createThing(true, 32, cb)
     ], (err, results) => {
       expect(err).to.not.exist()
-      expect(results).to.have.length(3)
+      expect(results).to.have.length(4)
       nodes = results
       done()
     })
@@ -127,10 +143,11 @@ describe('bitswap with DHT', function () {
     }, done)
   })
 
-  it('connect 0 -> 1 && 1 -> 2', (done) => {
+  it('connect 0 -> 1 && 1 -> 2 && 2 -> 3', (done) => {
     parallel([
       (cb) => nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerInfo, cb),
-      (cb) => nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerInfo, cb)
+      (cb) => nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerInfo, cb),
+      (cb) => nodes[2].libp2pNode.dial(nodes[3].libp2pNode.peerInfo, cb)
     ], done)
   })
 
@@ -140,6 +157,34 @@ describe('bitswap with DHT', function () {
       (block, cb) => nodes[2].bitswap.put(block, () => cb(null, block)),
       (block, cb) => setTimeout(() => cb(null, block), 400),
       (block, cb) => nodes[0].bitswap.get(block.cid, (err, blockRetrieved) => {
+        expect(err).to.not.exist()
+        expect(block.data).to.eql(blockRetrieved.data)
+        expect(block.cid).to.eql(blockRetrieved.cid)
+        cb()
+      })
+    ], done)
+  })
+
+  it('put a block in 2, get it in 3', (done) => {
+    waterfall([
+      (cb) => makeBlock(cb),
+      (block, cb) => nodes[2].bitswap.put(block, () => cb(null, block)),
+      (block, cb) => setTimeout(() => cb(null, block), 400),
+      (block, cb) => nodes[3].bitswap.get(block.cid, (err, blockRetrieved) => {
+        expect(err).to.not.exist()
+        expect(block.data).to.eql(blockRetrieved.data)
+        expect(block.cid).to.eql(blockRetrieved.cid)
+        cb()
+      })
+    ], done)
+  })
+
+  it('put a block in 3, get it in 2', (done) => {
+    waterfall([
+      (cb) => makeBlock(cb),
+      (block, cb) => nodes[3].bitswap.put(block, () => cb(null, block)),
+      (block, cb) => setTimeout(() => cb(null, block), 400),
+      (block, cb) => nodes[2].bitswap.get(block.cid, (err, blockRetrieved) => {
         expect(err).to.not.exist()
         expect(block.data).to.eql(blockRetrieved.data)
         expect(block.cid).to.eql(blockRetrieved.cid)

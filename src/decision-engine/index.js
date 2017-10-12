@@ -18,6 +18,8 @@ const Wantlist = require('../types/wantlist')
 const Ledger = require('./ledger')
 const logger = require('../utils').logger
 
+const MAX_MESSAGE_SIZE = 512 * 1024
+
 class DecisionEngine {
   constructor (peerId, blockstore, network, stats, options) {
     this._log = logger(peerId, 'engine')
@@ -33,7 +35,11 @@ class DecisionEngine {
     this._tasks = []
 
     options = options || {}
-    this._maxMessageSize = options.maxMessageSize
+    this._maxMessageSize = options.maxMessageSize || MAX_MESSAGE_SIZE
+    // make sure the maxMessageSize is at least 1024
+    if (this._maxMessageSize < 1024) {
+      this._maxMessageSize = 1024
+    }
 
     this._outbox = debounce(this._processTasks.bind(this), 100)
   }

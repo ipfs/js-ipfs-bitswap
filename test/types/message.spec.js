@@ -266,6 +266,7 @@ describe('BitswapMessage', () => {
           expect(err).to.not.exist()
           // TODO
           //   check the deserialised message
+          expect(message.serializeToBitswap110()).to.eql(rawMessageFullWantlist)
           done()
         })
       })
@@ -275,6 +276,7 @@ describe('BitswapMessage', () => {
           expect(err).to.not.exist()
           // TODO
           //   check the deserialised message
+          expect(message.serializeToBitswap110()).to.eql(rawMessageOneBlock)
           done()
         })
       })
