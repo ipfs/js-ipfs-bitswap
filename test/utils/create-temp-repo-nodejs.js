@@ -4,6 +4,7 @@ const IPFSRepo = require('ipfs-repo')
 const path = require('path')
 const ncp = require('ncp')
 const rimraf = require('rimraf')
+const series = require('async/series')
 
 const baseRepo = path.join(__dirname, '../fixtures/repo')
 
@@ -16,7 +17,12 @@ function createTempRepo (callback) {
 
     const repo = new IPFSRepo(path)
 
-    repo.teardown = (callback) => rimraf(path, callback)
+    repo.teardown = (done) => {
+      series([
+        (cb) => repo.close(cb),
+        (cb) => rimraf(path, cb)
+      ], (err) => done(err))
+    }
 
     repo.open((err) => {
       if (err) { return callback(err) }
