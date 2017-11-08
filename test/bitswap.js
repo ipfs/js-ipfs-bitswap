@@ -99,7 +99,9 @@ describe('bitswap without DHT', function () {
   })
 })
 
-describe('bitswap with DHT', () => {
+describe('bitswap with DHT', function () {
+  this.timeout(20 * 1000)
+
   let nodes
 
   before((done) => {
