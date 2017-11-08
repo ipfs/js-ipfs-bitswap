@@ -53,6 +53,7 @@ describe('bitswap without DHT', function () {
       (cb) => createThing(false, cb),
       (cb) => createThing(false, cb)
     ], (err, results) => {
+      if (err) console.log('createThing error', err)
       expect(err).to.not.exist()
       expect(results).to.have.length(3)
       nodes = results
