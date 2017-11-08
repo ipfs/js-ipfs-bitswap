@@ -1,16 +1,17 @@
 'use strict'
 
 const IPFSRepo = require('ipfs-repo')
-const path = require('path')
+const pathJoin = require('path').join
+const os = require('os')
 const ncp = require('ncp')
 const rimraf = require('rimraf')
 const series = require('async/series')
 
-const baseRepo = path.join(__dirname, '../fixtures/repo')
+const baseRepo = pathJoin(__dirname, '../fixtures/repo')
 
 function createTempRepo (callback) {
   const date = Date.now().toString()
-  const path = `/tmp/bitswap-tests-${date}-${Math.random()}`
+  const path = pathJoin(os.tmpdir(), `bitswap-tests-${date}-${Math.random()}`)
 
   ncp(baseRepo, path, (err) => {
     if (err) { return callback(err) }
