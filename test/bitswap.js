@@ -32,6 +32,7 @@ function createThing (dht, callback) {
       bitswap.start((err) => cb(err, repo, libp2pNode, bitswap))
     }
   ], (err, repo, libp2pNode, bitswap) => {
+    if (err) console.log('createThing error', err)
     expect(err).to.not.exist()
 
     callback(null, {
@@ -53,7 +54,7 @@ describe('bitswap without DHT', function () {
       (cb) => createThing(false, cb),
       (cb) => createThing(false, cb)
     ], (err, results) => {
-      if (err) console.log('createThing error', err)
+      if (err) console.log('createThings error', err)
       expect(err).to.not.exist()
       expect(results).to.have.length(3)
       nodes = results
