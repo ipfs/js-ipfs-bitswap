@@ -8,16 +8,16 @@
     "./test/utils/create-temp-repo-nodejs.js": "./test/utils/create-temp-repo-browser.js"
   },
   "scripts": {
-    "test": "aegir test --target node --target browser --timeout 10000",
-    "test:browser": "aegir test --target browser --timeout 10000",
-    "test:node": "aegir test --target node --timeout 10000",
+    "test": "aegir test -t node -t browser",
+    "test:browser": "aegir test -t browser",
+    "test:node": "aegir test -t node",
     "lint": "aegir lint",
     "release": "aegir release",
     "release-minor": "aegir release --type minor",
     "release-major": "aegir release --type major",
     "bench": "node benchmarks/index",
     "build": "aegir build",
-    "coverage": "aegir coverage -u",
+    "coverage": "aegir coverage --provider codecov",
     "docs": "aegir docs"
   },
   "repository": {
@@ -43,7 +43,7 @@
     "dirty-chai": "^2.0.1",
     "ipfs-repo": "~0.18.2",
     "libp2p": "~0.13.0",
-    "libp2p-kad-dht": "github:libp2p/js-libp2p-kad-dht#windows-interop",
+    "libp2p-kad-dht": "~0.6.0",
     "libp2p-multiplex": "~0.5.0",
     "libp2p-secio": "~0.8.1",
     "libp2p-tcp": "~0.11.1",
