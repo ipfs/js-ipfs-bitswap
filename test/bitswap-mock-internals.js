@@ -109,9 +109,8 @@ describe('bitswap with mocks', () => {
       })
     })
 
-    // TODO: This test is just taking too long
-    it.skip('multi peer', function (done) {
-      this.timeout(40 * 1000)
+    it('multi peer', function (done) {
+      this.timeout(80 * 1000)
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
 
       let others
