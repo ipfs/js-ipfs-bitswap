@@ -110,7 +110,7 @@ describe('bitswap with mocks', () => {
     })
 
     it('multi peer', function (done) {
-      this.timeout(40 * 1000)
+      this.timeout(80 * 1000)
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
 
       let others

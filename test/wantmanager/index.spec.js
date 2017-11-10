@@ -67,7 +67,7 @@ describe('WantManager', () => {
           expect(m[0]).to.be.eql(calls.connects[i])
           if (!m[1].equals(msgs[i])) {
             return done(
-              new Error(`expected ${m[1].toString()} to equal ${msgs[1].toString()}`)
+              new Error(`expected ${m[1].toString()} to equal ${msgs[i].toString()}`)
             )
           }
         })
