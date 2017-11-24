@@ -21,7 +21,8 @@ const statsKeys = [
   'blocksReceived',
   'dataReceived',
   'dupBlksReceived',
-  'dupDataReceived'
+  'dupDataReceived',
+  'dataSent'
 ]
 
 /**
@@ -36,13 +37,16 @@ class Bitswap {
     this._libp2p = libp2p
     this._log = logger(this.peerInfo.id)
 
+    this._options = Object.assign({}, defaultOptions, options)
+
+    // stats
+    this._stats = new Stats(statsKeys, this._options.statsUpdateInterval)
+
     // the network delivers messages
-    this.network = new Network(libp2p, this)
+    this.network = new Network(libp2p, this, {}, this._stats)
 
     // local database
     this.blockstore = blockstore
-
-    this._options = Object.assign({}, defaultOptions, options)
 
     this.engine = new DecisionEngine(this.peerInfo.id, blockstore, this.network)
 
@@ -50,7 +54,6 @@ class Bitswap {
     this.wm = new WantManager(this.peerInfo.id, this.network)
 
     this.notifications = new Notifications(this.peerInfo.id)
-    this._stats = new Stats(statsKeys, this._options.statsUpdateInterval)
   }
 
   get peerInfo () {

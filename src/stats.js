@@ -22,7 +22,7 @@ class Stats extends EventEmitter {
   }
 
   get snapshot () {
-    return this._stats
+    return Object.assign({}, this._stats)
   }
 
   push (counter, inc) {
@@ -60,10 +60,8 @@ class Stats extends EventEmitter {
   }
 
   stop () {
-    if (this._updater) {
-      clearInterval(this._updater)
-      this._updater = null
-    }
+    clearInterval(this._updater)
+    this._updater = null
   }
 }
 
