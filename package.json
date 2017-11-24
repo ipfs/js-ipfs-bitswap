@@ -53,6 +53,7 @@
     "peer-book": "~0.5.1",
     "peer-id": "~0.10.2",
     "peer-info": "~0.11.1",
+    "pre-commit": "^1.2.2",
     "rimraf": "^2.6.2",
     "safe-buffer": "^5.1.1"
   },
@@ -80,6 +81,10 @@
     "safe-buffer": "^5.1.1",
     "varint-decoder": "^0.1.1"
   },
+  "pre-commit": [
+    "lint",
+    "test"
+  ],
   "contributors": [
     "David Dias <daviddias.p@gmail.com>",
     "Dmitriy Ryajov <dryajov@gmail.com>",
