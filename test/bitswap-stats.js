@@ -58,6 +58,7 @@ describe.only('bitswap stats', () => {
   it('has initial stats', () => {
     const stats = bs.stat().snapshot
     expect(stats).to.have.property('blocksReceived', 0)
+    expect(stats).to.have.property('dataReceived', 0)
     expect(stats).to.have.property('dupBlksReceived', 0)
     expect(stats).to.have.property('dupDataReceived', 0)
   })
@@ -69,6 +70,7 @@ describe.only('bitswap stats', () => {
       const stats = bs.stat()
       stats.once('update', (stats) => {
         expect(stats).to.have.property('blocksReceived', 2)
+        expect(stats).to.have.property('dataReceived', 96)
         expect(stats).to.have.property('dupBlksReceived', 0)
         expect(stats).to.have.property('dupDataReceived', 0)
         done()
@@ -89,6 +91,7 @@ describe.only('bitswap stats', () => {
     const stats = bs.stat()
     stats.once('update', (stats) => {
       expect(stats).to.have.property('blocksReceived', 4)
+      expect(stats).to.have.property('dataReceived', 192)
       expect(stats).to.have.property('dupBlksReceived', 2)
       expect(stats).to.have.property('dupDataReceived', 96)
       done()

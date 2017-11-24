@@ -19,6 +19,7 @@ const defaultOptions = {
 }
 const statsKeys = [
   'blocksReceived',
+  'dataReceived',
   'dupBlksReceived',
   'dupDataReceived'
 ]
@@ -105,6 +106,7 @@ class Bitswap {
 
   _updateReceiveCounters (block, exists) {
     this._stats.push('blocksReceived', 1)
+    this._stats.push('dataReceived', block.data.length)
 
     if (exists) {
       this._stats.push('dupBlksReceived', 1)
