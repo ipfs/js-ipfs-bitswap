@@ -1,12 +1,8 @@
 /* eslint-env mocha */
-/* eslint max-nested-callbacks: ["error", 8] */
 'use strict'
 
-const eachSeries = require('async/eachSeries')
-const waterfall = require('async/waterfall')
 const map = require('async/map')
 const parallel = require('async/parallel')
-const setImmediate = require('async/setImmediate')
 const _ = require('lodash')
 const chai = require('chai')
 chai.use(require('dirty-chai'))
@@ -17,12 +13,8 @@ const Message = require('../src/types/message')
 const Bitswap = require('../src')
 
 const createTempRepo = require('./utils/create-temp-repo-nodejs')
-const mockNetwork = require('./utils/mocks').mockNetwork
-const applyNetwork = require('./utils/mocks').applyNetwork
 const mockLibp2pNode = require('./utils/mocks').mockLibp2pNode
-const storeHasBlocks = require('./utils/store-has-blocks')
 const makeBlock = require('./utils/make-block')
-const orderedFinish = require('./utils/helpers').orderedFinish
 
 describe.only('bitswap stats', () => {
   let repo

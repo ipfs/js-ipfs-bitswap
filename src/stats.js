@@ -14,7 +14,7 @@ class Stats extends EventEmitter {
     this._queue = []
     this._stats = {}
 
-    initialCounters.forEach((key) => this._stats[key] = 0)
+    initialCounters.forEach((key) => { this._stats[key] = 0 })
   }
 
   start () {
@@ -58,7 +58,6 @@ class Stats extends EventEmitter {
     }
     this._stats[key] += inc
   }
-
 
   stop () {
     if (this._updater) {
