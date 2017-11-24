@@ -66,8 +66,6 @@ describe('bitswap with mocks', () => {
 
         bs._receiveMessage(other, msg, (err) => {
           expect(err).to.not.exist()
-          expect(bs.blocksRecvd).to.equal(2)
-          expect(bs.dupBlocksRecvd).to.equal(0)
 
           map([b1.cid, b2.cid], (cid, cb) => repo.blocks.get(cid, cb), (err, blocks) => {
             expect(err).to.not.exist()
@@ -95,9 +93,6 @@ describe('bitswap with mocks', () => {
 
         bs._receiveMessage(other, msg, (err) => {
           expect(err).to.not.exist()
-
-          expect(bs.blocksRecvd).to.be.eql(0)
-          expect(bs.dupBlocksRecvd).to.be.eql(0)
 
           const wl = bs.wantlistForPeer(other)
 
@@ -325,19 +320,6 @@ describe('bitswap with mocks', () => {
           }
         ], done)
       })
-    })
-  })
-
-  describe('stat', () => {
-    it('has initial stats', () => {
-      const bs = new Bitswap(mockLibp2pNode(), {})
-
-      const stats = bs.stat()
-      expect(stats).to.have.property('wantlist')
-      expect(stats).to.have.property('blocksReceived', 0)
-      expect(stats).to.have.property('dupBlksReceived', 0)
-      expect(stats).to.have.property('dupDataReceived', 0)
-      expect(stats).to.have.property('peers')
     })
   })
 

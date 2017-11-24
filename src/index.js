@@ -12,6 +12,16 @@ const Network = require('./network')
 const DecisionEngine = require('./decision-engine')
 const Notifications = require('./notifications')
 const logger = require('./utils').logger
+const Stats = require('./stats')
+
+const defaultOptions = {
+  statsUpdateInterval: 5000
+}
+const statsKeys = [
+  'blocksReceived',
+  'dupBlksReceived',
+  'dupDataReceived'
+]
 
 /**
  * JavaScript implementation of the Bitswap 'data exchange' protocol
@@ -21,7 +31,7 @@ const logger = require('./utils').logger
  * @param {Blockstore} blockstore
  */
 class Bitswap {
-  constructor (libp2p, blockstore) {
+  constructor (libp2p, blockstore, options) {
     this._libp2p = libp2p
     this._log = logger(this.peerInfo.id)
 
@@ -31,16 +41,15 @@ class Bitswap {
     // local database
     this.blockstore = blockstore
 
+    this._options = Object.assign({}, defaultOptions, options)
+
     this.engine = new DecisionEngine(this.peerInfo.id, blockstore, this.network)
 
     // handle message sending
     this.wm = new WantManager(this.peerInfo.id, this.network)
 
-    this.blocksRecvd = 0
-    this.dupBlocksRecvd = 0
-    this.dupDataRecvd = 0
-
     this.notifications = new Notifications(this.peerInfo.id)
+    this._stats = new Stats(statsKeys, this._options.statsUpdateInterval)
   }
 
   get peerInfo () {
@@ -95,11 +104,11 @@ class Bitswap {
   }
 
   _updateReceiveCounters (block, exists) {
-    this.blocksRecvd++
+    this._stats.push('blocksReceived', 1)
 
     if (exists) {
-      this.dupBlocksRecvd++
-      this.dupDataRecvd += block.data.length
+      this._stats.push('dupBlksReceived', 1)
+      this._stats.push('dupDataReceived', block.data.length)
     }
   }
 
@@ -341,13 +350,7 @@ class Bitswap {
    * @returns {Object}
    */
   stat () {
-    return {
-      wantlist: this.getWantlist(),
-      blocksReceived: this.blocksRecvd,
-      dupBlksReceived: this.dupBlocksRecvd,
-      dupDataReceived: this.dupDataRecvd,
-      peers: this.engine.peers()
-    }
+    return this._stats
   }
 
   /**
@@ -358,6 +361,7 @@ class Bitswap {
    * @returns {void}
    */
   start (callback) {
+    this._stats.start()
     series([
       (cb) => this.wm.start(cb),
       (cb) => this.network.start(cb),
@@ -373,6 +377,7 @@ class Bitswap {
    * @returns {void}
    */
   stop (callback) {
+    this._stats.stop()
     series([
       (cb) => this.wm.stop(cb),
       (cb) => this.network.stop(cb),
