@@ -22,6 +22,7 @@ const statsKeys = [
   'dataReceived',
   'dupBlksReceived',
   'dupDataReceived',
+  'blocksSent',
   'dataSent'
 ]
 

@@ -150,7 +150,7 @@ class Network {
         }
       })
       callback()
-      this._updateSentStats(serialized.length)
+      this._updateSentStats(msg.blocks)
     })
   }
 
@@ -179,9 +179,10 @@ class Network {
     })
   }
 
-  _updateSentStats (sentSize) {
+  _updateSentStats (blocks) {
     if (this._stats) {
-      this._stats.push('dataSent', sentSize)
+      blocks.forEach((block) => this._stats.push('dataSent', block.data.length))
+      this._stats.push('blocksSent', blocks.size)
     }
   }
 }

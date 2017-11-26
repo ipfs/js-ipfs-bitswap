@@ -88,6 +88,7 @@ describe('bitswap stats', () => {
     expect(stats).to.have.property('dataReceived', 0)
     expect(stats).to.have.property('dupBlksReceived', 0)
     expect(stats).to.have.property('dupDataReceived', 0)
+    expect(stats).to.have.property('blocksSent', 0)
     expect(stats).to.have.property('dataSent', 0)
   })
 
@@ -98,6 +99,7 @@ describe('bitswap stats', () => {
       expect(stats).to.have.property('dataReceived', 96)
       expect(stats).to.have.property('dupBlksReceived', 0)
       expect(stats).to.have.property('dupDataReceived', 0)
+      expect(stats).to.have.property('blocksSent', 0)
       expect(stats).to.have.property('dataSent', 0)
       done()
     })
@@ -119,6 +121,7 @@ describe('bitswap stats', () => {
       expect(stats).to.have.property('dataReceived', 192)
       expect(stats).to.have.property('dupBlksReceived', 2)
       expect(stats).to.have.property('dupDataReceived', 96)
+      expect(stats).to.have.property('blocksSent', 0)
       expect(stats).to.have.property('dataSent', 0)
       done()
     })
@@ -177,7 +180,8 @@ describe('bitswap stats', () => {
         expect(stats).to.have.property('dataReceived', 192)
         expect(stats).to.have.property('dupBlksReceived', 2)
         expect(stats).to.have.property('dupDataReceived', 96)
-        expect(stats).to.have.property('dataSent', 60)
+        expect(stats).to.have.property('blocksSent', 1)
+        expect(stats).to.have.property('dataSent', 48)
         done()
       })
 
