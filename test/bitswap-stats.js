@@ -68,7 +68,7 @@ describe('bitswap stats', () => {
 
   before(() => {
     bitswaps = nodes.map((node, i) => new Bitswap(libp2pNodes[i], repos[i].blocks, {
-      statsUpdateInterval: 100 // fast update interval for so tests run fast
+      statsComputeThrottleTimeout: 100 // fast update interval for so tests run fast
     }))
     bs = bitswaps[0]
   })

@@ -4,22 +4,24 @@ const EventEmitter = require('events')
 const Big = require('big.js')
 
 class Stats extends EventEmitter {
-  constructor (initialCounters, updateInterval) {
+  constructor (initialCounters, options) {
     super()
 
-    if (typeof updateInterval !== 'number') {
-      throw new Error('need updateInterval')
+    if (typeof options.computeThrottleTimeout !== 'number') {
+      throw new Error('need computeThrottleTimeout')
     }
 
-    this._updateInterval = updateInterval
+    if (typeof options.computeThrottleMaxQueueSize !== 'number') {
+      throw new Error('need computeThrottleMaxQueueSize')
+    }
+
+    this._options = options
     this._queue = []
     this._stats = {}
 
-    initialCounters.forEach((key) => { this._stats[key] = Big(0) })
-  }
+    this._update = this._update.bind(this)
 
-  start () {
-    this._startUpdater()
+    initialCounters.forEach((key) => { this._stats[key] = Big(0) })
   }
 
   get snapshot () {
@@ -28,15 +30,25 @@ class Stats extends EventEmitter {
 
   push (counter, inc) {
     this._queue.push([counter, inc])
-  }
-
-  _startUpdater () {
-    if (!this._updater) {
-      this._updater = setInterval(this._update.bind(this), this._updateInterval)
+    if (this._queue.length <= this._options.computeThrottleMaxQueueSize) {
+      this._resetComputeTimeout()
+    } else {
+      if (this._timeout) {
+        clearTimeout(this._timeout)
+      }
+      this._update()
     }
   }
 
+  _resetComputeTimeout () {
+    if (this._timeout) {
+      clearTimeout(this._timeout)
+    }
+    this._timeout = setTimeout(this._update, this._options.computeThrottleTimeout)
+  }
+
   _update () {
+    this._timeout = null
     if (this._queue.length) {
       while (this._queue.length) {
         const op = this._queue.shift()
@@ -62,11 +74,6 @@ class Stats extends EventEmitter {
       n = this._stats[key]
     }
     this._stats[key] = n.plus(inc)
-  }
-
-  stop () {
-    clearInterval(this._updater)
-    this._updater = null
   }
 }
 

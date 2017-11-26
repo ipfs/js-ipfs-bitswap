@@ -15,7 +15,8 @@ const logger = require('./utils').logger
 const Stats = require('./stats')
 
 const defaultOptions = {
-  statsUpdateInterval: 5000
+  statsComputeThrottleTimeout: 1000,
+  statsComputeThrottleMaxQueueSize: 1000
 }
 const statsKeys = [
   'blocksReceived',
@@ -41,7 +42,10 @@ class Bitswap {
     this._options = Object.assign({}, defaultOptions, options)
 
     // stats
-    this._stats = new Stats(statsKeys, this._options.statsUpdateInterval)
+    this._stats = new Stats(statsKeys, {
+      computeThrottleTimeout: this._options.statsComputeThrottleTimeout,
+      computeThrottleMaxQueueSize: this._options.statsComputeThrottleMaxQueueSize
+    })
 
     // the network delivers messages
     this.network = new Network(libp2p, this, {}, this._stats)
@@ -367,7 +371,6 @@ class Bitswap {
    * @returns {void}
    */
   start (callback) {
-    this._stats.start()
     series([
       (cb) => this.wm.start(cb),
       (cb) => this.network.start(cb),
@@ -383,7 +386,6 @@ class Bitswap {
    * @returns {void}
    */
   stop (callback) {
-    this._stats.stop()
     series([
       (cb) => this.wm.stop(cb),
       (cb) => this.network.stop(cb),
