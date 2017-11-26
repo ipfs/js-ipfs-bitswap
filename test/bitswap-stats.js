@@ -30,7 +30,7 @@ describe('bitswap stats', () => {
   before((done) => {
     parallel(
       {
-        blocks: (cb) => map(_.range(15), (i, cb) => makeBlock(cb), cb),
+        blocks: (cb) => map(_.range(2), (i, cb) => makeBlock(cb), cb),
         ids: (cb) => map(_.range(2), (i, cb) => PeerId.create({bits: 1024}, cb), cb)
       },
       (err, results) => {
@@ -84,30 +84,30 @@ describe('bitswap stats', () => {
 
   it('has initial stats', () => {
     const stats = bs.stat().snapshot
-    expect(stats).to.have.property('blocksReceived', 0)
-    expect(stats).to.have.property('dataReceived', 0)
-    expect(stats).to.have.property('dupBlksReceived', 0)
-    expect(stats).to.have.property('dupDataReceived', 0)
-    expect(stats).to.have.property('blocksSent', 0)
-    expect(stats).to.have.property('dataSent', 0)
+    expect(stats.blocksReceived.eq(0)).to.be.true()
+    expect(stats.dataReceived.eq(0)).to.be.true()
+    expect(stats.dupBlksReceived.eq(0)).to.be.true()
+    expect(stats.dupDataReceived.eq(0)).to.be.true()
+    expect(stats.blocksSent.eq(0)).to.be.true()
+    expect(stats.dataSent.eq(0)).to.be.true()
   })
 
   it('updates blocks received', (done) => {
     const stats = bs.stat()
     stats.once('update', (stats) => {
-      expect(stats).to.have.property('blocksReceived', 2)
-      expect(stats).to.have.property('dataReceived', 96)
-      expect(stats).to.have.property('dupBlksReceived', 0)
-      expect(stats).to.have.property('dupDataReceived', 0)
-      expect(stats).to.have.property('blocksSent', 0)
-      expect(stats).to.have.property('dataSent', 0)
+      expect(stats.blocksReceived.eq(2)).to.be.true()
+      expect(stats.dataReceived.eq(96)).to.be.true()
+      expect(stats.dupBlksReceived.eq(0)).to.be.true()
+      expect(stats.dupDataReceived.eq(0)).to.be.true()
+      expect(stats.blocksSent.eq(0)).to.be.true()
+      expect(stats.dataSent.eq(0)).to.be.true()
       done()
     })
 
     const other = ids[1]
 
     const msg = new Message(false)
-    blocks.slice(0, 2).forEach((block) => msg.addBlock(block))
+    blocks.forEach((block) => msg.addBlock(block))
 
     bs._receiveMessage(other, msg, (err) => {
       expect(err).to.not.exist()
@@ -117,19 +117,19 @@ describe('bitswap stats', () => {
   it('updates duplicate blocks counters', (done) => {
     const stats = bs.stat()
     stats.once('update', (stats) => {
-      expect(stats).to.have.property('blocksReceived', 4)
-      expect(stats).to.have.property('dataReceived', 192)
-      expect(stats).to.have.property('dupBlksReceived', 2)
-      expect(stats).to.have.property('dupDataReceived', 96)
-      expect(stats).to.have.property('blocksSent', 0)
-      expect(stats).to.have.property('dataSent', 0)
+      expect(stats.blocksReceived.eq(4)).to.be.true()
+      expect(stats.dataReceived.eq(192)).to.be.true()
+      expect(stats.dupBlksReceived.eq(2)).to.be.true()
+      expect(stats.dupDataReceived.eq(96)).to.be.true()
+      expect(stats.blocksSent.eq(0)).to.be.true()
+      expect(stats.dataSent.eq(0)).to.be.true()
       done()
     })
 
     const other = ids[1]
 
     const msg = new Message(false)
-    blocks.slice(0, 2).forEach((block) => msg.addBlock(block))
+    blocks.forEach((block) => msg.addBlock(block))
 
     bs._receiveMessage(other, msg, (err) => {
       expect(err).to.not.exist()
@@ -141,10 +141,6 @@ describe('bitswap stats', () => {
     let block
 
     before((done) => {
-      // parallel([
-      //   (cb) => libp2pNodes[0].dial(libp2pNodes[1].peerInfo, cb),
-      //   (cb) => libp2pNodes[1].dial(libp2pNodes[0].peerInfo, cb),
-      //   ], done)
       eachOf(
         libp2pNodes,
         (node, i, cb) => node.dial(libp2pNodes[(i + 1) % nodes.length].peerInfo, cb),
@@ -176,12 +172,12 @@ describe('bitswap stats', () => {
     it('updates stats on transfer', (done) => {
       const stats = bs.stat()
       stats.once('update', (stats) => {
-        expect(stats).to.have.property('blocksReceived', 4)
-        expect(stats).to.have.property('dataReceived', 192)
-        expect(stats).to.have.property('dupBlksReceived', 2)
-        expect(stats).to.have.property('dupDataReceived', 96)
-        expect(stats).to.have.property('blocksSent', 1)
-        expect(stats).to.have.property('dataSent', 48)
+        expect(stats.blocksReceived.eq(4)).to.be.true()
+        expect(stats.dataReceived.eq(192)).to.be.true()
+        expect(stats.dupBlksReceived.eq(2)).to.be.true()
+        expect(stats.dupDataReceived.eq(96)).to.be.true()
+        expect(stats.blocksSent.eq(1)).to.be.true()
+        expect(stats.dataSent.eq(48)).to.be.true()
         done()
       })
 

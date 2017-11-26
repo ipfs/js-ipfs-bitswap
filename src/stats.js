@@ -1,6 +1,7 @@
 'use strict'
 
 const EventEmitter = require('events')
+const Big = require('big.js')
 
 class Stats extends EventEmitter {
   constructor (initialCounters, updateInterval) {
@@ -14,7 +15,7 @@ class Stats extends EventEmitter {
     this._queue = []
     this._stats = {}
 
-    initialCounters.forEach((key) => { this._stats[key] = 0 })
+    initialCounters.forEach((key) => { this._stats[key] = Big(0) })
   }
 
   start () {
@@ -53,10 +54,14 @@ class Stats extends EventEmitter {
       throw new Error('invalid increment number:', inc)
     }
 
+    let n
+
     if (!this._stats.hasOwnProperty(key)) {
-      this._stats[key] = 0
+      n = this._stats[key] = Big(0)
+    } else {
+      n = this._stats[key]
     }
-    this._stats[key] += inc
+    this._stats[key] = n.plus(inc)
   }
 
   stop () {
