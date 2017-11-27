@@ -86,7 +86,7 @@ describe('bitswap stats', () => {
 
   before(() => {
     bitswaps = nodes.map((node, i) => new Bitswap(libp2pNodes[i], repos[i].blocks, {
-      statsComputeThrottleTimeout: 100 // fast update interval for so tests run fast
+      statsComputeThrottleTimeout: 500 // fast update interval for so tests run fast
     }))
     bs = bitswaps[0]
   })
@@ -130,6 +130,8 @@ describe('bitswap stats', () => {
       expect(stats.blocksSent.eq(0)).to.be.true()
       expect(stats.dataSent.eq(0)).to.be.true()
       expect(stats.providesBufferLength.eq(0)).to.be.true()
+      expect(stats.wantListLength.eq(0)).to.be.true()
+      expect(stats.peerCount.eq(1)).to.be.true()
 
       // test moving averages
       const movingAverages = bs.stat().movingAverages
@@ -219,7 +221,6 @@ describe('bitswap stats', () => {
     it('updates stats on transfer', (done) => {
       const finish = orderedFinish(2, done)
       bs.stat().once('update', (stats) => {
-        console.log(stats.blocksReceived.toJSON())
         expect(stats.blocksReceived.eq(4)).to.be.true()
         expect(stats.dataReceived.eq(192)).to.be.true()
         expect(stats.dupBlksReceived.eq(2)).to.be.true()
@@ -228,6 +229,7 @@ describe('bitswap stats', () => {
         expect(stats.dataSent.eq(48)).to.be.true()
         expect(stats.providesBufferLength.eq(0)).to.be.true()
         expect(stats.wantListLength.eq(0)).to.be.true()
+        expect(stats.peerCount.eq(2)).to.be.true()
         finish(2)
       })
 
