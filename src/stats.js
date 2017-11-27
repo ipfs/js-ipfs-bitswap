@@ -35,7 +35,6 @@ class Stats extends EventEmitter {
     this._movingAverages = {}
 
     this._update = this._update.bind(this)
-    this._updateFrequency = this._updateFrequency.bind(this)
 
     initialCounters.forEach((key) => {
       this._stats[key] = Big(0)
@@ -45,6 +44,16 @@ class Stats extends EventEmitter {
         ma.push(this._frequencyLastTime, 0)
       })
     })
+
+    this._enabled = this._options.enabled
+  }
+
+  enable () {
+    this._enabled = true
+  }
+
+  disable () {
+    this._disabled = true
   }
 
   get snapshot () {
@@ -56,8 +65,10 @@ class Stats extends EventEmitter {
   }
 
   push (counter, inc) {
-    this._queue.push([counter, inc, Date.now()])
-    this._resetComputeTimeout()
+    if (this._enabled) {
+      this._queue.push([counter, inc, Date.now()])
+      this._resetComputeTimeout()
+    }
   }
 
   _resetComputeTimeout () {

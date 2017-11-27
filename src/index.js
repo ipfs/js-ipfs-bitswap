@@ -15,6 +15,7 @@ const logger = require('./utils').logger
 const Stats = require('./stats')
 
 const defaultOptions = {
+  statsEnabled: false,
   statsComputeThrottleTimeout: 1000,
   statsComputeThrottleMaxQueueSize: 1000
 }
@@ -46,6 +47,7 @@ class Bitswap {
 
     // stats
     this._stats = new Stats(statsKeys, {
+      enabled: this._options.statsEnabled,
       computeThrottleTimeout: this._options.statsComputeThrottleTimeout,
       computeThrottleMaxQueueSize: this._options.statsComputeThrottleMaxQueueSize
     })
@@ -157,6 +159,14 @@ class Bitswap {
       this.engine.receivedBlocks([block.cid])
       callback()
     })
+  }
+
+  enableStats () {
+    this._stats.enable()
+  }
+
+  disableStats () {
+    this._stats.disable()
   }
 
   /**
