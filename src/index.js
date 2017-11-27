@@ -12,6 +12,24 @@ const Network = require('./network')
 const DecisionEngine = require('./decision-engine')
 const Notifications = require('./notifications')
 const logger = require('./utils').logger
+const Stats = require('./stats')
+
+const defaultOptions = {
+  statsEnabled: false,
+  statsComputeThrottleTimeout: 1000,
+  statsComputeThrottleMaxQueueSize: 1000
+}
+const statsKeys = [
+  'blocksReceived',
+  'dataReceived',
+  'dupBlksReceived',
+  'dupDataReceived',
+  'blocksSent',
+  'dataSent',
+  'providesBufferLength',
+  'wantListLength',
+  'peerCount'
+]
 
 /**
  * JavaScript implementation of the Bitswap 'data exchange' protocol
@@ -21,24 +39,29 @@ const logger = require('./utils').logger
  * @param {Blockstore} blockstore
  */
 class Bitswap {
-  constructor (libp2p, blockstore) {
+  constructor (libp2p, blockstore, options) {
     this._libp2p = libp2p
     this._log = logger(this.peerInfo.id)
 
+    this._options = Object.assign({}, defaultOptions, options)
+
+    // stats
+    this._stats = new Stats(statsKeys, {
+      enabled: this._options.statsEnabled,
+      computeThrottleTimeout: this._options.statsComputeThrottleTimeout,
+      computeThrottleMaxQueueSize: this._options.statsComputeThrottleMaxQueueSize
+    })
+
     // the network delivers messages
-    this.network = new Network(libp2p, this)
+    this.network = new Network(libp2p, this, {}, this._stats)
 
     // local database
     this.blockstore = blockstore
 
-    this.engine = new DecisionEngine(this.peerInfo.id, blockstore, this.network)
+    this.engine = new DecisionEngine(this.peerInfo.id, blockstore, this.network, this._stats)
 
     // handle message sending
-    this.wm = new WantManager(this.peerInfo.id, this.network)
-
-    this.blocksRecvd = 0
-    this.dupBlocksRecvd = 0
-    this.dupDataRecvd = 0
+    this.wm = new WantManager(this.peerInfo.id, this.network, this._stats)
 
     this.notifications = new Notifications(this.peerInfo.id)
   }
@@ -95,11 +118,12 @@ class Bitswap {
   }
 
   _updateReceiveCounters (block, exists) {
-    this.blocksRecvd++
+    this._stats.push('blocksReceived', 1)
+    this._stats.push('dataReceived', block.data.length)
 
     if (exists) {
-      this.dupBlocksRecvd++
-      this.dupDataRecvd += block.data.length
+      this._stats.push('dupBlksReceived', 1)
+      this._stats.push('dupDataReceived', block.data.length)
     }
   }
 
@@ -135,6 +159,14 @@ class Bitswap {
       this.engine.receivedBlocks([block.cid])
       callback()
     })
+  }
+
+  enableStats () {
+    this._stats.enable()
+  }
+
+  disableStats () {
+    this._stats.disable()
   }
 
   /**
@@ -329,10 +361,19 @@ class Bitswap {
   /**
    * Get the current list of wants.
    *
-   * @returns {Array<WantlistEntry>}
+   * @returns {Iterator<WantlistEntry>}
    */
   getWantlist () {
     return this.wm.wantlist.entries()
+  }
+
+  /**
+   * Get the current list of partners.
+   *
+   * @returns {Array<PeerId>}
+   */
+  peers () {
+    return this.engine.peers()
   }
 
   /**
@@ -341,13 +382,7 @@ class Bitswap {
    * @returns {Object}
    */
   stat () {
-    return {
-      wantlist: this.getWantlist(),
-      blocksReceived: this.blocksRecvd,
-      dupBlksReceived: this.dupBlocksRecvd,
-      dupDataReceived: this.dupDataRecvd,
-      peers: this.engine.peers()
-    }
+    return this._stats
   }
 
   /**

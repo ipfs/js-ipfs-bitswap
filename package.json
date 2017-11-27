@@ -53,11 +53,13 @@
     "peer-book": "~0.5.1",
     "peer-id": "~0.10.2",
     "peer-info": "~0.11.1",
+    "pre-commit": "^1.2.2",
     "rimraf": "^2.6.2",
     "safe-buffer": "^5.1.1"
   },
   "dependencies": {
     "async": "^2.6.0",
+    "big.js": "^5.0.3",
     "cids": "~0.5.2",
     "debug": "^3.1.0",
     "ipfs-block": "~0.6.1",
@@ -70,6 +72,7 @@
     "lodash.sortby": "^4.7.0",
     "lodash.uniqwith": "^4.5.0",
     "lodash.values": "^4.3.0",
+    "moving-average": "^1.0.0",
     "multicodec": "~0.2.5",
     "multihashing-async": "~0.4.7",
     "protons": "^1.0.0",
@@ -80,6 +83,10 @@
     "safe-buffer": "^5.1.1",
     "varint-decoder": "^0.1.1"
   },
+  "pre-commit": [
+    "lint",
+    "test"
+  ],
   "contributors": [
     "David Dias <daviddias.p@gmail.com>",
     "Dmitriy Ryajov <dryajov@gmail.com>",

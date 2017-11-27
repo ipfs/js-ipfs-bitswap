@@ -21,10 +21,11 @@ const logger = require('../utils').logger
 const MAX_MESSAGE_SIZE = 512 * 1024
 
 class DecisionEngine {
-  constructor (peerId, blockstore, network) {
+  constructor (peerId, blockstore, network, stats) {
     this._log = logger(peerId, 'engine')
     this.blockstore = blockstore
     this.network = network
+    this._stats = stats
 
     // A list of of ledgers by their partner id
     this.ledgerMap = new Map()
@@ -267,6 +268,9 @@ class DecisionEngine {
     const l = new Ledger(peerId)
 
     this.ledgerMap.set(peerIdStr, l)
+    if (this._stats) {
+      this._stats.push('peerCount', 1)
+    }
 
     return l
   }

@@ -4,8 +4,9 @@ const sort = require('lodash.sortby')
 const Entry = require('./entry')
 
 class Wantlist {
-  constructor () {
+  constructor (stats) {
     this.set = new Map()
+    this._stats = stats
   }
 
   get length () {
@@ -21,6 +22,9 @@ class Wantlist {
       entry.priority = priority
     } else {
       this.set.set(cidStr, new Entry(cid, priority))
+      if (this._stats) {
+        this._stats.push('wantListSize', 1)
+      }
     }
   }
 
@@ -40,6 +44,9 @@ class Wantlist {
     }
 
     this.set.delete(cidStr)
+    if (this._stats) {
+      this._stats.push('wantListSize', -1)
+    }
   }
 
   removeForce (cidStr) {

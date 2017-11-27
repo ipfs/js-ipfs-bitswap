@@ -14,13 +14,14 @@ const BITSWAP100 = '/ipfs/bitswap/1.0.0'
 const BITSWAP110 = '/ipfs/bitswap/1.1.0'
 
 class Network {
-  constructor (libp2p, bitswap, options) {
+  constructor (libp2p, bitswap, options, stats) {
     this._log = logger(libp2p.peerInfo.id, 'network')
     options = options || {}
     this.libp2p = libp2p
     this.bitswap = bitswap
     this.b100Only = options.b100Only || false
 
+    this._stats = stats
     this._running = false
   }
 
@@ -149,6 +150,7 @@ class Network {
         }
       })
       callback()
+      this._updateSentStats(msg.blocks)
     })
   }
 
@@ -175,6 +177,13 @@ class Network {
 
       callback(null, conn, BITSWAP110)
     })
+  }
+
+  _updateSentStats (blocks) {
+    if (this._stats) {
+      blocks.forEach((block) => this._stats.push('dataSent', block.data.length))
+      this._stats.push('blocksSent', blocks.size)
+    }
   }
 }
 

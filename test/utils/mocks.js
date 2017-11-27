@@ -13,6 +13,7 @@ const PeerBook = require('peer-book')
 const Node = require('./create-libp2p-node').bundle
 const os = require('os')
 const Repo = require('ipfs-repo')
+const EventEmitter = require('events')
 
 const Bitswap = require('../../src')
 
@@ -22,9 +23,10 @@ const Bitswap = require('../../src')
 exports.mockLibp2pNode = () => {
   const peerInfo = new PeerInfo(PeerId.createFromHexString('122019318b6e5e0cf93a2314bf01269a2cc23cd3dcd452d742cdb9379d8646f6e4a9'))
 
-  return {
+  return Object.assign(new EventEmitter(), {
     peerInfo: peerInfo,
     handle () {},
+    unhandle () {},
     contentRouting: {
       provide: (cid, callback) => callback(),
       findProviders: (cid, timeout, callback) => callback(null, [])
@@ -38,7 +40,7 @@ exports.mockLibp2pNode = () => {
       setMaxListeners () {}
     },
     peerBook: new PeerBook()
-  }
+  })
 }
 
 /*
