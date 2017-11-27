@@ -30,21 +30,20 @@ class Stats extends EventEmitter {
 
   push (counter, inc) {
     this._queue.push([counter, inc])
-    if (this._queue.length <= this._options.computeThrottleMaxQueueSize) {
-      this._resetComputeTimeout()
-    } else {
-      if (this._timeout) {
-        clearTimeout(this._timeout)
-      }
-      this._update()
-    }
+    this._resetComputeTimeout()
   }
 
   _resetComputeTimeout () {
     if (this._timeout) {
       clearTimeout(this._timeout)
     }
-    this._timeout = setTimeout(this._update, this._options.computeThrottleTimeout)
+    this._timeout = setTimeout(this._update, this._nextTimeout())
+  }
+
+  _nextTimeout () {
+    // calculate the need for an update, depending on the queue length
+    const urgency = this._queue.length / this._options.computeThrottleMaxQueueSize
+    return Math.max(this._options.computeThrottleTimeout * (1 - urgency), 0)
   }
 
   _update () {
