@@ -9,11 +9,12 @@ const MsgQueue = require('./msg-queue')
 const logger = require('../utils').logger
 
 module.exports = class WantManager {
-  constructor (peerId, network) {
+  constructor (peerId, network, stats) {
     this.peers = new Map()
-    this.wantlist = new Wantlist()
+    this.wantlist = new Wantlist(stats)
 
     this.network = network
+    this._stats = stats
 
     this._peerId = peerId
     this._log = logger(peerId, 'want')

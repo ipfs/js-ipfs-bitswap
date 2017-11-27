@@ -17,6 +17,7 @@ const Bitswap = require('../src')
 const createTempRepo = require('./utils/create-temp-repo-nodejs')
 const createLibp2pNode = require('./utils/create-libp2p-node')
 const makeBlock = require('./utils/make-block')
+const orderedFinish = require('./utils/helpers').orderedFinish
 
 const expectedStats = [
   'blocksReceived',
@@ -24,7 +25,9 @@ const expectedStats = [
   'dupBlksReceived',
   'dupDataReceived',
   'blocksSent',
-  'dataSent'
+  'dataSent',
+  'providesBufferLength',
+  'wantListLength'
 ]
 
 const expectedTimeWindows = [
@@ -119,8 +122,7 @@ describe('bitswap stats', () => {
   })
 
   it('updates blocks received', (done) => {
-    const stats = bs.stat()
-    stats.once('update', (stats) => {
+    bs.stat().once('update', (stats) => {
       expect(stats.blocksReceived.eq(2)).to.be.true()
       expect(stats.dataReceived.eq(96)).to.be.true()
       expect(stats.dupBlksReceived.eq(0)).to.be.true()
@@ -160,8 +162,7 @@ describe('bitswap stats', () => {
   })
 
   it('updates duplicate blocks counters', (done) => {
-    const stats = bs.stat()
-    stats.once('update', (stats) => {
+    bs.stat().once('update', (stats) => {
       expect(stats.blocksReceived.eq(4)).to.be.true()
       expect(stats.dataReceived.eq(192)).to.be.true()
       expect(stats.dupBlksReceived.eq(2)).to.be.true()
@@ -216,8 +217,9 @@ describe('bitswap stats', () => {
     })
 
     it('updates stats on transfer', (done) => {
-      const stats = bs.stat()
-      stats.once('update', (stats) => {
+      const finish = orderedFinish(2, done)
+      bs.stat().once('update', (stats) => {
+        console.log(stats.blocksReceived.toJSON())
         expect(stats.blocksReceived.eq(4)).to.be.true()
         expect(stats.dataReceived.eq(192)).to.be.true()
         expect(stats.dupBlksReceived.eq(2)).to.be.true()
@@ -225,12 +227,14 @@ describe('bitswap stats', () => {
         expect(stats.blocksSent.eq(1)).to.be.true()
         expect(stats.dataSent.eq(48)).to.be.true()
         expect(stats.providesBufferLength.eq(0)).to.be.true()
-        done()
+        expect(stats.wantListLength.eq(0)).to.be.true()
+        finish(2)
       })
 
-      bs2.get(block.cid, (err, _block) => {
+      bs2.get(block.cid, (err, block) => {
         expect(err).to.not.exist()
-        expect(_block).to.exist()
+        expect(block).to.exist()
+        finish(1)
       })
     })
   })

@@ -25,7 +25,8 @@ const statsKeys = [
   'dupDataReceived',
   'blocksSent',
   'dataSent',
-  'providesBufferLength'
+  'providesBufferLength',
+  'wantListLength'
 ]
 
 /**
@@ -57,7 +58,7 @@ class Bitswap {
     this.engine = new DecisionEngine(this.peerInfo.id, blockstore, this.network)
 
     // handle message sending
-    this.wm = new WantManager(this.peerInfo.id, this.network)
+    this.wm = new WantManager(this.peerInfo.id, this.network, this._stats)
 
     this.notifications = new Notifications(this.peerInfo.id)
   }
@@ -349,10 +350,19 @@ class Bitswap {
   /**
    * Get the current list of wants.
    *
-   * @returns {Array<WantlistEntry>}
+   * @returns {Iterator<WantlistEntry>}
    */
   getWantlist () {
     return this.wm.wantlist.entries()
+  }
+
+  /**
+   * Get the current list of partners.
+   *
+   * @returns {Array<PeerId>}
+   */
+  peers () {
+    return this.engine.peers()
   }
 
   /**
