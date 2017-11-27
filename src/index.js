@@ -24,7 +24,8 @@ const statsKeys = [
   'dupBlksReceived',
   'dupDataReceived',
   'blocksSent',
-  'dataSent'
+  'dataSent',
+  'providesBufferLength'
 ]
 
 /**

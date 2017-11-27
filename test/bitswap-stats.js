@@ -127,6 +127,7 @@ describe('bitswap stats', () => {
       expect(stats.dupDataReceived.eq(0)).to.be.true()
       expect(stats.blocksSent.eq(0)).to.be.true()
       expect(stats.dataSent.eq(0)).to.be.true()
+      expect(stats.providesBufferLength.eq(0)).to.be.true()
 
       // test moving averages
       const movingAverages = bs.stat().movingAverages
@@ -167,6 +168,7 @@ describe('bitswap stats', () => {
       expect(stats.dupDataReceived.eq(96)).to.be.true()
       expect(stats.blocksSent.eq(0)).to.be.true()
       expect(stats.dataSent.eq(0)).to.be.true()
+      expect(stats.providesBufferLength.eq(0)).to.be.true()
       done()
     })
 
@@ -222,6 +224,7 @@ describe('bitswap stats', () => {
         expect(stats.dupDataReceived.eq(96)).to.be.true()
         expect(stats.blocksSent.eq(1)).to.be.true()
         expect(stats.dataSent.eq(48)).to.be.true()
+        expect(stats.providesBufferLength.eq(0)).to.be.true()
         done()
       })
 
