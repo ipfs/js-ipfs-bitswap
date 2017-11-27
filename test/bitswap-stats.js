@@ -18,6 +18,21 @@ const createTempRepo = require('./utils/create-temp-repo-nodejs')
 const createLibp2pNode = require('./utils/create-libp2p-node')
 const makeBlock = require('./utils/make-block')
 
+const expectedStats = [
+  'blocksReceived',
+  'dataReceived',
+  'dupBlksReceived',
+  'dupDataReceived',
+  'blocksSent',
+  'dataSent'
+]
+
+const expectedTimeWindows = [
+  1000 * 60,
+  1000 * 60 * 5,
+  1000 * 60 * 15
+]
+
 describe('bitswap stats', () => {
   const nodes = [0, 1]
   let libp2pNodes
@@ -83,13 +98,24 @@ describe('bitswap stats', () => {
   after((done) => each(libp2pNodes, (n, cb) => n.stop(cb), done))
 
   it('has initial stats', () => {
-    const stats = bs.stat().snapshot
-    expect(stats.blocksReceived.eq(0)).to.be.true()
-    expect(stats.dataReceived.eq(0)).to.be.true()
-    expect(stats.dupBlksReceived.eq(0)).to.be.true()
-    expect(stats.dupDataReceived.eq(0)).to.be.true()
-    expect(stats.blocksSent.eq(0)).to.be.true()
-    expect(stats.dataSent.eq(0)).to.be.true()
+    const stats = bs.stat()
+    const snapshot = stats.snapshot
+
+    expectedStats.forEach((key) => {
+      expect(snapshot).to.have.property(key)
+      expect(snapshot[key].eq(0)).to.be.true()
+    })
+
+    const movingAverages = stats.movingAverages
+    expectedStats.forEach((key) => {
+      expectedTimeWindows.forEach((timeWindow) => {
+        expect(movingAverages).to.have.property(key)
+        expect(stats.movingAverages[key]).to.have.property(timeWindow)
+        const ma = stats.movingAverages[key][timeWindow]
+        expect(ma.movingAverage()).to.eql(0)
+        expect(ma.variance()).to.eql(0)
+      })
+    })
   })
 
   it('updates blocks received', (done) => {
@@ -101,6 +127,24 @@ describe('bitswap stats', () => {
       expect(stats.dupDataReceived.eq(0)).to.be.true()
       expect(stats.blocksSent.eq(0)).to.be.true()
       expect(stats.dataSent.eq(0)).to.be.true()
+
+      // test moving averages
+      const movingAverages = bs.stat().movingAverages
+      const blocksReceivedMA = movingAverages.blocksReceived
+      expectedTimeWindows.forEach((timeWindow) => {
+        expect(blocksReceivedMA).to.have.property(timeWindow)
+        const ma = blocksReceivedMA[timeWindow]
+        expect(ma.movingAverage()).to.be.above(0)
+        expect(ma.variance()).to.be.above(0)
+      })
+
+      const dataReceivedMA = movingAverages.dataReceived
+      expectedTimeWindows.forEach((timeWindow) => {
+        expect(dataReceivedMA).to.have.property(timeWindow)
+        const ma = dataReceivedMA[timeWindow]
+        expect(ma.movingAverage()).to.be.above(0)
+        expect(ma.variance()).to.be.above(0)
+      })
       done()
     })
 
