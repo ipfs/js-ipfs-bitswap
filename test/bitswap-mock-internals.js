@@ -24,7 +24,9 @@ const storeHasBlocks = require('./utils/store-has-blocks')
 const makeBlock = require('./utils/make-block')
 const orderedFinish = require('./utils/helpers').orderedFinish
 
-describe('bitswap with mocks', () => {
+describe('bitswap with mocks', function () {
+  this.timeout(10 * 1000)
+
   let repo
   let blocks
   let ids
