@@ -48,6 +48,8 @@
     "libp2p-secio": "~0.8.1",
     "libp2p-tcp": "~0.11.1",
     "lodash": "^4.17.4",
+    "lodash.range": "^3.2.0",
+    "lodash.without": "^4.4.0",
     "multiaddr": "^3.0.1",
     "ncp": "^2.0.0",
     "peer-book": "~0.5.1",
