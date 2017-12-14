@@ -16,12 +16,17 @@ describe('swarms', () => {
     distributionTest(10, 2, done)
   })
 
+  test.only('50 nodes, 2 blocks', function (done) {
+    this.timeout(300 * 1000)
+    distributionTest(50, 2, done)
+  })
+
   test.skip('100 nodes, 2 blocks', function (done) {
     this.timeout(300 * 1000)
     distributionTest(100, 2, done)
   })
 
-  test.skip('10 nodes, 100 blocks', function (done) {
+  test.only('10 nodes, 100 blocks', function (done) {
     this.timeout(300 * 1000)
     distributionTest(10, 100, done)
   })
