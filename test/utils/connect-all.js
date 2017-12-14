@@ -1,11 +1,11 @@
 'use strict'
 
-const each = require('async/each')
+const eachSeries = require('async/each')
 const without = require('lodash.without')
 
 module.exports = (nodes, callback) => {
-  each(nodes, (node, cb) => {
-    each(
+  eachSeries(nodes, (node, cb) => {
+    eachSeries(
       without(nodes, node),
       (otherNode, cb) => {
         node.libp2pNode.dial(otherNode.bitswap.peerInfo, cb)
