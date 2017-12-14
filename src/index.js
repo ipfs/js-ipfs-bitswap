@@ -260,9 +260,7 @@ class Bitswap {
           }
         ],
         cb)
-    }, (err, results) => {
-      callback(err, results)
-    })
+    }, callback)
   }
 
   // removes the given cids from the wantlist independent of any ref counts
