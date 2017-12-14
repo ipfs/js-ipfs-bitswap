@@ -151,6 +151,16 @@ describe('bitswap with mocks', function () {
   })
 
   describe('get', () => {
+
+    it('fails on requesting empty block', (done) => {
+      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      bs.get(null, (err, res) => {
+        expect(err).to.exist()
+        expect(err.message).to.equal('Not a valid cid')
+        done()
+      })
+    })
+
     it('block exists locally', (done) => {
       const block = blocks[4]
 
