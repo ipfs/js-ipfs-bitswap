@@ -49,7 +49,9 @@ describe('bitswap with mocks', function () {
     })
   })
 
-  after((done) => repo.teardown(done))
+  after((done) => {
+    repo.teardown(done)
+  })
 
   describe('receive message', () => {
     it('simple block message', (done) => {
@@ -334,30 +336,25 @@ describe('bitswap with mocks', function () {
     })
 
     it('double get', (done) => {
-      const finish = orderedFinish(2, done)
-      const block = blocks[9]
+      const block = blocks[11]
+
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
-      const net = mockNetwork()
 
-      bs.network = net
-      bs.wm.network = net
-      bs.engine.network = net
-      bs.start((err) => {
-        expect(err).to.not.exist()
-
-        parallel([
+      parallel(
+        [
           (cb) => bs.get(block.cid, cb),
           (cb) => bs.get(block.cid, cb)
-        ], (err, results) => {
+        ],
+        (err, res) => {
           expect(err).to.not.exist()
-          expect(res).to.eql(block)
-          finish(2)
-        })
+          expect(res[0]).to.eql(block)
+          expect(res[1]).to.eql(block)
+          done()
+        }
+      )
 
-        setTimeout(() => {
-          finish(1)
-          bs.put(block, () => {})
-        }, 200)
+      bs.put(block, (err) => {
+        expect(err).to.not.exist()
       })
     })
   })
@@ -367,7 +364,7 @@ describe('bitswap with mocks', function () {
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
       bs.start((err) => {
         expect(err).to.not.exist()
-        const b = blocks[11]
+        const b = blocks[12]
 
         let counter = 0
         const check = (err, res) => {
