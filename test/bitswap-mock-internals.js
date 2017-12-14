@@ -332,6 +332,34 @@ describe('bitswap with mocks', function () {
         ], done)
       })
     })
+
+    it('double get', (done) => {
+      const finish = orderedFinish(2, done)
+      const block = blocks[9]
+      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const net = mockNetwork()
+
+      bs.network = net
+      bs.wm.network = net
+      bs.engine.network = net
+      bs.start((err) => {
+        expect(err).to.not.exist()
+
+        parallel([
+          (cb) => bs.get(block.cid, cb),
+          (cb) => bs.get(block.cid, cb)
+        ], (err, results) => {
+          expect(err).to.not.exist()
+          expect(res).to.eql(block)
+          finish(2)
+        })
+
+        setTimeout(() => {
+          finish(1)
+          bs.put(block, () => {})
+        }, 200)
+      })
+    })
   })
 
   describe('unwant', () => {
