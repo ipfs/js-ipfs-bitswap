@@ -15,4 +15,14 @@ describe('swarms', () => {
     this.timeout(30 * 1000)
     distributionTest(10, 2, done)
   })
+
+  test.skip('100 nodes, 2 blocks', function (done) {
+    this.timeout(300 * 1000)
+    distributionTest(100, 2, done)
+  })
+
+  test.skip('10 nodes, 100 blocks', function (done) {
+    this.timeout(300 * 1000)
+    distributionTest(10, 100, done)
+  })
 })

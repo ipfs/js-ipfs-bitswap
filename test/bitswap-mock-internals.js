@@ -151,7 +151,6 @@ describe('bitswap with mocks', function () {
   })
 
   describe('get', () => {
-
     it('fails on requesting empty block', (done) => {
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
       bs.get(null, (err, res) => {
