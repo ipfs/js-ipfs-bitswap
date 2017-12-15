@@ -5,7 +5,6 @@ const reject = require('async/reject')
 const each = require('async/each')
 const series = require('async/series')
 const map = require('async/map')
-const once = require('once')
 
 const WantManager = require('./want-manager')
 const Network = require('./network')
@@ -211,78 +210,57 @@ class Bitswap {
    * @returns {void}
    */
   getMany (cids, callback) {
-    const retrieved = []
-    const locals = []
-    const missing = []
-    const canceled = []
+    let pendingStart = cids.length
+    const wantList = []
+    let promptedNetwork = false
 
-    const finish = once(() => {
-      map(locals, (cid, cb) => {
-        this.blockstore.get(cid, cb)
-      }, (err, localBlocks) => {
-        if (err) {
-          return callback(err)
+    const getFromOutside = (cid, cb) => {
+      wantList.push(cid)
+
+      this.notifications.wantBlock(
+        cid,
+        // called on block receive
+        (block) => {
+          this.wm.cancelWants([cid])
+          cb(null, block)
+        },
+        // called on unwant
+        () => {
+          this.wm.cancelWants([cid])
+          cb(null, undefined)
         }
+      )
 
-        callback(null, localBlocks.concat(retrieved))
-      })
-    })
-
-    this._log('getMany', cids.length)
-
-    const addListeners = (cids) => {
-      cids.forEach((cid) => {
-        this.notifications.wantBlock(
-          cid,
-          // called on block receive
-          (block) => {
-            this.wm.cancelWants([cid])
-            retrieved.push(block)
-
-            if (retrieved.length === missing.length) {
-              finish()
-            }
-          },
-          // called on unwant
-          () => {
-            this.wm.cancelWants([cid])
-            canceled.push(cid)
-            if (canceled.length + retrieved.length === missing.length) {
-              finish()
-            }
-          }
-        )
-      })
+      if (!pendingStart) {
+        this.wm.wantBlocks(wantList)
+      }
     }
 
-    each(cids, (cid, cb) => {
-      this.blockstore.has(cid, (err, has) => {
-        if (err) {
-          return cb(err)
-        }
+    map(cids, (cid, cb) => {
+      waterfall(
+        [
+          (cb) => this.blockstore.has(cid, cb),
+          (has, cb) => {
+            pendingStart--
+            if (has) {
+              return this.blockstore.get(cid, cb)
+            }
 
-        if (has) {
-          locals.push(cid)
-        } else {
-          missing.push(cid)
-        }
-        cb()
-      })
-    }, () => {
-      if (missing.length === 0) {
-        // already finished
-        finish()
-      }
+            if (!promptedNetwork) {
+              promptedNetwork = true
+              this.network.findAndConnect(cids[0], (err) => {
+                if (err) {
+                  this._log.error(err)
+                }
+              })
+            }
 
-      addListeners(missing)
-      this.wm.wantBlocks(missing)
-
-      this.network.findAndConnect(cids[0], (err) => {
-        if (err) {
-          this._log.error(err)
-        }
-      })
-    })
+            // we don't have the block here
+            getFromOutside(cid, cb)
+          }
+        ],
+        cb)
+    }, callback)
   }
 
   // removes the given cids from the wantlist independent of any ref counts

@@ -49,7 +49,9 @@ describe('bitswap with mocks', function () {
     })
   })
 
-  after((done) => repo.teardown(done))
+  after((done) => {
+    repo.teardown(done)
+  })
 
   describe('receive message', () => {
     it('simple block message', (done) => {
@@ -151,6 +153,15 @@ describe('bitswap with mocks', function () {
   })
 
   describe('get', () => {
+    it('fails on requesting empty block', (done) => {
+      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      bs.get(null, (err, res) => {
+        expect(err).to.exist()
+        expect(err.message).to.equal('Not a valid cid')
+        done()
+      })
+    })
+
     it('block exists locally', (done) => {
       const block = blocks[4]
 
@@ -323,6 +334,29 @@ describe('bitswap with mocks', function () {
         ], done)
       })
     })
+
+    it('double get', (done) => {
+      const block = blocks[11]
+
+      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+
+      parallel(
+        [
+          (cb) => bs.get(block.cid, cb),
+          (cb) => bs.get(block.cid, cb)
+        ],
+        (err, res) => {
+          expect(err).to.not.exist()
+          expect(res[0]).to.eql(block)
+          expect(res[1]).to.eql(block)
+          done()
+        }
+      )
+
+      bs.put(block, (err) => {
+        expect(err).to.not.exist()
+      })
+    })
   })
 
   describe('unwant', () => {
@@ -330,7 +364,7 @@ describe('bitswap with mocks', function () {
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
       bs.start((err) => {
         expect(err).to.not.exist()
-        const b = blocks[11]
+        const b = blocks[12]
 
         let counter = 0
         const check = (err, res) => {
