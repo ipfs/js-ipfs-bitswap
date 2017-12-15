@@ -1,3 +1,13 @@
+<a name="0.18.0"></a>
+# [0.18.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.17.4...v0.18.0) (2017-12-15)
+
+
+### Features
+
+* stats improvements ([#158](https://github.com/ipfs/js-ipfs-bitswap/issues/158)) ([17e15d0](https://github.com/ipfs/js-ipfs-bitswap/commit/17e15d0))
+
+
+
 <a name="0.17.4"></a>
 ## [0.17.4](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.17.3...v0.17.4) (2017-11-10)
 
