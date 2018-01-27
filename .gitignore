@@ -36,3 +36,5 @@ test/test-repo-for*
 docs
 
 test/test-repo/datastore
+
+*.flamegraph
