@@ -16,3 +16,16 @@ exports.orderedFinish = (n, callback) => {
     }
   }
 }
+
+exports.countToFinish = (n, callback) => {
+  let pending = n
+
+  return () => {
+    pending--
+    if (pending === 0) {
+      callback()
+    } else if (pending < 0) {
+      callback(new Error('too many finishes, expected only ' + n))
+    }
+  }
+}

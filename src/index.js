@@ -243,6 +243,9 @@ class Bitswap {
           (has, cb) => {
             pendingStart--
             if (has) {
+              if (!pendingStart) {
+                this.wm.wantBlocks(wantList)
+              }
               return this.blockstore.get(cid, cb)
             }
 

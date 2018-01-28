@@ -17,7 +17,7 @@ const Bitswap = require('../src')
 const createTempRepo = require('./utils/create-temp-repo-nodejs')
 const createLibp2pNode = require('./utils/create-libp2p-node')
 const makeBlock = require('./utils/make-block')
-const orderedFinish = require('./utils/helpers').orderedFinish
+const countToFinish = require('./utils/helpers').countToFinish
 
 const expectedStats = [
   'blocksReceived',
@@ -220,7 +220,7 @@ describe('bitswap stats', () => {
     })
 
     it('updates stats on transfer', (done) => {
-      const finish = orderedFinish(2, done)
+      const finish = countToFinish(2, done)
       bs.stat().once('update', (stats) => {
         expect(stats.blocksReceived.eq(4)).to.be.true()
         expect(stats.dataReceived.eq(192)).to.be.true()
@@ -231,13 +231,13 @@ describe('bitswap stats', () => {
         expect(stats.providesBufferLength.eq(0)).to.be.true()
         expect(stats.wantListLength.eq(0)).to.be.true()
         expect(stats.peerCount.eq(2)).to.be.true()
-        finish(2)
+        finish()
       })
 
       bs2.get(block.cid, (err, block) => {
         expect(err).to.not.exist()
         expect(block).to.exist()
-        finish(1)
+        finish()
       })
     })
   })
