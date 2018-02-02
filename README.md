@@ -54,6 +54,77 @@ Loading this module through a script tag will make the `IpfsBitswap` object avai
 
 See https://ipfs.github.io/js-ipfs-bitswap
 
+### Stats
+
+```js
+const bitswapNode = // ...
+
+const stats = bitswapNode.stat()
+```
+
+Stats contains a snapshot accessor and a moving average acessor
+
+#### Snapshot accessor:
+
+```js
+const snapshot = stats.snapshot
+console.log('stats: %j', snapshot)
+```
+
+the snapshot will contain the following keys, with the values being [Big.js](https://github.com/MikeMcl/big.js#readme) instances:
+
+```js
+// stats: {
+//   "dataReceived":"96",
+//   "blocksReceived":"2",
+//   "dataReceived":"96",
+//   "dupBlksReceived":"0",
+//   "dupDataReceived":"0",
+//   "blocksSent":"0",
+//   "dataSent":"0",
+//   "providesBufferLength":"0",
+//   "wantListLength":"0",
+//   "peerCount":"1"
+// }
+```
+
+#### Moving average accessor:
+
+```js
+const movingAverages = stats.movingAverages
+```
+
+This object contains these properties:
+
+* 'blocksReceived',
+* 'dataReceived',
+* 'dupBlksReceived',
+* 'dupDataReceived',
+* 'blocksSent',
+* 'dataSent',
+* 'providesBufferLength',
+* 'wantListLength',
+* 'peerCount'
+
+```js
+const dataReceivedMovingAverages = movingAverages.dataReceived
+```
+
+Each one of these will contain one key per interval (miliseconds), being the default intervals defined:
+
+* 60000 (1 minute)
+* 300000 (5 minutes)
+* 900000 (15 minutes)
+
+You can then select one of them
+
+```js
+const oneMinuteDataReceivedMovingAverages = dataReceivedMovingAverages[60000]
+```
+
+This object will be a [movingAverage](https://github.com/pgte/moving-average#readme) instance.
+
+
 ## Development
 
 ### Structure
