@@ -4,27 +4,9 @@ const EventEmitter = require('events')
 const Big = require('big.js')
 const MovingAverage = require('moving-average')
 
-const defaultOptions = {
-  movingAverageIntervals: [
-    60 * 1000, // 1 minute
-    5 * 60 * 1000, // 5 minutes
-    15 * 60 * 1000 // 15 minutes
-  ]
-}
-
 class Stats extends EventEmitter {
-  constructor (initialCounters, _options) {
+  constructor (initialCounters, options) {
     super()
-
-    const options = Object.assign({}, defaultOptions, _options)
-
-    if (typeof options.computeThrottleTimeout !== 'number') {
-      throw new Error('need computeThrottleTimeout')
-    }
-
-    if (typeof options.computeThrottleMaxQueueSize !== 'number') {
-      throw new Error('need computeThrottleMaxQueueSize')
-    }
 
     this._options = options
     this._queue = []
@@ -54,6 +36,12 @@ class Stats extends EventEmitter {
 
   disable () {
     this._disabled = true
+  }
+
+  stop () {
+    if (this._timeout) {
+      clearTimeout(this._timeout)
+    }
   }
 
   get snapshot () {

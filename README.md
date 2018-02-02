@@ -62,9 +62,27 @@ const bitswapNode = // ...
 const stats = bitswapNode.stat()
 ```
 
-Stats contains a snapshot accessor and a moving average acessor
+Stats contains a snapshot accessor, a moving average acessor and a peer accessor.
 
-#### Snapshot accessor:
+Besides that, it emits "update" events every time it is updated.
+
+```js
+stats.on('update', (stats) => {
+  console.log('latest stats snapshot: %j', stats)
+})
+```
+
+#### Peer accessor:
+
+You can get the stats for a specific peer by doing:
+
+```js
+const peerStats = stats.forPeer(peerId)
+```
+
+The returned object behaves like the root stats accessor (has a snapshot, a moving average accessors and is an event emitter).
+
+#### Global snapshot accessor:
 
 ```js
 const snapshot = stats.snapshot
@@ -123,7 +141,6 @@ const oneMinuteDataReceivedMovingAverages = dataReceivedMovingAverages[60000]
 ```
 
 This object will be a [movingAverage](https://github.com/pgte/moving-average#readme) instance.
-
 
 ## Development
 

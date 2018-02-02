@@ -106,7 +106,7 @@ class Bitswap {
     waterfall([
       (cb) => this.blockstore.has(block.cid, cb),
       (has, cb) => {
-        this._updateReceiveCounters(block, has)
+        this._updateReceiveCounters(peerId.toB58String(), block, has)
         if (has) {
           return cb()
         }
@@ -116,13 +116,13 @@ class Bitswap {
     ], callback)
   }
 
-  _updateReceiveCounters (block, exists) {
-    this._stats.push('blocksReceived', 1)
-    this._stats.push('dataReceived', block.data.length)
+  _updateReceiveCounters (peerId, block, exists) {
+    this._stats.push(peerId, 'blocksReceived', 1)
+    this._stats.push(peerId, 'dataReceived', block.data.length)
 
     if (exists) {
-      this._stats.push('dupBlksReceived', 1)
-      this._stats.push('dupDataReceived', block.data.length)
+      this._stats.push(peerId, 'dupBlksReceived', 1)
+      this._stats.push(peerId, 'dupDataReceived', block.data.length)
     }
   }
 
@@ -140,6 +140,7 @@ class Bitswap {
   _onPeerDisconnected (peerId) {
     this.wm.disconnected(peerId)
     this.engine.peerDisconnected(peerId)
+    this._stats.disconnected(peerId)
   }
 
   _putBlock (block, callback) {
@@ -389,6 +390,7 @@ class Bitswap {
    * @returns {void}
    */
   stop (callback) {
+    this._stats.stop()
     series([
       (cb) => this.wm.stop(cb),
       (cb) => this.network.stop(cb),
