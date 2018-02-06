@@ -171,6 +171,35 @@ src
         └── index.js
 ```
 
+## Performance tests
+
+You can run performance tests like this:
+
+```
+$ npm run benchmarks
+```
+
+### Profiling
+
+You can run each of the individual performance tests with a profiler like 0x.
+
+To do that, you need to install 0x:
+
+```bash
+$ npm install 0x --global
+```
+
+And then run the test:
+
+```bash
+$ 0x test/benchmarks/get-many
+```
+
+This will output a flame graph and print the location for it.
+Use the browser Chrome to open and inspect the generated graph.
+
+![Flame graph](https://ipfs.io/ipfs/QmVbyLgYfkLewNtzTAFwAEMmP2hTJgs8sSqsRTBNBjyQ1y)
+
 ## Contribute
 
 Feel free to join in. All welcome. Open an [issue](https://github.com/ipfs/js-ipfs-bitswap/issues)!
