@@ -269,7 +269,7 @@ class DecisionEngine {
 
     this.ledgerMap.set(peerIdStr, l)
     if (this._stats) {
-      this._stats.push('peerCount', 1)
+      this._stats.push(peerIdStr, 'peerCount', 1)
     }
 
     return l

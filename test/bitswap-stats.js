@@ -240,5 +240,27 @@ describe('bitswap stats', () => {
         finish()
       })
     })
+
+    it('has peer stats', (done) => {
+      const peerIds = libp2pNodes.map((node) => node.peerInfo.id.toB58String())
+      const peerStats = bs2.stat().forPeer(peerIds[0])
+      peerStats.once('update', (stats) => {
+        expect(stats.blocksReceived.eq(1)).to.be.true()
+        expect(stats.dataReceived.eq(48)).to.be.true()
+        expect(stats.dupBlksReceived.eq(0)).to.be.true()
+        expect(stats.dupDataReceived.eq(0)).to.be.true()
+        expect(stats.blocksSent.eq(0)).to.be.true()
+        expect(stats.dataSent.eq(0)).to.be.true()
+        expect(stats.providesBufferLength.eq(0)).to.be.true()
+        expect(stats.wantListLength.eq(0)).to.be.true()
+        expect(stats.peerCount.eq(1)).to.be.true()
+
+        const ma = peerStats.movingAverages.dataReceived[60000]
+        expect(ma.movingAverage()).to.be.above(0)
+        expect(ma.variance()).to.be.above(0)
+
+        done()
+      })
+    })
   })
 })

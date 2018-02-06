@@ -23,7 +23,7 @@ class Wantlist {
     } else {
       this.set.set(cidStr, new Entry(cid, priority))
       if (this._stats) {
-        this._stats.push('wantListSize', 1)
+        this._stats.push(null, 'wantListSize', 1)
       }
     }
   }
@@ -45,7 +45,7 @@ class Wantlist {
 
     this.set.delete(cidStr)
     if (this._stats) {
-      this._stats.push('wantListSize', -1)
+      this._stats.push(null, 'wantListSize', -1)
     }
   }
 

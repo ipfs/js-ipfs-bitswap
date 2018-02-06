@@ -54,6 +54,94 @@ Loading this module through a script tag will make the `IpfsBitswap` object avai
 
 See https://ipfs.github.io/js-ipfs-bitswap
 
+### Stats
+
+```js
+const bitswapNode = // ...
+
+const stats = bitswapNode.stat()
+```
+
+Stats contains a snapshot accessor, a moving average acessor and a peer accessor.
+
+Besides that, it emits "update" events every time it is updated.
+
+```js
+stats.on('update', (stats) => {
+  console.log('latest stats snapshot: %j', stats)
+})
+```
+
+#### Peer accessor:
+
+You can get the stats for a specific peer by doing:
+
+```js
+const peerStats = stats.forPeer(peerId)
+```
+
+The returned object behaves like the root stats accessor (has a snapshot, a moving average accessors and is an event emitter).
+
+#### Global snapshot accessor:
+
+```js
+const snapshot = stats.snapshot
+console.log('stats: %j', snapshot)
+```
+
+the snapshot will contain the following keys, with the values being [Big.js](https://github.com/MikeMcl/big.js#readme) instances:
+
+```js
+// stats: {
+//   "dataReceived":"96",
+//   "blocksReceived":"2",
+//   "dataReceived":"96",
+//   "dupBlksReceived":"0",
+//   "dupDataReceived":"0",
+//   "blocksSent":"0",
+//   "dataSent":"0",
+//   "providesBufferLength":"0",
+//   "wantListLength":"0",
+//   "peerCount":"1"
+// }
+```
+
+#### Moving average accessor:
+
+```js
+const movingAverages = stats.movingAverages
+```
+
+This object contains these properties:
+
+* 'blocksReceived',
+* 'dataReceived',
+* 'dupBlksReceived',
+* 'dupDataReceived',
+* 'blocksSent',
+* 'dataSent',
+* 'providesBufferLength',
+* 'wantListLength',
+* 'peerCount'
+
+```js
+const dataReceivedMovingAverages = movingAverages.dataReceived
+```
+
+Each one of these will contain one key per interval (miliseconds), being the default intervals defined:
+
+* 60000 (1 minute)
+* 300000 (5 minutes)
+* 900000 (15 minutes)
+
+You can then select one of them
+
+```js
+const oneMinuteDataReceivedMovingAverages = dataReceivedMovingAverages[60000]
+```
+
+This object will be a [movingAverage](https://github.com/pgte/moving-average#readme) instance.
+
 ## Development
 
 ### Structure

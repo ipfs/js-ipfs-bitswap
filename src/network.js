@@ -150,7 +150,7 @@ class Network {
         }
       })
       callback()
-      this._updateSentStats(msg.blocks)
+      this._updateSentStats(peer, msg.blocks)
     })
   }
 
@@ -179,10 +179,11 @@ class Network {
     })
   }
 
-  _updateSentStats (blocks) {
+  _updateSentStats (peer, blocks) {
+    const peerId = peer.toB58String()
     if (this._stats) {
-      blocks.forEach((block) => this._stats.push('dataSent', block.data.length))
-      this._stats.push('blocksSent', blocks.size)
+      blocks.forEach((block) => this._stats.push(peerId, 'dataSent', block.data.length))
+      this._stats.push(peerId, 'blocksSent', blocks.size)
     }
   }
 }
