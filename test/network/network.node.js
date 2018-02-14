@@ -186,7 +186,7 @@ describe('network', () => {
       expect(err).to.not.exist()
     }
 
-    p2pA.dial(p2pB.peerInfo, '/ipfs/bitswap/1.0.0', (err, conn) => {
+    p2pA.dialProtocol(p2pB.peerInfo, '/ipfs/bitswap/1.0.0', (err, conn) => {
       expect(err).to.not.exist()
 
       pull(
@@ -219,7 +219,7 @@ describe('network', () => {
       expect(err).to.not.exist()
     }
 
-    p2pA.dial(p2pB.peerInfo, '/ipfs/bitswap/1.1.0', (err, conn) => {
+    p2pA.dialProtocol(p2pB.peerInfo, '/ipfs/bitswap/1.1.0', (err, conn) => {
       expect(err).to.not.exist()
 
       pull(

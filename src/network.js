@@ -163,10 +163,10 @@ class Network {
   // Dial to the peer and try to use the most recent Bitswap
   _dialPeer (peer, callback) {
     // Attempt Bitswap 1.1.0
-    this.libp2p.dial(peer, BITSWAP110, (err, conn) => {
+    this.libp2p.dialProtocol(peer, BITSWAP110, (err, conn) => {
       if (err) {
         // Attempt Bitswap 1.0.0
-        this.libp2p.dial(peer, BITSWAP100, (err, conn) => {
+        this.libp2p.dialProtocol(peer, BITSWAP100, (err, conn) => {
           if (err) { return callback(err) }
 
           callback(null, conn, BITSWAP100)
