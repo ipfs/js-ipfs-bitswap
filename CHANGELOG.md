@@ -1,3 +1,13 @@
+<a name="0.19.0"></a>
+# [0.19.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.18.1...v0.19.0) (2018-02-14)
+
+
+### Features
+
+* update network calls to use dialProtocol instead ([b669aac](https://github.com/ipfs/js-ipfs-bitswap/commit/b669aac))
+
+
+
 <a name="0.18.1"></a>
 ## [0.18.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.18.0...v0.18.1) (2018-02-06)
 
