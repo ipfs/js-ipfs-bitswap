@@ -6,7 +6,7 @@ const stats = require('stats-lite')
 const distributionTest = require('./utils/distribution-test')
 const test = it
 
-describe('swarms', () => {
+describe.skip('swarms', () => {
   const print = Boolean(process.env.PRINT)
 
   after(() => {
@@ -15,26 +15,31 @@ describe('swarms', () => {
 
   test('2 nodes, 2 blocks', function (done) {
     this.timeout(10 * 1000)
+
     maybePrint('2 nodes, 2 blocks', distributionTest(2, 2, done))
   })
 
   test('10 nodes, 2 blocks', function (done) {
     this.timeout(30 * 1000)
+
     maybePrint('10 nodes, 2 blocks', distributionTest(10, 2, done))
   })
 
-  test.only('10 nodes, 10 blocks', function (done) {
+  test('10 nodes, 10 blocks', function (done) {
     this.timeout(30 * 1000)
+
     maybePrint('10 nodes, 10 blocks', distributionTest(10, 10, 1, done))
   })
 
   test('10 nodes, 20 blocks', function (done) {
     this.timeout(30 * 1000)
+
     maybePrint('10 nodes, 20 blocks', distributionTest(10, 20, done))
   })
 
   test('50 nodes, 2 blocks', function (done) {
     this.timeout(600 * 1000)
+
     maybePrint('50 nodes, 2 blocks', distributionTest(50, 2, done))
   })
 
