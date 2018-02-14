@@ -32,7 +32,10 @@ exports.mockLibp2pNode = () => {
       findProviders: (cid, timeout, callback) => callback(null, [])
     },
     on () {},
-    dial (peer, protocol, callback) {
+    dial (peer, callback) {
+      setImmediate(() => callback())
+    },
+    dialProtocol (peer, protocol, callback) {
       setImmediate(() => callback())
     },
     swarm: {

@@ -8,13 +8,12 @@ const expect = chai.expect
 const protons = require('protons')
 const map = require('async/map')
 const CID = require('cids')
-const isNode = require('detect-node')
 const _ = require('lodash')
 const Buffer = require('safe-buffer').Buffer
 const loadFixture = require('aegir/fixtures')
-const testDataPath = (isNode ? '../' : '') + 'fixtures/serialized-from-go'
-const rawMessageFullWantlist = loadFixture(__dirname, testDataPath + '/bitswap110-message-full-wantlist')
-const rawMessageOneBlock = loadFixture(__dirname, testDataPath + '/bitswap110-message-one-block')
+const testDataPath = 'test/fixtures/serialized-from-go'
+const rawMessageFullWantlist = loadFixture(testDataPath + '/bitswap110-message-full-wantlist')
+const rawMessageOneBlock = loadFixture(testDataPath + '/bitswap110-message-one-block')
 
 const pbm = protons(require('../../src/types/message/message.proto'))
 
