@@ -1,5 +1,7 @@
 'use strict'
 
+/* eslint-disable no-console */
+
 const stats = require('stats-lite')
 
 module.exports = (suite, emitter) => {

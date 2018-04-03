@@ -148,7 +148,12 @@ BitswapMessage.deserialize = (raw, callback) => {
   if (decoded.wantlist) {
     decoded.wantlist.entries.forEach((entry) => {
       // note: entry.block is the CID here
-      const cid = new CID(entry.block)
+      let cid
+      try {
+        cid = new CID(entry.block)
+      } catch (err) {
+        return callback(err)
+      }
       msg.addEntry(cid, entry.priority, entry.cancel)
     })
   }
@@ -161,7 +166,12 @@ BitswapMessage.deserialize = (raw, callback) => {
         if (err) {
           return cb(err)
         }
-        const cid = new CID(hash)
+        let cid
+        try {
+          cid = new CID(hash)
+        } catch (err) {
+          return callback(err)
+        }
         msg.addBlock(new Block(b, cid))
         cb()
       })
@@ -189,7 +199,12 @@ BitswapMessage.deserialize = (raw, callback) => {
           return cb(err)
         }
 
-        const cid = new CID(cidVersion, codecName[multicodec.toString('16')], hash)
+        let cid
+        try {
+          cid = new CID(cidVersion, codecName[multicodec.toString('16')], hash)
+        } catch (err) {
+          return callback(err)
+        }
 
         msg.addBlock(new Block(p.data, cid))
         cb()

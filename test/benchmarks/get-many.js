@@ -1,5 +1,7 @@
 'use strict'
 
+/* eslint-disable no-console */
+
 const distributionTest = require('../utils/distribution-test')
 const print = require('./helpers/print-swarm-results')
 
