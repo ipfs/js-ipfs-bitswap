@@ -56,7 +56,6 @@
     "peer-book": "~0.7.0",
     "peer-id": "~0.10.7",
     "peer-info": "~0.14.1",
-    "pre-commit": "^1.2.2",
     "rimraf": "^2.6.2",
     "safe-buffer": "^5.1.1",
     "stats-lite": "^2.1.0"
@@ -87,7 +86,7 @@
     "safe-buffer": "^5.1.1",
     "varint-decoder": "^0.1.1"
   },
-  "pre-commit": [
+  "pre-push": [
     "lint",
     "test"
   ],
