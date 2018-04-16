@@ -8,8 +8,8 @@
     "./test/utils/create-temp-repo-nodejs.js": "./test/utils/create-temp-repo-browser.js"
   },
   "scripts": {
-    "test": "aegir test -t node -t browser",
-    "test:browser": "aegir test -t browser",
+    "test": "aegir test",
+    "test:browser": "aegir test -t browser -t webworker",
     "test:node": "aegir test -t node",
     "lint": "aegir lint",
     "release": "aegir release",
