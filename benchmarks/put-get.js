@@ -1,4 +1,5 @@
 /* eslint max-nested-callbacks: ["error", 8] */
+/* eslint-disable no-console */
 'use strict'
 
 const Benchmark = require('benchmark')

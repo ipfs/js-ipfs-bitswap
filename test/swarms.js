@@ -1,6 +1,7 @@
 'use strict'
 
 /* eslint-env mocha */
+/* eslint-disable no-console */
 
 const stats = require('stats-lite')
 const distributionTest = require('./utils/distribution-test')
