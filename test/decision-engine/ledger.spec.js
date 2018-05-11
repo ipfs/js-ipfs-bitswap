@@ -38,5 +38,7 @@ describe('Ledger', () => {
         bytesSent: 100 + 12000,
         bytesRecv: 223432 + 2333
       })
+    expect(ledger.debtRatio())
+      .to.eql((100 + 12000) / (223432 + 2333 + 1))
   })
 })
