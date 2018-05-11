@@ -39,6 +39,10 @@ class Ledger {
   wantlistContains (cid) {
     return this.wantlist.contains(cid)
   }
+
+  debtRatio () {
+    return (this.accounting.bytesSent / (this.accounting.bytesRecv + 1)) // +1 is to prevent division by zero
+  }
 }
 
 module.exports = Ledger
