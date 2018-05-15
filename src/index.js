@@ -180,6 +180,16 @@ class Bitswap {
   }
 
   /**
+   * Return ledger information for a given `peerId`
+   *
+   * @param {PeerId} peerId
+   * @returns {?Object}
+   */
+  ledgerForPeer (peerId) {
+    return this.engine.ledgerForPeer(peerId)
+  }
+
+  /**
    * Fetch a given block by cid. If the block is in the local
    * blockstore it is returned, otherwise the block is added to the wantlist and returned once another node sends it to us.
    *
