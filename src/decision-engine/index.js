@@ -135,6 +135,22 @@ class DecisionEngine {
     return this.ledgerMap.get(peerIdStr).wantlist.sortedEntries()
   }
 
+  ledgerForPeer (peerId) {
+    const peerIdStr = peerId.toB58String()
+
+    const ledger = this.ledgerMap.get(peerIdStr)
+    if (!ledger) {
+      return null
+    }
+    return {
+      peer: ledger.partner.toB58String(),
+      value: ledger.debtRatio(),
+      sent: ledger.accounting.bytesSent,
+      recv: ledger.accounting.bytesRecv,
+      exchanged: ledger.exchangeCount
+    }
+  }
+
   peers () {
     return Array.from(this.ledgerMap.values()).map((l) => l.partner)
   }

@@ -28,6 +28,8 @@ describe('Ledger', () => {
   })
 
   it('accounts', () => {
+    expect(ledger.debtRatio()).to.eql(0)
+
     ledger.sentBytes(100)
     ledger.sentBytes(12000)
     ledger.receivedBytes(223432)
