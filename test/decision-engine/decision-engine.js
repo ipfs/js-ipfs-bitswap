@@ -216,7 +216,11 @@ describe('Engine', () => {
     })
 
     const net = mockNetwork(5, (res) => {
-      expect(res.messages).to.have.length(5)
+      res.messages.forEach((message) => {
+        // The batch size is big enough to hold two blocks, so every
+        // message should contain two blocks
+        expect(message[1].blocks.size).to.eql(2)
+      })
       done()
     })
 

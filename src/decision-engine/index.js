@@ -59,6 +59,7 @@ class DecisionEngine {
       if (size >= MAX_MESSAGE_SIZE ||
           // need to ensure the last remaining items get sent
           outstanding === 0) {
+        size = 0
         const nextBatch = batch.slice()
         batch = []
         this._sendSafeBlocks(peer, nextBatch, (err) => {
