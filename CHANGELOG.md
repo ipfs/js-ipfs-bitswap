@@ -1,3 +1,14 @@
+<a name="0.20.1"></a>
+## [0.20.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.20.0...v0.20.1) (2018-05-28)
+
+
+### Bug Fixes
+
+* ipfs/js-ipfs[#1292](https://github.com/ipfs/js-ipfs-bitswap/issues/1292) - Catch invalid CIDs and return the error via callback ([#170](https://github.com/ipfs/js-ipfs-bitswap/issues/170)) ([51f5ce0](https://github.com/ipfs/js-ipfs-bitswap/commit/51f5ce0))
+* reset batch size counter ([739ad0d](https://github.com/ipfs/js-ipfs-bitswap/commit/739ad0d))
+
+
+
 <a name="0.20.0"></a>
 # [0.20.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.19.0...v0.20.0) (2018-04-10)
 
