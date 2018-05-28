@@ -14,6 +14,10 @@
 
 > JavaScript implementation of the Bitswap 'data exchange' protocol used by IPFS
 
+## Lead Maintainer
+
+[Volker Mische](https://github.com/vmx)
+
 ## Table of Contents
 
 - [Install](#install)
