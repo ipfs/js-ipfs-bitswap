@@ -2,6 +2,7 @@
   "name": "ipfs-bitswap",
   "version": "0.20.1",
   "description": "Node.js implementation of the Bitswap data exchange protocol used by IPFS",
+  "leadMaintainer": "Volker Mische <volker.mische@gmail.com>",
   "main": "src/index.js",
   "browser": {
     "./test/utils/create-libp2p-node": false,
@@ -31,7 +32,6 @@
     "p2p",
     "exchange"
   ],
-  "author": "Friedel Ziegelmayer <dignifiedquire@gmail.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/ipfs/js-ipfs-bitswap/issues"
