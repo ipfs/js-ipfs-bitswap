@@ -1,3 +1,20 @@
+<a name="0.20.2"></a>
+## [0.20.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.20.0...v0.20.2) (2018-06-18)
+
+
+### Bug Fixes
+
+* ipfs/js-ipfs[#1292](https://github.com/ipfs/js-ipfs-bitswap/issues/1292) - Catch invalid CIDs and return the error via callback ([#170](https://github.com/ipfs/js-ipfs-bitswap/issues/170)) ([51f5ce0](https://github.com/ipfs/js-ipfs-bitswap/commit/51f5ce0))
+* reset batch size counter ([739ad0d](https://github.com/ipfs/js-ipfs-bitswap/commit/739ad0d))
+
+
+### Features
+
+* add bitswap.ledgerForPeer ([871d0d2](https://github.com/ipfs/js-ipfs-bitswap/commit/871d0d2))
+* add ledger.debtRatio() ([e602810](https://github.com/ipfs/js-ipfs-bitswap/commit/e602810))
+
+
+
 <a name="0.20.1"></a>
 ## [0.20.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.20.0...v0.20.1) (2018-05-28)
 
