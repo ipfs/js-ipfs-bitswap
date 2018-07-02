@@ -78,7 +78,7 @@ describe('bitswap with mocks', function () {
             expect(blocks[1].data).to.eql(b2.data)
 
             const ledger = bs.ledgerForPeer(other)
-            expect(ledger.peer).to.equal(other.toB58String())
+            expect(ledger.peer).to.equal(other.toPrint())
             expect(ledger.value).to.equal(0)
             expect(ledger.sent).to.equal(0)
             expect(ledger.recv).to.equal(96)
