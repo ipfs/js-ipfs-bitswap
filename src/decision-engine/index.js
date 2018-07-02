@@ -143,11 +143,11 @@ class DecisionEngine {
       return null
     }
     return {
-      peer: ledger.partner.toB58String(),
-      value: ledger.debtRatio(),
-      sent: ledger.accounting.bytesSent,
-      recv: ledger.accounting.bytesRecv,
-      exchanged: ledger.exchangeCount
+      Peer: ledger.partner.toPrint(),
+      Value: ledger.debtRatio(),
+      Sent: ledger.accounting.bytesSent,
+      Recv: ledger.accounting.bytesRecv,
+      Exchanged: ledger.exchangeCount
     }
   }
 
