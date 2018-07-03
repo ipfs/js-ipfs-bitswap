@@ -85,6 +85,10 @@
     "pull-stream": "^3.6.8",
     "varint-decoder": "~0.1.1"
   },
+  "pre-push": [
+    "lint",
+    "test"
+  ],
   "contributors": [
     "David Dias <daviddias.p@gmail.com>",
     "Dmitriy Ryajov <dryajov@gmail.com>",
