@@ -157,7 +157,7 @@ exports.genBitswapNetwork = (n, callback) => {
         '/ipfs/' + p.id.toB58String()
       p.multiaddrs.add(ma1)
 
-      const l = new Node(p)
+      const l = new Node({ peerInfo: p })
       netArray.push({ peerInfo: p, libp2p: l })
     })
 

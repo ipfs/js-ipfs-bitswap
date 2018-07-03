@@ -38,6 +38,7 @@
   },
   "homepage": "https://github.com/ipfs/js-ipfs-bitswap#readme",
   "devDependencies": {
+    "@nodeutils/defaults-deep": "github:nodeutils/defaults-deep",
     "aegir": "^14.0.0",
     "benchmark": "^2.1.4",
     "chai": "^4.1.2",

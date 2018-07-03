@@ -34,10 +34,8 @@ function createP2PNode (multiaddrs, options, callback) {
     (peerId, cb) => PeerInfo.create(peerId, cb),
     (peerInfo, cb) => {
       multiaddrs.map((ma) => peerInfo.multiaddrs.add(ma))
-      cb(null, peerInfo)
-    },
-    (peerInfo, cb) => {
-      const node = new Node(peerInfo, undefined, options)
+      options.peerInfo = peerInfo
+      const node = new Node(options)
       cb(null, node)
     }
   ], callback)
@@ -57,9 +55,9 @@ describe('network', () => {
 
   before((done) => {
     parallel([
-      (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', { bits: 1024 }, cb),
-      (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', { bits: 1024 }, cb),
-      (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', { bits: 1024 }, cb),
+      (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', cb),
+      (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', cb),
+      (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', cb),
       (cb) => map(_.range(2), (i, cb) => makeBlock(cb), cb)
     ], (err, results) => {
       expect(err).to.not.exist()
