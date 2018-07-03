@@ -8,21 +8,33 @@ const KadDHT = require('libp2p-kad-dht')
 const waterfall = require('async/waterfall')
 const PeerInfo = require('peer-info')
 const PeerId = require('peer-id')
+const defaultsDeep = require('@nodeutils/defaults-deep')
 
 class Node extends libp2p {
-  constructor (peerInfo, options) {
-    options = options || {}
-
-    const modules = {
-      transport: [new TCP()],
-      connection: {
-        muxer: Multiplex,
-        crypto: SECIO
+  constructor (_options) {
+    const defaults = {
+      modules: {
+        transport: [
+          TCP
+        ],
+        streamMuxer: [
+          Multiplex
+        ],
+        connEncryption: [
+          SECIO
+        ],
+        dht: _options.DHT ? KadDHT : undefined
       },
-      DHT: options.DHT ? KadDHT : undefined
+      config: {
+        dht: {},
+        EXPERIMENTAL: {
+          dht: Boolean(_options.DHT)
+        }
+      }
     }
 
-    super(modules, peerInfo, null, options.DHT || {})
+    delete _options.DHT
+    super(defaultsDeep(_options, defaults))
   }
 }
 
@@ -30,11 +42,12 @@ function createLibp2pNode (options, callback) {
   let node
 
   waterfall([
-    (cb) => PeerId.create({bits: 1024}, cb),
+    (cb) => PeerId.create({ bits: 1024 }, cb),
     (id, cb) => PeerInfo.create(id, cb),
     (peerInfo, cb) => {
       peerInfo.multiaddrs.add('/ip4/0.0.0.0/tcp/0')
-      node = new Node(peerInfo, options)
+      options.peerInfo = peerInfo
+      node = new Node(options)
       node.start(cb)
     }
   ], (err) => callback(err, node))

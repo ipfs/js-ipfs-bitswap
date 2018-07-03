@@ -126,7 +126,7 @@ describe('bitswap with mocks', function () {
         expect(err).to.not.exist()
 
         parallel([
-          (cb) => map(_.range(5), (i, cb) => PeerId.create(cb), cb),
+          (cb) => map(_.range(5), (i, cb) => PeerId.create({bits: 1024}, cb), cb),
           (cb) => map(_.range(10), (i, cb) => makeBlock(cb), cb)
         ], (err, results) => {
           expect(err).to.not.exist()
@@ -392,7 +392,7 @@ describe('bitswap with mocks', function () {
   describe('ledgerForPeer', () => {
     it('returns null for unknown peer', (done) => {
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
-      PeerId.create((err, id) => {
+      PeerId.create({bits: 1024}, (err, id) => {
         expect(err).to.not.exist()
         const ledger = bs.ledgerForPeer(id)
         expect(ledger).to.equal(null)

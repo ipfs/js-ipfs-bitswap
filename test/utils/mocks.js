@@ -94,7 +94,7 @@ exports.mockNetwork = (calls, done) => {
 exports.createMockTestNet = (repo, count, cb) => {
   parallel([
     (cb) => map(_.range(count), (i, cb) => repo.create(`repo-${i}`), cb),
-    (cb) => map(_.range(count), (i, cb) => PeerId.create(cb), cb)
+    (cb) => map(_.range(count), (i, cb) => PeerId.create({bits: 1024}, cb), cb)
   ], (err, results) => {
     if (err) {
       return cb(err)
@@ -157,7 +157,7 @@ exports.genBitswapNetwork = (n, callback) => {
         '/ipfs/' + p.id.toB58String()
       p.multiaddrs.add(ma1)
 
-      const l = new Node(p)
+      const l = new Node({ peerInfo: p })
       netArray.push({ peerInfo: p, libp2p: l })
     })
 

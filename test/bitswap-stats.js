@@ -46,22 +46,17 @@ describe('bitswap stats', () => {
   let ids
 
   before((done) => {
-    parallel(
-      {
-        blocks: (cb) => map(_.range(2), (i, cb) => makeBlock(cb), cb),
-        ids: (cb) => map(_.range(2), (i, cb) => PeerId.create({bits: 1024}, cb), cb)
-      },
-      (err, results) => {
-        if (err) {
-          return done(err)
-        }
+    parallel({
+      blocks: (cb) => map(_.range(2), (i, cb) => makeBlock(cb), cb),
+      ids: (cb) => map(_.range(2), (i, cb) => PeerId.create({ bits: 1024 }, cb), cb)
+    },
+    (err, results) => {
+      expect(err).to.not.exist()
 
-        blocks = results.blocks
-        ids = results.ids
-
-        done()
-      }
-    )
+      blocks = results.blocks
+      ids = results.ids
+      done()
+    })
   })
 
   before((done) => {
@@ -79,16 +74,18 @@ describe('bitswap stats', () => {
       DHT: repos[n].datastore
     }, cb), (err, _libp2pNodes) => {
       expect(err).to.not.exist()
+
       libp2pNodes = _libp2pNodes
       done()
     })
   })
 
   before(() => {
-    bitswaps = nodes.map((node, i) => new Bitswap(libp2pNodes[i], repos[i].blocks, {
-      statsEnabled: true,
-      statsComputeThrottleTimeout: 500 // fast update interval for so tests run fast
-    }))
+    bitswaps = nodes.map((node, i) =>
+      new Bitswap(libp2pNodes[i], repos[i].blocks, {
+        statsEnabled: true,
+        statsComputeThrottleTimeout: 500 // fast update interval for tests
+      }))
     bs = bitswaps[0]
   })
 

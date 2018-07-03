@@ -71,11 +71,11 @@ describe('gen Bitswap network', function () {
         expect(err).to.not.exist()
         nodeArr.forEach((node) => {
           expect(
-            Object.keys(node.libp2p.switch.conns)
+            Object.keys(node.libp2p._switch.conns)
           ).to.be.empty()
 
           expect(
-            Object.keys(node.libp2p.switch.muxedConns)
+            Object.keys(node.libp2p._switch.muxedConns)
           ).to.have.length(n - 1)
         })
 
