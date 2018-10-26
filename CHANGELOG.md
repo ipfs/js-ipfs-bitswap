@@ -1,3 +1,13 @@
+<a name="0.21.0"></a>
+# [0.21.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.20.3...v0.21.0) (2018-10-26)
+
+
+### Features
+
+* change bitswapLedgerForPeer output format ([c68a0c8](https://github.com/ipfs/js-ipfs-bitswap/commit/c68a0c8))
+
+
+
 <a name="0.20.3"></a>
 ## [0.20.3](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.20.2...v0.20.3) (2018-07-03)
 
