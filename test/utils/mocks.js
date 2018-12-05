@@ -94,7 +94,7 @@ exports.mockNetwork = (calls, done) => {
 exports.createMockTestNet = (repo, count, cb) => {
   parallel([
     (cb) => map(_.range(count), (i, cb) => repo.create(`repo-${i}`), cb),
-    (cb) => map(_.range(count), (i, cb) => PeerId.create({bits: 1024}, cb), cb)
+    (cb) => map(_.range(count), (i, cb) => PeerId.create({ bits: 1024 }, cb), cb)
   ], (err, results) => {
     if (err) {
       return cb(err)
