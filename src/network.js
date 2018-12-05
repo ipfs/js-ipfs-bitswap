@@ -98,11 +98,10 @@ class Network {
   }
 
   findProviders (cid, maxProviders, callback) {
-    // TODO
-    // consider if we want to trickleDown maxProviders, currently this is
-    // not an exposed option:
-    // https://github.com/libp2p/js-libp2p-kad-dht/blob/master/src/index.js#L416
-    this.libp2p.contentRouting.findProviders(cid, CONSTANTS.providerRequestTimeout, callback)
+    this.libp2p.contentRouting.findProviders(cid, {
+      maxTimeout: CONSTANTS.providerRequestTimeout,
+      maxNumProviders: maxProviders
+    }, callback)
   }
 
   findAndConnect (cid, callback) {
