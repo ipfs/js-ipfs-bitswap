@@ -36,7 +36,7 @@ function stringifyMessages (messages) {
 function newEngine (network, callback) {
   parallel([
     (cb) => createTempRepo(cb),
-    (cb) => PeerId.create({ bits: 1024 }, cb)
+    (cb) => PeerId.create({ bits: 512 }, cb)
   ], (err, results) => {
     if (err) {
       return callback(err)
@@ -182,7 +182,7 @@ describe('Engine', () => {
               innerCb()
             })
 
-            PeerId.create({ bits: 1024 }, (err, id) => {
+            PeerId.create({ bits: 512 }, (err, id) => {
               expect(err).to.not.exist()
               const dEngine = new DecisionEngine(id, repo.blocks, network)
               dEngine.start((err) => {
@@ -190,7 +190,7 @@ describe('Engine', () => {
 
                 let partner
                 series([
-                  (cb) => PeerId.create({ bits: 1024 }, (err, id) => {
+                  (cb) => PeerId.create({ bits: 512 }, (err, id) => {
                     if (err) { return cb(err) }
                     partner = id
                     cb()

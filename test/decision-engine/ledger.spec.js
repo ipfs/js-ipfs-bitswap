@@ -13,7 +13,7 @@ describe('Ledger', () => {
   let ledger
 
   before((done) => {
-    PeerId.create({ bits: 1024 }, (err, _peerId) => {
+    PeerId.create({ bits: 512 }, (err, _peerId) => {
       if (err) {
         return done(err)
       }

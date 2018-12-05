@@ -20,7 +20,7 @@ describe('MessageQueue', () => {
 
   before((done) => {
     parallel([
-      (cb) => map([0, 1], (i, cb) => PeerId.create({ bits: 1024 }, cb), (err, res) => {
+      (cb) => map([0, 1], (i, cb) => PeerId.create({ bits: 512 }, cb), (err, res) => {
         expect(err).to.not.exist()
         peerIds = res
         cb()

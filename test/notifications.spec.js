@@ -23,7 +23,7 @@ describe('Notifications', () => {
         blocks = res
         cb()
       }),
-      (cb) => PeerId.create({ bits: 1024 }, (err, id) => {
+      (cb) => PeerId.create({ bits: 512 }, (err, id) => {
         expect(err).to.not.exist()
         peerId = id
         cb()

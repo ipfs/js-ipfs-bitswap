@@ -48,7 +48,7 @@ describe('bitswap stats', () => {
   before((done) => {
     parallel({
       blocks: (cb) => map(_.range(2), (i, cb) => makeBlock(cb), cb),
-      ids: (cb) => map(_.range(2), (i, cb) => PeerId.create({ bits: 1024 }, cb), cb)
+      ids: (cb) => map(_.range(2), (i, cb) => PeerId.create({ bits: 512 }, cb), cb)
     },
     (err, results) => {
       expect(err).to.not.exist()
