@@ -1,7 +1,7 @@
 'use strict'
 
 const TCP = require('libp2p-tcp')
-const Multiplex = require('libp2p-multiplex')
+const MPLEX = require('libp2p-mplex')
 const SECIO = require('libp2p-secio')
 const libp2p = require('libp2p')
 const KadDHT = require('libp2p-kad-dht')
@@ -18,7 +18,7 @@ class Node extends libp2p {
           TCP
         ],
         streamMuxer: [
-          Multiplex
+          MPLEX
         ],
         connEncryption: [
           SECIO
