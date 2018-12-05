@@ -134,11 +134,11 @@ describe('bitswap with DHT', function () {
     ], done)
   })
 
-  it('put a block in 2, get it in 0', (done) => {
+  it('put a block in 2, get it in 0', function (done) {
+    this.timeout(30 * 1000)
     waterfall([
       (cb) => makeBlock(cb),
       (block, cb) => nodes[2].bitswap.put(block, () => cb(null, block)),
-      (block, cb) => setTimeout(() => cb(null, block), 400),
       (block, cb) => nodes[0].bitswap.get(block.cid, (err, blockRetrieved) => {
         expect(err).to.not.exist()
         expect(block.data).to.eql(blockRetrieved.data)
