@@ -42,7 +42,7 @@ function createLibp2pNode (options, callback) {
   let node
 
   waterfall([
-    (cb) => PeerId.create({ bits: 1024 }, cb),
+    (cb) => PeerId.create({ bits: 512 }, cb),
     (id, cb) => PeerInfo.create(id, cb),
     (peerInfo, cb) => {
       peerInfo.multiaddrs.add('/ip4/0.0.0.0/tcp/0')

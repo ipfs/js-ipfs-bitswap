@@ -25,9 +25,9 @@ describe('WantManager', () => {
     let blocks
 
     parallel([
-      (cb) => PeerId.create({ bits: 1024 }, cb),
-      (cb) => PeerId.create({ bits: 1024 }, cb),
-      (cb) => PeerId.create({ bits: 1024 }, cb),
+      (cb) => PeerId.create({ bits: 512 }, cb),
+      (cb) => PeerId.create({ bits: 512 }, cb),
+      (cb) => PeerId.create({ bits: 512 }, cb),
       (cb) => {
         map(_.range(3), (i, cb) => makeBlock(cb), (err, res) => {
           expect(err).to.not.exist()

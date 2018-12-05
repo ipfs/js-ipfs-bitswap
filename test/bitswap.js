@@ -135,7 +135,6 @@ describe('bitswap with DHT', function () {
   })
 
   it('put a block in 2, get it in 0', function (done) {
-    this.timeout(30 * 1000)
     waterfall([
       (cb) => makeBlock(cb),
       (block, cb) => nodes[2].bitswap.put(block, () => cb(null, block)),
