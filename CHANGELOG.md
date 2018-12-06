@@ -1,3 +1,13 @@
+<a name="0.21.1"></a>
+## [0.21.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.21.0...v0.21.1) (2018-12-06)
+
+
+### Features
+
+* send max providers to findProviders request ([31493dc](https://github.com/ipfs/js-ipfs-bitswap/commit/31493dc))
+
+
+
 <a name="0.21.0"></a>
 # [0.21.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.20.3...v0.21.0) (2018-10-26)
 
