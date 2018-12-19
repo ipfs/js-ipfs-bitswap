@@ -187,7 +187,7 @@ BitswapMessage.deserialize = (raw, callback) => {
   if (decoded.payload.length > 0) {
     return each(decoded.payload, (p, cb) => {
       if (!p.prefix || !p.data) {
-        cb()
+        return setImmediate(cb)
       }
       const values = vd(p.prefix)
       const cidVersion = values[0]
@@ -203,7 +203,7 @@ BitswapMessage.deserialize = (raw, callback) => {
         try {
           cid = new CID(cidVersion, codecName[multicodec.toString('16')], hash)
         } catch (err) {
-          return callback(err)
+          return cb(err)
         }
 
         msg.addBlock(new Block(p.data, cid))

@@ -4,6 +4,7 @@ const waterfall = require('async/waterfall')
 const reject = require('async/reject')
 const each = require('async/each')
 const series = require('async/series')
+const setImmediate = require('async/setImmediate')
 const map = require('async/map')
 
 const WantManager = require('./want-manager')
@@ -108,7 +109,7 @@ class Bitswap {
       (has, cb) => {
         this._updateReceiveCounters(peerId.toB58String(), block, has)
         if (has) {
-          return cb()
+          return setImmediate(cb)
         }
 
         this._putBlock(block, cb)
@@ -146,7 +147,7 @@ class Bitswap {
   _putBlock (block, callback) {
     this.blockstore.put(block, (err) => {
       if (err) {
-        return callback(err)
+        return setImmediate(() => callback(err))
       }
 
       this.notifications.hasBlock(block)
@@ -310,7 +311,7 @@ class Bitswap {
       (cb) => this.blockstore.has(block.cid, cb),
       (has, cb) => {
         if (has) {
-          return cb()
+          return setImmediate(cb)
         }
 
         this._putBlock(block, cb)
@@ -333,7 +334,7 @@ class Bitswap {
       }, cb),
       (newBlocks, cb) => this.blockstore.putMany(newBlocks, (err) => {
         if (err) {
-          return cb(err)
+          return setImmediate(() => cb(err))
         }
 
         newBlocks.forEach((block) => {
@@ -345,7 +346,7 @@ class Bitswap {
             }
           })
         })
-        cb()
+        setImmediate(cb)
       })
     ], callback)
   }
