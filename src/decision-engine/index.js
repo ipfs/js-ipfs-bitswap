@@ -71,7 +71,7 @@ class DecisionEngine {
           cb()
         })
       } else {
-        cb()
+        setImmediate(cb)
       }
     }, cb)
   }
@@ -179,7 +179,7 @@ class DecisionEngine {
     const ledger = this._findOrCreate(peerId)
 
     if (msg.empty) {
-      return cb()
+      return setImmediate(cb)
     }
 
     // If the message was a full wantlist clear the current one
@@ -190,7 +190,7 @@ class DecisionEngine {
     this._processBlocks(msg.blocks, ledger)
 
     if (msg.wantlist.size === 0) {
-      return cb()
+      return setImmediate(cb)
     }
 
     let cancels = []
@@ -219,7 +219,7 @@ class DecisionEngine {
     })
   }
 
-  _addWants (ledger, peerId, entries, cb) {
+  _addWants (ledger, peerId, entries, callback) {
     each(entries, (entry, cb) => {
       // If we already have the block, serve it
       this.blockstore.has(entry.cid, (err, exists) => {
@@ -235,7 +235,7 @@ class DecisionEngine {
       })
     }, () => {
       this._outbox()
-      cb()
+      callback()
     })
   }
 
