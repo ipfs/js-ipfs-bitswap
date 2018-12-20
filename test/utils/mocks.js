@@ -39,7 +39,6 @@ exports.mockLibp2pNode = () => {
       setImmediate(() => callback())
     },
     swarm: {
-      muxedConns: {},
       setMaxListeners () {}
     },
     peerBook: new PeerBook()
