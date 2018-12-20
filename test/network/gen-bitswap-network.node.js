@@ -74,9 +74,11 @@ describe('gen Bitswap network', function () {
             Object.keys(node.libp2p._switch.conns)
           ).to.be.empty()
 
+          // Parallel dials may result in 1 or 2 connections
+          // depending on when they're executed.
           expect(
-            Object.keys(node.libp2p._switch.muxedConns)
-          ).to.have.length(n - 1)
+            Object.keys(node.libp2p._switch.connection.getAll())
+          ).to.have.a.lengthOf.at.least(n - 1)
         })
 
         // -- actual test
