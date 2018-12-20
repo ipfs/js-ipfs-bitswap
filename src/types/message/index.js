@@ -139,7 +139,7 @@ BitswapMessage.deserialize = (raw, callback) => {
   try {
     decoded = pbm.Message.decode(raw)
   } catch (err) {
-    return setImmediate(() => callback(err))
+    return process.nextTick(() => callback(err))
   }
 
   const isFull = (decoded.wantlist && decoded.wantlist.full) || false
@@ -187,7 +187,7 @@ BitswapMessage.deserialize = (raw, callback) => {
   if (decoded.payload.length > 0) {
     return each(decoded.payload, (p, cb) => {
       if (!p.prefix || !p.data) {
-        return setImmediate(cb)
+        return process.nextTick(cb)
       }
       const values = vd(p.prefix)
       const cidVersion = values[0]
