@@ -95,10 +95,10 @@ class DecisionEngine {
     const groupedTasks = groupBy(tasks, (task) => task.target.toB58String())
 
     waterfall([
-      (cb) => map(uniqCids, (cid, cb) => {
+      (callback) => map(uniqCids, (cid, cb) => {
         this.blockstore.get(cid, cb)
-      }, cb),
-      (blocks, cb) => each(values(groupedTasks), (tasks, cb) => {
+      }, callback),
+      (blocks, callback) => each(values(groupedTasks), (tasks, cb) => {
         // all tasks have the same target
         const peer = tasks[0].target
         const blockList = cids.map((cid) => {
@@ -115,7 +115,7 @@ class DecisionEngine {
 
           cb()
         })
-      })
+      }, callback)
     ], (err) => {
       this._tasks = []
 
