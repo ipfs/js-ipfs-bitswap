@@ -1,7 +1,5 @@
 'use strict'
 
-const setImmediate = require('async/setImmediate')
-
 const Message = require('../types/message')
 const Wantlist = require('../types/wantlist')
 const CONSTANTS = require('../constants')
@@ -125,13 +123,13 @@ module.exports = class WantManager {
       this.peers.forEach((p) => p.addMessage(fullwantlist))
     }, 60 * 1000)
 
-    setImmediate(() => callback())
+    process.nextTick(() => callback())
   }
 
   stop (callback) {
     this.peers.forEach((mq) => this.disconnected(mq.peerId))
 
     clearInterval(this.timer)
-    setImmediate(() => callback())
+    process.nextTick(() => callback())
   }
 }
