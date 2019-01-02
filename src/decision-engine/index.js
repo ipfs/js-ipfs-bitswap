@@ -3,6 +3,7 @@
 const each = require('async/each')
 const eachSeries = require('async/eachSeries')
 const waterfall = require('async/waterfall')
+const nextTick = require('async/nextTick')
 
 const map = require('async/map')
 const debounce = require('lodash.debounce')
@@ -70,7 +71,7 @@ class DecisionEngine {
           cb()
         })
       } else {
-        process.nextTick(cb)
+        nextTick(cb)
       }
     }, cb)
   }
@@ -178,7 +179,7 @@ class DecisionEngine {
     const ledger = this._findOrCreate(peerId)
 
     if (msg.empty) {
-      return process.nextTick(cb)
+      return nextTick(cb)
     }
 
     // If the message was a full wantlist clear the current one
@@ -189,7 +190,7 @@ class DecisionEngine {
     this._processBlocks(msg.blocks, ledger)
 
     if (msg.wantlist.size === 0) {
-      return process.nextTick(cb)
+      return nextTick(cb)
     }
 
     let cancels = []
@@ -293,12 +294,12 @@ class DecisionEngine {
 
   start (callback) {
     this._running = true
-    process.nextTick(() => callback())
+    nextTick(() => callback())
   }
 
   stop (callback) {
     this._running = false
-    process.nextTick(() => callback())
+    nextTick(() => callback())
   }
 }
 
