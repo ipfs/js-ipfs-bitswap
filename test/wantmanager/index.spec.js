@@ -63,13 +63,13 @@ describe('WantManager', () => {
         expect(calls.connects).to.have.length(6)
         expect(calls.messages).to.have.length(6)
 
-        for (let i = 0; i < calls.messages.length; i++) {
-          const m = calls.messages[i]
-          const connect = calls.connects[i]
-          expect(m[0]).to.be.eql(connect)
-          if (!m[1].equals(msgs[i])) {
+        for (let ii = 0; ii < calls.messages.length; ii++) {
+          const message = calls.messages[ii]
+          const connect = calls.connects[ii]
+          expect(message[0]).to.be.eql(connect)
+          if (!message[1].equals(msgs[ii])) {
             return done(
-              new Error(`expected ${m[1].toString()} to equal ${msgs[i].toString()}`)
+              new Error(`expected ${message[1].toString()} to equal ${msgs[ii].toString()}`)
             )
           }
         }

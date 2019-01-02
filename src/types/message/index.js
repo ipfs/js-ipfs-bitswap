@@ -5,6 +5,7 @@ const Block = require('ipfs-block')
 const isEqualWith = require('lodash.isequalwith')
 const assert = require('assert')
 const each = require('async/each')
+const nextTick = require('async/nextTick')
 const CID = require('cids')
 const codecName = require('multicodec/src/name-table')
 const vd = require('varint-decoder')
@@ -139,7 +140,7 @@ BitswapMessage.deserialize = (raw, callback) => {
   try {
     decoded = pbm.Message.decode(raw)
   } catch (err) {
-    return process.nextTick(() => callback(err))
+    return nextTick(() => callback(err))
   }
 
   const isFull = (decoded.wantlist && decoded.wantlist.full) || false
@@ -187,7 +188,7 @@ BitswapMessage.deserialize = (raw, callback) => {
   if (decoded.payload.length > 0) {
     return each(decoded.payload, (p, cb) => {
       if (!p.prefix || !p.data) {
-        return process.nextTick(cb)
+        return nextTick(cb)
       }
       const values = vd(p.prefix)
       const cidVersion = values[0]
