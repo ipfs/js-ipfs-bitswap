@@ -1,6 +1,6 @@
 'use strict'
 
-const debounce = require('lodash.debounce')
+const debounce = require('just-debounce-it')
 
 const Message = require('../types/message')
 const logger = require('../utils').logger
