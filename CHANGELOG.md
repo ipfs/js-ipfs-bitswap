@@ -1,3 +1,21 @@
+<a name="0.22.0"></a>
+# [0.22.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.21.2...v0.22.0) (2019-01-08)
+
+
+### Bug Fixes
+
+* reduce bundle size ([d8f8040](https://github.com/ipfs/js-ipfs-bitswap/commit/d8f8040))
+
+
+### BREAKING CHANGES
+
+* change from big.js to bignumber.js
+
+The impact of this change is only on the `snapshot` field of
+the stats, as those values are represented as Big Numbers.
+
+
+
 <a name="0.21.2"></a>
 ## [0.21.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.21.1...v0.21.2) (2019-01-08)
 
