@@ -1,6 +1,6 @@
 'use strict'
 
-const sort = require('lodash.sortby')
+const { sortBy } = require('../../utils')
 const Entry = require('./entry')
 
 class Wantlist {
@@ -64,11 +64,7 @@ class Wantlist {
   }
 
   sortedEntries () {
-    return new Map(
-      sort(Array.from(this.set.entries()), (o) => {
-        return o[1].key
-      })
-    )
+    return new Map(sortBy(o => o[1].key, Array.from(this.set.entries())))
   }
 
   contains (cid) {

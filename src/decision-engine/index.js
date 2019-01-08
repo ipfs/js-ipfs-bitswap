@@ -6,17 +6,12 @@ const waterfall = require('async/waterfall')
 const nextTick = require('async/nextTick')
 
 const map = require('async/map')
-const debounce = require('lodash.debounce')
-const uniqWith = require('lodash.uniqwith')
-const find = require('lodash.find')
-const values = require('lodash.values')
-const groupBy = require('lodash.groupby')
-const pullAllWith = require('lodash.pullallwith')
+const debounce = require('just-debounce-it')
 
 const Message = require('../types/message')
 const Wantlist = require('../types/wantlist')
 const Ledger = require('./ledger')
-const logger = require('../utils').logger
+const { logger, groupBy, pullAllWith, uniqWith } = require('../utils')
 
 const MAX_MESSAGE_SIZE = 512 * 1024
 
@@ -92,18 +87,18 @@ class DecisionEngine {
     this._tasks = []
     const entries = tasks.map((t) => t.entry)
     const cids = entries.map((e) => e.cid)
-    const uniqCids = uniqWith(cids, (a, b) => a.equals(b))
-    const groupedTasks = groupBy(tasks, (task) => task.target.toB58String())
+    const uniqCids = uniqWith((a, b) => a.equals(b), cids)
+    const groupedTasks = groupBy(task => task.target.toB58String(), tasks)
 
     waterfall([
       (callback) => map(uniqCids, (cid, cb) => {
         this.blockstore.get(cid, cb)
       }, callback),
-      (blocks, callback) => each(values(groupedTasks), (tasks, cb) => {
+      (blocks, callback) => each(Object.values(groupedTasks), (tasks, cb) => {
         // all tasks have the same target
         const peer = tasks[0].target
         const blockList = cids.map((cid) => {
-          return find(blocks, (b) => b.cid.equals(cid))
+          return blocks.find(b => b.cid.equals(cid))
         })
 
         this._sendBlocks(peer, blockList, (err) => {
@@ -212,11 +207,11 @@ class DecisionEngine {
   _cancelWants (ledger, peerId, entries) {
     const id = peerId.toB58String()
 
-    pullAllWith(this._tasks, entries, (t, e) => {
+    this._tasks = pullAllWith((t, e) => {
       const sameTarget = t.target.toB58String() === id
       const sameCid = t.entry.cid.equals(e.cid)
       return sameTarget && sameCid
-    })
+    }, this._tasks, entries)
   }
 
   _addWants (ledger, peerId, entries, callback) {

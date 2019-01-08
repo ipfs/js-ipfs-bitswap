@@ -1,7 +1,7 @@
 'use strict'
 
 const EventEmitter = require('events')
-const Big = require('big.js')
+const Big = require('bignumber.js')
 const MovingAverage = require('moving-average')
 
 class Stats extends EventEmitter {
