@@ -1,3 +1,14 @@
+<a name="0.21.2"></a>
+## [0.21.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.21.1...v0.21.2) (2019-01-08)
+
+
+### Bug Fixes
+
+* avoid sync callbacks in async code ([ddfdd71](https://github.com/ipfs/js-ipfs-bitswap/commit/ddfdd71))
+* ensure callback is called ([c27318f](https://github.com/ipfs/js-ipfs-bitswap/commit/c27318f))
+
+
+
 <a name="0.21.1"></a>
 ## [0.21.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.21.0...v0.21.1) (2018-12-06)
 
