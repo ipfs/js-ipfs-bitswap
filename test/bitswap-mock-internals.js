@@ -107,8 +107,8 @@ describe('bitswap with mocks', function () {
 
           const wl = bs.wantlistForPeer(other)
 
-          expect(wl.has(b1.cid.buffer.toString())).to.eql(true)
-          expect(wl.has(b2.cid.buffer.toString())).to.eql(true)
+          expect(wl.has(b1.cid.buffer.toString('hex'))).to.eql(true)
+          expect(wl.has(b2.cid.buffer.toString('hex'))).to.eql(true)
 
           done()
         })

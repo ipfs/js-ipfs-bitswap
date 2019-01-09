@@ -86,7 +86,7 @@ describe('Wantlist', () => {
     expect(
       Array.from(wm.entries())
     ).to.be.eql([[
-      b.cid.buffer.toString(),
+      b.cid.buffer.toString('hex'),
       new Wantlist.Entry(b.cid, 2)
     ]])
   })
@@ -101,8 +101,8 @@ describe('Wantlist', () => {
     expect(
       Array.from(wm.sortedEntries())
     ).to.be.eql([
-      [b1.cid.buffer.toString(), new Wantlist.Entry(b1.cid, 1)],
-      [b2.cid.buffer.toString(), new Wantlist.Entry(b2.cid, 1)]
+      [b1.cid.buffer.toString('hex'), new Wantlist.Entry(b1.cid, 1)],
+      [b2.cid.buffer.toString('hex'), new Wantlist.Entry(b2.cid, 1)]
     ])
   })
 
@@ -126,7 +126,7 @@ describe('Wantlist', () => {
       expect(
         Array.from(wm.entries())
       ).to.be.eql([[
-        cid.buffer.toString(),
+        cid.buffer.toString('hex'),
         new Wantlist.Entry(cid, 2)
       ]])
       done()

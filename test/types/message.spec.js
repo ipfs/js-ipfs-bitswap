@@ -92,15 +92,15 @@ describe('BitswapMessage', () => {
       expect(msg.full).to.equal(true)
       expect(Array.from(msg.wantlist))
         .to.eql([[
-          cid0.buffer.toString(),
+          cid0.buffer.toString('hex'),
           new BitswapMessage.Entry(cid0, 0, false)
         ]])
 
       expect(
         Array.from(msg.blocks).map((b) => [b[0], b[1].data])
       ).to.eql([
-        [cid1.buffer.toString(), b1.data],
-        [cid2.buffer.toString(), b2.data]
+        [cid1.buffer.toString('hex'), b1.data],
+        [cid2.buffer.toString('hex'), b2.data]
       ])
 
       done()
@@ -137,15 +137,15 @@ describe('BitswapMessage', () => {
       expect(msg.full).to.equal(true)
       expect(Array.from(msg.wantlist))
         .to.eql([[
-          cid0.buffer.toString(),
+          cid0.buffer.toString('hex'),
           new BitswapMessage.Entry(cid0, 0, false)
         ]])
 
       expect(
         Array.from(msg.blocks).map((b) => [b[0], b[1].data])
       ).to.eql([
-        [cid1.buffer.toString(), b1.data],
-        [cid2.buffer.toString(), b2.data]
+        [cid1.buffer.toString('hex'), b1.data],
+        [cid2.buffer.toString('hex'), b2.data]
       ])
 
       done()
