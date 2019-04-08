@@ -34,7 +34,7 @@ describe('Notifications', () => {
   it('hasBlock', (done) => {
     const n = new Notifications(peerId)
     const b = blocks[0]
-    n.once(`block:${b.cid.buffer.toString()}`, (block) => {
+    n.once(`block:${b.cid}`, (block) => {
       expect(b).to.eql(block)
       done()
     })
