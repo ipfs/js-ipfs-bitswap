@@ -55,9 +55,11 @@ describe('bitswap with mocks', function () {
 
   describe('receive message', () => {
     it('simple block message', (done) => {
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
-      bs.start((err) => {
-        expect(err).to.not.exist()
+      (async () => {
+        const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+        await bs.start().catch((err) => {
+          expect(err).to.not.exist()
+        })
 
         const other = ids[1]
 
@@ -86,13 +88,16 @@ describe('bitswap with mocks', function () {
             done()
           })
         })
-      })
+      })()
     })
 
     it('simple want message', (done) => {
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
-      bs.start((err) => {
-        expect(err).to.not.exist()
+      (async () => {
+        const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+        await bs.start().catch((err) => {
+          expect(err).to.not.exist()
+        })
+
         const other = ids[1]
         const b1 = blocks[0]
         const b2 = blocks[1]
@@ -112,7 +117,7 @@ describe('bitswap with mocks', function () {
 
           done()
         })
-      })
+      })()
     })
 
     it('multi peer', function (done) {
@@ -122,8 +127,8 @@ describe('bitswap with mocks', function () {
       let others
       let blocks
 
-      bs.start((err) => {
-        expect(err).to.not.exist()
+      (async () => {
+        await bs.start()
 
         parallel([
           (cb) => map(_.range(5), (i, cb) => PeerId.create({ bits: 512 }, cb), cb),
@@ -155,7 +160,7 @@ describe('bitswap with mocks', function () {
             }, done)
           })
         }
-      })
+      })()
     })
   })
 
@@ -223,7 +228,7 @@ describe('bitswap with mocks', function () {
         bs.network = net
         bs.wm.network = net
         bs.engine.network = net
-        await promisify(bs.start.bind(bs))()
+        await bs.start()
         bs.get(block.cid).then((res) => {
           expect(res).to.eql(block)
           finish(2)
@@ -305,13 +310,13 @@ describe('bitswap with mocks', function () {
         // Create and start bs1
         bs1 = new Bitswap(mockLibp2pNode(), repo.blocks)
         applyNetwork(bs1, n1)
-        await promisify(bs1.start.bind(bs1))()
+        await bs1.start()
 
         // Create and start bs2
         const repo2 = await promisify(createTempRepo)()
         bs2 = new Bitswap(mockLibp2pNode(), repo2.blocks)
         applyNetwork(bs2, n2)
-        await promisify(bs2.start.bind(bs2))()
+        await bs2.start()
 
         bs1._onPeerConnected(other)
         bs2._onPeerConnected(me)
@@ -354,7 +359,7 @@ describe('bitswap with mocks', function () {
     it('removes blocks that are wanted multiple times', (done) => {
       (async () => {
         const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
-        await promisify(bs.start.bind(bs))()
+        await bs.start()
 
         const b = blocks[12]
         Promise.all([

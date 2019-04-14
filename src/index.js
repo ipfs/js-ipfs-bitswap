@@ -1,9 +1,7 @@
 'use strict'
 
 const waterfall = require('async/waterfall')
-const reject = require('async/reject')
 const each = require('async/each')
-const series = require('async/series')
 const nextTick = require('async/nextTick')
 const promisify = require('promisify-es6')
 const typical = require('typical')
@@ -319,7 +317,7 @@ class Bitswap {
   /**
    * Get the current list of wants.
    *
-   * @returns {Iterator<WantlistEntry>}
+   * @returns {Iterator.<WantlistEntry>}
    */
   getWantlist () {
     return this.wm.wantlist.entries()
@@ -328,7 +326,7 @@ class Bitswap {
   /**
    * Get the current list of partners.
    *
-   * @returns {Array<PeerId>}
+   * @returns {Array.<PeerId>}
    */
   peers () {
     return this.engine.peers()
@@ -346,32 +344,25 @@ class Bitswap {
   /**
    * Start the bitswap node.
    *
-   * @param {function(Error)} callback
-   *
-   * @returns {void}
+   * @returns {Promise}
    */
-  start (callback) {
-    series([
-      (cb) => this.wm.start(cb),
-      (cb) => this.network.start(cb),
-      (cb) => this.engine.start(cb)
-    ], callback)
+  async start () {
+    await promisify(this.wm.start.bind(this.wm))()
+    await promisify(this.network.start.bind(this.network))()
+    await promisify(this.engine.start.bind(this.engine))()
   }
 
   /**
    * Stop the bitswap node.
    *
-   * @param {function(Error)} callback
-   *
-   * @returns {void}
+   * @returns {Promise}
    */
-  stop (callback) {
+  async stop () {
     this._stats.stop()
-    series([
-      (cb) => this.wm.stop(cb),
-      (cb) => this.network.stop(cb),
-      (cb) => this.engine.stop(cb)
-    ], callback)
+
+    await promisify(this.wm.stop.bind(this.wm))()
+    await promisify(this.network.stop.bind(this.network))()
+    await promisify(this.engine.stop.bind(this.engine))()
   }
 }
 
