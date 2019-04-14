@@ -6,6 +6,7 @@ const waterfall = require('async/waterfall')
 const series = require('async/series')
 const each = require('async/each')
 const parallel = require('async/parallel')
+const promisify = require('promisify-es6')
 
 const chai = require('chai')
 chai.use(require('dirty-chai'))
@@ -78,15 +79,13 @@ describe('bitswap without DHT', function () {
   })
 
   it('put a block in 2, fail to get it in 0', (done) => {
-    const finish = orderedFinish(2, done)
+    (async () => {
+      const finish = orderedFinish(2, done)
 
-    waterfall([
-      (cb) => makeBlock(cb),
-      (block, cb) => nodes[2].bitswap.put(block, () => cb(null, block))
-    ], (err, block) => {
-      expect(err).to.not.exist()
-      nodes[0].bitswap.get(block.cid, (err, block) => {
-        expect(err).to.not.exist()
+      const block = await promisify(makeBlock)()
+      await promisify(nodes[2].bitswap.put.bind(nodes[2].bitswap))(block)
+
+      nodes[0].bitswap.get(block.cid).then((block) => {
         expect(block).to.not.exist()
         finish(2)
       })
@@ -95,7 +94,7 @@ describe('bitswap without DHT', function () {
         finish(1)
         nodes[0].bitswap.unwant(block.cid)
       }, 200)
-    })
+    })()
   })
 })
 
@@ -134,16 +133,12 @@ describe('bitswap with DHT', function () {
     ], done)
   })
 
-  it('put a block in 2, get it in 0', function (done) {
-    waterfall([
-      (cb) => makeBlock(cb),
-      (block, cb) => nodes[2].bitswap.put(block, () => cb(null, block)),
-      (block, cb) => nodes[0].bitswap.get(block.cid, (err, blockRetrieved) => {
-        expect(err).to.not.exist()
-        expect(block.data).to.eql(blockRetrieved.data)
-        expect(block.cid).to.eql(blockRetrieved.cid)
-        cb()
-      })
-    ], done)
+  it('put a block in 2, get it in 0', async () => {
+    const block = await promisify(makeBlock)()
+    await promisify(nodes[2].bitswap.put.bind(nodes[2].bitswap))(block)
+
+    const blockRetrieved = await nodes[0].bitswap.get(block.cid)
+    expect(block.data).to.eql(blockRetrieved.data)
+    expect(block.cid).to.eql(blockRetrieved.cid)
   })
 })

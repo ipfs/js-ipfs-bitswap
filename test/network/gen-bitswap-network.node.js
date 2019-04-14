@@ -49,10 +49,9 @@ describe('gen Bitswap network', function () {
           (b, cb) => node.bitswap.put(b, cb),
           cb
         ),
-        (cb) => map(_.range(100), (i, cb) => {
-          node.bitswap.get(blocks[i].cid, cb)
-        }, (err, res) => {
-          expect(err).to.not.exist()
+        (cb) => Promise.all(_.range(100).map((i) => {
+          return node.bitswap.get(blocks[i].cid)
+        })).then((res) => {
           expect(res).to.have.length(blocks.length)
           cb()
         })
@@ -119,19 +118,21 @@ function round (nodeArr, n, cb) {
       }), cb),
       (cb) => {
         d = (new Date()).getTime()
-        // fetch all blocks on every node
-        parallel(_.map(nodeArr, (node, i) => (cb) => {
-          map(cids, (cid, cb) => {
-            node.bitswap.get(cid, cb)
-          }, (err, res) => {
-            if (err) {
-              return cb(err)
-            }
 
-            expect(res).to.have.length(blocks.length)
-            cb()
-          })
-        }), cb)
+        // fetch all blocks on every node
+        Promise.all(nodeArr.map((node) => {
+          return Promise.all(
+            cids.map((cid) => {
+              return node.bitswap.get(cid)
+            })
+          )
+        })).then((res) => {
+          expect(res[0]).to.deep.equal(blocks)
+          expect(res[1]).to.deep.equal(blocks)
+          cb()
+        }).catch((err) => {
+          cb(err)
+        })
       }
     ], (err) => {
       if (err) {

@@ -3,7 +3,6 @@
 'use strict'
 
 const eachSeries = require('async/eachSeries')
-const waterfall = require('async/waterfall')
 const map = require('async/map')
 const parallel = require('async/parallel')
 const setImmediate = require('async/setImmediate')
@@ -12,6 +11,7 @@ const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
 const PeerId = require('peer-id')
+const promisify = require('promisify-es6')
 
 const Message = require('../src/types/message')
 const Bitswap = require('../src')
@@ -160,79 +160,71 @@ describe('bitswap with mocks', function () {
   })
 
   describe('get', () => {
-    it('fails on requesting empty block', (done) => {
+    it('fails on requesting empty block', async () => {
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
-      bs.get(null, (err, res) => {
+      try {
+        await bs.get(null)
+      } catch (err) {
         expect(err).to.exist()
         expect(err.message).to.equal('Not a valid cid')
-        done()
-      })
+      }
     })
 
-    it('block exists locally', (done) => {
+    it('block exists locally', async () => {
       const block = blocks[4]
+      await promisify(repo.blocks.put)(block)
+      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
 
-      repo.blocks.put(block, (err) => {
-        expect(err).to.not.exist()
-        const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
-
-        bs.get(block.cid, (err, res) => {
-          expect(err).to.not.exist()
-          expect(res).to.eql(block)
-          done()
-        })
-      })
+      const retrievedBlock = await bs.get(block.cid)
+      expect(retrievedBlock).to.eql(block)
     })
 
-    it('blocks exist locally', (done) => {
+    it('blocks exist locally', async () => {
       const b1 = blocks[3]
       const b2 = blocks[14]
       const b3 = blocks[13]
 
-      repo.blocks.putMany([b1, b2, b3], (err) => {
-        expect(err).to.not.exist()
+      await promisify(repo.blocks.putMany)([b1, b2, b3])
+      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
 
-        const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
-
-        bs.getMany([b1.cid, b2.cid, b3.cid], (err, res) => {
-          expect(err).to.not.exist()
-          expect(res).to.be.eql([b1, b2, b3])
-          done()
-        })
-      })
+      const gen = bs.getMany([b1.cid, b2.cid, b3.cid])
+      const retrievedBlocks = []
+      for await (const block of gen) {
+        retrievedBlocks.push(block)
+      }
+      expect(retrievedBlocks).to.be.eql([b1, b2, b3])
     })
 
-    it('getMany', (done) => {
+    it('getMany', async () => {
       const b1 = blocks[5]
       const b2 = blocks[6]
       const b3 = blocks[7]
 
-      repo.blocks.putMany([b1, b2, b3], (err) => {
-        expect(err).to.not.exist()
+      await promisify(repo.blocks.putMany)([b1, b2, b3])
+      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
 
-        const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const block1 = await bs.get(b1.cid)
+      expect(block1).to.eql(b1)
 
-        map([b1.cid, b2.cid, b3.cid], (cid, cb) => bs.get(cid, cb), (err, res) => {
-          expect(err).to.not.exist()
-          expect(res).to.eql([b1, b2, b3])
-          done()
-        })
-      })
+      const block2 = await bs.get(b2.cid)
+      expect(block2).to.eql(b2)
+
+      const block3 = await bs.get(b3.cid)
+      expect(block3).to.eql(b3)
     })
 
     it('block is added locally afterwards', (done) => {
-      const finish = orderedFinish(2, done)
-      const block = blocks[9]
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
-      const net = mockNetwork()
+      (async () => {
+        const finish = orderedFinish(2, done)
+        const block = blocks[9]
+        const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+        const net = mockNetwork()
 
-      bs.network = net
-      bs.wm.network = net
-      bs.engine.network = net
-      bs.start((err) => {
-        expect(err).to.not.exist()
-        bs.get(block.cid, (err, res) => {
-          expect(err).to.not.exist()
+        bs.network = net
+        bs.wm.network = net
+        bs.engine.network = net
+        await promisify(bs.start.bind(bs))()
+        bs.get(block.cid).then((res) => {
           expect(res).to.eql(block)
           finish(2)
         })
@@ -241,7 +233,7 @@ describe('bitswap with mocks', function () {
           finish(1)
           bs.put(block, () => {})
         }, 200)
-      })
+      })()
     })
 
     it('block is sent after local add', (done) => {
@@ -307,39 +299,33 @@ describe('bitswap with mocks', function () {
           setImmediate(() => callback())
         }
       }
-      bs1 = new Bitswap(mockLibp2pNode(), repo.blocks)
-      applyNetwork(bs1, n1)
 
-      bs1.start((err) => {
-        expect(err).to.not.exist()
+      // Do not remove semi-colon. Will break the test.
+      ;(async () => {
+        // Create and start bs1
+        bs1 = new Bitswap(mockLibp2pNode(), repo.blocks)
+        applyNetwork(bs1, n1)
+        await promisify(bs1.start.bind(bs1))()
 
-        let repo2
+        // Create and start bs2
+        const repo2 = await promisify(createTempRepo)()
+        bs2 = new Bitswap(mockLibp2pNode(), repo2.blocks)
+        applyNetwork(bs2, n2)
+        await promisify(bs2.start.bind(bs2))()
 
-        waterfall([
-          (cb) => createTempRepo(cb),
-          (repo, cb) => {
-            repo2 = repo
-            bs2 = new Bitswap(mockLibp2pNode(), repo2.blocks)
-            applyNetwork(bs2, n2)
-            bs2.start((err) => {
-              expect(err).to.not.exist()
+        bs1._onPeerConnected(other)
+        bs2._onPeerConnected(me)
 
-              bs1._onPeerConnected(other)
-              bs2._onPeerConnected(me)
-
-              bs1.get(block.cid, (err, res) => {
-                expect(err).to.not.exist()
-                cb(null, res)
-              })
-              setTimeout(() => bs2.put(block, () => {}), 1000)
-            })
-          },
-          (res, cb) => {
-            expect(res).to.eql(block)
-            cb()
-          }
-        ], done)
-      })
+        bs1.get(block.cid).then((res) => {
+          expect(res).to.eql(block)
+          done()
+        }).catch((err) => {
+          expect(err).to.not.exist()
+        })
+        setTimeout(() => {
+          bs2.put(block, () => {})
+        }, 1000)
+      })()
     })
 
     it('double get', (done) => {
@@ -347,18 +333,16 @@ describe('bitswap with mocks', function () {
 
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
 
-      parallel(
-        [
-          (cb) => bs.get(block.cid, cb),
-          (cb) => bs.get(block.cid, cb)
-        ],
-        (err, res) => {
-          expect(err).to.not.exist()
-          expect(res[0]).to.eql(block)
-          expect(res[1]).to.eql(block)
-          done()
-        }
-      )
+      Promise.all([
+        bs.get(block.cid),
+        bs.get(block.cid)
+      ]).then((res) => {
+        expect(res[0]).to.eql(block)
+        expect(res[1]).to.eql(block)
+        done()
+      }).catch((err) => {
+        expect(err).to.not.exist()
+      })
 
       bs.put(block, (err) => {
         expect(err).to.not.exist()
@@ -368,24 +352,23 @@ describe('bitswap with mocks', function () {
 
   describe('unwant', () => {
     it('removes blocks that are wanted multiple times', (done) => {
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
-      bs.start((err) => {
-        expect(err).to.not.exist()
+      (async () => {
+        const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+        await promisify(bs.start.bind(bs))()
+
         const b = blocks[12]
-
-        let counter = 0
-        const check = (err, res) => {
-          expect(err).to.not.exist()
-          expect(res).to.not.exist()
-
-          if (++counter === 2) { done() }
-        }
-
-        bs.get(b.cid, check)
-        bs.get(b.cid, check)
+        Promise.all([
+          bs.get(b.cid),
+          bs.get(b.cid)
+        ]).then((res) => {
+          expect(res[1]).to.not.exist()
+          done()
+        }).catch((e) => {
+          expect(e).to.not.exist()
+        })
 
         setTimeout(() => bs.unwant(b.cid), 10)
-      })
+      })()
     })
   })
 
