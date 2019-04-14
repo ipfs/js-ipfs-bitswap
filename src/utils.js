@@ -80,11 +80,41 @@ const sortBy = (fn, list) => {
   })
 }
 
+const first = async (iterator) => {
+  for await (const value of iterator) {
+    return value
+  }
+}
+
+const last = async (iterator) => {
+  let value
+  for await (value of iterator) {
+    // Intentionally empty
+  }
+  return value
+}
+
+const all = async (iterator) => {
+  const values = []
+  for await (const value of iterator) {
+    values.push(value)
+  }
+  return values
+}
+
+const extendIterator = (iterator) => {
+  iterator.first = () => first(iterator)
+  iterator.last = () => last(iterator)
+  iterator.all = () => all(iterator)
+  return iterator
+}
+
 module.exports = {
   logger,
   includesWith,
   uniqWith,
   groupBy,
   pullAllWith,
-  sortBy
+  sortBy,
+  extendIterator
 }

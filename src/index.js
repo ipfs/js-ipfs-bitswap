@@ -4,14 +4,15 @@ const waterfall = require('async/waterfall')
 const reject = require('async/reject')
 const each = require('async/each')
 const series = require('async/series')
-const map = require('async/map')
 const nextTick = require('async/nextTick')
+const promisify = require('promisify-es6')
+const typical = require('typical')
 
 const WantManager = require('./want-manager')
 const Network = require('./network')
 const DecisionEngine = require('./decision-engine')
 const Notifications = require('./notifications')
-const logger = require('./utils').logger
+const { logger, extendIterator } = require('./utils')
 const Stats = require('./stats')
 
 const defaultOptions = {
@@ -165,6 +166,14 @@ class Bitswap {
     })
   }
 
+  _findAndConnect (cid) {
+    if (this.promptNetwork) {
+      this.network.findAndConnect(cid, (err) => {
+        if (err) this._log.error(err)
+      })
+    }
+  }
+
   enableStats () {
     this._stats.enable()
   }
@@ -197,88 +206,72 @@ class Bitswap {
    * Fetch a given block by cid. If the block is in the local
    * blockstore it is returned, otherwise the block is added to the wantlist and returned once another node sends it to us.
    *
-   * @param {CID} cid
-   * @param {function(Error, Block)} callback
-   * @returns {void}
+   * @param {CID} cid - The CID of the block that should be retrieved.
+   * @param {Object} options
+   * @param {boolean} options.promptNetwork - Option whether to promptNetwork or not
+   * @returns {Promise.<Object>} - Returns a promise with a block corresponding with the given `cid`.
    */
-  get (cid, callback) {
-    this.getMany([cid], (err, blocks) => {
-      if (err) {
-        return callback(err)
-      }
+  async get (cid, options) {
+    const optionsCopy = Object.assign({}, options)
 
-      if (blocks && blocks.length > 0) {
-        callback(null, blocks[0])
-      } else {
-        // when a unwant happens
-        callback()
+    optionsCopy.promptNetwork = optionsCopy.promptNetwork || true
+
+    const getFromOutside = (cid) => {
+      return new Promise((resolve) => {
+        this.wm.wantBlocks([cid])
+
+        this.notifications.wantBlock(
+          cid,
+          // called on block receive
+          (block) => {
+            this.wm.cancelWants([cid])
+            resolve(block)
+          },
+          // called on unwant
+          () => {
+            this.wm.cancelWants([cid])
+            resolve(undefined)
+          }
+        )
+      })
+    }
+
+    if (await promisify(this.blockstore.has)(cid)) {
+      return promisify(this.blockstore.get)(cid)
+    } else {
+      if (optionsCopy.promptNetwork) {
+        this._findAndConnect(cid)
       }
-    })
+      return getFromOutside(cid)
+    }
   }
 
   /**
    * Fetch a a list of blocks by cid. If the blocks are in the local
    * blockstore they are returned, otherwise the blocks are added to the wantlist and returned once another node sends them to us.
    *
-   * @param {Array<CID>} cids
-   * @param {function(Error, Blocks)} callback
-   * @returns {void}
+   * @param {Iterable.<CID>} cids
+   * @returns {Iterable.<Promise.<Object>>}
    */
-  getMany (cids, callback) {
-    let pendingStart = cids.length
-    const wantList = []
-    let promptedNetwork = false
-
-    const getFromOutside = (cid, cb) => {
-      wantList.push(cid)
-
-      this.notifications.wantBlock(
-        cid,
-        // called on block receive
-        (block) => {
-          this.wm.cancelWants([cid])
-          cb(null, block)
-        },
-        // called on unwant
-        () => {
-          this.wm.cancelWants([cid])
-          cb(null, undefined)
-        }
-      )
-
-      if (!pendingStart) {
-        this.wm.wantBlocks(wantList)
-      }
+  getMany (cids) {
+    if (!typical.isIterable(cids) || typical.isString(cids) ||
+        Buffer.isBuffer(cids)) {
+      throw new Error('`cids` must be an iterable of CIDs')
     }
 
-    map(cids, (cid, cb) => {
-      waterfall(
-        [
-          (cb) => this.blockstore.has(cid, cb),
-          (has, cb) => {
-            pendingStart--
-            if (has) {
-              if (!pendingStart) {
-                this.wm.wantBlocks(wantList)
-              }
-              return this.blockstore.get(cid, cb)
-            }
+    const generator = async function * () {
+      let promptNetwork = true
+      for await (const cid of cids) {
+        if (promptNetwork) {
+          yield this.get(cid, { promptNetwork: true })
+          promptNetwork = false
+        } else {
+          yield this.get(cid, { promptNetwork: false })
+        }
+      }
+    }.bind(this)
 
-            if (!promptedNetwork) {
-              promptedNetwork = true
-              this.network.findAndConnect(cids[0], (err) => {
-                if (err) {
-                  this._log.error(err)
-                }
-              })
-            }
-
-            // we don't have the block here
-            getFromOutside(cid, cb)
-          }
-        ],
-        cb)
-    }, callback)
+    return extendIterator(generator())
   }
 
   // removes the given cids from the wantlist independent of any ref counts

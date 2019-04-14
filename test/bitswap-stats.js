@@ -232,10 +232,11 @@ describe('bitswap stats', () => {
         finish()
       })
 
-      bs2.get(block.cid, (err, block) => {
-        expect(err).to.not.exist()
+      bs2.get(block.cid).then(() => {
         expect(block).to.exist()
         finish()
+      }).catch((err) => {
+        expect(err).to.not.exist()
       })
     })
 
