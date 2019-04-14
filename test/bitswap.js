@@ -30,7 +30,7 @@ function createThing (dht, callback) {
     },
     (repo, libp2pNode, cb) => {
       const bitswap = new Bitswap(libp2pNode, repo.blocks)
-      bitswap.start((err) => cb(err, repo, libp2pNode, bitswap))
+      bitswap.start().then((err) => cb(err, repo, libp2pNode, bitswap))
     }
   ], (err, repo, libp2pNode, bitswap) => {
     expect(err).to.not.exist()
@@ -64,7 +64,7 @@ describe('bitswap without DHT', function () {
   after((done) => {
     each(nodes, (node, cb) => {
       series([
-        (cb) => node.bitswap.stop(cb),
+        (cb) => node.bitswap.stop().then(() => cb()),
         (cb) => node.libp2pNode.stop(cb),
         (cb) => node.repo.teardown(cb)
       ], cb)
@@ -120,7 +120,7 @@ describe('bitswap with DHT', function () {
   after((done) => {
     each(nodes, (node, cb) => {
       series([
-        (cb) => node.bitswap.stop(cb),
+        (cb) => node.bitswap.stop().then(() => cb()),
         (cb) => node.libp2pNode.stop(cb),
         (cb) => node.repo.teardown(cb)
       ], cb)

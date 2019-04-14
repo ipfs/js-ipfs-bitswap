@@ -91,9 +91,11 @@ describe('bitswap stats', () => {
   })
 
   // start the first bitswap
-  before((done) => bs.start(done))
+  before((done) => {
+    bs.start().then(() => done())
+  })
 
-  after((done) => each(bitswaps, (bs, cb) => bs.stop(cb), done))
+  after((done) => each(bitswaps, (bs, cb) => bs.stop().then(() => cb()), done))
 
   after((done) => each(repos, (repo, cb) => repo.teardown(cb), done))
 
@@ -197,11 +199,11 @@ describe('bitswap stats', () => {
 
     before((done) => {
       bs2 = bitswaps[1]
-      bs2.start(done)
+      bs2.start().then(() => done())
     })
 
     after((done) => {
-      bs2.stop(done)
+      bs2.stop().then(() => done())
     })
 
     before((done) => {
