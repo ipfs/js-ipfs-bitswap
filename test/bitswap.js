@@ -83,7 +83,8 @@ describe('bitswap without DHT', function () {
       const finish = orderedFinish(2, done)
 
       const block = await promisify(makeBlock)()
-      await promisify(nodes[2].bitswap.put.bind(nodes[2].bitswap))(block)
+      await nodes[2].bitswap.put(block)
+      // await promisify(nodes[2].bitswap.put.bind(nodes[2].bitswap))(block)
 
       nodes[0].bitswap.get(block.cid).then((block) => {
         expect(block).to.not.exist()
@@ -135,7 +136,8 @@ describe('bitswap with DHT', function () {
 
   it('put a block in 2, get it in 0', async () => {
     const block = await promisify(makeBlock)()
-    await promisify(nodes[2].bitswap.put.bind(nodes[2].bitswap))(block)
+    nodes[2].bitswap.put(block)
+    // await promisify(nodes[2].bitswap.put.bind(nodes[2].bitswap))(block)
 
     const blockRetrieved = await nodes[0].bitswap.get(block.cid)
     expect(block.data).to.eql(blockRetrieved.data)

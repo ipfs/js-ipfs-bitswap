@@ -46,7 +46,7 @@ describe('gen Bitswap network', function () {
         }),
         (cb) => each(
           blocks,
-          (b, cb) => node.bitswap.put(b, cb),
+          (b, cb) => node.bitswap.put(b).then(() => cb()),
           cb
         ),
         (cb) => Promise.all(_.range(100).map((i) => {
@@ -114,7 +114,7 @@ function round (nodeArr, n, cb) {
           return blocks[index]
         })
 
-        each(data, (d, cb) => node.bitswap.put(d, cb), cb)
+        each(data, (d, cb) => node.bitswap.put(d).then(() => cb()), cb)
       }), cb),
       (cb) => {
         d = (new Date()).getTime()
