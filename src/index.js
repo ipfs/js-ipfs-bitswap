@@ -116,7 +116,7 @@ class Bitswap {
           return nextTick(cb)
         }
 
-        this._putBlock(block, cb)
+        this.put(block).then(() => cb())
       }
     ], callback)
   }
@@ -148,30 +148,10 @@ class Bitswap {
     this._stats.disconnected(peerId)
   }
 
-  _putBlock (block, callback) {
-    this.blockstore.put(block, (err) => {
-      if (err) {
-        return callback(err)
-      }
-
-      this.notifications.hasBlock(block)
-      this.network.provide(block.cid, (err) => {
-        if (err) {
-          this._log.error('Failed to provide: %s', err.message)
-        }
-      })
-
-      this.engine.receivedBlocks([block.cid])
-      callback()
-    })
-  }
-
   _findAndConnect (cid) {
-    if (this.promptNetwork) {
-      this.network.findAndConnect(cid, (err) => {
-        if (err) this._log.error(err)
-      })
-    }
+    this.network.findAndConnect(cid, (err) => {
+      if (err) this._log.error(err)
+    })
   }
 
   enableStats () {
@@ -296,55 +276,47 @@ class Bitswap {
    * Put the given block to the underlying blockstore and
    * send it to nodes that have it in their wantlist.
    *
-   * @param {Block} block
-   * @param {function(Error)} callback
-   * @returns {void}
+   * @param {Block} block - Block that should be inserted.
+   * @returns {Promise.<CID>} - Returns the CID of the serialized IPLD Nodes.
    */
-  put (block, callback) {
+  async put (block) {
     this._log('putting block')
 
-    waterfall([
-      (cb) => this.blockstore.has(block.cid, cb),
-      (has, cb) => {
-        if (has) {
-          return nextTick(cb)
-        }
+    const has = await promisify(this.blockstore.has)(block.cid)
+    if (!has) {
+      await promisify(this.blockstore.put)(block)
+      this.notifications.hasBlock(block)
+      this.network.provide(block.cid, (err) => {
+        if (err) this._log.error('Failed to provide: %s', err.message)
+      })
+      this.engine.receivedBlocks([block.cid])
+    }
 
-        this._putBlock(block, cb)
-      }
-    ], callback)
+    return block.cid
   }
 
   /**
    * Put the given blocks to the underlying blockstore and
    * send it to nodes that have it them their wantlist.
    *
-   * @param {Array<Block>} blocks
-   * @param {function(Error)} callback
-   * @returns {void}
+   * @param {Iterable.<Block>} blocks
+   * @returns {Iterable.<Promise.<CID>>} - Returns an async iterator with the CIDs of the blocks inserted
    */
-  putMany (blocks, callback) {
-    waterfall([
-      (cb) => reject(blocks, (b, cb) => {
-        this.blockstore.has(b.cid, cb)
-      }, cb),
-      (newBlocks, cb) => this.blockstore.putMany(newBlocks, (err) => {
-        if (err) {
-          return cb(err)
-        }
+  putMany (blocks) {
+    if (!typical.isIterable(blocks)) {
+      throw new Error('`blocks` must be an iterable')
+    }
 
-        newBlocks.forEach((block) => {
-          this.notifications.hasBlock(block)
-          this.engine.receivedBlocks([block.cid])
-          this.network.provide(block.cid, (err) => {
-            if (err) {
-              this._log.error('Failed to provide: %s', err.message)
-            }
-          })
-        })
-        cb()
-      })
-    ], callback)
+    const generator = async function * () {
+      for await (const block of blocks) {
+        const has = await promisify(this.blockstore.has)(block.cid)
+        if (!has) {
+          yield this.put(block)
+        }
+      }
+    }.bind(this)
+
+    return extendIterator(generator())
   }
 
   /**

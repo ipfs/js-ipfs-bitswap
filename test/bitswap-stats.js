@@ -213,8 +213,8 @@ describe('bitswap stats', () => {
       })
     })
 
-    before((done) => {
-      bs.put(block, done)
+    before(async () => {
+      await bs.put(block)
     })
 
     it('updates stats on transfer', (done) => {
