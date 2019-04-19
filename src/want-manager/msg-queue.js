@@ -46,19 +46,18 @@ module.exports = class MsgQueue {
     this.addMessage(msg)
   }
 
-  send (msg) {
-    this.network.connectTo(this.peerId, (err) => {
-      if (err) {
-        this._log.error('cant connect to peer %s: %s', this.peerId.toB58String(), err.message)
-        return
-      }
-
+  async send (msg) {
+    try {
+      await this.network.connectTo(this.peerId)
       this._log('sending message')
       this.network.sendMessage(this.peerId, msg, (err) => {
         if (err) {
           this._log.error('send error: %s', err.message)
         }
       })
-    })
+    } catch (err) {
+      this._log.error('cant connect to peer %s: %s', this.peerId.toB58String(), err.message)
+      return
+    }
   }
 }

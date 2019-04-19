@@ -5,6 +5,7 @@ const pull = require('pull-stream')
 const waterfall = require('async/waterfall')
 const each = require('async/each')
 const nextTick = require('async/nextTick')
+const promisify = require('promisify-es6')
 
 const Message = require('./types/message')
 const CONSTANTS = require('./constants')
@@ -109,7 +110,7 @@ class Network {
       (cb) => this.findProviders(cid, CONSTANTS.maxProvidersPerRequest, cb),
       (provs, cb) => {
         this._log('connecting to providers', provs.map((p) => p.id.toB58String()))
-        each(provs, (p, cb) => this.connectTo(p, cb))
+        each(provs, (p, cb) => this.connectTo(p).then(() => cb()))
       }
     ], callback)
   }
@@ -153,10 +154,18 @@ class Network {
     })
   }
 
-  connectTo (peer, callback) {
-    if (!this._running) { return callback(new Error(`network isn't running`)) }
+  /**
+   * Connects to another peer
+   *
+   * @param {PeerInfo|PeerId|Multiaddr}
+   * @returns {Promise.<Connection>}
+   */
+  connectTo (peer) {
+    if (!this._running) {
+      throw new Error(`network isn't running`)
+    }
 
-    this.libp2p.dial(peer, callback)
+    return promisify(this.libp2p.dial.bind(this.libp2p))(peer)
   }
 
   // Dial to the peer and try to use the most recent Bitswap

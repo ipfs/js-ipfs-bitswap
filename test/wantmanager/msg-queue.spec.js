@@ -75,9 +75,8 @@ describe('MessageQueue', () => {
     }
 
     const network = {
-      connectTo (p, cb) {
+      connectTo (p) {
         connects.push(p)
-        cb()
       },
       sendMessage (p, msg, cb) {
         messages.push([p, msg])

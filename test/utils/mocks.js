@@ -62,10 +62,9 @@ exports.mockNetwork = (calls, done) => {
   }
 
   return {
-    connectTo (p, cb) {
+    connectTo (p) {
       setImmediate(() => {
         connects.push(p)
-        cb()
       })
     },
     sendMessage (p, msg, cb) {
