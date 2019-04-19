@@ -77,8 +77,8 @@ exports.mockNetwork = (calls, done) => {
     start (callback) {
       setImmediate(() => callback())
     },
-    findAndConnect (cid, callback) {
-      setImmediate(() => callback())
+    findAndConnect (cid) {
+      return new Promise(() => {})
     },
     provide (cid, callback) {
       setImmediate(() => callback())

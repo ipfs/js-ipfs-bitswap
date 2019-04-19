@@ -57,7 +57,6 @@ module.exports = class MsgQueue {
       })
     } catch (err) {
       this._log.error('cant connect to peer %s: %s', this.peerId.toB58String(), err.message)
-      return
     }
   }
 }

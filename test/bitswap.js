@@ -84,7 +84,6 @@ describe('bitswap without DHT', function () {
 
       const block = await promisify(makeBlock)()
       await nodes[2].bitswap.put(block)
-      // await promisify(nodes[2].bitswap.put.bind(nodes[2].bitswap))(block)
 
       nodes[0].bitswap.get(block.cid).then((block) => {
         expect(block).to.not.exist()

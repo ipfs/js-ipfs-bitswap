@@ -319,8 +319,8 @@ describe('bitswap with mocks', function () {
         stop (callback) {
           setImmediate(() => callback())
         },
-        findAndConnect (cid, callback) {
-          setImmediate(() => callback())
+        findAndConnect (cid) {
+          return new Promise(() => {})
         },
         provide (cid, callback) {
           setImmediate(() => callback())
@@ -345,8 +345,8 @@ describe('bitswap with mocks', function () {
         stop (callback) {
           setImmediate(() => callback())
         },
-        findAndConnect (cid, callback) {
-          setImmediate(() => callback())
+        findAndConnect (cid) {
+          return new Promise(() => {})
         },
         provide (cid, callback) {
           setImmediate(() => callback())
