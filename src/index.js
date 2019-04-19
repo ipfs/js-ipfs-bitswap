@@ -144,7 +144,7 @@ class Bitswap {
   }
 
   _findAndConnect (cid) {
-    this.network.findAndConnect(cid, (err) => {
+    this.network.findAndConnect(cid).catch((err) => {
       if (err) this._log.error(err)
     })
   }

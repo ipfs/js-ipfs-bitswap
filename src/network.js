@@ -2,8 +2,6 @@
 
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
-const waterfall = require('async/waterfall')
-const each = require('async/each')
 const nextTick = require('async/nextTick')
 const promisify = require('promisify-es6')
 
@@ -98,21 +96,35 @@ class Network {
     this.bitswap._onPeerDisconnected(peerInfo.id)
   }
 
-  findProviders (cid, maxProviders, callback) {
-    this.libp2p.contentRouting.findProviders(cid, {
-      maxTimeout: CONSTANTS.providerRequestTimeout,
-      maxNumProviders: maxProviders
-    }, callback)
+  /**
+   * Find providers given a `cid`.
+   *
+   * @param {CID} cid
+   * @param {number} maxProviders
+   * @returns {Promise.<Result.<Array>>}
+   */
+  findProviders (cid, maxProviders) {
+    return promisify(this.libp2p.contentRouting.findProviders.bind(this.libp2p.contentRouting))(
+      cid,
+      {
+        maxTimeout: CONSTANTS.providerRequestTimeout,
+        maxNumProviders: maxProviders
+      }
+    )
   }
 
-  findAndConnect (cid, callback) {
-    waterfall([
-      (cb) => this.findProviders(cid, CONSTANTS.maxProvidersPerRequest, cb),
-      (provs, cb) => {
-        this._log('connecting to providers', provs.map((p) => p.id.toB58String()))
-        each(provs, (p, cb) => this.connectTo(p).then(() => cb()))
-      }
-    ], callback)
+  /**
+   * Find the providers of a given `cid` and connect to them.
+   *
+   * @param {CID} cid
+   * @returns {void}
+   */
+  async findAndConnect (cid) {
+    const provs = await this.findProviders(cid, CONSTANTS.maxProvidersPerRequest)
+    this._log('connecting to providers', provs.map((p) => p.id.toB58String()))
+    await Promise.all(provs.map((p) => {
+      return this.connectTo(p)
+    }))
   }
 
   provide (cid, callback) {
@@ -157,7 +169,7 @@ class Network {
   /**
    * Connects to another peer
    *
-   * @param {PeerInfo|PeerId|Multiaddr}
+   * @param {PeerInfo|PeerId|Multiaddr} peer
    * @returns {Promise.<Connection>}
    */
   connectTo (peer) {
