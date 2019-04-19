@@ -123,10 +123,15 @@ describe('network', () => {
   })
 
   it('connectTo fail', (done) => {
-    networkA.connectTo(p2pB.peerInfo.id, (err) => {
-      expect(err).to.exist()
-      done()
-    })
+    (async () => {
+      try {
+        await networkA.connectTo(p2pB.peerInfo.id)
+        chai.assert.fail()
+      } catch (err) {
+        expect(err).to.exist()
+        done()
+      }
+    })()
   })
 
   it('onPeerConnected success', (done) => {
@@ -160,7 +165,11 @@ describe('network', () => {
   })
 
   it('connectTo success', (done) => {
-    networkA.connectTo(p2pB.peerInfo, done)
+    networkA.connectTo(p2pB.peerInfo).then(() => {
+      done()
+    }).catch((err) => {
+      expect(err).to.not.exist()
+    })
   })
 
   it('._receiveMessage success from Bitswap 1.0.0', (done) => {
@@ -279,7 +288,9 @@ describe('network', () => {
     function finish () {
       bitswapMockA._onPeerConnected = () => {}
       bitswapMockC._onPeerConnected = () => {}
-      networkA.connectTo(p2pC.peerInfo.id, done)
+      networkA.connectTo(p2pC.peerInfo.id).then(() => {
+        done()
+      })
     }
   })
 

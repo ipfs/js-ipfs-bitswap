@@ -249,12 +249,10 @@ describe('bitswap with mocks', function () {
       let bs2
 
       const n1 = {
-        connectTo (id, cb) {
-          let err
+        connectTo (id) {
           if (id.toHexString() !== other.toHexString()) {
-            err = new Error('unknown peer')
+            throw new Error('unknown peer')
           }
-          setImmediate(() => cb(err))
         },
         sendMessage (id, msg, cb) {
           if (id.toHexString() === other.toHexString()) {
@@ -278,11 +276,9 @@ describe('bitswap with mocks', function () {
       }
       const n2 = {
         connectTo (id, cb) {
-          let err
           if (id.toHexString() !== me.toHexString()) {
-            err = new Error('unkown peer')
+            throw new Error('unknown peer')
           }
-          setImmediate(() => cb(err))
         },
         sendMessage (id, msg, cb) {
           if (id.toHexString() === me.toHexString()) {
@@ -305,7 +301,6 @@ describe('bitswap with mocks', function () {
         }
       }
 
-      // Do not remove semi-colon. Will break the test.
       ;(async () => {
         // Create and start bs1
         bs1 = new Bitswap(mockLibp2pNode(), repo.blocks)
