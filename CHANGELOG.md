@@ -1,3 +1,23 @@
+<a name="0.24.0"></a>
+# [0.24.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.23.0...v0.24.0) (2019-05-09)
+
+
+### Chores
+
+* update cids dependency ([0779160](https://github.com/ipfs/js-ipfs-bitswap/commit/0779160))
+
+
+### BREAKING CHANGES
+
+* v1 CIDs created by this module now default to base32 encoding when stringified
+
+refs: https://github.com/ipfs/js-ipfs/issues/1995
+
+License: MIT
+Signed-off-by: Alan Shaw <alan.shaw@protocol.ai>
+
+
+
 <a name="0.23.0"></a>
 # [0.23.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.22.0...v0.23.0) (2019-03-16)
 
