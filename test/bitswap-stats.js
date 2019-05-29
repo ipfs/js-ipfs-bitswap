@@ -87,6 +87,7 @@ describe('bitswap stats', () => {
         statsComputeThrottleTimeout: 500 // fast update interval for tests
       }))
     bs = bitswaps[0]
+    bs.wm.wantBlocks(blocks.map(b => b.cid))
   })
 
   // start the first bitswap
