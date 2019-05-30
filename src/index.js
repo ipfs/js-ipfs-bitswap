@@ -87,28 +87,31 @@ class Bitswap {
       const blocks = Array.from(incoming.blocks.values())
 
       // quickly send out cancels, reduces chances of duplicate block receives
-      const toCancel = blocks
+      const wanted = blocks
         .filter((b) => this.wm.wantlist.contains(b.cid))
         .map((b) => b.cid)
 
-      this.wm.cancelWants(toCancel)
+      this.wm.cancelWants(wanted)
 
       each(
         blocks,
-        (b, cb) => this._handleReceivedBlock(peerId, b, cb),
+        (b, cb) => {
+          const wasWanted = wanted.includes(b.cid)
+          this._handleReceivedBlock(peerId, b, wasWanted, cb)
+        },
         callback
       )
     })
   }
 
-  _handleReceivedBlock (peerId, block, callback) {
+  _handleReceivedBlock (peerId, block, wasWanted, callback) {
     this._log('received block')
 
     waterfall([
       (cb) => this.blockstore.has(block.cid, cb),
       (has, cb) => {
         this._updateReceiveCounters(peerId.toB58String(), block, has)
-        if (has) {
+        if (has || !wasWanted) {
           return nextTick(cb)
         }
 

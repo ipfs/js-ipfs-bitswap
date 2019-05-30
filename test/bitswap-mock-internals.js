@@ -64,6 +64,8 @@ describe('bitswap with mocks', function () {
         const b1 = blocks[0]
         const b2 = blocks[1]
 
+        bs.wm.wantBlocks([b1.cid, b2.cid])
+
         const msg = new Message(false)
         msg.addBlock(b1)
         msg.addBlock(b2)
@@ -140,7 +142,7 @@ describe('bitswap with mocks', function () {
           map(_.range(5), (i, cb) => {
             const msg = new Message(false)
             msg.addBlock(blocks[i])
-            msg.addBlock(blocks[5 + 1])
+            msg.addBlock(blocks[i + 5])
             cb(null, msg)
           }, (err, messages) => {
             expect(err).to.not.exist()
@@ -148,6 +150,10 @@ describe('bitswap with mocks', function () {
             eachSeries(others, (other, cb) => {
               const msg = messages[i]
               i++
+
+              const cids = [...msg.blocks.values()].map(b => b.cid)
+              bs.wm.wantBlocks(cids)
+
               bs._receiveMessage(other, msg, (err) => {
                 expect(err).to.not.exist()
                 storeHasBlocks(msg, repo.blocks, cb)
@@ -155,6 +161,52 @@ describe('bitswap with mocks', function () {
             }, done)
           })
         }
+      })
+    })
+
+    it('ignore unwanted blocks', (done) => {
+      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      bs.start((err) => {
+        expect(err).to.not.exist()
+
+        const other = ids[1]
+
+        const b1 = blocks[2]
+        const b2 = blocks[3]
+        const b3 = blocks[4]
+
+        bs.wm.wantBlocks([b2.cid])
+
+        const msg = new Message(false)
+        msg.addBlock(b1)
+        msg.addBlock(b2)
+        msg.addBlock(b3)
+
+        bs._receiveMessage(other, msg, (err) => {
+          expect(err).to.not.exist()
+
+          map([b1.cid, b2.cid, b3.cid], (cid, cb) => repo.blocks.has(cid, cb), (err, res) => {
+            expect(err).to.not.exist()
+
+            expect(res).to.eql([false, true, false])
+
+            const ledger = bs.ledgerForPeer(other)
+            expect(ledger.peer).to.equal(other.toPrint())
+            expect(ledger.value).to.equal(0)
+
+            // Note: Keeping track of received bytes for blocks affects the
+            // debt ratio, which in future may be used as part of fairness
+            // algorithms when prioritizing who to send blocks to.
+            // So we may want to revise whether we record received blocks from
+            // a peer even if we didn't ask for the blocks.
+            // For now keeping it liks this to match the go implementation:
+            // https://github.com/ipfs/go-bitswap/blob/acc22c283722c15436120ae522c8e8021d0b06f8/bitswap.go#L293
+            expect(ledger.sent).to.equal(0)
+            expect(ledger.recv).to.equal(144)
+            expect(ledger.exchanged).to.equal(3)
+            done()
+          })
+        })
       })
     })
   })
