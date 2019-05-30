@@ -1,3 +1,13 @@
+<a name="0.24.1"></a>
+## [0.24.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.24.0...v0.24.1) (2019-05-30)
+
+
+### Bug Fixes
+
+* ignore unwanted blocks ([#194](https://github.com/ipfs/js-ipfs-bitswap/issues/194)) ([e8d722c](https://github.com/ipfs/js-ipfs-bitswap/commit/e8d722c))
+
+
+
 <a name="0.24.0"></a>
 # [0.24.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.23.0...v0.24.0) (2019-05-09)
 
