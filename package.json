@@ -1,6 +1,6 @@
 {
   "name": "ipfs-bitswap",
-  "version": "0.24.1",
+  "version": "0.25.0",
   "description": "Node.js implementation of the Bitswap data exchange protocol used by IPFS",
   "leadMaintainer": "Volker Mische <volker.mische@gmail.com>",
   "main": "src/index.js",
@@ -99,6 +99,7 @@
     "Richard Schneider <makaretu@gmail.com>",
     "Stephen Whitmore <stephen.whitmore@gmail.com>",
     "Volker Mische <volker.mische@gmail.com>",
+    "achingbrain <alex@achingbrain.net>",
     "dirkmc <dirkmdev@gmail.com>",
     "dmitriy ryajov <dryajov@dmitriys-MBP.HomeNET>",
     "greenkeeper[bot] <greenkeeper[bot]@users.noreply.github.com>",
