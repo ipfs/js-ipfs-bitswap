@@ -1,3 +1,25 @@
+<a name="0.25.0"></a>
+# [0.25.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.24.1...v0.25.0) (2019-06-12)
+
+
+### Bug Fixes
+
+* base encode CIDs before logging or emitting them ([704de22](https://github.com/ipfs/js-ipfs-bitswap/commit/704de22))
+
+
+### BREAKING CHANGES
+
+* Emitted events have different bytes
+
+The emitted events contain the stringified version of the CID, as we
+change it to the base encoding the CID has, those bytes may be different
+to previous versions of this module.
+
+Though this shouldn't have any impact on any other modules as the
+events are only used internally.
+
+
+
 <a name="0.24.1"></a>
 ## [0.24.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.24.0...v0.24.1) (2019-05-30)
 
