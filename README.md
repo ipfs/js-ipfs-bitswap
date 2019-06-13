@@ -15,7 +15,7 @@
 
 ## Lead Maintainer
 
-[Volker Mische](https://github.com/vmx)
+[Dirk McCormick](https://github.com/dirkmc)
 
 ## Table of Contents
 
