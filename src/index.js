@@ -5,7 +5,7 @@ const reject = require('async/reject')
 const each = require('async/each')
 const series = require('async/series')
 const map = require('async/map')
-const nextTick = require('async/nextTick')
+const setImmediate = require('async/setImmediate')
 
 const WantManager = require('./want-manager')
 const Network = require('./network')
@@ -112,7 +112,7 @@ class Bitswap {
       (has, cb) => {
         this._updateReceiveCounters(peerId.toB58String(), block, has)
         if (has || !wasWanted) {
-          return nextTick(cb)
+          return setImmediate(cb)
         }
 
         this._putBlock(block, cb)
@@ -314,7 +314,7 @@ class Bitswap {
       (cb) => this.blockstore.has(block.cid, cb),
       (has, cb) => {
         if (has) {
-          return nextTick(cb)
+          return setImmediate(cb)
         }
 
         this._putBlock(block, cb)

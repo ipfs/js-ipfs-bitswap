@@ -3,7 +3,7 @@
 const each = require('async/each')
 const eachSeries = require('async/eachSeries')
 const waterfall = require('async/waterfall')
-const nextTick = require('async/nextTick')
+const setImmediate = require('async/setImmediate')
 
 const map = require('async/map')
 const debounce = require('just-debounce-it')
@@ -66,7 +66,7 @@ class DecisionEngine {
           cb()
         })
       } else {
-        nextTick(cb)
+        setImmediate(cb)
       }
     }, cb)
   }
@@ -174,7 +174,7 @@ class DecisionEngine {
     const ledger = this._findOrCreate(peerId)
 
     if (msg.empty) {
-      return nextTick(cb)
+      return setImmediate(cb)
     }
 
     // If the message was a full wantlist clear the current one
@@ -185,7 +185,7 @@ class DecisionEngine {
     this._processBlocks(msg.blocks, ledger)
 
     if (msg.wantlist.size === 0) {
-      return nextTick(cb)
+      return setImmediate(cb)
     }
 
     let cancels = []
@@ -289,12 +289,12 @@ class DecisionEngine {
 
   start (callback) {
     this._running = true
-    nextTick(() => callback())
+    setImmediate(() => callback())
   }
 
   stop (callback) {
     this._running = false
-    nextTick(() => callback())
+    setImmediate(() => callback())
   }
 }
 

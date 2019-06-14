@@ -4,7 +4,7 @@ const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
 const waterfall = require('async/waterfall')
 const each = require('async/each')
-const nextTick = require('async/nextTick')
+const setImmediate = require('async/setImmediate')
 
 const Message = require('./types/message')
 const CONSTANTS = require('./constants')
@@ -44,7 +44,7 @@ class Network {
       .filter((peer) => peer.isConnected())
       .forEach((peer) => this._onPeerConnect((peer)))
 
-    nextTick(() => callback())
+    setImmediate(() => callback())
   }
 
   stop (callback) {
@@ -56,7 +56,7 @@ class Network {
     this.libp2p.removeListener('peer:connect', this._onPeerConnect)
     this.libp2p.removeListener('peer:disconnect', this._onPeerDisconnect)
 
-    nextTick(() => callback())
+    setImmediate(() => callback())
   }
 
   // Handles both types of bitswap messgages
