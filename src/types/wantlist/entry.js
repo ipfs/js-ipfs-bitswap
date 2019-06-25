@@ -28,7 +28,7 @@ class WantListEntry {
 
   // So that console.log prints a nice description of this object
   get [Symbol.toStringTag] () {
-    const cidStr = this.cid.toBaseEncodedString()
+    const cidStr = this.cid.toString('base58btc')
     return `WantlistEntry <key: ${cidStr}, priority: ${this.priority}, refs: ${this._refCounter}>`
   }
 

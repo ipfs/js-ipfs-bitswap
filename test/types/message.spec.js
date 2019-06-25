@@ -92,15 +92,15 @@ describe('BitswapMessage', () => {
       expect(msg.full).to.equal(true)
       expect(Array.from(msg.wantlist))
         .to.eql([[
-          cid0.buffer.toString(),
+          cid0.toString('base58btc'),
           new BitswapMessage.Entry(cid0, 0, false)
         ]])
 
       expect(
         Array.from(msg.blocks).map((b) => [b[0], b[1].data])
       ).to.eql([
-        [cid1.buffer.toString(), b1.data],
-        [cid2.buffer.toString(), b2.data]
+        [cid1.toString('base58btc'), b1.data],
+        [cid2.toString('base58btc'), b2.data]
       ])
 
       done()
@@ -137,15 +137,15 @@ describe('BitswapMessage', () => {
       expect(msg.full).to.equal(true)
       expect(Array.from(msg.wantlist))
         .to.eql([[
-          cid0.buffer.toString(),
+          cid0.toString('base58btc'),
           new BitswapMessage.Entry(cid0, 0, false)
         ]])
 
       expect(
         Array.from(msg.blocks).map((b) => [b[0], b[1].data])
       ).to.eql([
-        [cid1.buffer.toString(), b1.data],
-        [cid2.buffer.toString(), b2.data]
+        [cid1.toString('base58btc'), b1.data],
+        [cid2.toString('base58btc'), b2.data]
       ])
 
       done()
@@ -207,6 +207,23 @@ describe('BitswapMessage', () => {
       m1.addBlock(b)
       m2.addBlock(b)
       expect(m1.equals(m2)).to.equal(false)
+      done()
+    })
+
+    it('true, same cid derived from distinct encoding', (done) => {
+      const b = blocks[0]
+      const cid = cids[0].toV1()
+      const cid1 = new CID(cid.toBaseEncodedString('base32'))
+      const cid2 = new CID(cid.toBaseEncodedString('base64'))
+      const m1 = new BitswapMessage(true)
+      const m2 = new BitswapMessage(true)
+
+      m1.addEntry(cid1, 1)
+      m2.addEntry(cid2, 1)
+
+      m1.addBlock(b)
+      m2.addBlock(b)
+      expect(m1.equals(m2)).to.equal(true)
       done()
     })
   })

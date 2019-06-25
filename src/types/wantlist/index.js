@@ -14,7 +14,7 @@ class Wantlist {
   }
 
   add (cid, priority) {
-    const cidStr = cid.buffer.toString()
+    const cidStr = cid.toString('base58btc')
     const entry = this.set.get(cidStr)
 
     if (entry) {
@@ -29,7 +29,7 @@ class Wantlist {
   }
 
   remove (cid) {
-    const cidStr = cid.buffer.toString()
+    const cidStr = cid.toString('base58btc')
     const entry = this.set.get(cidStr)
 
     if (!entry) {
@@ -68,7 +68,7 @@ class Wantlist {
   }
 
   contains (cid) {
-    const cidStr = cid.buffer.toString()
+    const cidStr = cid.toString('base58btc')
     return this.set.get(cidStr)
   }
 }
