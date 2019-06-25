@@ -34,7 +34,8 @@ class Notifications extends EventEmitter {
    * @return {void}
    */
   hasBlock (block) {
-    const str = `block:${block.cid}`
+    const cidStr = block.cid.toString('base58btc')
+    const str = `block:${cidStr}`
     this._log(str)
     this.emit(str, block)
   }
@@ -49,7 +50,7 @@ class Notifications extends EventEmitter {
    * @returns {void}
    */
   wantBlock (cid, onBlock, onUnwant) {
-    const cidStr = cid.toString()
+    const cidStr = cid.toString('base58btc')
     this._log(`wantBlock:${cidStr}`)
 
     this._unwantListeners[cidStr] = () => {
@@ -80,7 +81,7 @@ class Notifications extends EventEmitter {
    * @returns {void}
    */
   unwantBlock (cid) {
-    const str = `unwant:${cid}`
+    const str = `unwant:${cid.toString('base58btc')}`
     this._log(str)
     this.emit(str)
   }

@@ -28,8 +28,7 @@ module.exports = class BitswapMessageEntry {
   }
 
   get [Symbol.toStringTag] () {
-    const cidStr = this.cid.toBaseEncodedString()
-
+    const cidStr = this.cid.toString('base58btc')
     return `BitswapMessageEntry ${cidStr} <cancel: ${this.cancel}, priority: ${this.priority}>`
   }
 

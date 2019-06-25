@@ -86,7 +86,7 @@ describe('Wantlist', () => {
     expect(
       Array.from(wm.entries())
     ).to.be.eql([[
-      b.cid.buffer.toString(),
+      b.cid.toString('base58btc'),
       new Wantlist.Entry(b.cid, 2)
     ]])
   })
@@ -101,8 +101,8 @@ describe('Wantlist', () => {
     expect(
       Array.from(wm.sortedEntries())
     ).to.be.eql([
-      [b1.cid.buffer.toString(), new Wantlist.Entry(b1.cid, 1)],
-      [b2.cid.buffer.toString(), new Wantlist.Entry(b2.cid, 1)]
+      [b1.cid.toString('base58btc'), new Wantlist.Entry(b1.cid, 1)],
+      [b2.cid.toString('base58btc'), new Wantlist.Entry(b2.cid, 1)]
     ])
   })
 
@@ -126,10 +126,27 @@ describe('Wantlist', () => {
       expect(
         Array.from(wm.entries())
       ).to.be.eql([[
-        cid.buffer.toString(),
+        cid.toString('base58btc'),
         new Wantlist.Entry(cid, 2)
       ]])
       done()
     })
+  })
+
+  it('matches same cid derived from distinct encodings', () => {
+    // Base 64
+    const id1 = 'mAVUSIKlIkE8vD0ebj4GXaUswGEsNLtHBzSoewPuF0pmhkqRH'
+    // Base 32
+    const id2 = 'bafkreifjjcie6lypi6ny7amxnfftagclbuxndqonfipmb64f2km2devei4'
+
+    const cid1 = new CID(id1)
+    const cid2 = new CID(id2)
+    wm.add(cid1, 2)
+    expect(wm.contains(cid1)).to.exist()
+    expect(wm.contains(cid2)).to.exist()
+
+    wm.remove(cid1)
+    expect(wm.contains(cid1)).not.to.exist()
+    expect(wm.contains(cid2)).not.to.exist()
   })
 })
