@@ -1,3 +1,25 @@
+<a name="0.25.1"></a>
+## [0.25.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.25.0...v0.25.1) (2019-06-26)
+
+
+### Bug Fixes
+
+* use consistent encoding for cid comparison ([c8cee6a](https://github.com/ipfs/js-ipfs-bitswap/commit/c8cee6a))
+
+
+### BREAKING CHANGES
+
+* Emitted events have different bytes
+
+The emitted events contain the stringified version of the CID, as we
+change it to the base encoding the CID has, those bytes may be different
+to previous versions of this module.
+
+Though this shouldn't have any impact on any other modules as the
+events are only used internally.
+
+
+
 <a name="0.25.0"></a>
 # [0.25.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.24.1...v0.25.0) (2019-06-12)
 
