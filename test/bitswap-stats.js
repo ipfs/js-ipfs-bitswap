@@ -15,6 +15,7 @@ const Message = require('../src/types/message')
 const Bitswap = require('../src')
 
 const createTempRepo = require('./utils/create-temp-repo-nodejs')
+const Provider = require('./utils/mocks').mockProvider
 const createLibp2pNode = require('./utils/create-libp2p-node')
 const makeBlock = require('./utils/make-block')
 const countToFinish = require('./utils/helpers').countToFinish
@@ -81,11 +82,14 @@ describe('bitswap stats', () => {
   })
 
   before(() => {
-    bitswaps = nodes.map((node, i) =>
-      new Bitswap(libp2pNodes[i], repos[i].blocks, {
+    bitswaps = nodes.map((node, i) => {
+      const provider = new Provider(libp2pNodes[i])
+
+      return new Bitswap(libp2pNodes[i], repos[i].blocks, provider, {
         statsEnabled: true,
         statsComputeThrottleTimeout: 500 // fast update interval for tests
-      }))
+      })
+    })
     bs = bitswaps[0]
     bs.wm.wantBlocks(blocks.map(b => b.cid))
   })

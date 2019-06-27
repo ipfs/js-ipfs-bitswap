@@ -6,6 +6,7 @@ const map = require('async/map')
 const parallel = require('async/parallel')
 const setImmediate = require('async/setImmediate')
 const series = require('async/series')
+const promisify = require('promisify-es6')
 const _ = require('lodash')
 const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
@@ -16,6 +17,35 @@ const Repo = require('ipfs-repo')
 const EventEmitter = require('events')
 
 const Bitswap = require('../../src')
+
+/*
+ * Create a mock provider
+ */
+
+class Provider {
+  constructor (libp2p) {
+    this._contentRouting = libp2p.contentRouting
+  }
+
+  /**
+   * Announce block to the network and add and entry to the tracker
+   * Takes a cid and makes an attempt to announce it to the network
+   * @param {CID} cid
+   */
+  async provide (cid) {
+    await promisify((callback) => {
+      this._contentRouting.provide(cid, callback)
+    })()
+  }
+
+  async findProviders (cid, options) { // eslint-disable-line require-await
+    return promisify((callback) => {
+      this._contentRouting.findProviders(cid, options, callback)
+    })()
+  }
+}
+
+exports.mockProvider = Provider
 
 /*
  * Create a mock libp2p node
@@ -206,7 +236,9 @@ exports.genBitswapNetwork = (n, callback) => {
     // create every BitSwap
     function createBitswaps () {
       netArray.forEach((net) => {
-        net.bitswap = new Bitswap(net.libp2p, net.repo.blocks, net.peerBook)
+        const provider = new Provider(net.libp2p)
+
+        net.bitswap = new Bitswap(net.libp2p, net.repo.blocks, provider, net.peerBook)
       })
       establishLinks()
     }

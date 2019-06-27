@@ -37,9 +37,11 @@ const statsKeys = [
  *
  * @param {Libp2p} libp2p
  * @param {Blockstore} blockstore
+ * @param {Provider} provider
+ * @param {object} options
  */
 class Bitswap {
-  constructor (libp2p, blockstore, options) {
+  constructor (libp2p, blockstore, provider, options) {
     this._libp2p = libp2p
     this._log = logger(this.peerInfo.id)
 
@@ -53,7 +55,7 @@ class Bitswap {
     })
 
     // the network delivers messages
-    this.network = new Network(libp2p, this, {}, this._stats)
+    this.network = new Network(libp2p, this, {}, this._stats, provider)
 
     // local database
     this.blockstore = blockstore

@@ -19,6 +19,7 @@ const Bitswap = require('../src')
 const createTempRepo = require('./utils/create-temp-repo-nodejs')
 const mockNetwork = require('./utils/mocks').mockNetwork
 const applyNetwork = require('./utils/mocks').applyNetwork
+const Provider = require('./utils/mocks').mockProvider
 const mockLibp2pNode = require('./utils/mocks').mockLibp2pNode
 const storeHasBlocks = require('./utils/store-has-blocks')
 const makeBlock = require('./utils/make-block')
@@ -55,7 +56,10 @@ describe('bitswap with mocks', function () {
 
   describe('receive message', () => {
     it('simple block message', (done) => {
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const libp2pNode = mockLibp2pNode()
+      const provider = new Provider(libp2pNode)
+      const bs = new Bitswap(libp2pNode, repo.blocks, provider)
+
       bs.start((err) => {
         expect(err).to.not.exist()
 
@@ -92,7 +96,10 @@ describe('bitswap with mocks', function () {
     })
 
     it('simple want message', (done) => {
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const libp2pNode = mockLibp2pNode()
+      const provider = new Provider(libp2pNode)
+      const bs = new Bitswap(libp2pNode, repo.blocks, provider)
+
       bs.start((err) => {
         expect(err).to.not.exist()
         const other = ids[1]
@@ -119,7 +126,9 @@ describe('bitswap with mocks', function () {
 
     it('multi peer', function (done) {
       this.timeout(80 * 1000)
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const libp2pNode = mockLibp2pNode()
+      const provider = new Provider(libp2pNode)
+      const bs = new Bitswap(libp2pNode, repo.blocks, provider)
 
       let others
       let blocks
@@ -165,7 +174,10 @@ describe('bitswap with mocks', function () {
     })
 
     it('ignore unwanted blocks', (done) => {
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const libp2pNode = mockLibp2pNode()
+      const provider = new Provider(libp2pNode)
+      const bs = new Bitswap(libp2pNode, repo.blocks, provider)
+
       bs.start((err) => {
         expect(err).to.not.exist()
 
@@ -213,7 +225,10 @@ describe('bitswap with mocks', function () {
 
   describe('get', () => {
     it('fails on requesting empty block', (done) => {
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const libp2pNode = mockLibp2pNode()
+      const provider = new Provider(libp2pNode)
+      const bs = new Bitswap(libp2pNode, repo.blocks, provider)
+
       bs.get(null, (err, res) => {
         expect(err).to.exist()
         expect(err.message).to.equal('Not a valid cid')
@@ -226,7 +241,9 @@ describe('bitswap with mocks', function () {
 
       repo.blocks.put(block, (err) => {
         expect(err).to.not.exist()
-        const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+        const libp2pNode = mockLibp2pNode()
+        const provider = new Provider(libp2pNode)
+        const bs = new Bitswap(libp2pNode, repo.blocks, provider)
 
         bs.get(block.cid, (err, res) => {
           expect(err).to.not.exist()
@@ -244,7 +261,9 @@ describe('bitswap with mocks', function () {
       repo.blocks.putMany([b1, b2, b3], (err) => {
         expect(err).to.not.exist()
 
-        const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+        const libp2pNode = mockLibp2pNode()
+        const provider = new Provider(libp2pNode)
+        const bs = new Bitswap(libp2pNode, repo.blocks, provider)
 
         bs.getMany([b1.cid, b2.cid, b3.cid], (err, res) => {
           expect(err).to.not.exist()
@@ -262,7 +281,9 @@ describe('bitswap with mocks', function () {
       repo.blocks.putMany([b1, b2, b3], (err) => {
         expect(err).to.not.exist()
 
-        const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+        const libp2pNode = mockLibp2pNode()
+        const provider = new Provider(libp2pNode)
+        const bs = new Bitswap(libp2pNode, repo.blocks, provider)
 
         map([b1.cid, b2.cid, b3.cid], (cid, cb) => bs.get(cid, cb), (err, res) => {
           expect(err).to.not.exist()
@@ -275,7 +296,9 @@ describe('bitswap with mocks', function () {
     it('block is added locally afterwards', (done) => {
       const finish = orderedFinish(2, done)
       const block = blocks[9]
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const libp2pNode = mockLibp2pNode()
+      const provider = new Provider(libp2pNode)
+      const bs = new Bitswap(libp2pNode, repo.blocks, provider)
       const net = mockNetwork()
 
       bs.network = net
@@ -359,7 +382,9 @@ describe('bitswap with mocks', function () {
           setImmediate(() => callback())
         }
       }
-      bs1 = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const libp2pNode = mockLibp2pNode()
+      const provider = new Provider(libp2pNode)
+      bs1 = new Bitswap(libp2pNode, repo.blocks, provider)
       applyNetwork(bs1, n1)
 
       bs1.start((err) => {
@@ -371,7 +396,9 @@ describe('bitswap with mocks', function () {
           (cb) => createTempRepo(cb),
           (repo, cb) => {
             repo2 = repo
-            bs2 = new Bitswap(mockLibp2pNode(), repo2.blocks)
+            const libp2pNode2 = mockLibp2pNode()
+            const provider2 = new Provider(libp2pNode)
+            bs2 = new Bitswap(libp2pNode2, repo2.blocks, provider2)
             applyNetwork(bs2, n2)
             bs2.start((err) => {
               expect(err).to.not.exist()
@@ -397,7 +424,9 @@ describe('bitswap with mocks', function () {
     it('double get', (done) => {
       const block = blocks[11]
 
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const libp2pNode = mockLibp2pNode()
+      const provider = new Provider(libp2pNode)
+      const bs = new Bitswap(libp2pNode, repo.blocks, provider)
 
       parallel(
         [
@@ -420,7 +449,10 @@ describe('bitswap with mocks', function () {
 
   describe('unwant', () => {
     it('removes blocks that are wanted multiple times', (done) => {
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const libp2pNode = mockLibp2pNode()
+      const provider = new Provider(libp2pNode)
+      const bs = new Bitswap(libp2pNode, repo.blocks, provider)
+
       bs.start((err) => {
         expect(err).to.not.exist()
         const b = blocks[12]

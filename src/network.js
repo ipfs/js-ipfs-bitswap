@@ -5,6 +5,7 @@ const pull = require('pull-stream')
 const waterfall = require('async/waterfall')
 const each = require('async/each')
 const nextTick = require('async/nextTick')
+const callbackify = require('callbackify')
 
 const Message = require('./types/message')
 const CONSTANTS = require('./constants')
@@ -14,11 +15,12 @@ const BITSWAP100 = '/ipfs/bitswap/1.0.0'
 const BITSWAP110 = '/ipfs/bitswap/1.1.0'
 
 class Network {
-  constructor (libp2p, bitswap, options, stats) {
+  constructor (libp2p, bitswap, options, stats, provider) {
     this._log = logger(libp2p.peerInfo.id, 'network')
     options = options || {}
     this.libp2p = libp2p
     this.bitswap = bitswap
+    this.provider = provider
     this.b100Only = options.b100Only || false
 
     this._stats = stats
@@ -98,10 +100,14 @@ class Network {
   }
 
   findProviders (cid, maxProviders, callback) {
-    this.libp2p.contentRouting.findProviders(cid, {
-      maxTimeout: CONSTANTS.providerRequestTimeout,
-      maxNumProviders: maxProviders
-    }, callback)
+    const findProviders = callbackify((cid, maxProviders) => {
+      return this.provider.findProviders(cid, {
+        maxTimeout: CONSTANTS.providerRequestTimeout,
+        maxNumProviders: maxProviders
+      })
+    })
+
+    findProviders(cid, maxProviders, callback)
   }
 
   findAndConnect (cid, callback) {
@@ -115,7 +121,9 @@ class Network {
   }
 
   provide (cid, callback) {
-    this.libp2p.contentRouting.provide(cid, callback)
+    const provide = callbackify((cid) => this.provider.provide(cid))
+
+    provide(cid, callback)
   }
 
   // Connect to the given peer

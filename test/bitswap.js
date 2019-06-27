@@ -16,6 +16,7 @@ const Bitswap = require('../src')
 const createTempRepo = require('./utils/create-temp-repo-nodejs')
 const createLibp2pNode = require('./utils/create-libp2p-node')
 const makeBlock = require('./utils/make-block')
+const Provider = require('./utils/mocks').mockProvider
 const orderedFinish = require('./utils/helpers').orderedFinish
 
 // Creates a repo + libp2pNode + Bitswap with or without DHT
@@ -28,7 +29,8 @@ function createThing (dht, callback) {
       }, (err, node) => cb(err, repo, node))
     },
     (repo, libp2pNode, cb) => {
-      const bitswap = new Bitswap(libp2pNode, repo.blocks)
+      const provider = new Provider(libp2pNode)
+      const bitswap = new Bitswap(libp2pNode, repo.blocks, provider)
       bitswap.start((err) => cb(err, repo, libp2pNode, bitswap))
     }
   ], (err, repo, libp2pNode, bitswap) => {
