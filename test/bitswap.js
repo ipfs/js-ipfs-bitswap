@@ -2,15 +2,10 @@
 /* eslint max-nested-callbacks: ["error", 8] */
 'use strict'
 
-const waterfall = require('async/waterfall')
-const series = require('async/series')
-const each = require('async/each')
-const parallel = require('async/parallel')
-const promisify = require('promisify-es6')
-
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
+const promisify = require('promisify-es6')
 
 const Bitswap = require('../src')
 
@@ -20,27 +15,14 @@ const makeBlock = require('./utils/make-block')
 const orderedFinish = require('./utils/helpers').orderedFinish
 
 // Creates a repo + libp2pNode + Bitswap with or without DHT
-function createThing (dht, callback) {
-  waterfall([
-    (cb) => createTempRepo(cb),
-    (repo, cb) => {
-      createLibp2pNode({
-        DHT: dht
-      }, (err, node) => cb(err, repo, node))
-    },
-    (repo, libp2pNode, cb) => {
-      const bitswap = new Bitswap(libp2pNode, repo.blocks)
-      bitswap.start().then((err) => cb(err, repo, libp2pNode, bitswap))
-    }
-  ], (err, repo, libp2pNode, bitswap) => {
-    expect(err).to.not.exist()
-
-    callback(null, {
-      repo: repo,
-      libp2pNode: libp2pNode,
-      bitswap: bitswap
-    })
+async function createThing (dht) {
+  const repo = await createTempRepo()
+  const libp2pNode = await createLibp2pNode({
+    DHT: dht
   })
+  const bitswap = new Bitswap(libp2pNode, repo.blocks)
+  bitswap.start()
+  return { repo, libp2pNode, bitswap }
 }
 
 describe('bitswap without DHT', function () {
@@ -48,53 +30,45 @@ describe('bitswap without DHT', function () {
 
   let nodes
 
-  before((done) => {
-    parallel([
-      (cb) => createThing(false, cb),
-      (cb) => createThing(false, cb),
-      (cb) => createThing(false, cb)
-    ], (err, results) => {
-      expect(err).to.not.exist()
-      expect(results).to.have.length(3)
-      nodes = results
-      done()
-    })
+  before(async () => {
+    nodes = await Promise.all([
+      createThing(false),
+      createThing(false),
+      createThing(false)
+    ])
   })
 
-  after((done) => {
-    each(nodes, (node, cb) => {
-      series([
-        (cb) => node.bitswap.stop().then(() => cb()),
-        (cb) => node.libp2pNode.stop(cb),
-        (cb) => node.repo.teardown(cb)
-      ], cb)
-    }, done)
+  after(async () => {
+    await Promise.all(nodes.map(async (node) => {
+      node.bitswap.stop()
+      await promisify(node.libp2pNode.stop.bind(node.libp2pNode))()
+      await node.repo.teardown()
+    }))
   })
 
-  it('connect 0 -> 1 && 1 -> 2', (done) => {
-    parallel([
-      (cb) => nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerInfo, cb),
-      (cb) => nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerInfo, cb)
-    ], done)
+  it('connect 0 -> 1 && 1 -> 2', async () => {
+    await Promise.all([
+      promisify(nodes[0].libp2pNode.dial.bind(nodes[0].libp2pNode))(nodes[1].libp2pNode.peerInfo),
+      promisify(nodes[1].libp2pNode.dial.bind(nodes[1].libp2pNode))(nodes[2].libp2pNode.peerInfo)
+    ])
   })
 
-  it('put a block in 2, fail to get it in 0', (done) => {
-    (async () => {
-      const finish = orderedFinish(2, done)
+  it('put a block in 2, fail to get it in 0', async (done) => {
+    const finish = orderedFinish(2, done)
 
-      const block = await promisify(makeBlock)()
-      await nodes[2].bitswap.put(block)
+    const block = await makeBlock()
+    await nodes[2].bitswap.put(block)
 
-      nodes[0].bitswap.get(block.cid).then((block) => {
-        expect(block).to.not.exist()
-        finish(2)
-      })
+    const node0Get = nodes[0].bitswap.get(block.cid)
 
-      setTimeout(() => {
-        finish(1)
-        nodes[0].bitswap.unwant(block.cid)
-      }, 200)
-    })()
+    setTimeout(() => {
+      finish(1)
+      nodes[0].bitswap.unwant(block.cid)
+    }, 200)
+
+    const b = await node0Get
+    expect(b).to.not.exist()
+    finish(2)
   })
 })
 
@@ -103,38 +77,31 @@ describe('bitswap with DHT', function () {
 
   let nodes
 
-  before((done) => {
-    parallel([
-      (cb) => createThing(true, cb),
-      (cb) => createThing(true, cb),
-      (cb) => createThing(true, cb)
-    ], (err, results) => {
-      expect(err).to.not.exist()
-      expect(results).to.have.length(3)
-      nodes = results
-      done()
-    })
+  before(async () => {
+    nodes = await Promise.all([
+      createThing(true),
+      createThing(true),
+      createThing(true)
+    ])
   })
 
-  after((done) => {
-    each(nodes, (node, cb) => {
-      series([
-        (cb) => node.bitswap.stop().then(() => cb()),
-        (cb) => node.libp2pNode.stop(cb),
-        (cb) => node.repo.teardown(cb)
-      ], cb)
-    }, done)
+  after(async () => {
+    await Promise.all(nodes.map(async (node) => {
+      node.bitswap.stop()
+      await promisify(node.libp2pNode.stop.bind(node.libp2pNode))()
+      await node.repo.teardown()
+    }))
   })
 
-  it('connect 0 -> 1 && 1 -> 2', (done) => {
-    parallel([
-      (cb) => nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerInfo, cb),
-      (cb) => nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerInfo, cb)
-    ], done)
+  it('connect 0 -> 1 && 1 -> 2', async () => {
+    await Promise.all([
+      promisify(nodes[0].libp2pNode.dial.bind(nodes[0].libp2pNode))(nodes[1].libp2pNode.peerInfo),
+      promisify(nodes[1].libp2pNode.dial.bind(nodes[1].libp2pNode))(nodes[2].libp2pNode.peerInfo)
+    ])
   })
 
   it('put a block in 2, get it in 0', async () => {
-    const block = await promisify(makeBlock)()
+    const block = await makeBlock()
     nodes[2].bitswap.put(block)
     // await promisify(nodes[2].bitswap.put.bind(nodes[2].bitswap))(block)
 

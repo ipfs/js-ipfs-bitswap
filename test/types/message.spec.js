@@ -6,9 +6,7 @@ const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
 const protons = require('protons')
-const map = require('async/map')
 const CID = require('cids')
-const _ = require('lodash')
 const Buffer = require('safe-buffer').Buffer
 const loadFixture = require('aegir/fixtures')
 const testDataPath = 'test/fixtures/serialized-from-go'
@@ -24,13 +22,9 @@ describe('BitswapMessage', () => {
   let blocks
   let cids
 
-  before((done) => {
-    map(_.range(3), (i, cb) => makeBlock(cb), (err, res) => {
-      expect(err).to.not.exist()
-      blocks = res
-      cids = blocks.map((b) => b.cid)
-      done()
-    })
+  before(async () => {
+    blocks = await makeBlock(3)
+    cids = blocks.map((b) => b.cid)
   })
 
   it('.addEntry - want block', () => {
@@ -65,7 +59,7 @@ describe('BitswapMessage', () => {
     expect(decoded.payload[0].data).to.eql(block.data)
   })
 
-  it('.deserialize a Bitswap100 Message', (done) => {
+  it('.deserialize a Bitswap100 Message', async () => {
     const cid0 = cids[0]
     const cid1 = cids[1]
     const cid2 = cids[2]
@@ -87,27 +81,23 @@ describe('BitswapMessage', () => {
       ]
     })
 
-    BitswapMessage.deserialize(raw, (err, msg) => {
-      expect(err).to.not.exist()
-      expect(msg.full).to.equal(true)
-      expect(Array.from(msg.wantlist))
-        .to.eql([[
-          cid0.toString('base58btc'),
-          new BitswapMessage.Entry(cid0, 0, false)
-        ]])
+    const msg = await BitswapMessage.deserialize(raw)
+    expect(msg.full).to.equal(true)
+    expect(Array.from(msg.wantlist))
+      .to.eql([[
+        cid0.toString('base58btc'),
+        new BitswapMessage.Entry(cid0, 0, false)
+      ]])
 
-      expect(
-        Array.from(msg.blocks).map((b) => [b[0], b[1].data])
-      ).to.eql([
-        [cid1.toString('base58btc'), b1.data],
-        [cid2.toString('base58btc'), b2.data]
-      ])
-
-      done()
-    })
+    expect(
+      Array.from(msg.blocks).map((b) => [b[0], b[1].data])
+    ).to.eql([
+      [cid1.toString('base58btc'), b1.data],
+      [cid2.toString('base58btc'), b2.data]
+    ])
   })
 
-  it('.deserialize a Bitswap110 Message', (done) => {
+  it('.deserialize a Bitswap110 Message', async () => {
     const cid0 = cids[0]
     const cid1 = cids[1]
     const cid2 = cids[2]
@@ -132,27 +122,23 @@ describe('BitswapMessage', () => {
       }]
     })
 
-    BitswapMessage.deserialize(raw, (err, msg) => {
-      expect(err).to.not.exist()
-      expect(msg.full).to.equal(true)
-      expect(Array.from(msg.wantlist))
-        .to.eql([[
-          cid0.toString('base58btc'),
-          new BitswapMessage.Entry(cid0, 0, false)
-        ]])
+    const msg = await BitswapMessage.deserialize(raw)
+    expect(msg.full).to.equal(true)
+    expect(Array.from(msg.wantlist))
+      .to.eql([[
+        cid0.toString('base58btc'),
+        new BitswapMessage.Entry(cid0, 0, false)
+      ]])
 
-      expect(
-        Array.from(msg.blocks).map((b) => [b[0], b[1].data])
-      ).to.eql([
-        [cid1.toString('base58btc'), b1.data],
-        [cid2.toString('base58btc'), b2.data]
-      ])
-
-      done()
-    })
+    expect(
+      Array.from(msg.blocks).map((b) => [b[0], b[1].data])
+    ).to.eql([
+      [cid1.toString('base58btc'), b1.data],
+      [cid2.toString('base58btc'), b2.data]
+    ])
   })
 
-  it('duplicates', (done) => {
+  it('ignores duplicates', () => {
     const b = blocks[0]
     const cid = cids[0]
     const m = new BitswapMessage(true)
@@ -164,7 +150,6 @@ describe('BitswapMessage', () => {
     m.addBlock(b)
     m.addBlock(b)
     expect(m.blocks.size).to.be.eql(1)
-    done()
   })
 
   it('.empty', () => {
@@ -172,7 +157,7 @@ describe('BitswapMessage', () => {
     expect(m.empty).to.equal(true)
   })
 
-  it('non full wantlist message', () => {
+  it('non-full wantlist message', () => {
     const msg = new BitswapMessage(false)
     const serialized = msg.serializeToBitswap100()
 
@@ -180,7 +165,7 @@ describe('BitswapMessage', () => {
   })
 
   describe('.equals', () => {
-    it('true, same message', (done) => {
+    it('true, same message', () => {
       const b = blocks[0]
       const cid = cids[0]
       const m1 = new BitswapMessage(true)
@@ -192,10 +177,9 @@ describe('BitswapMessage', () => {
       m1.addBlock(b)
       m2.addBlock(b)
       expect(m1.equals(m2)).to.equal(true)
-      done()
     })
 
-    it('false, different entries', (done) => {
+    it('false, different entries', () => {
       const b = blocks[0]
       const cid = cids[0]
       const m1 = new BitswapMessage(true)
@@ -207,10 +191,9 @@ describe('BitswapMessage', () => {
       m1.addBlock(b)
       m2.addBlock(b)
       expect(m1.equals(m2)).to.equal(false)
-      done()
     })
 
-    it('true, same cid derived from distinct encoding', (done) => {
+    it('true, same cid derived from distinct encoding', () => {
       const b = blocks[0]
       const cid = cids[0].toV1()
       const cid1 = new CID(cid.toBaseEncodedString('base32'))
@@ -224,7 +207,6 @@ describe('BitswapMessage', () => {
       m1.addBlock(b)
       m2.addBlock(b)
       expect(m1.equals(m2)).to.equal(true)
-      done()
     })
   })
 
@@ -258,41 +240,32 @@ describe('BitswapMessage', () => {
   })
 
   describe('go interop', () => {
-    it('bitswap 1.0.0 message', (done) => {
+    it('bitswap 1.0.0 message', () => {
       const goEncoded = Buffer.from('CioKKAoiEiAs8k26X7CjDiboOyrFueKeGxYeXB+nQl5zBDNik4uYJBAKGAA=', 'base64')
 
       const msg = new BitswapMessage(false)
       const cid = new CID('QmRN6wdp1S2A5EtjW9A3M1vKSBuQQGcgvuhoMUoEz4iiT5')
       msg.addEntry(cid, 10)
 
-      BitswapMessage.deserialize(goEncoded, (err, res) => {
-        expect(err).to.not.exist()
-        expect(res).to.eql(msg)
-        expect(msg.serializeToBitswap100()).to.eql(goEncoded)
-        done()
-      })
+      const res = BitswapMessage.deserialize(goEncoded)
+      expect(res).to.eql(msg)
+      expect(msg.serializeToBitswap100()).to.eql(goEncoded)
     })
 
     describe.skip('bitswap 1.1.0 message', () => {
       // TODO check with whyrusleeping the quality of the raw protobufs
       // deserialization is just failing on the first and the second has a
       // payload but empty
-      it('full wantlist message', (done) => {
-        BitswapMessage.deserialize(rawMessageFullWantlist, (err, message) => {
-          expect(err).to.not.exist()
-          // TODO
-          //   check the deserialised message
-          done()
-        })
+      it('full wantlist message', async () => {
+        await BitswapMessage.deserialize(rawMessageFullWantlist)
+        // TODO
+        //   check the deserialised message
       })
 
-      it('one block message', (done) => {
-        BitswapMessage.deserialize(rawMessageOneBlock, (err, message) => {
-          expect(err).to.not.exist()
-          // TODO
-          //   check the deserialised message
-          done()
-        })
+      it('one block message', async () => {
+        await BitswapMessage.deserialize(rawMessageOneBlock)
+        // TODO
+        //   check the deserialised message
       })
     })
   })

@@ -1,11 +1,5 @@
 'use strict'
 
-const each = require('async/each')
-const eachSeries = require('async/eachSeries')
-const map = require('async/map')
-const parallel = require('async/parallel')
-const setImmediate = require('async/setImmediate')
-const series = require('async/series')
 const _ = require('lodash')
 const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
@@ -14,6 +8,7 @@ const Node = require('./create-libp2p-node').bundle
 const os = require('os')
 const Repo = require('ipfs-repo')
 const EventEmitter = require('events')
+const promisify = require('promisify-es6')
 
 const Bitswap = require('../../src')
 
@@ -89,49 +84,47 @@ exports.mockNetwork = (calls, done) => {
 /*
  * Create a mock test network
  */
-exports.createMockTestNet = (repo, count, cb) => {
-  parallel([
-    (cb) => map(_.range(count), (i, cb) => repo.create(`repo-${i}`), cb),
-    (cb) => map(_.range(count), (i, cb) => PeerId.create({ bits: 512 }, cb), cb)
-  ], (err, results) => {
-    if (err) {
-      return cb(err)
-    }
-    const stores = results[0].map((r) => r.blockstore)
-    const ids = results[1]
+exports.createMockTestNet = async (repo, count) => {
+  const results = await Promise.all([
+    _.range(count).map((i) => repo.create(`repo-${i}`)),
+    _.range(count).map((i) => PeerId.create({ bits: 512 }))
+  ])
 
-    const hexIds = ids.map((id) => id.toHexString())
-    const bitswaps = _.range(count).map((i) => new Bitswap({}, stores[i]))
-    const networks = _.range(count).map((i) => {
-      return {
-        connectTo (id, cb) {
-          const done = (err) => setImmediate(() => cb(err))
+  const stores = results[0].map((r) => r.blockstore)
+  const ids = results[1]
+
+  const hexIds = ids.map((id) => id.toHexString())
+  const bitswaps = _.range(count).map((i) => new Bitswap({}, stores[i]))
+  const networks = _.range(count).map((i) => {
+    return {
+      connectTo (id) {
+        return new Promise((resolve, reject) => {
           if (!_.includes(hexIds, id.toHexString())) {
-            return done(new Error('unkown peer'))
+            return reject(new Error('unkown peer'))
           }
-          done()
-        },
-        sendMessage (id, msg, cb) {
-          const j = _.findIndex(hexIds, (el) => el === id.toHexString())
-          bitswaps[j]._receiveMessage(ids[i], msg, cb)
-        },
-        start () {
-        }
+          resolve()
+        })
+      },
+      sendMessage (id, msg) {
+        const j = _.findIndex(hexIds, (el) => el === id.toHexString())
+        return bitswaps[j]._receiveMessage(ids[i], msg)
+      },
+      start () {
       }
-    })
-
-    _.range(count).forEach((i) => {
-      exports.applyNetwork(bitswaps[i], networks[i])
-      bitswaps[i].start()
-    })
-
-    cb(null, {
-      ids,
-      stores,
-      bitswaps,
-      networks
-    })
+    }
   })
+
+  _.range(count).forEach((i) => {
+    exports.applyNetwork(bitswaps[i], networks[i])
+    bitswaps[i].start()
+  })
+
+  return {
+    ids,
+    stores,
+    bitswaps,
+    networks
+  }
 }
 
 exports.applyNetwork = (bs, n) => {
@@ -140,93 +133,65 @@ exports.applyNetwork = (bs, n) => {
   bs.engine.network = n
 }
 
-exports.genBitswapNetwork = (n, callback) => {
+exports.genBitswapNetwork = async (n) => {
   const netArray = [] // bitswap, peerBook, libp2p, peerInfo, repo
   const basePort = 12000
 
   // create PeerInfo and libp2p.Node for each
-  map(_.range(n), (i, cb) => PeerInfo.create(cb), (err, peers) => {
-    if (err) {
-      return callback(err)
-    }
+  const peers = await Promise.all(_.range(n).map(i => PeerInfo.create()))
 
-    peers.forEach((p, i) => {
-      const ma1 = '/ip4/127.0.0.1/tcp/' + (basePort + i) +
-        '/ipfs/' + p.id.toB58String()
-      p.multiaddrs.add(ma1)
+  peers.forEach((p, i) => {
+    const ma1 = '/ip4/127.0.0.1/tcp/' + (basePort + i) +
+      '/ipfs/' + p.id.toB58String()
+    p.multiaddrs.add(ma1)
 
-      const l = new Node({ peerInfo: p })
-      netArray.push({ peerInfo: p, libp2p: l })
-    })
-
-    // create PeerBook and populate peerBook
-    netArray.forEach((net, i) => {
-      const pb = netArray[i].libp2p.peerBook
-      netArray.forEach((net, j) => {
-        if (i === j) {
-          return
-        }
-        pb.put(net.peerInfo)
-      })
-      netArray[i].peerBook = pb
-    })
-
-    // create the repos
-    const tmpDir = os.tmpdir()
-    netArray.forEach((net, i) => {
-      const repoPath = tmpDir + '/' + net.peerInfo.id.toB58String()
-      net.repo = new Repo(repoPath)
-    })
-
-    each(netArray, (net, cb) => {
-      const repoPath = tmpDir + '/' + net.peerInfo.id.toB58String()
-      net.repo = new Repo(repoPath)
-
-      series([
-        (cb) => net.repo.init({}, cb),
-        (cb) => net.repo.open(cb)
-      ], cb)
-    }, (err) => {
-      if (err) {
-        throw err
-      }
-      startLibp2p()
-    })
-
-    function startLibp2p () {
-      // start every libp2pNode
-      each(netArray, (net, cb) => net.libp2p.start(cb), (err) => {
-        if (err) {
-          throw err
-        }
-        createBitswaps()
-      })
-    }
-    // create every BitSwap
-    function createBitswaps () {
-      netArray.forEach((net) => {
-        net.bitswap = new Bitswap(net.libp2p, net.repo.blocks, net.peerBook)
-      })
-      establishLinks()
-    }
-
-    // connect all the nodes between each other
-    function establishLinks () {
-      eachSeries(netArray, (from, cbI) => {
-        eachSeries(netArray, (to, cbJ) => {
-          if (from.peerInfo.id.toB58String() === to.peerInfo.id.toB58String()) {
-            return cbJ()
-          }
-
-          from.libp2p.dial(to.peerInfo, cbJ)
-        }, cbI)
-      }, finish)
-    }
-
-    // callback with netArray
-    function finish (err) {
-      if (err) { throw err }
-      callback(null, netArray)
-    }
+    const l = new Node({ peerInfo: p })
+    netArray.push({ peerInfo: p, libp2p: l })
   })
+
+  // create PeerBook and populate peerBook
+  netArray.forEach((net, i) => {
+    const pb = netArray[i].libp2p.peerBook
+    netArray.forEach((net, j) => {
+      if (i === j) {
+        return
+      }
+      pb.put(net.peerInfo)
+    })
+    netArray[i].peerBook = pb
+  })
+
+  // create the repos
+  const tmpDir = os.tmpdir()
+  netArray.forEach((net, i) => {
+    const repoPath = tmpDir + '/' + net.peerInfo.id.toB58String()
+    net.repo = new Repo(repoPath)
+  })
+
+  await Promise.all(netArray.map(async (net) => {
+    const repoPath = tmpDir + '/' + net.peerInfo.id.toB58String()
+    net.repo = new Repo(repoPath)
+
+    await net.repo.init({})
+    await net.repo.open()
+  }))
+
+  // start every libp2pNode
+  await Promise.all(netArray.map((net) => promisify(net.libp2p.start.bind(net.libp2p))()))
+
+  // create every BitSwap
+  netArray.forEach((net) => {
+    net.bitswap = new Bitswap(net.libp2p, net.repo.blocks, net.peerBook)
+  })
+
+  // connect all the nodes between each other
+  for (const from of netArray) {
+    for (const to of netArray) {
+      if (from.peerInfo.id.toB58String() !== to.peerInfo.id.toB58String()) {
+        await promisify(from.libp2p.dial.bind(from.libp2p))(to.peerInfo)
+      }
+    }
+  }
+
+  return netArray
 }

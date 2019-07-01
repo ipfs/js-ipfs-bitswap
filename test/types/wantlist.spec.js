@@ -4,9 +4,7 @@
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const map = require('async/map')
 const CID = require('cids')
-const _ = require('lodash')
 const multihashing = require('multihashing-async')
 
 const Wantlist = require('../../src/types/wantlist')
@@ -16,12 +14,8 @@ describe('Wantlist', () => {
   let wm
   let blocks
 
-  before((done) => {
-    map(_.range(2), (i, cb) => makeBlock(cb), (err, res) => {
-      expect(err).to.not.exist()
-      blocks = res
-      done()
-    })
+  before(async () => {
+    blocks = await makeBlock(2)
   })
 
   beforeEach(() => {

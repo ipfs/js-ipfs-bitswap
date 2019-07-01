@@ -1,15 +1,10 @@
 /* eslint-env mocha */
 'use strict'
 
-const map = require('async/map')
-const each = require('async/each')
-const eachOf = require('async/eachOf')
-const parallel = require('async/parallel')
-const _ = require('lodash')
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const PeerId = require('peer-id')
+const promisify = require('promisify-es6')
 
 const Message = require('../src/types/message')
 const Bitswap = require('../src')
@@ -17,6 +12,7 @@ const Bitswap = require('../src')
 const createTempRepo = require('./utils/create-temp-repo-nodejs')
 const createLibp2pNode = require('./utils/create-libp2p-node')
 const makeBlock = require('./utils/make-block')
+const makePeerId = require('./utils/make-peer-id')
 const countToFinish = require('./utils/helpers').countToFinish
 
 const expectedStats = [
@@ -45,39 +41,21 @@ describe('bitswap stats', () => {
   let blocks
   let ids
 
-  before((done) => {
-    parallel({
-      blocks: (cb) => map(_.range(2), (i, cb) => makeBlock(cb), cb),
-      ids: (cb) => map(_.range(2), (i, cb) => PeerId.create({ bits: 512 }, cb), cb)
-    },
-    (err, results) => {
-      expect(err).to.not.exist()
-
-      blocks = results.blocks
-      ids = results.ids
-      done()
-    })
+  before(async () => {
+    blocks = await makeBlock(2)
+    ids = await makePeerId(2)
   })
 
-  before((done) => {
+  before(async () => {
     // create 2 temp repos
-    map(nodes, (n, cb) => createTempRepo(cb), (err, _repos) => {
-      expect(err).to.not.exist()
-      repos = _repos
-      done()
-    })
+    repos = await Promise.all(nodes.map(() => createTempRepo()))
   })
 
-  before((done) => {
+  before(async () => {
     // create 2 libp2p nodes
-    map(nodes, (n, cb) => createLibp2pNode({
+    libp2pNodes = await Promise.all(nodes.map((n, i) => createLibp2pNode({
       DHT: repos[n].datastore
-    }, cb), (err, _libp2pNodes) => {
-      expect(err).to.not.exist()
-
-      libp2pNodes = _libp2pNodes
-      done()
-    })
+    })))
   })
 
   before(() => {
@@ -91,15 +69,13 @@ describe('bitswap stats', () => {
   })
 
   // start the first bitswap
-  before((done) => {
-    bs.start().then(() => done())
-  })
+  before(() => bs.start())
 
-  after((done) => each(bitswaps, (bs, cb) => bs.stop().then(() => cb()), done))
+  after(bitswaps.map((bs) => bs.stop()))
 
-  after((done) => each(repos, (repo, cb) => repo.teardown(cb), done))
+  after(() => repos.map(repo => repo.teardown()))
 
-  after((done) => each(libp2pNodes, (n, cb) => n.stop(cb), done))
+  after(() => libp2pNodes.map((n) => promisify(n.stop.bind(n))()))
 
   it('has initial stats', () => {
     const stats = bs.stat()
@@ -159,9 +135,7 @@ describe('bitswap stats', () => {
     const msg = new Message(false)
     blocks.forEach((block) => msg.addBlock(block))
 
-    bs._receiveMessage(other, msg, (err) => {
-      expect(err).to.not.exist()
-    })
+    bs._receiveMessage(other, msg)
   })
 
   it('updates duplicate blocks counters', (done) => {
@@ -181,38 +155,31 @@ describe('bitswap stats', () => {
     const msg = new Message(false)
     blocks.forEach((block) => msg.addBlock(block))
 
-    bs._receiveMessage(other, msg, (err) => {
-      expect(err).to.not.exist()
-    })
+    bs._receiveMessage(other, msg)
   })
 
   describe('connected to another bitswap', () => {
     let bs2
     let block
 
-    before((done) => {
-      eachOf(
-        libp2pNodes,
-        (node, i, cb) => node.dial(libp2pNodes[(i + 1) % nodes.length].peerInfo, cb),
-        done)
+    before(async () => {
+      for (let i = 0; i < libp2pNodes.length; i++) {
+        const node = libp2pNodes[i]
+        await promisify(node.dial.bind(node))(libp2pNodes[(i + 1) % nodes.length].peerInfo)
+      }
     })
 
-    before((done) => {
+    before(() => {
       bs2 = bitswaps[1]
-      bs2.start().then(() => done())
+      bs2.start()
     })
 
-    after((done) => {
-      bs2.stop().then(() => done())
+    after(() => {
+      bs2.stop()
     })
 
-    before((done) => {
-      makeBlock((err, _block) => {
-        expect(err).to.not.exist()
-        expect(_block).to.exist()
-        block = _block
-        done()
-      })
+    before(async () => {
+      block = await makeBlock()
     })
 
     before(async () => {

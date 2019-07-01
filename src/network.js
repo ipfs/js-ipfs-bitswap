@@ -2,7 +2,6 @@
 
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
-const nextTick = require('async/nextTick')
 const promisify = require('promisify-es6')
 
 const Message = require('./types/message')
@@ -24,7 +23,7 @@ class Network {
     this._running = false
   }
 
-  start (callback) {
+  start () {
     this._running = true
     // bind event listeners
     this._onPeerConnect = this._onPeerConnect.bind(this)
@@ -42,11 +41,9 @@ class Network {
       .getAllArray()
       .filter((peer) => peer.isConnected())
       .forEach((peer) => this._onPeerConnect((peer)))
-
-    nextTick(() => callback())
   }
 
-  stop (callback) {
+  stop () {
     this._running = false
 
     this.libp2p.unhandle(BITSWAP100)
@@ -54,8 +51,6 @@ class Network {
 
     this.libp2p.removeListener('peer:connect', this._onPeerConnect)
     this.libp2p.removeListener('peer:disconnect', this._onPeerDisconnect)
-
-    nextTick(() => callback())
   }
 
   // Handles both types of bitswap messgages
@@ -66,13 +61,15 @@ class Network {
     pull(
       conn,
       lp.decode(),
-      pull.asyncMap((data, cb) => Message.deserialize(data, cb)),
+      // pull.asyncMap((data, cb) => Message.deserialize(data, cb)),
+      pull.asyncMap((data, cb) => Message.deserialize(data).then(data => cb(null, data), cb)),
       pull.asyncMap((msg, cb) => {
         conn.getPeerInfo((err, peerInfo) => {
           if (err) { return cb(err) }
 
           // this._log('data from', peerInfo.id.toB58String())
-          this.bitswap._receiveMessage(peerInfo.id, msg, cb)
+          // this.bitswap._receiveMessage(peerInfo.id, msg, cb)
+          this.bitswap._receiveMessage(peerInfo.id, msg).then(() => cb(), cb)
         })
       }),
       pull.onEnd((err) => {
@@ -101,7 +98,7 @@ class Network {
    *
    * @param {CID} cid
    * @param {number} maxProviders
-   * @returns {Promise.<Result.<Array>>}
+   * @returns {Promise<Result<Array>>}
    */
   findProviders (cid, maxProviders) {
     return promisify(this.libp2p.contentRouting.findProviders.bind(this.libp2p.contentRouting))(
@@ -122,48 +119,66 @@ class Network {
   async findAndConnect (cid) {
     const provs = await this.findProviders(cid, CONSTANTS.maxProvidersPerRequest)
     this._log('connecting to providers', provs.map((p) => p.id.toB58String()))
-    await Promise.all(provs.map((p) => {
-      return this.connectTo(p)
-    }))
+    await Promise.all(provs.map((p) => this.connectTo(p)))
   }
 
-  provide (cid, callback) {
-    this.libp2p.contentRouting.provide(cid, callback)
+  // provide (cid, callback) {
+  async provide (cid) {
+    await promisify(this.libp2p.contentRouting.provide.bind(this.libp2p.contentRouting))(cid)
   }
 
   // Connect to the given peer
   // Send the given msg (instance of Message) to the given peer
-  sendMessage (peer, msg, callback) {
-    if (!this._running) { return callback(new Error(`network isn't running`)) }
+  // sendMessage (peer, msg, callback) {
+  async sendMessage (peer, msg) {
+    // if (!this._running) { return callback(new Error(`network isn't running`)) }
+    if (!this._running) throw new Error(`network isn't running`)
 
     const stringId = peer.toB58String() ? peer.toB58String() : peer.id.toB58String()
     this._log('sendMessage to %s', stringId, msg)
 
-    this._dialPeer(peer, (err, conn, protocol) => {
-      if (err) {
-        return callback(err)
-      }
+    // this._dialPeer(peer, (err, conn, protocol) => {
+    //   if (err) {
+    //     return callback(err)
+    //   }
+    //   let serialized
+    //   switch (protocol) {
+    //     case BITSWAP100:
+    //       serialized = msg.serializeToBitswap100()
+    //       break
+    //     case BITSWAP110:
+    //       serialized = msg.serializeToBitswap110()
+    //       break
+    //     default:
+    //       return callback(new Error('Unkown protocol: ' + protocol))
+    //   }
+    //   // TODO: why doesn't the error get propageted back??
+    //   writeMessage(conn, serialized, (err) => {
+    //     if (err) {
+    //       this._log.error(err)
+    //     }
+    //   })
+    //   callback()
+    //   this._updateSentStats(peer, msg.blocks)
+    // })
+    const { conn, protocol } = await this._dialPeer(peer)
 
-      let serialized
-      switch (protocol) {
-        case BITSWAP100:
-          serialized = msg.serializeToBitswap100()
-          break
-        case BITSWAP110:
-          serialized = msg.serializeToBitswap110()
-          break
-        default:
-          return callback(new Error('Unkown protocol: ' + protocol))
-      }
-      // TODO: why doesn't the error get propageted back??
-      writeMessage(conn, serialized, (err) => {
-        if (err) {
-          this._log.error(err)
-        }
-      })
-      callback()
-      this._updateSentStats(peer, msg.blocks)
-    })
+    let serialized
+    switch (protocol) {
+      case BITSWAP100:
+        serialized = msg.serializeToBitswap100()
+        break
+      case BITSWAP110:
+        serialized = msg.serializeToBitswap110()
+        break
+      default:
+        throw new Error('Unkown protocol: ' + protocol)
+    }
+
+    // Note: Don't wait for writeMessage() to complete
+    writeMessage(conn, serialized).catch((err) => this._log.error(err))
+
+    this._updateSentStats(peer, msg.blocks)
   }
 
   /**
@@ -173,15 +188,17 @@ class Network {
    * @returns {Promise.<Connection>}
    */
   connectTo (peer) {
-    if (!this._running) {
-      throw new Error(`network isn't running`)
-    }
+    if (!this._running) throw new Error(`network isn't running`)
 
     return promisify(this.libp2p.dial.bind(this.libp2p))(peer)
   }
 
   // Dial to the peer and try to use the most recent Bitswap
-  _dialPeer (peer, callback) {
+  // _dialPeer (peer, callback) {
+  _dialPeer (peer) {
+    return promisify(this._dialPeerCb.bind(this))(peer)
+  }
+  _dialPeerCb (peer, callback) {
     // Attempt Bitswap 1.1.0
     this.libp2p.dialProtocol(peer, BITSWAP110, (err, conn) => {
       if (err) {
@@ -189,13 +206,15 @@ class Network {
         this.libp2p.dialProtocol(peer, BITSWAP100, (err, conn) => {
           if (err) { return callback(err) }
 
-          callback(null, conn, BITSWAP100)
+          // callback(null, conn, BITSWAP100)
+          callback(null, { conn, protocol: BITSWAP100 })
         })
 
         return
       }
 
-      callback(null, conn, BITSWAP110)
+      // callback(null, conn, BITSWAP110)
+      callback(null, { conn, protocol: BITSWAP110 })
     })
   }
 

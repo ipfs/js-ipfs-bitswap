@@ -12,15 +12,8 @@ describe('Ledger', () => {
   let peerId
   let ledger
 
-  before((done) => {
-    PeerId.create({ bits: 512 }, (err, _peerId) => {
-      if (err) {
-        return done(err)
-      }
-
-      peerId = _peerId
-      done()
-    })
+  before(async () => {
+    peerId = await PeerId.create({ bits: 512 })
   })
 
   beforeEach(() => {

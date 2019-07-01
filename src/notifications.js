@@ -43,35 +43,37 @@ class Notifications extends EventEmitter {
   /**
    * Signal the system that we are waiting to receive the
    * block associated with the given `cid`.
+   * Returns a Promise that resolves to the block when it is received,
+   * or undefined when the block is unwanted.
    *
    * @param {CID} cid
-   * @param {function(Block)} onBlock - called when the block is received
-   * @param {function()} onUnwant - called when the block is unwanted
-   * @returns {void}
+   * @returns {Promise<Block>}
    */
-  wantBlock (cid, onBlock, onUnwant) {
+  wantBlock (cid) {
     const cidStr = cid.toString('base58btc')
     this._log(`wantBlock:${cidStr}`)
 
-    this._unwantListeners[cidStr] = () => {
-      this._log(`manual unwant: ${cidStr}`)
-      this._cleanup(cidStr)
-      onUnwant()
-    }
+    return new Promise((resolve, reject) => {
+      this._unwantListeners[cidStr] = () => {
+        this._log(`manual unwant: ${cidStr}`)
+        this._cleanup(cidStr)
+        resolve()
+      }
 
-    this._blockListeners[cidStr] = (block) => {
-      this._cleanup(cidStr)
-      onBlock(block)
-    }
+      this._blockListeners[cidStr] = (block) => {
+        this._cleanup(cidStr)
+        resolve(block)
+      }
 
-    this.once(
-      unwantEvent(cidStr),
-      this._unwantListeners[cidStr]
-    )
-    this.once(
-      blockEvent(cidStr),
-      this._blockListeners[cidStr]
-    )
+      this.once(
+        unwantEvent(cidStr),
+        this._unwantListeners[cidStr]
+      )
+      this.once(
+        blockEvent(cidStr),
+        this._blockListeners[cidStr]
+      )
+    })
   }
 
   /**

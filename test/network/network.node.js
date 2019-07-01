@@ -8,10 +8,6 @@ const PeerInfo = require('peer-info')
 const PeerId = require('peer-id')
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
-const parallel = require('async/parallel')
-const waterfall = require('async/waterfall')
-const map = require('async/map')
-const _ = require('lodash')
 
 const Node = require('../utils/create-libp2p-node').bundle
 const makeBlock = require('../utils/make-block')
@@ -19,26 +15,17 @@ const Network = require('../../src/network')
 const Message = require('../../src/types/message')
 
 // TODO send this to utils
-function createP2PNode (multiaddrs, options, callback) {
-  if (typeof options === 'function') {
-    callback = options
-    options = {}
-  }
-
+async function createP2PNode (multiaddrs, options) {
   if (!Array.isArray(multiaddrs)) {
     multiaddrs = [multiaddrs]
   }
 
-  waterfall([
-    (cb) => PeerId.create({ bits: 512 }, cb),
-    (peerId, cb) => PeerInfo.create(peerId, cb),
-    (peerInfo, cb) => {
-      multiaddrs.map((ma) => peerInfo.multiaddrs.add(ma))
-      options.peerInfo = peerInfo
-      const node = new Node(options)
-      cb(null, node)
-    }
-  ], callback)
+  const peerId = await PeerId.create({ bits: 512 })
+  const peerInfo = await PeerInfo.create(peerId)
+  multiaddrs.map((ma) => peerInfo.multiaddrs.add(ma))
+  options.peerInfo = peerInfo
+  const node = new Node(options)
+  return node
 }
 
 describe('network', () => {
@@ -53,35 +40,23 @@ describe('network', () => {
 
   let blocks
 
-  before((done) => {
-    parallel([
-      (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', cb),
-      (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', cb),
-      (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', cb),
-      (cb) => map(_.range(2), (i, cb) => makeBlock(cb), cb)
-    ], (err, results) => {
-      expect(err).to.not.exist()
+  before(async () => {
+    const [p2pA, p2pB, p2pC] = await Promise.all([
+      createP2PNode('/ip4/127.0.0.1/tcp/0'),
+      createP2PNode('/ip4/127.0.0.1/tcp/0'),
+      createP2PNode('/ip4/127.0.0.1/tcp/0')
+    ])
+    blocks = await makeBlock(2)
 
-      p2pA = results[0]
-      p2pB = results[1]
-      p2pC = results[2]
-
-      blocks = results[3]
-
-      parallel([
-        (cb) => p2pA.start(cb),
-        (cb) => p2pB.start(cb),
-        (cb) => p2pC.start(cb)
-      ], done)
-    })
+    p2pA.start()
+    p2pB.start()
+    p2pC.start()
   })
 
-  after((done) => {
-    parallel([
-      (cb) => p2pA.stop(cb),
-      (cb) => p2pB.stop(cb),
-      (cb) => p2pC.stop(cb)
-    ], done)
+  after(() => {
+    p2pA.stop()
+    p2pB.stop()
+    p2pC.stop()
   })
 
   let bitswapMockA = {
@@ -105,7 +80,7 @@ describe('network', () => {
     _onPeerDisconnected: () => {}
   }
 
-  it('instantiate the network obj', (done) => {
+  it('instantiate the network obj', () => {
     networkA = new Network(p2pA, bitswapMockA)
     networkB = new Network(p2pB, bitswapMockB)
     // only bitswap100
@@ -115,23 +90,18 @@ describe('network', () => {
     expect(networkB).to.exist()
     expect(networkC).to.exist()
 
-    parallel([
-      (cb) => networkA.start(cb),
-      (cb) => networkB.start(cb),
-      (cb) => networkC.start(cb)
-    ], done)
+    networkA.start()
+    networkB.start()
+    networkC.start()
   })
 
-  it('connectTo fail', (done) => {
-    (async () => {
-      try {
-        await networkA.connectTo(p2pB.peerInfo.id)
-        chai.assert.fail()
-      } catch (err) {
-        expect(err).to.exist()
-        done()
-      }
-    })()
+  it('connectTo fail', async () => {
+    try {
+      await networkA.connectTo(p2pB.peerInfo.id)
+      chai.assert.fail()
+    } catch (err) {
+      expect(err).to.exist()
+    }
   })
 
   it('onPeerConnected success', (done) => {
@@ -164,12 +134,8 @@ describe('network', () => {
     }
   })
 
-  it('connectTo success', (done) => {
-    networkA.connectTo(p2pB.peerInfo).then(() => {
-      done()
-    }).catch((err) => {
-      expect(err).to.not.exist()
-    })
+  it('connectTo success', async () => {
+    await networkA.connectTo(p2pB.peerInfo)
   })
 
   it('._receiveMessage success from Bitswap 1.0.0', (done) => {

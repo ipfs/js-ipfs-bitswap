@@ -1,11 +1,9 @@
 'use strict'
 
 const protons = require('protons')
-const Block = require('ipfs-block')
+const Block = require('ipld-block')
 const isEqualWith = require('lodash.isequalwith')
 const assert = require('assert')
-const each = require('async/each')
-const nextTick = require('async/nextTick')
 const CID = require('cids')
 const codecName = require('multicodec/src/name-table')
 const vd = require('varint-decoder')
@@ -41,7 +39,7 @@ class BitswapMessage {
   }
 
   addBlock (block) {
-    assert(Block.isBlock(block), 'must be a valid cid')
+    assert(Block.isBlock(block), 'must be a valid block')
     const cidStr = block.cid.toString('base58btc')
     this.blocks.set(cidStr, block)
   }
@@ -135,13 +133,15 @@ class BitswapMessage {
   }
 }
 
-BitswapMessage.deserialize = (raw, callback) => {
-  let decoded
-  try {
-    decoded = pbm.Message.decode(raw)
-  } catch (err) {
-    return nextTick(() => callback(err))
-  }
+// BitswapMessage.deserialize = (raw, callback) => {
+BitswapMessage.deserialize = async (raw) => {
+  // let decoded
+  // try {
+  //   decoded = pbm.Message.decode(raw)
+  // } catch (err) {
+  //   return nextTick(() => callback(err))
+  // }
+  const decoded = pbm.Message.decode(raw)
 
   const isFull = (decoded.wantlist && decoded.wantlist.full) || false
   const msg = new BitswapMessage(isFull)
@@ -149,12 +149,13 @@ BitswapMessage.deserialize = (raw, callback) => {
   if (decoded.wantlist) {
     decoded.wantlist.entries.forEach((entry) => {
       // note: entry.block is the CID here
-      let cid
-      try {
-        cid = new CID(entry.block)
-      } catch (err) {
-        return callback(err)
-      }
+      // let cid
+      // try {
+      //   cid = new CID(entry.block)
+      // } catch (err) {
+      //   return callback(err)
+      // }
+      const cid = new CID(entry.block)
       msg.addEntry(cid, entry.priority, entry.cancel)
     })
   }
@@ -162,63 +163,84 @@ BitswapMessage.deserialize = (raw, callback) => {
   // Bitswap 1.0.0
   // decoded.blocks are just the byte arrays
   if (decoded.blocks.length > 0) {
-    return each(decoded.blocks, (b, cb) => {
-      multihashing(b, 'sha2-256', (err, hash) => {
-        if (err) {
-          return cb(err)
-        }
-        let cid
-        try {
-          cid = new CID(hash)
-        } catch (err) {
-          return callback(err)
-        }
-        msg.addBlock(new Block(b, cid))
-        cb()
-      })
-    }, (err) => {
-      if (err) {
-        return callback(err)
-      }
-      callback(null, msg)
-    })
+    // return each(decoded.blocks, (b, cb) => {
+    //   multihashing(b, 'sha2-256', (err, hash) => {
+    //     if (err) {
+    //       return cb(err)
+    //     }
+    //     let cid
+    //     try {
+    //       cid = new CID(hash)
+    //     } catch (err) {
+    //       return callback(err)
+    //     }
+    //     msg.addBlock(new Block(b, cid))
+    //     cb()
+    //   })
+    // }, (err) => {
+    //   if (err) {
+    //     return callback(err)
+    //   }
+    //   callback(null, msg)
+    // })
+    await Promise.all(decoded.blocks.map(async (b) => {
+      const hash = await multihashing(b, 'sha2-256')
+      const cid = new CID(hash)
+      msg.addBlock(new Block(b, cid))
+    }))
+    return msg
   }
 
   // Bitswap 1.1.0
   if (decoded.payload.length > 0) {
-    return each(decoded.payload, (p, cb) => {
+    // return each(decoded.payload, (p, cb) => {
+    //   if (!p.prefix || !p.data) {
+    //     return nextTick(cb)
+    //   }
+    //   const values = vd(p.prefix)
+    //   const cidVersion = values[0]
+    //   const multicodec = values[1]
+    //   const hashAlg = values[2]
+    //   // const hashLen = values[3] // We haven't need to use this so far
+    //   multihashing(p.data, hashAlg, (err, hash) => {
+    //     if (err) {
+    //       return cb(err)
+    //     }
+
+    //     let cid
+    //     try {
+    //       cid = new CID(cidVersion, codecName[multicodec.toString('16')], hash)
+    //     } catch (err) {
+    //       return cb(err)
+    //     }
+
+    //     msg.addBlock(new Block(p.data, cid))
+    //     cb()
+    //   })
+    // }, (err) => {
+    //   if (err) {
+    //     return callback(err)
+    //   }
+    //   callback(null, msg)
+    // })
+    await Promise.all(decoded.payload.map(async (p) => {
       if (!p.prefix || !p.data) {
-        return nextTick(cb)
+        return
       }
       const values = vd(p.prefix)
       const cidVersion = values[0]
       const multicodec = values[1]
       const hashAlg = values[2]
       // const hashLen = values[3] // We haven't need to use this so far
-      multihashing(p.data, hashAlg, (err, hash) => {
-        if (err) {
-          return cb(err)
-        }
-
-        let cid
-        try {
-          cid = new CID(cidVersion, codecName[multicodec.toString('16')], hash)
-        } catch (err) {
-          return cb(err)
-        }
-
-        msg.addBlock(new Block(p.data, cid))
-        cb()
-      })
-    }, (err) => {
-      if (err) {
-        return callback(err)
-      }
-      callback(null, msg)
-    })
+      const hash = await multihashing(p.data, hashAlg)
+      const cid = new CID(cidVersion, codecName[multicodec.toString('16')], hash)
+      msg.addBlock(new Block(p.data, cid))
+    }))
+    return msg
   }
 
-  callback(null, msg)
+  // callback(null, msg)
+  return msg
 }
 
 BitswapMessage.Entry = Entry

@@ -1,15 +1,12 @@
 'use strict'
 
-const eachSeries = require('async/eachSeries')
+const promisify = require('promisify-es6')
 const without = require('lodash.without')
 
-module.exports = (nodes, callback) => {
-  eachSeries(nodes, (node, cb) => {
-    eachSeries(
-      without(nodes, node),
-      (otherNode, cb) => {
-        node.libp2pNode.dial(otherNode.bitswap.peerInfo, cb)
-      },
-      cb)
-  }, callback)
+module.exports = async (nodes) => {
+  for (const node of nodes) {
+    for (const otherNode of without(nodes, node)) {
+      await promisify(node.libp2pNode.dial.bind(node.libp2pNode))(otherNode.bitswap.peerInfo)
+    }
+  }
 }

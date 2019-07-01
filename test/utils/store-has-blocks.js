@@ -1,19 +1,12 @@
 'use strict'
 
-const each = require('async/each')
-
-function storeHasBlocks (message, store, callback) {
-  each(message.blocks.values(), (b, callback) => {
-    store.has(b.cid, (err, has) => {
-      if (err) {
-        return callback(err)
-      }
-      if (!has) {
-        return callback(new Error('missing block'))
-      }
-      callback()
-    })
-  }, callback)
+function storeHasBlocks (message, store) {
+  return Promise.all((message.blocks.values().map(async (b) => {
+    const has = await store.has(b.cid)
+    if (!has) {
+      throw new Error('missing block')
+    }
+  })))
 }
 
 module.exports = storeHasBlocks

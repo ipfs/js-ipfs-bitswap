@@ -1,6 +1,5 @@
 'use strict'
 
-const nextTick = require('async/nextTick')
 const Message = require('../types/message')
 const Wantlist = require('../types/wantlist')
 const CONSTANTS = require('../constants')
@@ -112,7 +111,7 @@ module.exports = class WantManager {
     this._stopPeerHandler(peerId)
   }
 
-  start (callback) {
+  start () {
     // resend entire wantlist every so often
     this.timer = setInterval(() => {
       this._log('resend full-wantlist')
@@ -123,14 +122,11 @@ module.exports = class WantManager {
 
       this.peers.forEach((p) => p.addMessage(fullwantlist))
     }, 60 * 1000)
-
-    nextTick(() => callback())
   }
 
-  stop (callback) {
+  stop () {
     this.peers.forEach((mq) => this.disconnected(mq.peerId))
 
     clearInterval(this.timer)
-    nextTick(() => callback())
   }
 }

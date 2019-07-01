@@ -5,10 +5,10 @@ const MPLEX = require('libp2p-mplex')
 const SECIO = require('libp2p-secio')
 const libp2p = require('libp2p')
 const KadDHT = require('libp2p-kad-dht')
-const waterfall = require('async/waterfall')
 const PeerInfo = require('peer-info')
 const PeerId = require('peer-id')
 const defaultsDeep = require('@nodeutils/defaults-deep')
+const promisify = require('promisify-es6')
 
 class Node extends libp2p {
   constructor (_options) {
@@ -38,19 +38,14 @@ class Node extends libp2p {
   }
 }
 
-function createLibp2pNode (options, callback) {
-  let node
-
-  waterfall([
-    (cb) => PeerId.create({ bits: 512 }, cb),
-    (id, cb) => PeerInfo.create(id, cb),
-    (peerInfo, cb) => {
-      peerInfo.multiaddrs.add('/ip4/0.0.0.0/tcp/0')
-      options.peerInfo = peerInfo
-      node = new Node(options)
-      node.start(cb)
-    }
-  ], (err) => callback(err, node))
+async function createLibp2pNode (options) {
+  const id = await PeerId.create({ bits: 512 })
+  const peerInfo = await PeerInfo.create(id)
+  peerInfo.multiaddrs.add('/ip4/0.0.0.0/tcp/0')
+  options.peerInfo = peerInfo
+  const node = new Node(options)
+  await promisify(node.start.bind(node))()
+  return node
 }
 
 exports = module.exports = createLibp2pNode

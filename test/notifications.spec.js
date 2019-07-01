@@ -4,33 +4,21 @@
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const map = require('async/map')
-const parallel = require('async/parallel')
-const PeerId = require('peer-id')
 const CID = require('cids')
-const Block = require('ipfs-block')
+const Block = require('ipld-block')
 
 const Notifications = require('../src/notifications')
 
 const makeBlock = require('./utils/make-block')
+const makePeerId = require('./utils/make-peer-id')
 
 describe('Notifications', () => {
   let blocks
   let peerId
 
-  before((done) => {
-    parallel([
-      (cb) => map([0, 1, 2], (i, cb) => makeBlock(cb), (err, res) => {
-        expect(err).to.not.exist()
-        blocks = res
-        cb()
-      }),
-      (cb) => PeerId.create({ bits: 512 }, (err, id) => {
-        expect(err).to.not.exist()
-        peerId = id
-        cb()
-      })
-    ], done)
+  before(async () => {
+    blocks = await makeBlock(3)
+    peerId = await makePeerId()
   })
 
   it('hasBlock', (done) => {
