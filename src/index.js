@@ -64,38 +64,7 @@ class Bitswap {
   }
 
   // handle messages received through the network
-  // _receiveMessage (peerId, incoming, callback) {
   async _receiveMessage (peerId, incoming) {
-    // this.engine.messageReceived(peerId, incoming, (err) => {
-    //   if (err) {
-    //     // Only logging the issue to process as much as possible
-    //     // of the message. Currently `messageReceived` does not
-    //     // return any errors, but this could change in the future.
-    //     this._log('failed to receive message', incoming)
-    //   }
-
-    //   if (incoming.blocks.size === 0) {
-    //     return callback()
-    //   }
-
-    //   const blocks = Array.from(incoming.blocks.values())
-
-    //   // quickly send out cancels, reduces chances of duplicate block receives
-    //   const wanted = blocks
-    //     .filter((b) => this.wm.wantlist.contains(b.cid))
-    //     .map((b) => b.cid)
-
-    //   this.wm.cancelWants(wanted)
-
-    //   each(
-    //     blocks,
-    //     (b, cb) => {
-    //       const wasWanted = wanted.includes(b.cid)
-    //       this._handleReceivedBlock(peerId, b, wasWanted, cb)
-    //     },
-    //     callback
-    //   )
-    // })
     try {
       await this.engine.messageReceived(peerId, incoming)
     } catch (err) {
@@ -128,17 +97,6 @@ class Bitswap {
   async _handleReceivedBlock (peerId, block, wasWanted) {
     this._log('received block')
 
-    // waterfall([
-    //   (cb) => this.blockstore.has(block.cid, cb),
-    //   (has, cb) => {
-    //     this._updateReceiveCounters(peerId.toB58String(), block, has)
-    //     if (has || !wasWanted) {
-    //       return nextTick(cb)
-    //     }
-
-    //     this._putBlock(block, cb)
-    //   }
-    // ], callback)
     const has = await this.blockstore.has(block.cid)
     this._updateReceiveCounters(peerId.toB58String(), block, has)
     if (has || !wasWanted) {
@@ -175,23 +133,7 @@ class Bitswap {
     this._stats.disconnected(peerId)
   }
 
-  // _putBlock (block, callback) {
   async _putBlock (block) {
-    // this.blockstore.put(block, (err) => {
-    //   if (err) {
-    //     return callback(err)
-    //   }
-
-    //   this.notifications.hasBlock(block)
-    //   this.network.provide(block.cid, (err) => {
-    //     if (err) {
-    //       this._log.error('Failed to provide: %s', err.message)
-    //     }
-    //   })
-
-    //   this.engine.receivedBlocks([block.cid])
-    //   callback()
-    // })
     await this.blockstore.put(block)
 
     this.notifications.hasBlock(block)
@@ -240,23 +182,9 @@ class Bitswap {
    * @param {function(Error, Block)} callback
    * @returns {void}
    */
-  // get (cid, callback) {
   async get (cid) {
-    // this.getMany([cid], (err, blocks) => {
-    //   if (err) {
-    //     return callback(err)
-    //   }
-
-    //   if (blocks && blocks.length > 0) {
-    //     callback(null, blocks[0])
-    //   } else {
-    //     // when a unwant happens
-    //     callback()
-    //   }
-    // })
-    const blocks = await this.getMany([cid])
-    if (blocks && blocks.length > 0) {
-      return blocks[0]
+    for await (const block of this.getMany([cid])) {
+      return block
     }
   }
 
@@ -268,61 +196,11 @@ class Bitswap {
    * @param {function(Error, Blocks)} callback
    * @returns {void}
    */
-  getMany (cids) {
+  async * getMany (cids) {
     let pendingStart = cids.length
     const wantList = []
     let promptedNetwork = false
 
-    // const getFromOutside = (cid, cb) => {
-    //   wantList.push(cid)
-
-    //   this.notifications.wantBlock(
-    //     cid,
-    //     // called on block receive
-    //     (block) => {
-    //       this.wm.cancelWants([cid])
-    //       cb(null, block)
-    //     },
-    //     // called on unwant
-    //     () => {
-    //       this.wm.cancelWants([cid])
-    //       cb(null, undefined)
-    //     }
-    //   )
-
-    //   if (!pendingStart) {
-    //     this.wm.wantBlocks(wantList)
-    //   }
-    // }
-
-    // map(cids, (cid, cb) => {
-    //   waterfall(
-    //     [
-    //       (cb) => this.blockstore.has(cid, cb),
-    //       (has, cb) => {
-    //         pendingStart--
-    //         if (has) {
-    //           if (!pendingStart) {
-    //             this.wm.wantBlocks(wantList)
-    //           }
-    //           return this.blockstore.get(cid, cb)
-    //         }
-
-    //         if (!promptedNetwork) {
-    //           promptedNetwork = true
-    //           this.network.findAndConnect(cids[0], (err) => {
-    //             if (err) {
-    //               this._log.error(err)
-    //             }
-    //           })
-    //         }
-
-    //         // we don't have the block here
-    //         getFromOutside(cid, cb)
-    //       }
-    //     ],
-    //     cb)
-    // }, callback)
     const fetchFromNetwork = async (cid) => {
       wantList.push(cid)
 
@@ -334,17 +212,20 @@ class Bitswap {
 
       const block = await blockP
       this.wm.cancelWants([cid])
+
       return block
     }
 
-    return Promise.all(cids.map(async (cid) => {
+    for (const cid of cids) {
       const has = await this.blockstore.has(cid)
       pendingStart--
       if (has) {
         if (!pendingStart) {
           this.wm.wantBlocks(wantList)
         }
-        return this.blockstore.get(cid)
+        yield this.blockstore.get(cid)
+
+        continue
       }
 
       if (!promptedNetwork) {
@@ -353,8 +234,8 @@ class Bitswap {
       }
 
       // we don't have the block locally so fetch it from the network
-      return fetchFromNetwork(cid)
-    }))
+      yield fetchFromNetwork(cid)
+    }
   }
 
   // removes the given cids from the wantlist independent of any ref counts
@@ -383,22 +264,14 @@ class Bitswap {
    * @param {function(Error)} callback
    * @returns {void}
    */
-  // put (block, callback) {
   async put (block) {
     this._log('putting block')
 
-    // waterfall([
-    //   (cb) => this.blockstore.has(block.cid, cb),
-    //   (has, cb) => {
-    //     if (has) {
-    //       return nextTick(cb)
-    //     }
-
-    //     this._putBlock(block, cb)
-    //   }
-    // ], callback)
     const has = await this.blockstore.has(block.cid)
-    if (has) return
+
+    if (has) {
+      return
+    }
 
     await this._putBlock(block)
   }
@@ -411,29 +284,7 @@ class Bitswap {
    * @param {function(Error)} callback
    * @returns {void}
    */
-  // putMany (blocks, callback) {
   async putMany (blocks) {
-    // waterfall([
-    //   (cb) => reject(blocks, (b, cb) => {
-    //     this.blockstore.has(b.cid, cb)
-    //   }, cb),
-    //   (newBlocks, cb) => this.blockstore.putMany(newBlocks, (err) => {
-    //     if (err) {
-    //       return cb(err)
-    //     }
-
-    //     newBlocks.forEach((block) => {
-    //       this.notifications.hasBlock(block)
-    //       this.engine.receivedBlocks([block.cid])
-    //       this.network.provide(block.cid, (err) => {
-    //         if (err) {
-    //           this._log.error('Failed to provide: %s', err.message)
-    //         }
-    //       })
-    //     })
-    //     cb()
-    //   })
-    // ], callback)
     const newBlocks = await Promise.all(blocks.map(async (b) => {
       return !(await this.blockstore.has(b.cid))
     })).filter(Boolean)

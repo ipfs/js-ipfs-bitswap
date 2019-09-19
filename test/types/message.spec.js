@@ -240,14 +240,14 @@ describe('BitswapMessage', () => {
   })
 
   describe('go interop', () => {
-    it('bitswap 1.0.0 message', () => {
+    it('bitswap 1.0.0 message', async () => {
       const goEncoded = Buffer.from('CioKKAoiEiAs8k26X7CjDiboOyrFueKeGxYeXB+nQl5zBDNik4uYJBAKGAA=', 'base64')
 
       const msg = new BitswapMessage(false)
       const cid = new CID('QmRN6wdp1S2A5EtjW9A3M1vKSBuQQGcgvuhoMUoEz4iiT5')
       msg.addEntry(cid, 10)
 
-      const res = BitswapMessage.deserialize(goEncoded)
+      const res = await BitswapMessage.deserialize(goEncoded)
       expect(res).to.eql(msg)
       expect(msg.serializeToBitswap100()).to.eql(goEncoded)
     })

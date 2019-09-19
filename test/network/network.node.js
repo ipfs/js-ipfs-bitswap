@@ -4,29 +4,12 @@
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const PeerInfo = require('peer-info')
-const PeerId = require('peer-id')
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
-
-const Node = require('../utils/create-libp2p-node').bundle
+const createLibp2pNode = require('../utils/create-libp2p-node')
 const makeBlock = require('../utils/make-block')
 const Network = require('../../src/network')
 const Message = require('../../src/types/message')
-
-// TODO send this to utils
-async function createP2PNode (multiaddrs, options) {
-  if (!Array.isArray(multiaddrs)) {
-    multiaddrs = [multiaddrs]
-  }
-
-  const peerId = await PeerId.create({ bits: 512 })
-  const peerInfo = await PeerInfo.create(peerId)
-  multiaddrs.map((ma) => peerInfo.multiaddrs.add(ma))
-  options.peerInfo = peerInfo
-  const node = new Node(options)
-  return node
-}
 
 describe('network', () => {
   let p2pA
@@ -41,16 +24,12 @@ describe('network', () => {
   let blocks
 
   before(async () => {
-    const [p2pA, p2pB, p2pC] = await Promise.all([
-      createP2PNode('/ip4/127.0.0.1/tcp/0'),
-      createP2PNode('/ip4/127.0.0.1/tcp/0'),
-      createP2PNode('/ip4/127.0.0.1/tcp/0')
+    [p2pA, p2pB, p2pC] = await Promise.all([
+      createLibp2pNode(),
+      createLibp2pNode(),
+      createLibp2pNode()
     ])
     blocks = await makeBlock(2)
-
-    p2pA.start()
-    p2pB.start()
-    p2pC.start()
   })
 
   after(() => {
@@ -59,25 +38,25 @@ describe('network', () => {
     p2pC.stop()
   })
 
-  let bitswapMockA = {
-    _receiveMessage: () => {},
-    _receiveError: () => {},
-    _onPeerConnected: () => {},
-    _onPeerDisconnected: () => {}
+  const bitswapMockA = {
+    _receiveMessage: async () => {},
+    _receiveError: async () => {},
+    _onPeerConnected: async () => {},
+    _onPeerDisconnected: async () => {}
   }
 
-  let bitswapMockB = {
-    _receiveMessage: () => {},
-    _receiveError: () => {},
-    _onPeerConnected: () => {},
-    _onPeerDisconnected: () => {}
+  const bitswapMockB = {
+    _receiveMessage: async () => {},
+    _receiveError: async () => {},
+    _onPeerConnected: async () => {},
+    _onPeerDisconnected: async () => {}
   }
 
-  let bitswapMockC = {
-    _receiveMessage: () => {},
-    _receiveError: () => {},
-    _onPeerConnected: () => {},
-    _onPeerDisconnected: () => {}
+  const bitswapMockC = {
+    _receiveMessage: async () => {},
+    _receiveError: async () => {},
+    _onPeerConnected: async () => {},
+    _onPeerDisconnected: async () => {}
   }
 
   it('instantiate the network obj', () => {
@@ -147,11 +126,11 @@ describe('network', () => {
     msg.addBlock(b1)
     msg.addBlock(b2)
 
-    bitswapMockB._receiveMessage = (peerId, msgReceived) => {
+    bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       expect(msg).to.eql(msgReceived)
 
-      bitswapMockB._receiveMessage = () => {}
-      bitswapMockB._receiveError = () => {}
+      bitswapMockB._receiveMessage = async () => {}
+      bitswapMockB._receiveError = async () => {}
       done()
     }
 
@@ -181,10 +160,10 @@ describe('network', () => {
     msg.addBlock(b1)
     msg.addBlock(b2)
 
-    bitswapMockB._receiveMessage = (peerId, msgReceived) => {
+    bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       expect(msg).to.eql(msgReceived)
-      bitswapMockB._receiveMessage = () => {}
-      bitswapMockB._receiveError = () => {}
+      bitswapMockB._receiveMessage = async () => {}
+      bitswapMockB._receiveError = async () => {}
       done()
     }
 
@@ -214,10 +193,10 @@ describe('network', () => {
     msg.addBlock(b1)
     msg.addBlock(b2)
 
-    bitswapMockB._receiveMessage = (peerId, msgReceived) => {
+    bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       expect(msg).to.eql(msgReceived)
-      bitswapMockB._receiveMessage = () => {}
-      bitswapMockB._receiveError = () => {}
+      bitswapMockB._receiveMessage = async () => {}
+      bitswapMockB._receiveError = async () => {}
       done()
     }
 
@@ -269,10 +248,10 @@ describe('network', () => {
     msg.addBlock(b1)
     msg.addBlock(b2)
 
-    bitswapMockC._receiveMessage = (peerId, msgReceived) => {
+    bitswapMockC._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       expect(msg).to.eql(msgReceived)
-      bitswapMockC._receiveMessage = () => {}
-      bitswapMockC._receiveError = () => {}
+      bitswapMockC._receiveMessage = async () => {}
+      bitswapMockC._receiveError = async () => {}
       done()
     }
 

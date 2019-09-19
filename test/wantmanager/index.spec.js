@@ -11,18 +11,15 @@ const WantManager = require('../../src/want-manager')
 
 const mockNetwork = require('../utils/mocks').mockNetwork
 const makeBlock = require('../utils/make-block')
-const makePeerId = require('./utils/make-peer-id')
+const makePeerId = require('../utils/make-peer-id')
 
 describe('WantManager', () => {
   it('sends wantlist to all connected peers', async function () {
     this.timeout(80 * 1000)
 
-    let cids
-    let blocks
-
     const peerIds = await makePeerId(3)
-    blocks = await makeBlock(3)
-    cids = blocks.map((b) => b.cid)
+    const blocks = await makeBlock(3)
+    const cids = blocks.map((b) => b.cid)
 
     const peer1 = peerIds[0]
     const peer2 = peerIds[1]
@@ -42,7 +39,7 @@ describe('WantManager', () => {
 
     const msgs = [m1, m1, m2, m2, m3, m3]
 
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const network = mockNetwork(6, (calls) => {
         expect(calls.connects).to.have.length(6)
         expect(calls.messages).to.have.length(6)
@@ -69,10 +66,13 @@ describe('WantManager', () => {
       wantManager.connected(peer1)
       wantManager.connected(peer2)
 
-      await new Promise(resolve => setTimeout(resolve, 200))
-      wantManager.cancelWants([cid2])
-      await new Promise(resolve => setTimeout(resolve, 200))
-      wantManager.wantBlocks([cid3])
+      new Promise(resolve => setTimeout(resolve, 200))
+        .then(async () => {
+          wantManager.cancelWants([cid2])
+          await new Promise(resolve => setTimeout(resolve, 200))
+          wantManager.wantBlocks([cid3])
+        })
+        .catch(reject)
     })
   })
 })

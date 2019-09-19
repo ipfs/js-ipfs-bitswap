@@ -5,7 +5,6 @@
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const promisify = require('promisify-es6')
 
 const Bitswap = require('../src')
 
@@ -36,25 +35,24 @@ describe('bitswap without DHT', function () {
       createThing(false),
       createThing(false)
     ])
-  })
 
-  after(async () => {
-    await Promise.all(nodes.map(async (node) => {
-      node.bitswap.stop()
-      await promisify(node.libp2pNode.stop.bind(node.libp2pNode))()
-      await node.repo.teardown()
-    }))
-  })
-
-  it('connect 0 -> 1 && 1 -> 2', async () => {
+    // connect 0 -> 1 && 1 -> 2
     await Promise.all([
-      promisify(nodes[0].libp2pNode.dial.bind(nodes[0].libp2pNode))(nodes[1].libp2pNode.peerInfo),
-      promisify(nodes[1].libp2pNode.dial.bind(nodes[1].libp2pNode))(nodes[2].libp2pNode.peerInfo)
+      nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerInfo),
+      nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerInfo)
     ])
   })
 
-  it('put a block in 2, fail to get it in 0', async (done) => {
-    const finish = orderedFinish(2, done)
+  after(async () => {
+    await Promise.all(nodes.map((node) => Promise.all([
+      node.bitswap.stop(),
+      node.libp2pNode.stop(),
+      node.repo.teardown()
+    ])))
+  })
+
+  it('put a block in 2, fail to get it in 0', async () => {
+    const finish = orderedFinish(2)
 
     const block = await makeBlock()
     await nodes[2].bitswap.put(block)
@@ -69,6 +67,8 @@ describe('bitswap without DHT', function () {
     const b = await node0Get
     expect(b).to.not.exist()
     finish(2)
+
+    finish.assert()
   })
 })
 
@@ -83,27 +83,27 @@ describe('bitswap with DHT', function () {
       createThing(true),
       createThing(true)
     ])
+
+    // connect 0 -> 1 && 1 -> 2
+    await Promise.all([
+      nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerInfo),
+      nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerInfo)
+    ])
   })
 
   after(async () => {
-    await Promise.all(nodes.map(async (node) => {
-      node.bitswap.stop()
-      await promisify(node.libp2pNode.stop.bind(node.libp2pNode))()
-      await node.repo.teardown()
-    }))
-  })
-
-  it('connect 0 -> 1 && 1 -> 2', async () => {
-    await Promise.all([
-      promisify(nodes[0].libp2pNode.dial.bind(nodes[0].libp2pNode))(nodes[1].libp2pNode.peerInfo),
-      promisify(nodes[1].libp2pNode.dial.bind(nodes[1].libp2pNode))(nodes[2].libp2pNode.peerInfo)
-    ])
+    await Promise.all(nodes.map((node) => Promise.all([
+      node.bitswap.stop(),
+      node.libp2pNode.stop(),
+      node.repo.teardown()
+    ])))
   })
 
   it('put a block in 2, get it in 0', async () => {
     const block = await makeBlock()
     nodes[2].bitswap.put(block)
-    // await promisify(nodes[2].bitswap.put.bind(nodes[2].bitswap))(block)
+
+    await nodes[2].bitswap.put(block)
 
     const blockRetrieved = await nodes[0].bitswap.get(block.cid)
     expect(block.data).to.eql(blockRetrieved.data)

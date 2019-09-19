@@ -3,9 +3,10 @@
 
 const chai = require('chai')
 chai.use(require('dirty-chai'))
+
 const expect = chai.expect
 const CID = require('cids')
-const Block = require('ipld-block')
+const Block = require('ipfs-block')
 
 const Notifications = require('../src/notifications')
 
@@ -32,68 +33,70 @@ describe('Notifications', () => {
   })
 
   describe('wantBlock', () => {
-    it('receive block', (done) => {
+    it('receive block', async () => {
       const n = new Notifications(peerId)
       const b = blocks[0]
 
-      n.wantBlock(b.cid, (block) => {
-        expect(b).to.eql(block)
-
-        // check that internal cleanup works as expected
-        expect(Object.keys(n._blockListeners)).to.have.length(0)
-        expect(Object.keys(n._unwantListeners)).to.have.length(0)
-        done()
-      }, () => {
-        done(new Error('should never happen'))
-      })
+      const p = n.wantBlock(b.cid)
 
       n.hasBlock(b)
+
+      const block = await p
+
+      expect(b).to.eql(block)
+
+      // check that internal cleanup works as expected
+      expect(Object.keys(n._blockListeners)).to.have.length(0)
+      expect(Object.keys(n._unwantListeners)).to.have.length(0)
     })
 
-    it('unwant block', (done) => {
+    it('unwant block', async () => {
       const n = new Notifications()
       const b = blocks[0]
 
-      n.wantBlock(b.cid, () => {
-        done(new Error('should never happen'))
-      }, done)
+      const p = n.wantBlock(b.cid)
 
       n.unwantBlock(b.cid)
+
+      const block = await p
+
+      expect(block).to.be.undefined()
     })
   })
 
   describe('wantBlock with same cid derived from distinct encodings', () => {
-    it('receive block', (done) => {
+    it('receive block', async () => {
       const n = new Notifications(peerId)
       const cid = new CID(blocks[0].cid.toV1().toString('base64'))
       const b = new Block(blocks[0].data, cid)
 
       const cid2 = new CID(b.cid.toString('base32'))
-      n.wantBlock(cid2, (block) => {
-        expect(b).to.eql(block)
-
-        // check that internal cleanup works as expected
-        expect(Object.keys(n._blockListeners)).to.have.length(0)
-        expect(Object.keys(n._unwantListeners)).to.have.length(0)
-        done()
-      }, () => {
-        done(new Error('should never happen'))
-      })
+      const p = n.wantBlock(cid2)
 
       n.hasBlock(b)
+
+      const block = await p
+
+      expect(b).to.eql(block)
+
+      // check that internal cleanup works as expected
+      expect(Object.keys(n._blockListeners)).to.have.length(0)
+      expect(Object.keys(n._unwantListeners)).to.have.length(0)
     })
 
-    it('unwant block', (done) => {
+    it('unwant block', async () => {
       const n = new Notifications()
       const cid = new CID(blocks[0].cid.toV1().toString('base64'))
       const b = new Block(blocks[0].data, cid)
 
       const cid2 = new CID(b.cid.toString('base32'))
-      n.wantBlock(cid2, () => {
-        done(new Error('should never happen'))
-      }, done)
+      const p = n.wantBlock(cid2)
 
       n.unwantBlock(b.cid)
+
+      const block = await p
+
+      expect(block).to.be.undefined()
     })
   })
 })

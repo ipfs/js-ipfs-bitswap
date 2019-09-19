@@ -93,11 +93,11 @@ describe('utils spec', function () {
     const groupedList1 = sortBy(o => o.name, list)
     const groupedList2 = sortBy(o => o.id, list)
 
-    expect(groupedList1).to.be.deep.equal([ { id: 2, name: 'a' },
+    expect(groupedList1).to.be.deep.equal([{ id: 2, name: 'a' },
       { id: 3, name: 'b' },
-      { id: 1, name: 'c' } ])
-    expect(groupedList2).to.be.deep.equal([ { id: 1, name: 'c' },
+      { id: 1, name: 'c' }])
+    expect(groupedList2).to.be.deep.equal([{ id: 1, name: 'c' },
       { id: 2, name: 'a' },
-      { id: 3, name: 'b' } ])
+      { id: 3, name: 'b' }])
   })
 })

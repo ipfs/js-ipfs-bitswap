@@ -6,12 +6,12 @@
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const Block = require('ipld-block')
+const Block = require('ipfs-block')
 const Buffer = require('safe-buffer').Buffer
 const crypto = require('crypto')
 const CID = require('cids')
 const multihashing = require('multihashing-async')
-const promisify = require('promisify-es6')
+const range = require('lodash.range')
 
 const genBitswapNetwork = require('../utils/mocks').genBitswapNetwork
 
@@ -23,7 +23,7 @@ describe('gen Bitswap network', function () {
     const nodes = await genBitswapNetwork(1)
 
     const node = nodes[0]
-    const blocks = await Promise.all([...new Array(100)].map(async (k) => {
+    const blocks = await Promise.all(range(100).map(async (k) => {
       const b = Buffer.alloc(1024)
       b.fill(k)
       const hash = await multihashing(b, 'sha2-256')
@@ -32,13 +32,13 @@ describe('gen Bitswap network', function () {
     }))
 
     await Promise.all(blocks.map(b => node.bitswap.put(b)))
-    const res = await Promise.all([...new Array(100)].map((i) => {
+    const res = await Promise.all(range(100).map((i) => {
       return node.bitswap.get(blocks[i].cid)
     }))
     expect(res).to.have.length(blocks.length)
 
     node.bitswap.stop()
-    await promisify(node.libp2p.stop.bind(node.libp2p))()
+    await node.libp2p.stop()
   })
 
   describe('distributed blocks', () => {
@@ -62,7 +62,7 @@ describe('gen Bitswap network', function () {
       await round(nodeArr, n)
       await Promise.all(nodeArr.map(node => {
         node.bitswap.stop()
-        return promisify(node.libp2p.stop.bind(node.libp2p))()
+        return node.libp2p.stop()
       }))
     })
   })
@@ -78,7 +78,7 @@ async function round (nodeArr, n) {
   await Promise.all(nodeArr.map(async (node, i) => {
     node.bitswap.start()
 
-    const data = [...new Array(blockFactor)].map((j) => {
+    const data = range(blockFactor).map((j) => {
       const index = i * blockFactor + j
       return blocks[index]
     })

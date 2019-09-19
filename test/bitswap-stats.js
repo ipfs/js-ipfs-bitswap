@@ -4,8 +4,7 @@
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const promisify = require('promisify-es6')
-
+const pEvent = require('p-event')
 const Message = require('../src/types/message')
 const Bitswap = require('../src')
 
@@ -13,7 +12,6 @@ const createTempRepo = require('./utils/create-temp-repo-nodejs')
 const createLibp2pNode = require('./utils/create-libp2p-node')
 const makeBlock = require('./utils/make-block')
 const makePeerId = require('./utils/make-peer-id')
-const countToFinish = require('./utils/helpers').countToFinish
 
 const expectedStats = [
   'blocksReceived',
@@ -33,7 +31,6 @@ const expectedTimeWindows = [
 ]
 
 describe('bitswap stats', () => {
-  const nodes = [0, 1]
   let libp2pNodes
   let repos
   let bitswaps
@@ -42,40 +39,43 @@ describe('bitswap stats', () => {
   let ids
 
   before(async () => {
+    const nodes = [0, 1]
     blocks = await makeBlock(2)
     ids = await makePeerId(2)
-  })
 
-  before(async () => {
     // create 2 temp repos
     repos = await Promise.all(nodes.map(() => createTempRepo()))
-  })
 
-  before(async () => {
     // create 2 libp2p nodes
-    libp2pNodes = await Promise.all(nodes.map((n, i) => createLibp2pNode({
-      DHT: repos[n].datastore
+    libp2pNodes = await Promise.all(nodes.map((i) => createLibp2pNode({
+      DHT: repos[i].datastore
     })))
-  })
 
-  before(() => {
-    bitswaps = nodes.map((node, i) =>
-      new Bitswap(libp2pNodes[i], repos[i].blocks, {
+    // create bitswaps
+    bitswaps = libp2pNodes.map((node, i) =>
+      new Bitswap(node, repos[i].blocks, {
         statsEnabled: true,
         statsComputeThrottleTimeout: 500 // fast update interval for tests
-      }))
+      })
+    )
     bs = bitswaps[0]
     bs.wm.wantBlocks(blocks.map(b => b.cid))
+
+    // start the first bitswap
+    bs.start()
   })
 
-  // start the first bitswap
-  before(() => bs.start())
-
-  after(bitswaps.map((bs) => bs.stop()))
-
-  after(() => repos.map(repo => repo.teardown()))
-
-  after(() => libp2pNodes.map((n) => promisify(n.stop.bind(n))()))
+  after(async () => {
+    await Promise.all(
+      bitswaps.map((bs) => bs.stop())
+    )
+    await Promise.all(
+      repos.map(repo => repo.teardown())
+    )
+    await Promise.all(
+      libp2pNodes.map((n) => n.stop())
+    )
+  })
 
   it('has initial stats', () => {
     const stats = bs.stat()
@@ -163,72 +163,71 @@ describe('bitswap stats', () => {
     let block
 
     before(async () => {
-      for (let i = 0; i < libp2pNodes.length; i++) {
-        const node = libp2pNodes[i]
-        await promisify(node.dial.bind(node))(libp2pNodes[(i + 1) % nodes.length].peerInfo)
-      }
-    })
+      await Promise.all([
+        libp2pNodes[0].dial(libp2pNodes[1].peerInfo),
+        libp2pNodes[1].dial(libp2pNodes[0].peerInfo)
+      ])
 
-    before(() => {
       bs2 = bitswaps[1]
       bs2.start()
+
+      block = await makeBlock()
+
+      await bs.put(block)
     })
 
     after(() => {
       bs2.stop()
     })
 
-    before(async () => {
-      block = await makeBlock()
+    it('updates stats on transfer', async () => {
+      const originalStats = bs.stat().snapshot
+
+      expect(originalStats.blocksReceived.toNumber()).to.equal(4)
+      expect(originalStats.dataReceived.toNumber()).to.equal(192)
+      expect(originalStats.dupBlksReceived.toNumber()).to.equal(2)
+      expect(originalStats.dupDataReceived.toNumber()).to.equal(96)
+      expect(originalStats.blocksSent.toNumber()).to.equal(0)
+      expect(originalStats.dataSent.toNumber()).to.equal(0)
+      expect(originalStats.providesBufferLength.toNumber()).to.equal(0)
+      expect(originalStats.wantListLength.toNumber()).to.equal(0)
+      expect(originalStats.peerCount.toNumber()).to.equal(1)
+
+      // pull block from bs to bs2
+      await bs2.get(block.cid)
+
+      const nextStats = await pEvent(bs.stat(), 'update')
+
+      expect(nextStats.blocksReceived.toNumber()).to.equal(4)
+      expect(nextStats.dataReceived.toNumber()).to.equal(192)
+      expect(nextStats.dupBlksReceived.toNumber()).to.equal(2)
+      expect(nextStats.dupDataReceived.toNumber()).to.equal(96)
+      expect(nextStats.blocksSent.toNumber()).to.equal(1)
+      expect(nextStats.dataSent.toNumber()).to.equal(48)
+      expect(nextStats.providesBufferLength.toNumber()).to.equal(0)
+      expect(nextStats.wantListLength.toNumber()).to.equal(0)
+      expect(nextStats.peerCount.toNumber()).to.equal(2)
     })
 
-    before(async () => {
-      await bs.put(block)
-    })
+    it('has peer stats', async () => {
+      const peerStats = bs2.stat().forPeer(libp2pNodes[0].peerInfo.id)
+      expect(peerStats).to.exist()
 
-    it('updates stats on transfer', (done) => {
-      const finish = countToFinish(2, done)
-      bs.stat().once('update', (stats) => {
-        expect(stats.blocksReceived.eq(4)).to.be.true()
-        expect(stats.dataReceived.eq(192)).to.be.true()
-        expect(stats.dupBlksReceived.eq(2)).to.be.true()
-        expect(stats.dupDataReceived.eq(96)).to.be.true()
-        expect(stats.blocksSent.eq(1)).to.be.true()
-        expect(stats.dataSent.eq(48)).to.be.true()
-        expect(stats.providesBufferLength.eq(0)).to.be.true()
-        expect(stats.wantListLength.eq(0)).to.be.true()
-        expect(stats.peerCount.eq(2)).to.be.true()
-        finish()
-      })
+      const stats = await pEvent(peerStats, 'update')
 
-      bs2.get(block.cid).then(() => {
-        expect(block).to.exist()
-        finish()
-      }).catch((err) => {
-        expect(err).to.not.exist()
-      })
-    })
+      expect(stats.blocksReceived.toNumber()).to.equal(1)
+      expect(stats.dataReceived.toNumber()).to.equal(48)
+      expect(stats.dupBlksReceived.toNumber()).to.equal(0)
+      expect(stats.dupDataReceived.toNumber()).to.equal(0)
+      expect(stats.blocksSent.toNumber()).to.equal(0)
+      expect(stats.dataSent.toNumber()).to.equal(0)
+      expect(stats.providesBufferLength.toNumber()).to.equal(0)
+      expect(stats.wantListLength.toNumber()).to.equal(0)
+      expect(stats.peerCount.toNumber()).to.equal(1)
 
-    it('has peer stats', (done) => {
-      const peerIds = libp2pNodes.map((node) => node.peerInfo.id.toB58String())
-      const peerStats = bs2.stat().forPeer(peerIds[0])
-      peerStats.once('update', (stats) => {
-        expect(stats.blocksReceived.eq(1)).to.be.true()
-        expect(stats.dataReceived.eq(48)).to.be.true()
-        expect(stats.dupBlksReceived.eq(0)).to.be.true()
-        expect(stats.dupDataReceived.eq(0)).to.be.true()
-        expect(stats.blocksSent.eq(0)).to.be.true()
-        expect(stats.dataSent.eq(0)).to.be.true()
-        expect(stats.providesBufferLength.eq(0)).to.be.true()
-        expect(stats.wantListLength.eq(0)).to.be.true()
-        expect(stats.peerCount.eq(1)).to.be.true()
-
-        const ma = peerStats.movingAverages.dataReceived[60000]
-        expect(ma.movingAverage()).to.be.above(0)
-        expect(ma.variance()).to.be.above(0)
-
-        done()
-      })
+      const ma = peerStats.movingAverages.dataReceived[60000]
+      expect(ma.movingAverage()).to.be.above(0)
+      expect(ma.variance()).to.be.above(0)
     })
   })
 })

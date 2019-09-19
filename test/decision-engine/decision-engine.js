@@ -6,11 +6,14 @@ const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
 const PeerId = require('peer-id')
-const _ = require('lodash')
-const Block = require('ipld-block')
+const range = require('lodash.range')
+const difference = require('lodash.difference')
+const flatten = require('lodash.flatten')
+const Block = require('ipfs-block')
 const CID = require('cids')
 const multihashing = require('multihashing-async')
 const Buffer = require('safe-buffer').Buffer
+const promisify = require('promisify-es6')
 
 const Message = require('../../src/types/message')
 const DecisionEngine = require('../../src/decision-engine')
@@ -24,13 +27,13 @@ function messageToString (m) {
 }
 
 function stringifyMessages (messages) {
-  return _.flatten(messages.map(messageToString))
+  return flatten(messages.map(messageToString))
 }
 
 async function newEngine (network) {
   const results = await Promise.all([
     createTempRepo(),
-    PeerId.create({ bits: 512 })
+    promisify(PeerId.create)({ bits: 512 })
   ])
   const blockstore = results[0].blocks
   const peerId = results[1]
@@ -49,7 +52,7 @@ describe('Engine', () => {
     const sender = res[0]
     const receiver = res[1]
 
-    await Promise.all(_.range(1000).map(async (i) => {
+    await Promise.all(range(1000).map(async (i) => {
       const data = Buffer.from(`this is message ${i}`)
       const hash = await multihashing(data, 'sha2-256')
 
@@ -101,7 +104,7 @@ describe('Engine', () => {
     const vowels = 'aeiou'.split('')
     const testCases = [
       [alphabet, vowels],
-      [alphabet, _.difference(alphabet, vowels)]
+      [alphabet, difference(alphabet, vowels)]
     ]
 
     async function partnerWants (dEngine, values, partner) {
@@ -138,18 +141,18 @@ describe('Engine', () => {
       for (const testcase of testCases) {
         const set = testcase[0]
         const cancels = testcase[1]
-        const keeps = _.difference(set, cancels)
+        const keeps = difference(set, cancels)
 
         const network = mockNetwork(1, (res) => {
           const msgs = stringifyMessages(res.messages)
           expect(msgs.sort()).to.eql(keeps.sort())
         })
 
-        const id = await PeerId.create({ bits: 512 })
+        const id = await promisify(PeerId.create)({ bits: 512 })
         const dEngine = new DecisionEngine(id, repo.blocks, network)
         dEngine.start()
 
-        const partner = await PeerId.create({ bits: 512 })
+        const partner = await promisify(PeerId.create)({ bits: 512 })
         await partnerWants(dEngine, set, partner)
         await partnerCancels(dEngine, cancels, partner)
       }
@@ -157,13 +160,13 @@ describe('Engine', () => {
   })
 
   it('splits large block messages', () => {
-    const data = _.range(10).map((i) => {
+    const data = range(10).map((i) => {
       const b = Buffer.alloc(1024 * 256)
       b.fill(i)
       return b
     })
 
-    return new Promise(async (resolve) => {
+    return new Promise((resolve, reject) => {
       const net = mockNetwork(5, (res) => {
         res.messages.forEach((message) => {
           // The batch size is big enough to hold two blocks, so every
@@ -173,25 +176,27 @@ describe('Engine', () => {
         resolve()
       })
 
-      const res = await Promise.all([
+      Promise.all([
         newEngine(net),
         Promise.all(data.map(async (d) => {
           const hash = await multihashing(d, 'sha2-256')
           return new Block(d, new CID(hash))
         }))
       ])
+        .then(async (res) => {
+          const sf = res[0].engine
+          const id = res[0].peer
 
-      const sf = res[0].engine
-      const id = res[0].peer
+          const blocks = res[1]
+          const cids = blocks.map((b) => b.cid)
 
-      const blocks = res[1]
-      const cids = blocks.map((b) => b.cid)
+          await Promise.all((blocks.map((b) => sf.blockstore.put(b))))
+          const msg = new Message(false)
+          cids.forEach((c, i) => msg.addEntry(c, Math.pow(2, 32) - 1 - i))
 
-      await Promise.all((blocks.map((b) => sf.blockstore.put(b))))
-      const msg = new Message(false)
-      cids.forEach((c, i) => msg.addEntry(c, Math.pow(2, 32) - 1 - i))
-
-      sf.messageReceived(id, msg)
+          sf.messageReceived(id, msg)
+        })
+        .catch(reject)
     })
   })
 })

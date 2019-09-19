@@ -8,7 +8,7 @@ const PeerId = require('peer-id')
 const CID = require('cids')
 const multihashing = require('multihashing-async')
 const Buffer = require('safe-buffer').Buffer
-
+const promisify = require('promisify-es6')
 const Message = require('../../src/types/message')
 const MsgQueue = require('../../src/want-manager/msg-queue')
 
@@ -17,7 +17,7 @@ describe('MessageQueue', () => {
   let cids
 
   before(async () => {
-    peerIds = await Promise.all([0, 1].map(() => PeerId.create({ bits: 512 })))
+    peerIds = await Promise.all([0, 1].map(() => promisify(PeerId.create)({ bits: 512 })))
 
     const data = ['1', '2', '3', '4', '5', '6'].map((d) => Buffer.from(d))
     const hashes = await Promise.all(data.map((d) => multihashing(d, 'sha2-256')))
@@ -64,10 +64,10 @@ describe('MessageQueue', () => {
       }
 
       const network = {
-        connectTo (p) {
+        async connectTo (p) { // eslint-disable-line require-await
           connects.push(p)
         },
-        sendMessage (p, msg) {
+        async sendMessage (p, msg) { // eslint-disable-line require-await
           messages.push([p, msg])
           finish()
         }

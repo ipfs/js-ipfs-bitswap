@@ -110,21 +110,19 @@ describe('Wantlist', () => {
     expect(wm.contains(b2.cid)).to.not.exist()
   })
 
-  it('with cidV1', (done) => {
+  it('with cidV1', async () => {
     const b = blocks[0]
-    multihashing(b.data, 'sha2-256', (err, hash) => {
-      expect(err).to.not.exist()
-      const cid = new CID(1, 'dag-pb', hash)
-      wm.add(cid, 2)
+    const hash = await multihashing(b.data, 'sha2-256')
 
-      expect(
-        Array.from(wm.entries())
-      ).to.be.eql([[
-        cid.toString('base58btc'),
-        new Wantlist.Entry(cid, 2)
-      ]])
-      done()
-    })
+    const cid = new CID(1, 'dag-pb', hash)
+    wm.add(cid, 2)
+
+    expect(
+      Array.from(wm.entries())
+    ).to.be.eql([[
+      cid.toString('base58btc'),
+      new Wantlist.Entry(cid, 2)
+    ]])
   })
 
   it('matches same cid derived from distinct encodings', () => {

@@ -26,7 +26,6 @@ class DecisionEngine {
     this._outbox = debounce(this._processTasks.bind(this), 100)
   }
 
-  // _sendBlocks (peer, blocks, cb) {
   async _sendBlocks (peer, blocks) {
     // split into messages of max 512 * 1024 bytes
     const total = blocks.reduce((acc, b) => {
@@ -42,29 +41,6 @@ class DecisionEngine {
     let batch = []
     let outstanding = blocks.length
 
-    // eachSeries(blocks, (b, cb) => {
-    //   outstanding--
-    //   batch.push(b)
-    //   size += b.data.byteLength
-
-    //   if (size >= MAX_MESSAGE_SIZE ||
-    //       // need to ensure the last remaining items get sent
-    //       outstanding === 0) {
-    //     size = 0
-    //     const nextBatch = batch.slice()
-    //     batch = []
-    //     this._sendSafeBlocks(peer, nextBatch, (err) => {
-    //       if (err) {
-    //         this._log('sendblock error: %s', err.message)
-    //       }
-    //       // not returning the error, so we send as much as we can
-    //       // as otherwise `eachSeries` would cancel
-    //       cb()
-    //     })
-    //   } else {
-    //     nextTick(cb)
-    //   }
-    // }, cb)
     for (const b of blocks) {
       outstanding--
       batch.push(b)
@@ -86,7 +62,6 @@ class DecisionEngine {
     }
   }
 
-  // _sendSafeBlocks (peer, blocks, cb) {
   async _sendSafeBlocks (peer, blocks) {
     const msg = new Message(false)
     blocks.forEach((b) => msg.addBlock(b))
@@ -105,36 +80,6 @@ class DecisionEngine {
     const cids = entries.map((e) => e.cid)
     const uniqCids = uniqWith((a, b) => a.equals(b), cids)
     const groupedTasks = groupBy(task => task.target.toB58String(), tasks)
-
-    // waterfall([
-    //   (callback) => map(uniqCids, (cid, cb) => {
-    //     this.blockstore.get(cid, cb)
-    //   }, callback),
-    //   (blocks, callback) => each(Object.values(groupedTasks), (tasks, cb) => {
-    //     // all tasks have the same target
-    //     const peer = tasks[0].target
-    //     const blockList = cids.map((cid) => {
-    //       return blocks.find(b => b.cid.equals(cid))
-    //     })
-
-    //     this._sendBlocks(peer, blockList, (err) => {
-    //       if (err) {
-    //         // `_sendBlocks` actually doesn't return any errors
-    //         this._log.error('should never happen: ', err)
-    //       } else {
-    //         blockList.forEach((block) => this.messageSent(peer, block))
-    //       }
-
-    //       cb()
-    //     })
-    //   }, callback)
-    // ], (err) => {
-    //   this._tasks = []
-
-    //   if (err) {
-    //     this._log.error(err)
-    //   }
-    // })
 
     const blocks = await Promise.all(uniqCids.map(cid => this.blockstore.get(cid)))
     await Object.values(groupedTasks).map(async (tasks) => {
@@ -206,25 +151,7 @@ class DecisionEngine {
   }
 
   // Handle incoming messages
-  // messageReceived (peerId, msg, cb) {
   async messageReceived (peerId, msg) {
-    // const ledger = this._findOrCreate(peerId)
-
-    // if (msg.empty) {
-    //   return nextTick(cb)
-    // }
-
-    // // If the message was a full wantlist clear the current one
-    // if (msg.full) {
-    //   ledger.wantlist = new Wantlist()
-    // }
-
-    // this._processBlocks(msg.blocks, ledger)
-
-    // if (msg.wantlist.size === 0) {
-    //   return nextTick(cb)
-    // }
-
     const ledger = this._findOrCreate(peerId)
 
     if (msg.empty) {
@@ -242,8 +169,8 @@ class DecisionEngine {
       return
     }
 
-    let cancels = []
-    let wants = []
+    const cancels = []
+    const wants = []
     msg.wantlist.forEach((entry) => {
       if (entry.cancel) {
         ledger.cancelWant(entry.cid)
@@ -268,26 +195,7 @@ class DecisionEngine {
     }, this._tasks, entries)
   }
 
-  // _addWants (ledger, peerId, entries, callback) {
   async _addWants (ledger, peerId, entries) {
-    // each(entries, (entry, cb) => {
-    //   // If we already have the block, serve it
-    //   this.blockstore.has(entry.cid, (err, exists) => {
-    //     if (err) {
-    //       this._log.error('failed existence check')
-    //     } else if (exists) {
-    //       this._tasks.push({
-    //         entry: entry.entry,
-    //         target: peerId
-    //       })
-    //     }
-    //     cb()
-    //   })
-    // }, () => {
-    //   this._outbox()
-    //   callback()
-    // })
-
     await Promise.all(entries.map(async (entry) => {
       // If we already have the block, serve it
       let exists

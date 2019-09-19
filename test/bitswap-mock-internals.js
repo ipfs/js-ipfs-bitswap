@@ -2,13 +2,13 @@
 /* eslint max-nested-callbacks: ["error", 8] */
 'use strict'
 
-const _ = require('lodash')
+const range = require('lodash.range')
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
 const PeerId = require('peer-id')
 const promisify = require('promisify-es6')
-
+const all = require('async-iterator-all')
 const Message = require('../src/types/message')
 const Bitswap = require('../src')
 
@@ -54,7 +54,9 @@ describe('bitswap with mocks', function () {
 
       await bs._receiveMessage(other, msg)
 
-      const blks = Promise.all([b1.cid, b2.cid].map((cid) => repo.blocks.get(cid)))
+      const blks = await Promise.all([
+        b1.cid, b2.cid
+      ].map((cid) => repo.blocks.get(cid)))
 
       expect(blks[0].data).to.eql(b1.data)
       expect(blks[1].data).to.eql(b2.data)
@@ -97,7 +99,7 @@ describe('bitswap with mocks', function () {
       const others = await makePeerId(5)
       const blocks = await makeBlock(10)
 
-      const messages = await Promise.all(_.range(5).map((i) => {
+      const messages = await Promise.all(range(5).map((i) => {
         const msg = new Message(false)
         msg.addBlock(blocks[i])
         msg.addBlock(blocks[i + 5])
@@ -113,7 +115,7 @@ describe('bitswap with mocks', function () {
         bs.wm.wantBlocks(cids)
 
         await bs._receiveMessage(other, msg)
-        storeHasBlocks(msg, repo.blocks)
+        await storeHasBlocks(msg, repo.blocks)
       }
     })
 
@@ -169,7 +171,7 @@ describe('bitswap with mocks', function () {
 
     it('block exists locally', async () => {
       const block = blocks[4]
-      await promisify(repo.blocks.put)(block)
+      await repo.blocks.put(block)
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
 
       const retrievedBlock = await bs.get(block.cid)
@@ -181,14 +183,11 @@ describe('bitswap with mocks', function () {
       const b2 = blocks[14]
       const b3 = blocks[13]
 
-      await promisify(repo.blocks.putMany)([b1, b2, b3])
+      await repo.blocks.putMany([b1, b2, b3])
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
 
-      const gen = bs.getMany([b1.cid, b2.cid, b3.cid])
-      const retrievedBlocks = []
-      for await (const block of gen) {
-        retrievedBlocks.push(block)
-      }
+      const retrievedBlocks = await all(bs.getMany([b1.cid, b2.cid, b3.cid]))
+
       expect(retrievedBlocks).to.be.eql([b1, b2, b3])
     })
 
@@ -197,7 +196,7 @@ describe('bitswap with mocks', function () {
       const b2 = blocks[6]
       const b3 = blocks[7]
 
-      await promisify(repo.blocks.putMany)([b1, b2, b3])
+      await repo.blocks.putMany([b1, b2, b3])
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
 
       const block1 = await bs.get(b1.cid)
@@ -210,8 +209,8 @@ describe('bitswap with mocks', function () {
       expect(block3).to.eql(b3)
     })
 
-    it('block is added locally afterwards', (done) => {
-      const finish = orderedFinish(2, done)
+    it('block is added locally afterwards', async () => {
+      const finish = orderedFinish(2)
       const block = blocks[9]
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
       const net = mockNetwork()
@@ -220,29 +219,32 @@ describe('bitswap with mocks', function () {
       bs.wm.network = net
       bs.engine.network = net
       bs.start()
-      bs.get(block.cid).then((res) => {
-        expect(res).to.eql(block)
-        finish(2)
-      })
+      const get = bs.get(block.cid)
 
       setTimeout(() => {
         finish(1)
         bs.put(block, () => {})
       }, 200)
+
+      const res = await get
+      expect(res).to.eql(block)
+      finish(2)
+
+      finish.assert()
     })
 
     it('block is sent after local add', async () => {
       const me = ids[0]
       const other = ids[1]
       const block = blocks[10]
-      let bs1
-      let bs2
 
       const n1 = {
         connectTo (id) {
           if (id.toHexString() !== other.toHexString()) {
             throw new Error('unknown peer')
           }
+
+          return Promise.resolve()
         },
         sendMessage (id, msg) {
           if (id.toHexString() === other.toHexString()) {
@@ -251,44 +253,54 @@ describe('bitswap with mocks', function () {
           throw new Error('unkown peer')
         },
         start () {
+          return Promise.resolve()
         },
         stop () {
+          return Promise.resolve()
         },
         findAndConnect (cid) {
+          return Promise.resolve()
         },
         provide (cid) {
+          return Promise.resolve()
         }
       }
       const n2 = {
-        connectTo (id, cb) {
+        connectTo (id) {
           if (id.toHexString() !== me.toHexString()) {
             throw new Error('unknown peer')
           }
+
+          return Promise.resolve()
         },
-        sendMessage (id, msg, cb) {
+        sendMessage (id, msg) {
           if (id.toHexString() === me.toHexString()) {
-            return bs1._receiveMessage(other, msg, cb)
+            return bs1._receiveMessage(other, msg)
           }
           throw new Error('unkown peer')
         },
         start () {
+          return Promise.resolve()
         },
         stop () {
+          return Promise.resolve()
         },
         findAndConnect (cid) {
+          return Promise.resolve()
         },
         provide (cid) {
+          return Promise.resolve()
         }
       }
 
       // Create and start bs1
-      bs1 = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const bs1 = new Bitswap(mockLibp2pNode(), repo.blocks)
       applyNetwork(bs1, n1)
       bs1.start()
 
       // Create and start bs2
-      const repo2 = await promisify(createTempRepo)()
-      bs2 = new Bitswap(mockLibp2pNode(), repo2.blocks)
+      const repo2 = await createTempRepo()
+      const bs2 = new Bitswap(mockLibp2pNode(), repo2.blocks)
       applyNetwork(bs2, n2)
       bs2.start()
 
@@ -343,9 +355,9 @@ describe('bitswap with mocks', function () {
   })
 
   describe('ledgerForPeer', () => {
-    it('returns null for unknown peer', () => {
+    it('returns null for unknown peer', async () => {
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
-      const id = PeerId.create({ bits: 512 })
+      const id = await promisify(PeerId.create)({ bits: 512 })
       const ledger = bs.ledgerForPeer(id)
       expect(ledger).to.equal(null)
     })

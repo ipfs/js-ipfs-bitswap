@@ -1,6 +1,6 @@
 'use strict'
 
-const _ = require('lodash')
+const range = require('lodash.range')
 const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
 const PeerBook = require('peer-book')
@@ -23,15 +23,14 @@ exports.mockLibp2pNode = () => {
     handle () {},
     unhandle () {},
     contentRouting: {
-      provide: (cid, callback) => callback(),
-      findProviders: (cid, timeout, callback) => callback(null, [])
+      provide: async (cid) => {}, // eslint-disable-line require-await
+      findProviders: async (cid, timeout) => { return [] } // eslint-disable-line require-await
     },
     on () {},
-    dial (peer, callback) {
-      setImmediate(() => callback())
+    async  dial (peer) { // eslint-disable-line require-await
     },
-    dialProtocol (peer, protocol, callback) {
-      setImmediate(() => callback())
+    async dialProtocol (peer, protocol) { // eslint-disable-line require-await
+
     },
     swarm: {
       setMaxListeners () {}
@@ -62,21 +61,23 @@ exports.mockNetwork = (calls, done) => {
         connects.push(p)
       })
     },
-    sendMessage (p, msg, cb) {
+    sendMessage (p, msg) {
+      messages.push([p, msg])
+
       setImmediate(() => {
-        messages.push([p, msg])
-        cb()
         finish()
       })
+
+      return Promise.resolve()
     },
-    start (callback) {
-      setImmediate(() => callback())
+    start () {
+      return Promise.resolve()
     },
-    findAndConnect (cid) {
-      return new Promise(() => {})
+    findAndConnect () {
+      return Promise.resolve()
     },
-    provide (cid, callback) {
-      setImmediate(() => callback())
+    provide () {
+      return Promise.resolve()
     }
   }
 }
@@ -86,27 +87,27 @@ exports.mockNetwork = (calls, done) => {
  */
 exports.createMockTestNet = async (repo, count) => {
   const results = await Promise.all([
-    _.range(count).map((i) => repo.create(`repo-${i}`)),
-    _.range(count).map((i) => PeerId.create({ bits: 512 }))
+    range(count).map((i) => repo.create(`repo-${i}`)),
+    range(count).map((i) => promisify(PeerId.create)({ bits: 512 }))
   ])
 
   const stores = results[0].map((r) => r.blockstore)
   const ids = results[1]
 
   const hexIds = ids.map((id) => id.toHexString())
-  const bitswaps = _.range(count).map((i) => new Bitswap({}, stores[i]))
-  const networks = _.range(count).map((i) => {
+  const bitswaps = range(count).map((i) => new Bitswap({}, stores[i]))
+  const networks = range(count).map((i) => {
     return {
       connectTo (id) {
         return new Promise((resolve, reject) => {
-          if (!_.includes(hexIds, id.toHexString())) {
+          if (!hexIds.includes(hexIds, id.toHexString())) {
             return reject(new Error('unkown peer'))
           }
           resolve()
         })
       },
       sendMessage (id, msg) {
-        const j = _.findIndex(hexIds, (el) => el === id.toHexString())
+        const j = hexIds.findIndex((el) => el === id.toHexString())
         return bitswaps[j]._receiveMessage(ids[i], msg)
       },
       start () {
@@ -114,7 +115,7 @@ exports.createMockTestNet = async (repo, count) => {
     }
   })
 
-  _.range(count).forEach((i) => {
+  range(count).forEach((i) => {
     exports.applyNetwork(bitswaps[i], networks[i])
     bitswaps[i].start()
   })
@@ -138,7 +139,7 @@ exports.genBitswapNetwork = async (n) => {
   const basePort = 12000
 
   // create PeerInfo and libp2p.Node for each
-  const peers = await Promise.all(_.range(n).map(i => PeerInfo.create()))
+  const peers = await Promise.all(range(n).map(i => promisify(PeerInfo.create)()))
 
   peers.forEach((p, i) => {
     const ma1 = '/ip4/127.0.0.1/tcp/' + (basePort + i) +

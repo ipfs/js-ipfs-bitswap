@@ -1,31 +1,34 @@
 'use strict'
 
-const _ = require('lodash')
+const range = require('lodash.range')
+const expect = require('chai').expect
 
 exports.orderedFinish = (n, callback) => {
-  const r = _.range(1, n + 1)
-  const finishs = []
+  const r = range(1, n + 1)
+  const finishes = []
 
-  return (i) => {
-    finishs.push(i)
-    if (finishs.length === n) {
-      if (!_.isEqual(r, finishs)) {
-        return callback(new Error('Invalid finish order: ' + finishs))
-      }
-      callback()
-    }
+  const output = (i) => {
+    finishes.push(i)
   }
+
+  output.assert = () => {
+    expect(finishes.length).to.equal(n)
+    expect(r).to.deep.equal(finishes, 'Invalid finish order: ' + finishes)
+  }
+
+  return output
 }
 
-exports.countToFinish = (n, callback) => {
+exports.countToFinish = (n) => {
   let pending = n
 
-  return () => {
+  const output = () => {
     pending--
-    if (pending === 0) {
-      callback()
-    } else if (pending < 0) {
-      callback(new Error('too many finishes, expected only ' + n))
-    }
   }
+
+  output.assert = () => {
+    expect(pending).to.equal(0, 'too many finishes, expected only ' + n)
+  }
+
+  return output
 }

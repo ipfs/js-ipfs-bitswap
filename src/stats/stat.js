@@ -74,6 +74,7 @@ class Stats extends EventEmitter {
 
   _update () {
     this._timeout = null
+
     if (this._queue.length) {
       let last
       while (this._queue.length) {
@@ -125,7 +126,7 @@ class Stats extends EventEmitter {
 
     let n
 
-    if (!this._stats.hasOwnProperty(key)) {
+    if (!Object.prototype.hasOwnProperty.call(this._stats, key)) {
       n = this._stats[key] = Big(0)
     } else {
       n = this._stats[key]

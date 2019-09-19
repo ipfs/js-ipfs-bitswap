@@ -38,7 +38,7 @@ module.exports = class WantManager {
     })
 
     // broadcast changes
-    for (let p of this.peers.values()) {
+    for (const p of this.peers.values()) {
       p.addEntries(entries)
     }
   }
@@ -56,7 +56,7 @@ module.exports = class WantManager {
     // new peer, give them the full wantlist
     const fullwantlist = new Message(true)
 
-    for (let entry of this.wantlist.entries()) {
+    for (const entry of this.wantlist.entries()) {
       fullwantlist.addEntry(entry[1].cid, entry[1].priority)
     }
 

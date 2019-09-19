@@ -23,12 +23,11 @@ class Node extends libp2p {
         connEncryption: [
           SECIO
         ],
-        dht: _options.DHT ? KadDHT : undefined
+        dht: KadDHT
       },
       config: {
-        dht: {},
-        EXPERIMENTAL: {
-          dht: Boolean(_options.DHT)
+        dht: {
+          enabled: Boolean(_options.DHT)
         }
       }
     }
@@ -38,13 +37,14 @@ class Node extends libp2p {
   }
 }
 
-async function createLibp2pNode (options) {
-  const id = await PeerId.create({ bits: 512 })
-  const peerInfo = await PeerInfo.create(id)
+async function createLibp2pNode (options = {}) {
+  const id = await promisify(PeerId.create)({ bits: 512 })
+  const peerInfo = await promisify(PeerInfo.create)(id)
   peerInfo.multiaddrs.add('/ip4/0.0.0.0/tcp/0')
   options.peerInfo = peerInfo
   const node = new Node(options)
-  await promisify(node.start.bind(node))()
+  await node.start()
+
   return node
 }
 
