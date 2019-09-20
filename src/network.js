@@ -2,6 +2,7 @@
 
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
+const callbackify = require('callbackify')
 
 const Message = require('./types/message')
 const CONSTANTS = require('./constants')
@@ -60,12 +61,14 @@ class Network {
     pull(
       conn,
       lp.decode(),
-      pull.asyncMap((data, cb) => Message.deserialize(data).then(data => cb(null, data), cb)),
+      pull.asyncMap((data, cb) => callbackify(Message.deserialize)(data, cb)),
       pull.asyncMap((msg, cb) => {
         conn.getPeerInfo((err, peerInfo) => {
-          if (err) { return cb(err) }
+          if (err) {
+            return cb(err)
+          }
 
-          this.bitswap._receiveMessage(peerInfo.id, msg).then(() => cb(), cb)
+          callbackify(this.bitswap._receiveMessage.bind(this.bitswap))(peerInfo.id, msg, cb)
         })
       }),
       pull.onEnd((err) => {

@@ -1,7 +1,7 @@
 'use strict'
 
 module.exports = {
-  bundlesize: { maxSize: '225kB' },
+  bundlesize: { maxSize: '210kB' },
   karma: {
     files: [{
       pattern: 'test/test-data/**/*',
