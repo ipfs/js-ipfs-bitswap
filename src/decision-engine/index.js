@@ -82,7 +82,8 @@ class DecisionEngine {
     const groupedTasks = groupBy(task => task.target.toB58String(), tasks)
 
     const blocks = await Promise.all(uniqCids.map(cid => this.blockstore.get(cid)))
-    await Object.values(groupedTasks).map(async (tasks) => {
+
+    await Promise.all(Object.values(groupedTasks).map(async (tasks) => {
       // all tasks in the group have the same target
       const peer = tasks[0].target
       const blockList = cids.map((cid) => blocks.find(b => b.cid.equals(cid)))
@@ -97,7 +98,7 @@ class DecisionEngine {
       for (const block of blockList) {
         this.messageSent(peer, block)
       }
-    })
+    }))
 
     this._tasks = []
   }

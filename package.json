@@ -48,7 +48,7 @@
     "benchmark": "^2.1.4",
     "chai": "^4.2.0",
     "dirty-chai": "^2.0.1",
-    "ipfs-repo": "ipfs/js-ipfs-repo#blockstore-accept-async-iterator",
+    "ipfs-repo": "^0.28.0",
     "libp2p": "^0.26.1",
     "libp2p-kad-dht": "^0.16.0",
     "libp2p-mplex": "^0.8.0",
