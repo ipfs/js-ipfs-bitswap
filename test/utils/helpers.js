@@ -3,7 +3,7 @@
 const range = require('lodash.range')
 const expect = require('chai').expect
 
-exports.orderedFinish = (n, callback) => {
+exports.orderedFinish = (n) => {
   const r = range(1, n + 1)
   const finishes = []
 

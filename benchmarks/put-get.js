@@ -1,4 +1,4 @@
-/* eslint max-nested-callbacks: ["error", 8] */
+/* eslint max-nested-callbacks: ["error", 5] */
 /* eslint-disable no-console */
 'use strict'
 

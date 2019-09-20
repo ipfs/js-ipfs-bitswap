@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-/* eslint max-nested-callbacks: ["error", 8] */
+/* eslint max-nested-callbacks: ["error", 5] */
 'use strict'
 
 const range = require('lodash.range')
