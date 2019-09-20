@@ -264,41 +264,43 @@ class Bitswap {
    * @param {function(Error)} callback
    * @returns {void}
    */
-  async put (block) {
-    this._log('putting block')
-
-    const has = await this.blockstore.has(block.cid)
-
-    if (has) {
-      return
+  async put (block) { // eslint-disable-line require-await
+    if (!Array.isArray(block)) {
+      block = [
+        block
+      ]
     }
 
-    await this._putBlock(block)
+    return this.putMany(block)
   }
 
   /**
    * Put the given blocks to the underlying blockstore and
    * send it to nodes that have it them their wantlist.
    *
-   * @param {Array<Block>} blocks
+   * @param {AsyncIterable<Block>} blocks
    * @param {function(Error)} callback
    * @returns {void}
    */
-  async putMany (blocks) {
-    const newBlocks = await Promise.all(blocks.map(async (b) => {
-      return !(await this.blockstore.has(b.cid))
-    })).filter(Boolean)
+  async putMany (blocks) { // eslint-disable-line require-await
+    const self = this
 
-    await this.blockstore.putMany(newBlocks)
+    return this.blockstore.putMany(async function * () {
+      for await (const block of blocks) {
+        if (await self.blockstore.has(block.cid)) {
+          continue
+        }
 
-    for (const block of newBlocks) {
-      this.notifications.hasBlock(block)
-      this.engine.receivedBlocks([block.cid])
-      // Note: Don't wait for provide to finish before returning
-      this.network.provide(block.cid).catch((err) => {
-        this._log.error('Failed to provide: %s', err.message)
-      })
-    }
+        yield block
+
+        self.notifications.hasBlock(block)
+        self.engine.receivedBlocks([block.cid])
+        // Note: Don't wait for provide to finish before returning
+        self.network.provide(block.cid).catch((err) => {
+          self._log.error('Failed to provide: %s', err.message)
+        })
+      }
+    }())
   }
 
   /**

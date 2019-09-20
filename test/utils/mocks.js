@@ -134,17 +134,19 @@ exports.applyNetwork = (bs, n) => {
   bs.engine.network = n
 }
 
+let basePort = 12000
+
 exports.genBitswapNetwork = async (n) => {
   const netArray = [] // bitswap, peerBook, libp2p, peerInfo, repo
-  const basePort = 12000
 
   // create PeerInfo and libp2p.Node for each
-  const peers = await Promise.all(range(n).map(i => promisify(PeerInfo.create)()))
+  const peers = await Promise.all(
+    range(n).map(i => promisify(PeerInfo.create)())
+  )
 
   peers.forEach((p, i) => {
-    const ma1 = '/ip4/127.0.0.1/tcp/' + (basePort + i) +
-      '/ipfs/' + p.id.toB58String()
-    p.multiaddrs.add(ma1)
+    basePort++
+    p.multiaddrs.add('/ip4/127.0.0.1/tcp/' + basePort + '/ipfs/' + p.id.toB58String())
 
     const l = new Node({ peerInfo: p })
     netArray.push({ peerInfo: p, libp2p: l })
@@ -169,16 +171,20 @@ exports.genBitswapNetwork = async (n) => {
     net.repo = new Repo(repoPath)
   })
 
-  await Promise.all(netArray.map(async (net) => {
-    const repoPath = tmpDir + '/' + net.peerInfo.id.toB58String()
-    net.repo = new Repo(repoPath)
+  await Promise.all(
+    netArray.map(async (net) => {
+      const repoPath = tmpDir + '/' + net.peerInfo.id.toB58String()
+      net.repo = new Repo(repoPath)
 
-    await net.repo.init({})
-    await net.repo.open()
-  }))
+      await net.repo.init({})
+      await net.repo.open()
+    })
+  )
 
   // start every libp2pNode
-  await Promise.all(netArray.map((net) => promisify(net.libp2p.start.bind(net.libp2p))()))
+  await Promise.all(
+    netArray.map((net) => net.libp2p.start())
+  )
 
   // create every BitSwap
   netArray.forEach((net) => {
@@ -189,7 +195,7 @@ exports.genBitswapNetwork = async (n) => {
   for (const from of netArray) {
     for (const to of netArray) {
       if (from.peerInfo.id.toB58String() !== to.peerInfo.id.toB58String()) {
-        await promisify(from.libp2p.dial.bind(from.libp2p))(to.peerInfo)
+        await from.libp2p.dial(to.peerInfo)
       }
     }
   }
