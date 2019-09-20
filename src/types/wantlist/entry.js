@@ -1,12 +1,7 @@
 'use strict'
 
-const assert = require('assert')
-const CID = require('cids')
-
 class WantListEntry {
   constructor (cid, priority) {
-    assert(CID.isCID(cid), 'must be valid CID')
-
     // Keep track of how many requests we have for this key
     this._refCounter = 1
 

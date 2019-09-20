@@ -3,7 +3,6 @@
 const protons = require('protons')
 const Block = require('ipfs-block')
 const isEqualWith = require('lodash.isequalwith')
-const assert = require('assert')
 const CID = require('cids')
 const codecName = require('multicodec/src/name-table')
 const vd = require('varint-decoder')
@@ -25,7 +24,6 @@ class BitswapMessage {
   }
 
   addEntry (cid, priority, cancel) {
-    assert(cid && CID.isCID(cid), 'must be a valid cid')
     const cidStr = cid.toString('base58btc')
 
     const entry = this.wantlist.get(cidStr)
@@ -39,13 +37,11 @@ class BitswapMessage {
   }
 
   addBlock (block) {
-    assert(Block.isBlock(block), 'must be a valid block')
     const cidStr = block.cid.toString('base58btc')
     this.blocks.set(cidStr, block)
   }
 
   cancel (cid) {
-    assert(CID.isCID(cid), 'must be a valid cid')
     const cidStr = cid.toString('base58btc')
     this.wantlist.delete(cidStr)
     this.addEntry(cid, 0, true)

@@ -124,9 +124,7 @@ class Network {
 
   // Connect to the given peer
   // Send the given msg (instance of Message) to the given peer
-  // sendMessage (peer, msg, callback) {
   async sendMessage (peer, msg) {
-    // if (!this._running) { return callback(new Error(`network isn't running`)) }
     if (!this._running) throw new Error('network isn\'t running')
 
     const stringId = peer.toB58String() ? peer.toB58String() : peer.id.toB58String()

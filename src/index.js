@@ -30,6 +30,7 @@ const statsKeys = [
  *
  * @param {Libp2p} libp2p
  * @param {Blockstore} blockstore
+ * @param {Object} options
  */
 class Bitswap {
   constructor (libp2p, blockstore, options) {
@@ -93,17 +94,17 @@ class Bitswap {
     }))
   }
 
-  // _handleReceivedBlock (peerId, block, wasWanted, callback) {
   async _handleReceivedBlock (peerId, block, wasWanted) {
     this._log('received block')
 
     const has = await this.blockstore.has(block.cid)
     this._updateReceiveCounters(peerId.toB58String(), block, has)
-    if (has || !wasWanted) {
+
+    if (!wasWanted) {
       return
     }
 
-    await this._putBlock(block)
+    await this.put(block)
   }
 
   _updateReceiveCounters (peerId, block, exists) {
@@ -133,23 +134,16 @@ class Bitswap {
     this._stats.disconnected(peerId)
   }
 
-  async _putBlock (block) {
-    await this.blockstore.put(block)
-
-    this.notifications.hasBlock(block)
-
-    // Note: Don't wait for provide to finish before returning
-    this.network.provide(block.cid).catch((err) => {
-      this._log.error('Failed to provide: %s', err.message)
-    })
-
-    this.engine.receivedBlocks([block.cid])
-  }
-
+  /**
+   * @returns {void}
+   */
   enableStats () {
     this._stats.enable()
   }
 
+  /**
+   * @returns {void}
+   */
   disableStats () {
     this._stats.disable()
   }
@@ -158,7 +152,7 @@ class Bitswap {
    * Return the current wantlist for a given `peerId`
    *
    * @param {PeerId} peerId
-   * @returns {Wantlist}
+   * @returns {Map}
    */
   wantlistForPeer (peerId) {
     return this.engine.wantlistForPeer(peerId)
@@ -168,7 +162,7 @@ class Bitswap {
    * Return ledger information for a given `peerId`
    *
    * @param {PeerId} peerId
-   * @returns {?Object}
+   * @returns {Object}
    */
   ledgerForPeer (peerId) {
     return this.engine.ledgerForPeer(peerId)
@@ -179,8 +173,7 @@ class Bitswap {
    * blockstore it is returned, otherwise the block is added to the wantlist and returned once another node sends it to us.
    *
    * @param {CID} cid
-   * @param {function(Error, Block)} callback
-   * @returns {void}
+   * @returns {Promise<Block>}
    */
   async get (cid) {
     for await (const block of this.getMany([cid])) {
@@ -192,9 +185,8 @@ class Bitswap {
    * Fetch a a list of blocks by cid. If the blocks are in the local
    * blockstore they are returned, otherwise the blocks are added to the wantlist and returned once another node sends them to us.
    *
-   * @param {Array<CID>} cids
-   * @param {function(Error, Blocks)} callback
-   * @returns {void}
+   * @param {Iterable<CID>} cids
+   * @returns {Promise<AsyncIterator<Block>>}
    */
   async * getMany (cids) {
     let pendingStart = cids.length
@@ -238,7 +230,12 @@ class Bitswap {
     }
   }
 
-  // removes the given cids from the wantlist independent of any ref counts
+  /**
+   * Removes the given CIDs from the wantlist independent of any ref counts
+   *
+   * @param {Iterable<CID>} cids
+   * @returns {void}
+   */
   unwant (cids) {
     if (!Array.isArray(cids)) {
       cids = [cids]
@@ -248,7 +245,12 @@ class Bitswap {
     cids.forEach((cid) => this.notifications.unwantBlock(cid))
   }
 
-  // removes the given keys from the want list
+  /**
+   * Removes the given keys from the want list
+   *
+   * @param {Iterable<CID>} cids
+   * @returns {void}
+   */
   cancelWants (cids) {
     if (!Array.isArray(cids)) {
       cids = [cids]
@@ -261,26 +263,18 @@ class Bitswap {
    * send it to nodes that have it in their wantlist.
    *
    * @param {Block} block
-   * @param {function(Error)} callback
-   * @returns {void}
+   * @returns {Promise<void>}
    */
   async put (block) { // eslint-disable-line require-await
-    if (!Array.isArray(block)) {
-      block = [
-        block
-      ]
-    }
-
-    return this.putMany(block)
+    return this.putMany([block])
   }
 
   /**
    * Put the given blocks to the underlying blockstore and
    * send it to nodes that have it them their wantlist.
    *
-   * @param {AsyncIterable<Block>} blocks
-   * @param {function(Error)} callback
-   * @returns {void}
+   * @param {AsyncIterable<Block>|Iterable<Block>} blocks
+   * @returns {Promise<void>}
    */
   async putMany (blocks) { // eslint-disable-line require-await
     const self = this
@@ -315,7 +309,7 @@ class Bitswap {
   /**
    * Get the current list of partners.
    *
-   * @returns {Array<PeerId>}
+   * @returns {Iterator<PeerId>}
    */
   peers () {
     return this.engine.peers()

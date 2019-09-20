@@ -1,12 +1,9 @@
 'use strict'
 
 const WantlistEntry = require('../wantlist').Entry
-const CID = require('cids')
-const assert = require('assert')
 
 module.exports = class BitswapMessageEntry {
   constructor (cid, priority, cancel) {
-    assert(CID.isCID(cid), 'needs valid cid')
     this.entry = new WantlistEntry(cid, priority)
     this.cancel = Boolean(cancel)
   }
