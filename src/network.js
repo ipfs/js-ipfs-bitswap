@@ -173,13 +173,13 @@ class Network {
       // Attempt Bitswap 1.1.0
       return {
         conn: await this.libp2p.dialProtocol(peer, BITSWAP110),
-        protocol: BITSWAP100
+        protocol: BITSWAP110
       }
     } catch (err) {
       // Attempt Bitswap 1.0.0
       return {
         conn: await this.libp2p.dialProtocol(peer, BITSWAP100),
-        protocol: BITSWAP110
+        protocol: BITSWAP100
       }
     }
   }

@@ -100,7 +100,7 @@ class Bitswap {
     const has = await this.blockstore.has(block.cid)
     this._updateReceiveCounters(peerId.toB58String(), block, has)
 
-    if (!wasWanted) {
+    if (has || !wasWanted) {
       return
     }
 
