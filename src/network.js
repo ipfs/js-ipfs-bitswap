@@ -144,7 +144,7 @@ class Network {
         serialized = msg.serializeToBitswap110()
         break
       default:
-        throw new Error('Unkown protocol: ' + protocol)
+        throw new Error('Unknown protocol: ' + protocol)
     }
 
     // Note: Don't wait for writeMessage() to complete
