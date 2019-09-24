@@ -1,3 +1,54 @@
+<a name="0.26.0"></a>
+# [0.26.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.25.1...v0.26.0) (2019-09-24)
+
+
+### Code Refactoring
+
+* callbacks -> async / await ([#202](https://github.com/ipfs/js-ipfs-bitswap/issues/202)) ([accf53b](https://github.com/ipfs/js-ipfs-bitswap/commit/accf53b))
+
+
+### BREAKING CHANGES
+
+* All places in the API that used callbacks are now replaced with async/await
+
+* feat: make `get()` a generator
+
+* make `getMany()` AsyncIterable
+
+* feat: make `put()` a generator
+
+* make `putMany()` AsyncIterable
+
+* remove check in `_findAndConnect()`
+
+* feat: make `start()` and `stop()` async/await
+
+* refactor: make `connectTo()` async/await
+
+* refactor: make `findProviders()` and `findAndConnect()` async/await
+
+* refactor: cb => async
+
+* refactor: async/await
+
+* chore: update travis
+
+* refactor: update benchmark tests and allow streaming to putMany
+
+* chore: address pr comments
+
+* chore: remove callback hell eslint disables
+
+* chore: wrap list of tasks in promise.all
+
+* chore: callbackify methods inside pull stream
+
+* chore: accept PR suggestions
+
+* chore: fix typo
+
+
+
 <a name="0.25.1"></a>
 ## [0.25.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.25.0...v0.25.1) (2019-06-26)
 
