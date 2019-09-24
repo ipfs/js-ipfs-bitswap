@@ -4,9 +4,7 @@
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const map = require('async/map')
 const CID = require('cids')
-const _ = require('lodash')
 const multihashing = require('multihashing-async')
 
 const Wantlist = require('../../src/types/wantlist')
@@ -16,12 +14,8 @@ describe('Wantlist', () => {
   let wm
   let blocks
 
-  before((done) => {
-    map(_.range(2), (i, cb) => makeBlock(cb), (err, res) => {
-      expect(err).to.not.exist()
-      blocks = res
-      done()
-    })
+  before(async () => {
+    blocks = await makeBlock(2)
   })
 
   beforeEach(() => {
@@ -116,21 +110,19 @@ describe('Wantlist', () => {
     expect(wm.contains(b2.cid)).to.not.exist()
   })
 
-  it('with cidV1', (done) => {
+  it('with cidV1', async () => {
     const b = blocks[0]
-    multihashing(b.data, 'sha2-256', (err, hash) => {
-      expect(err).to.not.exist()
-      const cid = new CID(1, 'dag-pb', hash)
-      wm.add(cid, 2)
+    const hash = await multihashing(b.data, 'sha2-256')
 
-      expect(
-        Array.from(wm.entries())
-      ).to.be.eql([[
-        cid.toString('base58btc'),
-        new Wantlist.Entry(cid, 2)
-      ]])
-      done()
-    })
+    const cid = new CID(1, 'dag-pb', hash)
+    wm.add(cid, 2)
+
+    expect(
+      Array.from(wm.entries())
+    ).to.be.eql([[
+      cid.toString('base58btc'),
+      new Wantlist.Entry(cid, 2)
+    ]])
   })
 
   it('matches same cid derived from distinct encodings', () => {

@@ -5,6 +5,7 @@ const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
 const PeerId = require('peer-id')
+const promisify = require('promisify-es6')
 
 const Ledger = require('../../src/decision-engine/ledger')
 
@@ -12,15 +13,8 @@ describe('Ledger', () => {
   let peerId
   let ledger
 
-  before((done) => {
-    PeerId.create({ bits: 512 }, (err, _peerId) => {
-      if (err) {
-        return done(err)
-      }
-
-      peerId = _peerId
-      done()
-    })
+  before(async () => {
+    peerId = await promisify(PeerId.create)({ bits: 512 })
   })
 
   beforeEach(() => {

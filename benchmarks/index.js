@@ -1,110 +1,76 @@
-/* eslint max-nested-callbacks: ["error", 8] */
 /* eslint-disable no-console */
 'use strict'
 
-const series = require('async/series')
-const parallel = require('async/parallel')
-const map = require('async/map')
-const mapSeries = require('async/mapSeries')
-const each = require('async/each')
-const _ = require('lodash')
-const Block = require('ipfs-block')
 const assert = require('assert')
-const crypto = require('crypto')
-const CID = require('cids')
-const multihashing = require('multihashing-async')
+const range = require('lodash.range')
 
-const utils = require('../test/utils')
+const makeBlock = require('../test/utils/make-block')
+const genBitswapNetwork = require('../test/utils/mocks').genBitswapNetwork
 
 const nodes = [2, 5, 10, 20]
 const blockFactors = [1, 10, 100]
 
-console.log('-- start')
-mapSeries(nodes, (n, cb) => {
-  mapSeries(blockFactors, (blockFactor, cb) => {
-    utils.genBitswapNetwork(n, (err, nodeArr) => {
-      if (err) {
-        return cb(err)
-      }
-
-      round(nodeArr, blockFactor, n, (err) => {
-        if (err) {
-          return cb(err)
-        }
-
-        shutdown(nodeArr, cb)
-      })
+;(async function () {
+  console.log('-- start')
+  await Promise.all(
+    nodes.map(async nodeCount => {
+      await Promise.all(
+        blockFactors.map(async blockFactor => {
+          const nodeArr = await genBitswapNetwork(nodeCount)
+          await round(nodeArr, blockFactor, nodeCount)
+          await shutdown(nodeArr)
+        })
+      )
     })
-  }, cb)
-}, (err) => {
-  if (err) {
-    throw err
-  }
+  )
+
   console.log('-- finished')
-})
+})()
 
-function shutdown (nodeArr, cb) {
-  each(nodeArr, (node, cb) => {
-    node.bitswap.stop()
-    node.libp2p.stop(cb)
-  }, cb)
+async function shutdown (nodeArr) {
+  await Promise.all(
+    nodeArr.map(async node => {
+      await node.bitswap.stop()
+      await node.libp2p.stop()
+    })
+  )
 }
 
-function round (nodeArr, blockFactor, n, cb) {
-  createBlocks(n, blockFactor, (err, blocks) => {
-    if (err) {
-      return cb(err)
-    }
-    const cids = blocks.map((b) => b.cid)
-    let d
-    series([
-      // put blockFactor amount of blocks per node
-      (cb) => parallel(_.map(nodeArr, (node, i) => (callback) => {
-        node.bitswap.start()
+async function round (nodeArr, blockFactor, n) {
+  const blocks = await makeBlock(n * blockFactor)
+  const cids = blocks.map((b) => b.cid)
 
-        const data = _.map(_.range(blockFactor), (j) => {
+  console.info('put blockFactor amount of blocks per node')
+
+  await Promise.all(
+    nodeArr.map(async (node, i) => {
+      await node.bitswap.start()
+
+      await Promise.all(
+        range(blockFactor).map(async j => {
           const index = i * blockFactor + j
-          return blocks[index]
-        })
-        each(
-          data,
-          (d, cb) => node.bitswap.put(d, cb),
-          callback
-        )
-      }), cb),
-      (cb) => {
-        d = (new Date()).getTime()
-        cb()
-      },
-      // fetch all blocks on every node
-      (cb) => parallel(_.map(nodeArr, (node, i) => (callback) => {
-        map(cids, (cid, cb) => node.bitswap.get(cid, cb), (err, res) => {
-          if (err) {
-            return callback(err)
-          }
 
-          assert(res.length === blocks.length)
-          callback()
+          await node.bitswap.put(blocks[index])
         })
-      }), cb)
-    ], (err) => {
-      if (err) {
-        return cb(err)
-      }
-      console.log('  %s nodes - %s blocks/node - %sms', n, blockFactor, (new Date()).getTime() - d)
-      cb()
+      )
     })
-  })
-}
+  )
 
-function createBlocks (n, blockFactor, callback) {
-  map(_.range(n * blockFactor), (i, cb) => {
-    const data = crypto.randomBytes(n * blockFactor)
-    multihashing(data, 'sha2-256', (err, hash) => {
-      if (err) {
-        return cb(err)
+  console.info('fetch all blocks on every node')
+
+  const d = Date.now()
+
+  await Promise.all(
+    nodeArr.map(async node => {
+      let count = 0
+
+      for await (const _ of node.bitswap.getMany(cids)) { // eslint-disable-line no-unused-vars
+        count++
       }
-      cb(null, new Block(data, new CID(hash)))
+
+      assert(count === blocks.length)
     })
-  }, callback)
+  )
+
+  console.log('  %s nodes - %s blocks/node - %sms', n, blockFactor, Date.now() - d)
 }

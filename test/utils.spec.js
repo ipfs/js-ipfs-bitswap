@@ -6,7 +6,7 @@ const expect = chai.expect
 const { groupBy, uniqWith, pullAllWith, includesWith, sortBy } = require('../src/utils')
 
 describe('utils spec', function () {
-  it('grouby', (done) => {
+  it('groupBy', () => {
     const list = [
       { name: 'name1', score: 1 },
       { name: 'name2', score: 1 },
@@ -21,11 +21,9 @@ describe('utils spec', function () {
       ],
       b: [{ name: 'name3', score: 2 }]
     })
-
-    done()
   })
 
-  it('pullAllWith', (done) => {
+  it('pullAllWith', () => {
     var array = [{ x: 1, y: 2 }, { x: 3, y: 4 }, { x: 5, y: 6 }]
 
     const actual = pullAllWith(
@@ -35,11 +33,9 @@ describe('utils spec', function () {
     )
 
     expect(actual).to.deep.equal([{ x: 1, y: 2 }, { x: 5, y: 6 }])
-
-    done()
   })
 
-  it('uniqWith', (done) => {
+  it('uniqWith', () => {
     class T {
       constructor (id) {
         this.id = id
@@ -54,13 +50,13 @@ describe('utils spec', function () {
     const r = uniqWith((a, b) => a.equals(b), list)
 
     if (r[0].id === 1 && r[1].id === 2) {
-      return done()
+      return
     }
 
-    return done(new Error('no match'))
+    throw new Error('no match')
   })
 
-  it('includesWith', (done) => {
+  it('includesWith', () => {
     class T {
       constructor (id) {
         this.id = id
@@ -76,11 +72,9 @@ describe('utils spec', function () {
     const r2 = includesWith((a, b) => a.equals(b), new T(4), list)
     expect(r1).to.be.true()
     expect(r2).to.be.false()
-
-    done()
   })
 
-  it('sortBy', (done) => {
+  it('sortBy', () => {
     const list = [
       {
         id: 3,
@@ -99,13 +93,11 @@ describe('utils spec', function () {
     const groupedList1 = sortBy(o => o.name, list)
     const groupedList2 = sortBy(o => o.id, list)
 
-    expect(groupedList1).to.be.deep.equal([ { id: 2, name: 'a' },
+    expect(groupedList1).to.be.deep.equal([{ id: 2, name: 'a' },
       { id: 3, name: 'b' },
-      { id: 1, name: 'c' } ])
-    expect(groupedList2).to.be.deep.equal([ { id: 1, name: 'c' },
+      { id: 1, name: 'c' }])
+    expect(groupedList2).to.be.deep.equal([{ id: 1, name: 'c' },
       { id: 2, name: 'a' },
-      { id: 3, name: 'b' } ])
-
-    done()
+      { id: 3, name: 'b' }])
   })
 })

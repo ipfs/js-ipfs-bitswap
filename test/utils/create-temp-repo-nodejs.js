@@ -5,31 +5,26 @@ const pathJoin = require('path').join
 const os = require('os')
 const ncp = require('ncp')
 const rimraf = require('rimraf')
-const series = require('async/series')
+const promisify = require('promisify-es6')
 
 const baseRepo = pathJoin(__dirname, '../fixtures/repo')
 
-function createTempRepo (callback) {
+async function createTempRepo () {
   const date = Date.now().toString()
   const path = pathJoin(os.tmpdir(), `bitswap-tests-${date}-${Math.random()}`)
 
-  ncp(baseRepo, path, (err) => {
-    if (err) { return callback(err) }
+  await promisify(ncp)(baseRepo, path)
 
-    const repo = new IPFSRepo(path)
+  const repo = new IPFSRepo(path)
 
-    repo.teardown = (done) => {
-      series([
-        (cb) => repo.close(cb),
-        (cb) => rimraf(path, cb)
-      ], (err) => done(err))
-    }
+  repo.teardown = async () => {
+    await repo.close()
+    await promisify(rimraf)(path)
+  }
 
-    repo.open((err) => {
-      if (err) { return callback(err) }
-      callback(null, repo)
-    })
-  })
+  await repo.open()
+
+  return repo
 }
 
 module.exports = createTempRepo

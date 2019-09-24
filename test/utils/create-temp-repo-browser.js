@@ -2,34 +2,26 @@
 'use strict'
 
 const IPFSRepo = require('ipfs-repo')
-const series = require('async/series')
 
 const idb = self.indexedDB ||
   self.mozIndexedDB ||
   self.webkitIndexedDB ||
   self.msIndexedDB
 
-function createTempRepo (callback) {
+async function createTempRepo () {
   const date = Date.now().toString()
   const path = `/bitswap-tests-${date}-${Math.random()}`
 
   const repo = new IPFSRepo(path)
+  await repo.init({})
+  await repo.open()
 
-  series([
-    (cb) => repo.init({}, cb),
-    (cb) => repo.open(cb)
-  ], (err) => {
-    if (err) {
-      return callback(err)
-    }
-    repo.teardown = (callback) => {
-      idb.deleteDatabase(path)
-      idb.deleteDatabase(`${path}/blocks`)
-      callback()
-    }
+  repo.teardown = () => {
+    idb.deleteDatabase(path)
+    idb.deleteDatabase(`${path}/blocks`)
+  }
 
-    callback(null, repo)
-  })
+  return repo
 }
 
 module.exports = createTempRepo

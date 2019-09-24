@@ -1,4 +1,3 @@
-/* eslint max-nested-callbacks: ["error", 8] */
 /* eslint-env mocha */
 /* eslint-disable no-console */
 'use strict'
@@ -6,16 +5,12 @@
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const series = require('async/series')
-const parallel = require('async/parallel')
-const map = require('async/map')
-const each = require('async/each')
-const _ = require('lodash')
 const Block = require('ipfs-block')
 const Buffer = require('safe-buffer').Buffer
 const crypto = require('crypto')
 const CID = require('cids')
 const multihashing = require('multihashing-async')
+const range = require('lodash.range')
 
 const genBitswapNetwork = require('../utils/mocks').genBitswapNetwork
 
@@ -23,135 +18,88 @@ describe('gen Bitswap network', function () {
   // CI is very slow
   this.timeout(300 * 1000)
 
-  it('retrieves local blocks', (done) => {
-    genBitswapNetwork(1, (err, nodes) => {
-      expect(err).to.not.exist()
+  it('retrieves local blocks', async () => {
+    const nodes = await genBitswapNetwork(1)
 
-      const node = nodes[0]
-      let blocks
+    const node = nodes[0]
+    const blocks = await Promise.all(range(100).map(async (k) => {
+      const b = Buffer.alloc(1024)
+      b.fill(k)
+      const hash = await multihashing(b, 'sha2-256')
+      const cid = new CID(hash)
+      return new Block(b, cid)
+    }))
 
-      series([
-        (cb) => map(_.range(100), (k, cb) => {
-          const b = Buffer.alloc(1024)
-          b.fill(k)
-          multihashing(b, 'sha2-256', (err, hash) => {
-            expect(err).to.not.exist()
-            const cid = new CID(hash)
-            cb(null, new Block(b, cid))
-          })
-        }, (err, _blocks) => {
-          expect(err).to.not.exist()
-          blocks = _blocks
-          cb()
-        }),
-        (cb) => each(
-          blocks,
-          (b, cb) => node.bitswap.put(b, cb),
-          cb
-        ),
-        (cb) => map(_.range(100), (i, cb) => {
-          node.bitswap.get(blocks[i].cid, cb)
-        }, (err, res) => {
-          expect(err).to.not.exist()
-          expect(res).to.have.length(blocks.length)
-          cb()
-        })
-      ], (err) => {
-        expect(err).to.not.exist()
-        node.bitswap.stop()
-        node.libp2p.stop(done)
-      })
-    })
+    await Promise.all(blocks.map(b => node.bitswap.put(b)))
+    const res = await Promise.all(range(100).map((i) => {
+      return node.bitswap.get(blocks[i].cid)
+    }))
+    expect(res).to.have.length(blocks.length)
+
+    node.bitswap.stop()
+    await node.libp2p.stop()
   })
 
   describe('distributed blocks', () => {
-    it('with 2 nodes', (done) => {
+    it('with 2 nodes', async () => {
       const n = 2
-      genBitswapNetwork(n, (err, nodeArr) => {
-        expect(err).to.not.exist()
-        nodeArr.forEach((node) => {
-          expect(
-            Object.keys(node.libp2p._switch.conns)
-          ).to.be.empty()
+      const nodeArr = await genBitswapNetwork(n)
 
-          // Parallel dials may result in 1 or 2 connections
-          // depending on when they're executed.
-          expect(
-            Object.keys(node.libp2p._switch.connection.getAll())
-          ).to.have.a.lengthOf.at.least(n - 1)
-        })
+      nodeArr.forEach((node) => {
+        expect(
+          Object.keys(node.libp2p._switch.conns)
+        ).to.be.empty()
 
-        // -- actual test
-        round(nodeArr, n, (err) => {
-          if (err) {
-            return done(err)
-          }
-
-          each(nodeArr, (node, cb) => {
-            node.bitswap.stop()
-            node.libp2p.stop(cb)
-          }, done)
-        })
+        // Parallel dials may result in 1 or 2 connections
+        // depending on when they're executed.
+        expect(
+          Object.keys(node.libp2p._switch.connection.getAll())
+        ).to.have.a.lengthOf.at.least(n - 1)
       })
+
+      // -- actual test
+      await round(nodeArr, n)
+      await Promise.all(nodeArr.map(node => {
+        node.bitswap.stop()
+        return node.libp2p.stop()
+      }))
     })
   })
 })
 
-function round (nodeArr, n, cb) {
+async function round (nodeArr, n) {
   const blockFactor = 10
-  createBlocks(n, blockFactor, (err, blocks) => {
-    if (err) {
-      return cb(err)
-    }
-    const cids = blocks.map((b) => b.cid)
-    let d
-    series([
-      // put blockFactor amount of blocks per node
-      (cb) => parallel(_.map(nodeArr, (node, i) => (cb) => {
-        node.bitswap.start()
+  const blocks = await createBlocks(n, blockFactor)
 
-        const data = _.map(_.range(blockFactor), (j) => {
-          const index = i * blockFactor + j
-          return blocks[index]
-        })
+  const cids = blocks.map((b) => b.cid)
 
-        each(data, (d, cb) => node.bitswap.put(d, cb), cb)
-      }), cb),
-      (cb) => {
-        d = (new Date()).getTime()
-        // fetch all blocks on every node
-        parallel(_.map(nodeArr, (node, i) => (cb) => {
-          map(cids, (cid, cb) => {
-            node.bitswap.get(cid, cb)
-          }, (err, res) => {
-            if (err) {
-              return cb(err)
-            }
+  // put blockFactor amount of blocks per node
+  await Promise.all(nodeArr.map(async (node, i) => {
+    node.bitswap.start()
 
-            expect(res).to.have.length(blocks.length)
-            cb()
-          })
-        }), cb)
-      }
-    ], (err) => {
-      if (err) {
-        return cb(err)
-      }
-      console.log('  time -- %s', (new Date()).getTime() - d)
-      cb()
+    const data = range(blockFactor).map((j) => {
+      const index = i * blockFactor + j
+      return blocks[index]
     })
-  })
+
+    await Promise.all(data.map((d) => node.bitswap.put(d)))
+  }))
+
+  const d = Date.now()
+
+  // fetch all blocks on every node
+  await Promise.all(nodeArr.map(async (node) => {
+    const bs = await Promise.all(cids.map((cid) => node.bitswap.get(cid)))
+    expect(bs).to.deep.equal(blocks)
+  }))
+
+  console.log('  time -- %s', (Date.now() - d))
 }
 
-function createBlocks (n, blockFactor, callback) {
-  map(_.map(_.range(n * blockFactor), (k) => {
-    return crypto.randomBytes(n * blockFactor)
-  }), (d, cb) => {
-    multihashing(d, 'sha2-256', (err, hash) => {
-      if (err) {
-        return cb(err)
-      }
-      cb(null, new Block(d, new CID(hash)))
-    })
-  }, callback)
+function createBlocks (n, blockFactor) {
+  return Promise.all([...new Array(n * blockFactor)].map(async (k) => {
+    const d = crypto.randomBytes(n * blockFactor)
+    const hash = await multihashing(d, 'sha2-256')
+    return new Block(d, new CID(hash))
+  }))
 }

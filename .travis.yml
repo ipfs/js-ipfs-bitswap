@@ -1,11 +1,13 @@
 language: node_js
 cache: npm
+
 stages:
   - check
   - test
   - cov
 
 node_js:
+  - '12'
   - '10'
 
 os:
@@ -20,7 +22,7 @@ jobs:
   include:
     - stage: check
       script:
-        - npx aegir commitlint --travis
+        - npx aegir build --bundlesize
         - npx aegir dep-check
         - npm run lint
 
@@ -35,6 +37,18 @@ jobs:
       addons:
         firefox: latest
       script: npx aegir test -t browser -t webworker -- --browsers FirefoxHeadless
+
+    - stage: test
+      name: electron-main
+      os: osx
+      script:
+        - npx aegir test -t electron-main --bail
+
+    - stage: test
+      name: electron-renderer
+      os: osx
+      script:
+        - npx aegir test -t electron-renderer --bail
 
 notifications:
   email: false

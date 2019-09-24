@@ -1,19 +1,11 @@
 'use strict'
 
-const each = require('async/each')
+const expect = require('chai').expect
 
-function storeHasBlocks (message, store, callback) {
-  each(message.blocks.values(), (b, callback) => {
-    store.has(b.cid, (err, has) => {
-      if (err) {
-        return callback(err)
-      }
-      if (!has) {
-        return callback(new Error('missing block'))
-      }
-      callback()
-    })
-  }, callback)
+async function storeHasBlocks (message, store) {
+  for (const b of message.blocks.values()) {
+    expect(await store.has(b.cid)).to.be.true('missing block')
+  }
 }
 
 module.exports = storeHasBlocks

@@ -1,11 +1,5 @@
 'use strict'
 
-const each = require('async/each')
-const eachSeries = require('async/eachSeries')
-const waterfall = require('async/waterfall')
-const nextTick = require('async/nextTick')
-
-const map = require('async/map')
 const debounce = require('just-debounce-it')
 
 const Message = require('../types/message')
@@ -32,21 +26,22 @@ class DecisionEngine {
     this._outbox = debounce(this._processTasks.bind(this), 100)
   }
 
-  _sendBlocks (peer, blocks, cb) {
-    // split into messges of max 512 * 1024 bytes
+  async _sendBlocks (peer, blocks) {
+    // split into messages of max 512 * 1024 bytes
     const total = blocks.reduce((acc, b) => {
       return acc + b.data.byteLength
     }, 0)
 
     if (total < MAX_MESSAGE_SIZE) {
-      return this._sendSafeBlocks(peer, blocks, cb)
+      await this._sendSafeBlocks(peer, blocks)
+      return
     }
 
     let size = 0
     let batch = []
     let outstanding = blocks.length
 
-    eachSeries(blocks, (b, cb) => {
+    for (const b of blocks) {
       outstanding--
       batch.push(b)
       size += b.data.byteLength
@@ -57,28 +52,24 @@ class DecisionEngine {
         size = 0
         const nextBatch = batch.slice()
         batch = []
-        this._sendSafeBlocks(peer, nextBatch, (err) => {
-          if (err) {
-            this._log('sendblock error: %s', err.message)
-          }
-          // not returning the error, so we send as much as we can
-          // as otherwise `eachSeries` would cancel
-          cb()
-        })
-      } else {
-        nextTick(cb)
+        try {
+          await this._sendSafeBlocks(peer, nextBatch)
+        } catch (err) {
+          // catch the error so as to send as many blocks as we can
+          this._log('sendblock error: %s', err.message)
+        }
       }
-    }, cb)
+    }
   }
 
-  _sendSafeBlocks (peer, blocks, cb) {
+  async _sendSafeBlocks (peer, blocks) {
     const msg = new Message(false)
     blocks.forEach((b) => msg.addBlock(b))
 
-    this.network.sendMessage(peer, msg, cb)
+    await this.network.sendMessage(peer, msg)
   }
 
-  _processTasks () {
+  async _processTasks () {
     if (!this._running || !this._tasks.length) {
       return
     }
@@ -90,35 +81,26 @@ class DecisionEngine {
     const uniqCids = uniqWith((a, b) => a.equals(b), cids)
     const groupedTasks = groupBy(task => task.target.toB58String(), tasks)
 
-    waterfall([
-      (callback) => map(uniqCids, (cid, cb) => {
-        this.blockstore.get(cid, cb)
-      }, callback),
-      (blocks, callback) => each(Object.values(groupedTasks), (tasks, cb) => {
-        // all tasks have the same target
-        const peer = tasks[0].target
-        const blockList = cids.map((cid) => {
-          return blocks.find(b => b.cid.equals(cid))
-        })
+    const blocks = await Promise.all(uniqCids.map(cid => this.blockstore.get(cid)))
 
-        this._sendBlocks(peer, blockList, (err) => {
-          if (err) {
-            // `_sendBlocks` actually doesn't return any errors
-            this._log.error('should never happen: ', err)
-          } else {
-            blockList.forEach((block) => this.messageSent(peer, block))
-          }
+    await Promise.all(Object.values(groupedTasks).map(async (tasks) => {
+      // all tasks in the group have the same target
+      const peer = tasks[0].target
+      const blockList = cids.map((cid) => blocks.find(b => b.cid.equals(cid)))
 
-          cb()
-        })
-      }, callback)
-    ], (err) => {
-      this._tasks = []
-
-      if (err) {
-        this._log.error(err)
+      try {
+        await this._sendBlocks(peer, blockList)
+      } catch (err) {
+        // `_sendBlocks` actually doesn't return any errors
+        this._log.error('should never happen: ', err)
+        return
       }
-    })
+      for (const block of blockList) {
+        this.messageSent(peer, block)
+      }
+    }))
+
+    this._tasks = []
   }
 
   wantlistForPeer (peerId) {
@@ -170,11 +152,11 @@ class DecisionEngine {
   }
 
   // Handle incoming messages
-  messageReceived (peerId, msg, cb) {
+  async messageReceived (peerId, msg) {
     const ledger = this._findOrCreate(peerId)
 
     if (msg.empty) {
-      return nextTick(cb)
+      return
     }
 
     // If the message was a full wantlist clear the current one
@@ -185,11 +167,11 @@ class DecisionEngine {
     this._processBlocks(msg.blocks, ledger)
 
     if (msg.wantlist.size === 0) {
-      return nextTick(cb)
+      return
     }
 
-    let cancels = []
-    let wants = []
+    const cancels = []
+    const wants = []
     msg.wantlist.forEach((entry) => {
       if (entry.cancel) {
         ledger.cancelWant(entry.cid)
@@ -201,7 +183,7 @@ class DecisionEngine {
     })
 
     this._cancelWants(ledger, peerId, cancels)
-    this._addWants(ledger, peerId, wants, cb)
+    await this._addWants(ledger, peerId, wants)
   }
 
   _cancelWants (ledger, peerId, entries) {
@@ -214,27 +196,29 @@ class DecisionEngine {
     }, this._tasks, entries)
   }
 
-  _addWants (ledger, peerId, entries, callback) {
-    each(entries, (entry, cb) => {
+  async _addWants (ledger, peerId, entries) {
+    await Promise.all(entries.map(async (entry) => {
       // If we already have the block, serve it
-      this.blockstore.has(entry.cid, (err, exists) => {
-        if (err) {
-          this._log.error('failed existence check')
-        } else if (exists) {
-          this._tasks.push({
-            entry: entry.entry,
-            target: peerId
-          })
-        }
-        cb()
-      })
-    }, () => {
-      this._outbox()
-      callback()
-    })
+      let exists
+      try {
+        exists = await this.blockstore.has(entry.cid)
+      } catch (err) {
+        this._log.error('failed blockstore existence check for ' + entry.cid)
+        return
+      }
+
+      if (exists) {
+        this._tasks.push({
+          entry: entry.entry,
+          target: peerId
+        })
+      }
+    }))
+
+    this._outbox()
   }
 
-  _processBlocks (blocks, ledger, callback) {
+  _processBlocks (blocks, ledger) {
     const cids = []
     blocks.forEach((b, cidStr) => {
       this._log('got block (%s bytes)', b.data.length)
@@ -287,14 +271,12 @@ class DecisionEngine {
     return l
   }
 
-  start (callback) {
+  start () {
     this._running = true
-    nextTick(() => callback())
   }
 
-  stop (callback) {
+  stop () {
     this._running = false
-    nextTick(() => callback())
   }
 }
 

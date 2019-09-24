@@ -1,11 +1,5 @@
 /* eslint-env mocha */
-/* eslint max-nested-callbacks: ["error", 8] */
 'use strict'
-
-const waterfall = require('async/waterfall')
-const series = require('async/series')
-const each = require('async/each')
-const parallel = require('async/parallel')
 
 const chai = require('chai')
 chai.use(require('dirty-chai'))
@@ -19,27 +13,14 @@ const makeBlock = require('./utils/make-block')
 const orderedFinish = require('./utils/helpers').orderedFinish
 
 // Creates a repo + libp2pNode + Bitswap with or without DHT
-function createThing (dht, callback) {
-  waterfall([
-    (cb) => createTempRepo(cb),
-    (repo, cb) => {
-      createLibp2pNode({
-        DHT: dht
-      }, (err, node) => cb(err, repo, node))
-    },
-    (repo, libp2pNode, cb) => {
-      const bitswap = new Bitswap(libp2pNode, repo.blocks)
-      bitswap.start((err) => cb(err, repo, libp2pNode, bitswap))
-    }
-  ], (err, repo, libp2pNode, bitswap) => {
-    expect(err).to.not.exist()
-
-    callback(null, {
-      repo: repo,
-      libp2pNode: libp2pNode,
-      bitswap: bitswap
-    })
+async function createThing (dht) {
+  const repo = await createTempRepo()
+  const libp2pNode = await createLibp2pNode({
+    DHT: dht
   })
+  const bitswap = new Bitswap(libp2pNode, repo.blocks)
+  bitswap.start()
+  return { repo, libp2pNode, bitswap }
 }
 
 describe('bitswap without DHT', function () {
@@ -47,55 +28,46 @@ describe('bitswap without DHT', function () {
 
   let nodes
 
-  before((done) => {
-    parallel([
-      (cb) => createThing(false, cb),
-      (cb) => createThing(false, cb),
-      (cb) => createThing(false, cb)
-    ], (err, results) => {
-      expect(err).to.not.exist()
-      expect(results).to.have.length(3)
-      nodes = results
-      done()
-    })
+  before(async () => {
+    nodes = await Promise.all([
+      createThing(false),
+      createThing(false),
+      createThing(false)
+    ])
+
+    // connect 0 -> 1 && 1 -> 2
+    await Promise.all([
+      nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerInfo),
+      nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerInfo)
+    ])
   })
 
-  after((done) => {
-    each(nodes, (node, cb) => {
-      series([
-        (cb) => node.bitswap.stop(cb),
-        (cb) => node.libp2pNode.stop(cb),
-        (cb) => node.repo.teardown(cb)
-      ], cb)
-    }, done)
+  after(async () => {
+    await Promise.all(nodes.map((node) => Promise.all([
+      node.bitswap.stop(),
+      node.libp2pNode.stop(),
+      node.repo.teardown()
+    ])))
   })
 
-  it('connect 0 -> 1 && 1 -> 2', (done) => {
-    parallel([
-      (cb) => nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerInfo, cb),
-      (cb) => nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerInfo, cb)
-    ], done)
-  })
+  it('put a block in 2, fail to get it in 0', async () => {
+    const finish = orderedFinish(2)
 
-  it('put a block in 2, fail to get it in 0', (done) => {
-    const finish = orderedFinish(2, done)
+    const block = await makeBlock()
+    await nodes[2].bitswap.put(block)
 
-    waterfall([
-      (cb) => makeBlock(cb),
-      (block, cb) => nodes[2].bitswap.put(block, () => cb(null, block))
-    ], (err, block) => {
-      expect(err).to.not.exist()
-      nodes[0].bitswap.get(block.cid, (err, block) => {
-        expect(err).to.not.exist()
-        expect(block).to.not.exist()
-        finish(2)
-      })
+    const node0Get = nodes[0].bitswap.get(block.cid)
 
-      setTimeout(() => {
-        finish(1)
-        nodes[0].bitswap.unwant(block.cid)
-      }, 200)
-    })
+    setTimeout(() => {
+      finish(1)
+      nodes[0].bitswap.unwant(block.cid)
+    }, 200)
+
+    const b = await node0Get
+    expect(b).to.not.exist()
+    finish(2)
+
+    finish.assert()
   })
 })
 
@@ -104,46 +76,36 @@ describe('bitswap with DHT', function () {
 
   let nodes
 
-  before((done) => {
-    parallel([
-      (cb) => createThing(true, cb),
-      (cb) => createThing(true, cb),
-      (cb) => createThing(true, cb)
-    ], (err, results) => {
-      expect(err).to.not.exist()
-      expect(results).to.have.length(3)
-      nodes = results
-      done()
-    })
+  before(async () => {
+    nodes = await Promise.all([
+      createThing(true),
+      createThing(true),
+      createThing(true)
+    ])
+
+    // connect 0 -> 1 && 1 -> 2
+    await Promise.all([
+      nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerInfo),
+      nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerInfo)
+    ])
   })
 
-  after((done) => {
-    each(nodes, (node, cb) => {
-      series([
-        (cb) => node.bitswap.stop(cb),
-        (cb) => node.libp2pNode.stop(cb),
-        (cb) => node.repo.teardown(cb)
-      ], cb)
-    }, done)
+  after(async () => {
+    await Promise.all(nodes.map((node) => Promise.all([
+      node.bitswap.stop(),
+      node.libp2pNode.stop(),
+      node.repo.teardown()
+    ])))
   })
 
-  it('connect 0 -> 1 && 1 -> 2', (done) => {
-    parallel([
-      (cb) => nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerInfo, cb),
-      (cb) => nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerInfo, cb)
-    ], done)
-  })
+  it('put a block in 2, get it in 0', async () => {
+    const block = await makeBlock()
+    nodes[2].bitswap.put(block)
 
-  it('put a block in 2, get it in 0', function (done) {
-    waterfall([
-      (cb) => makeBlock(cb),
-      (block, cb) => nodes[2].bitswap.put(block, () => cb(null, block)),
-      (block, cb) => nodes[0].bitswap.get(block.cid, (err, blockRetrieved) => {
-        expect(err).to.not.exist()
-        expect(block.data).to.eql(blockRetrieved.data)
-        expect(block.cid).to.eql(blockRetrieved.cid)
-        cb()
-      })
-    ], done)
+    await nodes[2].bitswap.put(block)
+
+    const blockRetrieved = await nodes[0].bitswap.get(block.cid)
+    expect(block.data).to.eql(blockRetrieved.data)
+    expect(block.cid).to.eql(blockRetrieved.cid)
   })
 })

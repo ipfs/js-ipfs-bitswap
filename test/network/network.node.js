@@ -4,42 +4,12 @@
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const PeerInfo = require('peer-info')
-const PeerId = require('peer-id')
 const lp = require('pull-length-prefixed')
 const pull = require('pull-stream')
-const parallel = require('async/parallel')
-const waterfall = require('async/waterfall')
-const map = require('async/map')
-const _ = require('lodash')
-
-const Node = require('../utils/create-libp2p-node').bundle
+const createLibp2pNode = require('../utils/create-libp2p-node')
 const makeBlock = require('../utils/make-block')
 const Network = require('../../src/network')
 const Message = require('../../src/types/message')
-
-// TODO send this to utils
-function createP2PNode (multiaddrs, options, callback) {
-  if (typeof options === 'function') {
-    callback = options
-    options = {}
-  }
-
-  if (!Array.isArray(multiaddrs)) {
-    multiaddrs = [multiaddrs]
-  }
-
-  waterfall([
-    (cb) => PeerId.create({ bits: 512 }, cb),
-    (peerId, cb) => PeerInfo.create(peerId, cb),
-    (peerInfo, cb) => {
-      multiaddrs.map((ma) => peerInfo.multiaddrs.add(ma))
-      options.peerInfo = peerInfo
-      const node = new Node(options)
-      cb(null, node)
-    }
-  ], callback)
-}
 
 describe('network', () => {
   let p2pA
@@ -53,59 +23,43 @@ describe('network', () => {
 
   let blocks
 
-  before((done) => {
-    parallel([
-      (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', cb),
-      (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', cb),
-      (cb) => createP2PNode('/ip4/127.0.0.1/tcp/0', cb),
-      (cb) => map(_.range(2), (i, cb) => makeBlock(cb), cb)
-    ], (err, results) => {
-      expect(err).to.not.exist()
-
-      p2pA = results[0]
-      p2pB = results[1]
-      p2pC = results[2]
-
-      blocks = results[3]
-
-      parallel([
-        (cb) => p2pA.start(cb),
-        (cb) => p2pB.start(cb),
-        (cb) => p2pC.start(cb)
-      ], done)
-    })
+  before(async () => {
+    [p2pA, p2pB, p2pC] = await Promise.all([
+      createLibp2pNode(),
+      createLibp2pNode(),
+      createLibp2pNode()
+    ])
+    blocks = await makeBlock(2)
   })
 
-  after((done) => {
-    parallel([
-      (cb) => p2pA.stop(cb),
-      (cb) => p2pB.stop(cb),
-      (cb) => p2pC.stop(cb)
-    ], done)
+  after(() => {
+    p2pA.stop()
+    p2pB.stop()
+    p2pC.stop()
   })
 
-  let bitswapMockA = {
-    _receiveMessage: () => {},
-    _receiveError: () => {},
-    _onPeerConnected: () => {},
-    _onPeerDisconnected: () => {}
+  const bitswapMockA = {
+    _receiveMessage: async () => {},
+    _receiveError: async () => {},
+    _onPeerConnected: async () => {},
+    _onPeerDisconnected: async () => {}
   }
 
-  let bitswapMockB = {
-    _receiveMessage: () => {},
-    _receiveError: () => {},
-    _onPeerConnected: () => {},
-    _onPeerDisconnected: () => {}
+  const bitswapMockB = {
+    _receiveMessage: async () => {},
+    _receiveError: async () => {},
+    _onPeerConnected: async () => {},
+    _onPeerDisconnected: async () => {}
   }
 
-  let bitswapMockC = {
-    _receiveMessage: () => {},
-    _receiveError: () => {},
-    _onPeerConnected: () => {},
-    _onPeerDisconnected: () => {}
+  const bitswapMockC = {
+    _receiveMessage: async () => {},
+    _receiveError: async () => {},
+    _onPeerConnected: async () => {},
+    _onPeerDisconnected: async () => {}
   }
 
-  it('instantiate the network obj', (done) => {
+  it('instantiate the network obj', () => {
     networkA = new Network(p2pA, bitswapMockA)
     networkB = new Network(p2pB, bitswapMockB)
     // only bitswap100
@@ -115,18 +69,18 @@ describe('network', () => {
     expect(networkB).to.exist()
     expect(networkC).to.exist()
 
-    parallel([
-      (cb) => networkA.start(cb),
-      (cb) => networkB.start(cb),
-      (cb) => networkC.start(cb)
-    ], done)
+    networkA.start()
+    networkB.start()
+    networkC.start()
   })
 
-  it('connectTo fail', (done) => {
-    networkA.connectTo(p2pB.peerInfo.id, (err) => {
+  it('connectTo fail', async () => {
+    try {
+      await networkA.connectTo(p2pB.peerInfo.id)
+      chai.assert.fail()
+    } catch (err) {
       expect(err).to.exist()
-      done()
-    })
+    }
   })
 
   it('onPeerConnected success', (done) => {
@@ -159,8 +113,8 @@ describe('network', () => {
     }
   })
 
-  it('connectTo success', (done) => {
-    networkA.connectTo(p2pB.peerInfo, done)
+  it('connectTo success', async () => {
+    await networkA.connectTo(p2pB.peerInfo)
   })
 
   it('._receiveMessage success from Bitswap 1.0.0', (done) => {
@@ -172,11 +126,11 @@ describe('network', () => {
     msg.addBlock(b1)
     msg.addBlock(b2)
 
-    bitswapMockB._receiveMessage = (peerId, msgReceived) => {
+    bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       expect(msg).to.eql(msgReceived)
 
-      bitswapMockB._receiveMessage = () => {}
-      bitswapMockB._receiveError = () => {}
+      bitswapMockB._receiveMessage = async () => {}
+      bitswapMockB._receiveError = async () => {}
       done()
     }
 
@@ -206,10 +160,10 @@ describe('network', () => {
     msg.addBlock(b1)
     msg.addBlock(b2)
 
-    bitswapMockB._receiveMessage = (peerId, msgReceived) => {
+    bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       expect(msg).to.eql(msgReceived)
-      bitswapMockB._receiveMessage = () => {}
-      bitswapMockB._receiveError = () => {}
+      bitswapMockB._receiveMessage = async () => {}
+      bitswapMockB._receiveError = async () => {}
       done()
     }
 
@@ -239,10 +193,10 @@ describe('network', () => {
     msg.addBlock(b1)
     msg.addBlock(b2)
 
-    bitswapMockB._receiveMessage = (peerId, msgReceived) => {
+    bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       expect(msg).to.eql(msgReceived)
-      bitswapMockB._receiveMessage = () => {}
-      bitswapMockB._receiveError = () => {}
+      bitswapMockB._receiveMessage = async () => {}
+      bitswapMockB._receiveError = async () => {}
       done()
     }
 
@@ -279,7 +233,9 @@ describe('network', () => {
     function finish () {
       bitswapMockA._onPeerConnected = () => {}
       bitswapMockC._onPeerConnected = () => {}
-      networkA.connectTo(p2pC.peerInfo.id, done)
+      networkA.connectTo(p2pC.peerInfo.id).then(() => {
+        done()
+      })
     }
   })
 
@@ -292,10 +248,10 @@ describe('network', () => {
     msg.addBlock(b1)
     msg.addBlock(b2)
 
-    bitswapMockC._receiveMessage = (peerId, msgReceived) => {
+    bitswapMockC._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       expect(msg).to.eql(msgReceived)
-      bitswapMockC._receiveMessage = () => {}
-      bitswapMockC._receiveError = () => {}
+      bitswapMockC._receiveMessage = async () => {}
+      bitswapMockC._receiveError = async () => {}
       done()
     }
 

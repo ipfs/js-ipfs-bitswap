@@ -50,7 +50,7 @@ class Stats extends EventEmitter {
   stop () {
     this._enabled = false
     this._global.stop()
-    for (let peerStat of this._peers) {
+    for (const peerStat of this._peers) {
       peerStat[1].stop()
     }
   }
@@ -67,6 +67,7 @@ class Stats extends EventEmitter {
     if (peerId.toB58String) {
       peerId = peerId.toB58String()
     }
+
     return this._peers.get(peerId)
   }
 
