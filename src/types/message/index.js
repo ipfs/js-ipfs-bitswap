@@ -6,7 +6,7 @@ const CID = require('cids')
 const codecName = require('multicodec/src/name-table')
 const vd = require('varint-decoder')
 const multihashing = require('multihashing-async')
-const {isMapEqual} = require('../../utils')
+const { isMapEqual } = require('../../utils')
 const pbm = protons(require('./message.proto'))
 const Entry = require('./entry')
 
