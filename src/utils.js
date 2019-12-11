@@ -80,11 +80,43 @@ const sortBy = (fn, list) => {
   })
 }
 
+/**
+ * Is equal for Maps of BitswapMessageEntry or Blocks
+ * @param {Map} a
+ * @param {Map} b
+ * @returns {boolean}
+ */
+const isMapEqual = (a, b) => {
+  if (a.size !== b.size) {
+    return false
+  }
+
+  for (const [key, valueA] of a) {
+    if (!b.has(key)) {
+      return false
+    }
+
+    const valueB = b.get(key)
+
+    // Support BitswapMessageEntry
+    if (typeof valueA.equals === 'function' && !valueA.equals(valueB)) {
+      return false
+    }
+    // Support Blocks
+    if (valueA._data && !valueA._data.equals(valueB._data)) {
+      return false
+    }
+  }
+
+  return true
+}
+
 module.exports = {
   logger,
   includesWith,
   uniqWith,
   groupBy,
   pullAllWith,
-  sortBy
+  sortBy,
+  isMapEqual
 }

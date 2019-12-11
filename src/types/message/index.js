@@ -2,12 +2,11 @@
 
 const protons = require('protons')
 const Block = require('ipfs-block')
-const isEqualWith = require('lodash.isequalwith')
 const CID = require('cids')
 const codecName = require('multicodec/src/name-table')
 const vd = require('varint-decoder')
 const multihashing = require('multihashing-async')
-
+const { isMapEqual } = require('../../utils')
 const pbm = protons(require('./message.proto'))
 const Entry = require('./entry')
 
@@ -106,15 +105,9 @@ class BitswapMessage {
   }
 
   equals (other) {
-    const cmp = (a, b) => {
-      if (a.equals && typeof a.equals === 'function') {
-        return a.equals(b)
-      }
-    }
-
     if (this.full !== other.full ||
-        !isEqualWith(this.wantlist, other.wantlist, cmp) ||
-        !isEqualWith(this.blocks, other.blocks, cmp)
+        !isMapEqual(this.wantlist, other.wantlist) ||
+        !isMapEqual(this.blocks, other.blocks)
     ) {
       return false
     }
