@@ -1,3 +1,13 @@
+<a name="0.26.1"></a>
+## [0.26.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.26.0...v0.26.1) (2019-12-11)
+
+
+### Bug Fixes
+
+* reduce size ([#203](https://github.com/ipfs/js-ipfs-bitswap/issues/203)) ([9f818b4](https://github.com/ipfs/js-ipfs-bitswap/commit/9f818b4))
+
+
+
 <a name="0.26.0"></a>
 # [0.26.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.25.1...v0.26.0) (2019-09-24)
 
