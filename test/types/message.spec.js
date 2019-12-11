@@ -35,7 +35,9 @@ describe('BitswapMessage', () => {
     expect(pbm.Message.decode(serialized).wantlist.entries[0]).to.be.eql({
       block: cid.buffer,
       priority: 1,
-      cancel: false
+      cancel: false,
+      send_dont_have: false,
+      want_type: pbm.Message.Wantlist.WantType.Block
     })
   })
 
