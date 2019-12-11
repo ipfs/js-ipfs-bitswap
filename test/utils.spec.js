@@ -1,9 +1,15 @@
 /* eslint-env mocha */
 'use strict'
 const chai = require('chai')
+const CID = require('cids')
+const Block = require('ipfs-block')
+const { Buffer } = require('buffer')
+const multihashing = require('multihashing-async')
+const BitswapMessageEntry = require('../src/types/message/entry')
+
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const { groupBy, uniqWith, pullAllWith, includesWith, sortBy } = require('../src/utils')
+const { groupBy, uniqWith, pullAllWith, includesWith, sortBy, isMapEqual } = require('../src/utils')
 
 describe('utils spec', function () {
   it('groupBy', () => {
@@ -99,5 +105,66 @@ describe('utils spec', function () {
     expect(groupedList2).to.be.deep.equal([{ id: 1, name: 'c' },
       { id: 2, name: 'a' },
       { id: 3, name: 'b' }])
+  })
+
+  describe.only('isMapEqual', () => {
+    it('should on be false when !== size', ()=> {
+      expect(isMapEqual(
+        new Map([['key1', 'value1'], ['key2', 'value2']]), 
+        new Map([['key1', 'value1']])
+      )).to.be.false()
+    })
+
+    it('should on be false if one key is missing', ()=> {
+      expect(isMapEqual(
+        new Map([['key1', 'value1'], ['key2', 'value2']]), 
+        new Map([['key1', 'value1'], ['key3', 'value2']])
+      )).to.be.false()
+    })
+
+    it('should on be false if BitswapMessageEntry dont match', async ()=> {
+      const hash1 = await multihashing(Buffer.from('OMG!1'), 'sha2-256')
+      const cid1 = new CID(1, 'dag-pb', hash1)
+
+      expect(isMapEqual(
+        new Map([['key1', new BitswapMessageEntry(cid1, 1, true)], ['key2', new BitswapMessageEntry(cid1, 2, true)]]), 
+        new Map([['key1', new BitswapMessageEntry(cid1, 1, true)], ['key2', new BitswapMessageEntry(cid1, 1, true)]])
+      )).to.be.false()
+    })
+
+    it('should on be true if BitswapMessageEntry match', async ()=> {
+      const hash1 = await multihashing(Buffer.from('OMG!1'), 'sha2-256')
+      const cid1 = new CID(1, 'dag-pb', hash1)
+
+      expect(isMapEqual(
+        new Map([['key1', new BitswapMessageEntry(cid1, 1, true)], ['key2', new BitswapMessageEntry(cid1, 1, true)]]), 
+        new Map([['key1', new BitswapMessageEntry(cid1, 1, true)], ['key2', new BitswapMessageEntry(cid1, 1, true)]])
+      )).to.be.true()
+    })
+
+    it('should on be false if Blocks dont match', async ()=> {
+      const hash1 = await multihashing(Buffer.from('OMG!1'), 'sha2-256')
+      const cid1 = new CID(1, 'dag-pb', hash1)
+      const block1 = new Block(Buffer.from('hello world'), cid1)
+      const block2 = new Block(Buffer.from('hello world 2'), cid1)
+
+      expect(isMapEqual(
+        new Map([['key1', block1], ['key2', block1]]), 
+        new Map([['key1', block1], ['key2', block2]])
+      )).to.be.false()
+    })
+
+    it('should on be true if Blocks match', async ()=> {
+      const hash1 = await multihashing(Buffer.from('OMG!1'), 'sha2-256')
+      const cid1 = new CID(1, 'dag-pb', hash1)
+      const block1 = new Block(Buffer.from('hello world'), cid1)
+
+
+      expect(isMapEqual(
+        new Map([['key1', block1], ['key2', block1]]), 
+        new Map([['key1', block1], ['key2', block1]])
+      )).to.be.true()
+    })
+
   })
 })
