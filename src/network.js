@@ -64,7 +64,7 @@ class Network {
       async (source) => {
         for await (const data of source) {
           try {
-            const message = Message.deserialize(data)
+            const message = await Message.deserialize(data)
             this.bitswap._receiveMessage(connection.remotePeer, message)
           } catch (err) {
             this.bitswap._receiveError(err)
@@ -110,9 +110,12 @@ class Network {
    * @returns {void}
    */
   async findAndConnect (cid) {
-    const provs = await this.findProviders(cid, CONSTANTS.maxProvidersPerRequest)
-    this._log('connecting to providers', provs.map((p) => p.id.toB58String()))
-    await Promise.all(provs.map((p) => this.connectTo(p)))
+    const connectAttempts = []
+    for await (const provider of this.findProviders(cid, CONSTANTS.maxProvidersPerRequest)) {
+      this._log('connecting to providers', provider.id.toB58String())
+      connectAttempts.push(this.connectTo(provider))
+    }
+    await Promise.all(connectAttempts)
   }
 
   async provide (cid) {
