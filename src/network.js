@@ -36,10 +36,11 @@ class Network {
     this.libp2p.on('peer:disconnect', this._onPeerDisconnect)
 
     // All existing connections are like new ones for us
-    this.libp2p.peerBook
-      .getAllArray()
-      .filter((peer) => peer.isConnected())
-      .forEach((peer) => this._onPeerConnect((peer)))
+    for (const peer of this.libp2p.peerStore.peers.values()) {
+      if (peer.isConnected()) {
+        this._onPeerConnect(peer)
+      }
+    }
   }
 
   stop () {
