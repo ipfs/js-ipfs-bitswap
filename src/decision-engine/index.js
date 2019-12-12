@@ -28,15 +28,17 @@ class DecisionEngine {
 
   async _sendBlocks (peer, blocks) {
     // split into messages of max 512 * 1024 bytes
-    const total = blocks.reduce((acc, b) => {
+    let total = blocks.reduce((acc, b) => {
       return acc + b.data.byteLength
     }, 0)
 
+    // If the blocks fit into one message, send the message right away
     if (total < MAX_MESSAGE_SIZE) {
-      await this._sendSafeBlocks(peer, blocks)
+      await this._sendSafeBlocks(peer, blocks, 0)
       return
     }
 
+    // The blocks don't all fit into one message so we need to split them up
     let size = 0
     let batch = []
     let outstanding = blocks.length
@@ -45,6 +47,7 @@ class DecisionEngine {
       outstanding--
       batch.push(b)
       size += b.data.byteLength
+      total -= b.data.byteLength
 
       if (size >= MAX_MESSAGE_SIZE ||
           // need to ensure the last remaining items get sent
@@ -53,7 +56,7 @@ class DecisionEngine {
         const nextBatch = batch.slice()
         batch = []
         try {
-          await this._sendSafeBlocks(peer, nextBatch)
+          await this._sendSafeBlocks(peer, nextBatch, total)
         } catch (err) {
           // catch the error so as to send as many blocks as we can
           this._log('sendblock error: %s', err.message)
@@ -62,9 +65,10 @@ class DecisionEngine {
     }
   }
 
-  async _sendSafeBlocks (peer, blocks) {
+  async _sendSafeBlocks (peer, blocks, pendingBytes) {
     const msg = new Message(false)
     blocks.forEach((b) => msg.addBlock(b))
+    msg.setPendingBytes(pendingBytes)
 
     await this.network.sendMessage(peer, msg)
   }

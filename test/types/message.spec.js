@@ -53,11 +53,13 @@ describe('BitswapMessage', () => {
     const block = blocks[1]
     const msg = new BitswapMessage(true)
     msg.addBlock(block)
+    msg.setPendingBytes(10)
 
     const serialized = msg.serializeToBitswap110()
     const decoded = pbm.Message.decode(serialized)
 
     expect(decoded.payload[0].data).to.eql(block.data)
+    expect(decoded.pendingBytes).to.eql(10)
   })
 
   it('.deserialize a Bitswap100 Message', async () => {
@@ -120,7 +122,8 @@ describe('BitswapMessage', () => {
       }, {
         data: b2.data,
         prefix: cid2.prefix
-      }]
+      }],
+      pendingBytes: 10
     })
 
     const msg = await BitswapMessage.deserialize(raw)
@@ -137,6 +140,7 @@ describe('BitswapMessage', () => {
       [cid1.toString('base58btc'), b1.data],
       [cid2.toString('base58btc'), b2.data]
     ])
+    expect(msg.pendingBytes).to.equal(10)
   })
 
   it('ignores duplicates', () => {
