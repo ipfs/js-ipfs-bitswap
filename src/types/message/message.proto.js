@@ -41,6 +41,6 @@ module.exports = `
     repeated bytes blocks = 2;          // used to send Blocks in bitswap 1.0.0
     repeated Block payload = 3;         // used to send Blocks in bitswap 1.1.0
     repeated BlockPresence blockPresences = 4;
-    int32 PendingBytes = 5;
+    int32 pendingBytes = 5;
   }
 `
