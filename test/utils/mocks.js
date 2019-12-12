@@ -3,7 +3,7 @@
 const range = require('lodash.range')
 const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
-const PeerBook = require('peer-book')
+const PeerStore = require('libp2p/src/peer-store')
 const Node = require('./create-libp2p-node').bundle
 const os = require('os')
 const Repo = require('ipfs-repo')
@@ -35,7 +35,7 @@ exports.mockLibp2pNode = () => {
     swarm: {
       setMaxListeners () {}
     },
-    peerBook: new PeerBook()
+    peerStore: new PeerStore()
   })
 }
 
@@ -137,11 +137,11 @@ exports.applyNetwork = (bs, n) => {
 let basePort = 12000
 
 exports.genBitswapNetwork = async (n) => {
-  const netArray = [] // bitswap, peerBook, libp2p, peerInfo, repo
+  const netArray = [] // bitswap, peerStore, libp2p, peerInfo, repo
 
   // create PeerInfo and libp2p.Node for each
   const peers = await Promise.all(
-    range(n).map(i => promisify(PeerInfo.create)())
+    range(n).map(i => PeerInfo.create())
   )
 
   peers.forEach((p, i) => {
@@ -152,16 +152,16 @@ exports.genBitswapNetwork = async (n) => {
     netArray.push({ peerInfo: p, libp2p: l })
   })
 
-  // create PeerBook and populate peerBook
+  // create PeerStore and populate peerStore
   netArray.forEach((net, i) => {
-    const pb = netArray[i].libp2p.peerBook
+    const pb = netArray[i].libp2p.peerStore
     netArray.forEach((net, j) => {
       if (i === j) {
         return
       }
       pb.put(net.peerInfo)
     })
-    netArray[i].peerBook = pb
+    netArray[i].peerStore = pb
   })
 
   // create the repos
@@ -188,7 +188,7 @@ exports.genBitswapNetwork = async (n) => {
 
   // create every BitSwap
   netArray.forEach((net) => {
-    net.bitswap = new Bitswap(net.libp2p, net.repo.blocks, net.peerBook)
+    net.bitswap = new Bitswap(net.libp2p, net.repo.blocks, net.peerStore)
   })
 
   // connect all the nodes between each other
