@@ -158,6 +158,17 @@ describe('Engine', () => {
   })
 
   it('splits large block messages', () => {
+    const sum = (nums) => nums.reduce((a, b) => a + b, 0)
+
+    const getMessageSizes = (messages) => {
+      const sizes = []
+      for (const [, msg] of messages) {
+        const blocks = [...msg.blocks.values()]
+        sizes.push(sum(blocks.map(b => b.data.byteLength)))
+      }
+      return sizes
+    }
+
     const data = range(10).map((i) => {
       const b = Buffer.alloc(1024 * 256)
       b.fill(i)
@@ -166,11 +177,16 @@ describe('Engine', () => {
 
     return new Promise((resolve, reject) => {
       const net = mockNetwork(5, (res) => {
-        res.messages.forEach((message) => {
+        const messageSizes = getMessageSizes(res.messages)
+        for (let i = 0; i < res.messages.length; i++) {
+          const [, message] = res.messages[i]
           // The batch size is big enough to hold two blocks, so every
           // message should contain two blocks
-          expect(message[1].blocks.size).to.eql(2)
-        })
+          expect(message.blocks.size).to.eql(2)
+          // The pending bytes should be the sum of the size of blocks in the
+          // remaining messages
+          expect(message.pendingBytes).to.eql(sum(messageSizes.slice(i + 1)))
+        }
         resolve()
       })
 
@@ -188,10 +204,12 @@ describe('Engine', () => {
           const blocks = res[1]
           const cids = blocks.map((b) => b.cid)
 
+          // Put blocks into the node's blockstore
           await Promise.all((blocks.map((b) => sf.blockstore.put(b))))
+
+          // Simulate receiving a wantlist for all the blocks
           const msg = new Message(false)
           cids.forEach((c, i) => msg.addEntry(c, Math.pow(2, 32) - 1 - i))
-
           sf.messageReceived(id, msg)
         })
         .catch(reject)

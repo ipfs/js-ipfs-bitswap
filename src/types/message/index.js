@@ -14,6 +14,7 @@ class BitswapMessage {
     this.full = full
     this.wantlist = new Map()
     this.blocks = new Map()
+    this.pendingBytes = 0
   }
 
   get empty () {
@@ -43,6 +44,10 @@ class BitswapMessage {
     const cidStr = cid.toString('base58btc')
     this.wantlist.delete(cidStr)
     this.addEntry(cid, 0, true)
+  }
+
+  setPendingBytes (size) {
+    this.pendingBytes = size
   }
 
   /*
@@ -99,6 +104,10 @@ class BitswapMessage {
         data: block.data
       })
     })
+
+    if (this.pendingBytes > 0) {
+      msg.pendingBytes = this.pendingBytes
+    }
 
     return Message.encode(msg)
   }
@@ -161,6 +170,7 @@ BitswapMessage.deserialize = async (raw) => {
       const cid = new CID(cidVersion, getName(multicodec), hash)
       msg.addBlock(new Block(p.data, cid))
     }))
+    msg.setPendingBytes(decoded.pendingBytes)
     return msg
   }
 
