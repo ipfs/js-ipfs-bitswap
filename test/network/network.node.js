@@ -4,8 +4,8 @@
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const lp = require('pull-length-prefixed')
-const pull = require('pull-stream')
+const lp = require('it-length-prefixed')
+const pipe = require('it-pipe')
 const createLibp2pNode = require('../utils/create-libp2p-node')
 const makeBlock = require('../utils/make-block')
 const Network = require('../../src/network')
@@ -117,7 +117,7 @@ describe('network', () => {
     await networkA.connectTo(p2pB.peerInfo)
   })
 
-  it('._receiveMessage success from Bitswap 1.0.0', (done) => {
+  it('._receiveMessage success from Bitswap 1.0.0', async (done) => {
     const msg = new Message(true)
     const b1 = blocks[0]
     const b2 = blocks[1]
@@ -138,20 +138,16 @@ describe('network', () => {
       expect(err).to.not.exist()
     }
 
-    p2pA.dialProtocol(p2pB.peerInfo, '/ipfs/bitswap/1.0.0', (err, conn) => {
-      expect(err).to.not.exist()
+    const { stream } = await p2pA.dialProtocol(p2pB.peerInfo, '/ipfs/bitswap/1.0.0')
 
-      pull(
-        pull.values([
-          msg.serializeToBitswap100()
-        ]),
-        lp.encode(),
-        conn
-      )
-    })
+    await pipe(
+      [msg.serializeToBitswap100()],
+      lp.encode(),
+      stream
+    )
   })
 
-  it('._receiveMessage success from Bitswap 1.1.0', (done) => {
+  it('._receiveMessage success from Bitswap 1.1.0', async (done) => {
     const msg = new Message(true)
     const b1 = blocks[0]
     const b2 = blocks[1]
@@ -171,17 +167,12 @@ describe('network', () => {
       expect(err).to.not.exist()
     }
 
-    p2pA.dialProtocol(p2pB.peerInfo, '/ipfs/bitswap/1.1.0', (err, conn) => {
-      expect(err).to.not.exist()
-
-      pull(
-        pull.values([
-          msg.serializeToBitswap110()
-        ]),
-        lp.encode(),
-        conn
-      )
-    })
+    const { stream } = await p2pA.dialProtocol(p2pB.peerInfo, '/ipfs/bitswap/1.1.0')
+    await pipe(
+      [msg.serializeToBitswap110()],
+      lp.encode(),
+      stream
+    )
   })
 
   it('.sendMessage on Bitswap 1.1.0', (done) => {
