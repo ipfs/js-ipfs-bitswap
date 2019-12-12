@@ -127,7 +127,7 @@ class Network {
     const stringId = peer.toB58String() ? peer.toB58String() : peer.id.toB58String()
     this._log('sendMessage to %s', stringId, msg)
 
-    const { conn, protocol } = await this._dialPeer(peer)
+    const { stream, protocol } = await this._dialPeer(peer)
 
     let serialized
     switch (protocol) {
@@ -142,7 +142,7 @@ class Network {
     }
 
     // Note: Don't wait for writeMessage() to complete
-    writeMessage(conn, serialized, this._log)
+    writeMessage(stream, serialized, this._log)
 
     this._updateSentStats(peer, msg.blocks)
   }
@@ -163,19 +163,7 @@ class Network {
 
   // Dial to the peer and try to use the most recent Bitswap
   async _dialPeer (peer) {
-    try {
-      // Attempt Bitswap 1.1.0
-      return {
-        conn: await this.libp2p.dialProtocol(peer, BITSWAP110),
-        protocol: BITSWAP110
-      }
-    } catch (err) {
-      // Attempt Bitswap 1.0.0
-      return {
-        conn: await this.libp2p.dialProtocol(peer, BITSWAP100),
-        protocol: BITSWAP100
-      }
-    }
+    return this.libp2p.dialProtocol(peer, [BITSWAP110, BITSWAP100])
   }
 
   _updateSentStats (peer, blocks) {
