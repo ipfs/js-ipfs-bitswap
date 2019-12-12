@@ -12,7 +12,6 @@ const Block = require('ipfs-block')
 const CID = require('cids')
 const multihashing = require('multihashing-async')
 const Buffer = require('safe-buffer').Buffer
-const promisify = require('promisify-es6')
 
 const Message = require('../../src/types/message')
 const DecisionEngine = require('../../src/decision-engine')
@@ -32,7 +31,7 @@ function stringifyMessages (messages) {
 async function newEngine (network) {
   const results = await Promise.all([
     createTempRepo(),
-    promisify(PeerId.create)({ bits: 512 })
+    PeerId.create({ bits: 512 })
   ])
   const blockstore = results[0].blocks
   const peerId = results[1]
@@ -147,11 +146,11 @@ describe('Engine', () => {
           expect(msgs.sort()).to.eql(keeps.sort())
         })
 
-        const id = await promisify(PeerId.create)({ bits: 512 })
+        const id = await PeerId.create({ bits: 512 })
         const dEngine = new DecisionEngine(id, repo.blocks, network)
         dEngine.start()
 
-        const partner = await promisify(PeerId.create)({ bits: 512 })
+        const partner = await PeerId.create({ bits: 512 })
         await partnerWants(dEngine, set, partner)
         await partnerCancels(dEngine, cancels, partner)
       }

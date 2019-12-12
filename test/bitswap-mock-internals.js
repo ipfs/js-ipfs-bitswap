@@ -357,7 +357,7 @@ describe('bitswap with mocks', function () {
   describe('ledgerForPeer', () => {
     it('returns null for unknown peer', async () => {
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
-      const id = await promisify(PeerId.create)({ bits: 512 })
+      const id = await PeerId.create({ bits: 512 })
       const ledger = bs.ledgerForPeer(id)
       expect(ledger).to.equal(null)
     })

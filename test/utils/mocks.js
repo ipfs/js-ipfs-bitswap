@@ -88,7 +88,7 @@ exports.mockNetwork = (calls, done) => {
 exports.createMockTestNet = async (repo, count) => {
   const results = await Promise.all([
     range(count).map((i) => repo.create(`repo-${i}`)),
-    range(count).map((i) => promisify(PeerId.create)({ bits: 512 }))
+    range(count).map((i) => PeerId.create({ bits: 512 }))
   ])
 
   const stores = results[0].map((r) => r.blockstore)
