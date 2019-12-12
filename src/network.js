@@ -1,8 +1,7 @@
 'use strict'
 
-const lp = require('pull-length-prefixed')
-const pull = require('pull-stream')
-const callbackify = require('callbackify')
+const lp = require('it-length-prefixed')
+const pipe = require('it-pipe')
 
 const Message = require('./types/message')
 const CONSTANTS = require('./constants')
@@ -54,29 +53,23 @@ class Network {
   }
 
   // Handles both types of bitswap messgages
-  _onConnection (protocol, conn) {
+  _onConnection ({ protocol, stream, connection }) {
     if (!this._running) { return }
     this._log('incomming new bitswap connection: %s', protocol)
 
-    pull(
-      conn,
+    pipe(
+      stream,
       lp.decode(),
-      pull.asyncMap((data, cb) => callbackify(Message.deserialize)(data, cb)),
-      pull.asyncMap((msg, cb) => {
-        conn.getPeerInfo((err, peerInfo) => {
-          if (err) {
-            return cb(err)
+      async (source) => {
+        for await (const data of source) {
+          try {
+            const message = Message.deserialize(data)
+            this.bitswap._receiveMessage(connection.remotePeer, message)
+          } catch (err) {
+            this.bitswap._receiveError(err)
           }
-
-          callbackify(this.bitswap._receiveMessage.bind(this.bitswap))(peerInfo.id, msg, cb)
-        })
-      }),
-      pull.onEnd((err) => {
-        this._log('ending connection')
-        if (err) {
-          this.bitswap._receiveError(err)
         }
-      })
+      }
     )
   }
 
@@ -194,17 +187,16 @@ class Network {
   }
 }
 
-function writeMessage (conn, msg, log) {
-  pull(
-    pull.values([msg]),
-    lp.encode(),
-    conn.conn,
-    pull.onEnd((err) => {
-      if (err) {
-        log(err)
-      }
-    })
-  )
+async function writeMessage (stream, msg, log) {
+  try {
+    await pipe(
+      [msg],
+      lp.encode(),
+      stream
+    )
+  } catch (err) {
+    log(err)
+  }
 }
 
 module.exports = Network
