@@ -35,8 +35,8 @@ describe('BitswapMessage', () => {
       block: cid.buffer,
       priority: 1,
       cancel: false,
-      send_dont_have: false,
-      want_type: pbm.Message.Wantlist.WantType.Block
+      sendDontHave: false,
+      wantType: pbm.Message.Wantlist.WantType.Block
     })
   })
 
