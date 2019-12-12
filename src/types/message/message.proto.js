@@ -15,8 +15,8 @@ module.exports = `
         optional bytes block = 1;      // the block cid (cidV0 in bitswap 1.0.0, cidV1 in bitswap 1.1.0)
         optional int32 priority = 2;    // the priority (normalized). default to 1
         optional bool cancel = 3;       // whether this revokes an entry
-        WantType want_type = 4;         // Note: defaults to enum 0, ie Block
-        bool send_dont_have = 5;        // Note: defaults to false
+        WantType wantType = 4;         // Note: defaults to enum 0, ie Block
+        bool sendDontHave = 5;        // Note: defaults to false
       }
 
       repeated Entry entries = 1;       // a list of wantlist entries
