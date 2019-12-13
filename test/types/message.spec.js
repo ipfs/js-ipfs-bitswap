@@ -4,7 +4,6 @@
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const protons = require('protons')
 const CID = require('cids')
 const Buffer = require('safe-buffer').Buffer
 const loadFixture = require('aegir/fixtures')
@@ -12,7 +11,7 @@ const testDataPath = 'test/fixtures/serialized-from-go'
 const rawMessageFullWantlist = loadFixture(testDataPath + '/bitswap110-message-full-wantlist')
 const rawMessageOneBlock = loadFixture(testDataPath + '/bitswap110-message-one-block')
 
-const pbm = protons(require('../../src/types/message/message.proto'))
+const { Message } = require('../../src/types/message/message.proto')
 
 const BitswapMessage = require('../../src/types/message')
 const makeBlock = require('../utils/make-block')
@@ -32,7 +31,7 @@ describe('BitswapMessage', () => {
     msg.addEntry(cid, 1)
     const serialized = msg.serializeToBitswap100()
 
-    expect(pbm.Message.decode(serialized).wantlist.entries[0]).to.be.eql({
+    expect(Message.decode(serialized).wantlist.entries[0]).to.be.eql({
       block: cid.buffer,
       priority: 1,
       cancel: false
@@ -44,7 +43,7 @@ describe('BitswapMessage', () => {
     const msg = new BitswapMessage(true)
     msg.addBlock(block)
     const serialized = msg.serializeToBitswap100()
-    expect(pbm.Message.decode(serialized).blocks).to.eql([block.data])
+    expect(Message.decode(serialized).blocks).to.eql([block.data])
   })
 
   it('.serializeToBitswap110', () => {
@@ -53,7 +52,7 @@ describe('BitswapMessage', () => {
     msg.addBlock(block)
 
     const serialized = msg.serializeToBitswap110()
-    const decoded = pbm.Message.decode(serialized)
+    const decoded = Message.decode(serialized)
 
     expect(decoded.payload[0].data).to.eql(block.data)
   })
@@ -66,7 +65,7 @@ describe('BitswapMessage', () => {
     const b1 = blocks[1]
     const b2 = blocks[2]
 
-    const raw = pbm.Message.encode({
+    const raw = Message.encode({
       wantlist: {
         entries: [{
           block: cid0.buffer,
@@ -104,7 +103,7 @@ describe('BitswapMessage', () => {
     const b1 = blocks[1]
     const b2 = blocks[2]
 
-    const raw = pbm.Message.encode({
+    const raw = Message.encode({
       wantlist: {
         entries: [{
           block: cid0.buffer,
@@ -160,7 +159,7 @@ describe('BitswapMessage', () => {
     const msg = new BitswapMessage(false)
     const serialized = msg.serializeToBitswap100()
 
-    expect(pbm.Message.decode(serialized).wantlist.full).to.equal(false)
+    expect(Message.decode(serialized).wantlist.full).to.equal(false)
   })
 
   describe('.equals', () => {
