@@ -6,6 +6,8 @@ chai.use(require('dirty-chai'))
 const expect = chai.expect
 const lp = require('it-length-prefixed')
 const pipe = require('it-pipe')
+const pDefer = require('p-defer')
+const pWaitFor = require('p-wait-for')
 const createLibp2pNode = require('../utils/create-libp2p-node')
 const makeBlock = require('../utils/make-block')
 const Network = require('../../src/network')
@@ -83,44 +85,35 @@ describe('network', () => {
     }
   })
 
-  it('onPeerConnected success', (done) => {
+  it('onPeerConnected success', async () => {
     var counter = 0
 
     bitswapMockA._onPeerConnected = (peerId) => {
       expect(peerId.toB58String()).to.equal(p2pB.peerInfo.id.toB58String())
-
-      if (++counter === 2) {
-        finish()
-      }
+      counter++
     }
 
     bitswapMockB._onPeerConnected = (peerId) => {
       expect(peerId.toB58String()).to.equal(p2pA.peerInfo.id.toB58String())
-
-      if (++counter === 2) {
-        finish()
-      }
+      counter++
     }
 
-    p2pA.dial(p2pB.peerInfo, (err) => {
-      expect(err).to.not.exist()
-    })
+    await p2pA.dial(p2pB.peerInfo)
 
-    function finish () {
-      bitswapMockA._onPeerConnected = () => {}
-      bitswapMockB._onPeerConnected = () => {}
-      done()
-    }
+    await pWaitFor(() => counter >= 2)
+    bitswapMockA._onPeerConnected = () => {}
+    bitswapMockB._onPeerConnected = () => {}
   })
 
   it('connectTo success', async () => {
     await networkA.connectTo(p2pB.peerInfo)
   })
 
-  it('._receiveMessage success from Bitswap 1.0.0', async (done) => {
+  it('._receiveMessage success from Bitswap 1.0.0', async () => {
     const msg = new Message(true)
     const b1 = blocks[0]
     const b2 = blocks[1]
+    const deferred = pDefer()
 
     msg.addEntry(b1.cid, 0, false)
     msg.addBlock(b1)
@@ -131,11 +124,11 @@ describe('network', () => {
 
       bitswapMockB._receiveMessage = async () => {}
       bitswapMockB._receiveError = async () => {}
-      done()
+      deferred.resolve()
     }
 
     bitswapMockB._receiveError = (err) => {
-      expect(err).to.not.exist()
+      deferred.reject(err)
     }
 
     const { stream } = await p2pA.dialProtocol(p2pB.peerInfo, '/ipfs/bitswap/1.0.0')
@@ -145,12 +138,15 @@ describe('network', () => {
       lp.encode(),
       stream
     )
+
+    await deferred.promise
   })
 
-  it('._receiveMessage success from Bitswap 1.1.0', async (done) => {
+  it('._receiveMessage success from Bitswap 1.1.0', async () => {
     const msg = new Message(true)
     const b1 = blocks[0]
     const b2 = blocks[1]
+    const deferred = pDefer()
 
     msg.addEntry(b1.cid, 0, false)
     msg.addBlock(b1)
@@ -160,12 +156,10 @@ describe('network', () => {
       expect(msg).to.eql(msgReceived)
       bitswapMockB._receiveMessage = async () => {}
       bitswapMockB._receiveError = async () => {}
-      done()
+      deferred.resolve()
     }
 
-    bitswapMockB._receiveError = (err) => {
-      expect(err).to.not.exist()
-    }
+    bitswapMockB._receiveError = deferred.reject
 
     const { stream } = await p2pA.dialProtocol(p2pB.peerInfo, '/ipfs/bitswap/1.1.0')
     await pipe(
@@ -173,12 +167,15 @@ describe('network', () => {
       lp.encode(),
       stream
     )
+
+    await deferred.promise
   })
 
-  it('.sendMessage on Bitswap 1.1.0', (done) => {
+  it('.sendMessage on Bitswap 1.1.0', async () => {
     const msg = new Message(true)
     const b1 = blocks[0]
     const b2 = blocks[1]
+    const deferred = pDefer()
 
     msg.addEntry(b1.cid, 0, false)
     msg.addBlock(b1)
@@ -188,52 +185,25 @@ describe('network', () => {
       expect(msg).to.eql(msgReceived)
       bitswapMockB._receiveMessage = async () => {}
       bitswapMockB._receiveError = async () => {}
-      done()
+      deferred.resolve()
     }
 
-    bitswapMockB._receiveError = (err) => {
-      expect(err).to.not.exist()
-    }
+    bitswapMockB._receiveError = deferred.reject
 
-    networkA.sendMessage(p2pB.peerInfo.id, msg, (err) => {
-      expect(err).to.not.exist()
-    })
+    await networkA.sendMessage(p2pB.peerInfo.id, msg)
   })
 
-  it('dial to peer on Bitswap 1.0.0', (done) => {
-    let counter = 0
+  it('dial to peer on Bitswap 1.0.0', async () => {
+    const { protocol }  = await p2pA.dialProtocol(p2pC.peerInfo, ['/ipfs/bitswap/1.1.0', '/ipfs/bitswap/1.0.0'])
 
-    bitswapMockA._onPeerConnected = (peerId) => {
-      expect(peerId.toB58String()).to.equal(p2pC.peerInfo.id.toB58String())
-      if (++counter === 2) {
-        finish()
-      }
-    }
-
-    bitswapMockC._onPeerConnected = (peerId) => {
-      expect(peerId.toB58String()).to.equal(p2pA.peerInfo.id.toB58String())
-      if (++counter === 2) {
-        finish()
-      }
-    }
-
-    p2pA.dial(p2pC.peerInfo, (err) => {
-      expect(err).to.not.exist()
-    })
-
-    function finish () {
-      bitswapMockA._onPeerConnected = () => {}
-      bitswapMockC._onPeerConnected = () => {}
-      networkA.connectTo(p2pC.peerInfo.id).then(() => {
-        done()
-      })
-    }
+    expect(protocol).to.equal('/ipfs/bitswap/1.0.0')
   })
 
-  it('.sendMessage on Bitswap 1.1.0', (done) => {
+  it('.sendMessage on Bitswap 1.1.0', async () => {
     const msg = new Message(true)
     const b1 = blocks[0]
     const b2 = blocks[1]
+    const deferred = pDefer()
 
     msg.addEntry(b1.cid, 0, false)
     msg.addBlock(b1)
@@ -243,15 +213,12 @@ describe('network', () => {
       expect(msg).to.eql(msgReceived)
       bitswapMockC._receiveMessage = async () => {}
       bitswapMockC._receiveError = async () => {}
-      done()
+      deferred.resolve()
     }
 
-    bitswapMockC._receiveError = (err) => {
-      expect(err).to.not.exist()
-    }
+    bitswapMockC._receiveError = deferred.reject
 
-    networkA.sendMessage(p2pC.peerInfo.id, msg, (err) => {
-      expect(err).to.not.exist()
-    })
+    await networkA.sendMessage(p2pC.peerInfo.id, msg)
+    await deferred.promise
   })
 })
