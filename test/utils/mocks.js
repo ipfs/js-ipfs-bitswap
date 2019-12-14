@@ -8,7 +8,6 @@ const Node = require('./create-libp2p-node').bundle
 const os = require('os')
 const Repo = require('ipfs-repo')
 const EventEmitter = require('events')
-const promisify = require('promisify-es6')
 
 const Bitswap = require('../../src')
 

@@ -194,7 +194,7 @@ describe('network', () => {
   })
 
   it('dial to peer on Bitswap 1.0.0', async () => {
-    const { protocol }  = await p2pA.dialProtocol(p2pC.peerInfo, ['/ipfs/bitswap/1.1.0', '/ipfs/bitswap/1.0.0'])
+    const { protocol } = await p2pA.dialProtocol(p2pC.peerInfo, ['/ipfs/bitswap/1.1.0', '/ipfs/bitswap/1.0.0'])
 
     expect(protocol).to.equal('/ipfs/bitswap/1.0.0')
   })

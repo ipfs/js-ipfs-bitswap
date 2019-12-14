@@ -7,7 +7,6 @@ const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
 const PeerId = require('peer-id')
-const promisify = require('promisify-es6')
 const all = require('async-iterator-all')
 const Message = require('../src/types/message')
 const Bitswap = require('../src')

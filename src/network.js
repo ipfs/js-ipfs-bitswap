@@ -172,7 +172,7 @@ class Network {
   }
 
   // Dial to the peer and try to use the most recent Bitswap
-  async _dialPeer (peer) {
+  _dialPeer (peer) {
     return this.libp2p.dialProtocol(peer, [BITSWAP110, BITSWAP100])
   }
 
