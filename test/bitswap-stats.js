@@ -5,6 +5,7 @@ const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
 const pEvent = require('p-event')
+const delay = require('delay')
 const Message = require('../src/types/message')
 const Bitswap = require('../src')
 
@@ -195,6 +196,8 @@ describe('bitswap stats', () => {
 
       // pull block from bs to bs2
       await bs2.get(block.cid)
+
+      await delay(100)
 
       const nextStats = await pEvent(bs.stat(), 'update')
 
