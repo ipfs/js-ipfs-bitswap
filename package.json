@@ -47,6 +47,7 @@
     "async-iterator-all": "^1.0.0",
     "benchmark": "^2.1.4",
     "chai": "^4.2.0",
+    "delay": "^4.3.0",
     "dirty-chai": "^2.0.1",
     "ipfs-repo": "^0.28.2",
     "libp2p": "libp2p/js-libp2p#feat/dial-coalescing",

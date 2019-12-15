@@ -4,6 +4,7 @@
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
+const delay = require('delay')
 
 const Bitswap = require('../src')
 
@@ -103,6 +104,9 @@ describe('bitswap with DHT', function () {
     nodes[2].bitswap.put(block)
 
     await nodes[2].bitswap.put(block)
+
+    // Give put time to process
+    await delay(100)
 
     const blockRetrieved = await nodes[0].bitswap.get(block.cid)
     expect(block.data).to.eql(blockRetrieved.data)
