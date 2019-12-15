@@ -42,23 +42,12 @@ describe('gen Bitswap network', function () {
 
   describe('distributed blocks', () => {
     it('with 2 nodes', async () => {
-      const n = 2
-      const nodeArr = await genBitswapNetwork(n)
-
-      nodeArr.forEach((node) => {
-        expect(
-          Object.keys(node.libp2p._switch.conns)
-        ).to.be.empty()
-
-        // Parallel dials may result in 1 or 2 connections
-        // depending on when they're executed.
-        expect(
-          Object.keys(node.libp2p._switch.connection.getAll())
-        ).to.have.a.lengthOf.at.least(n - 1)
-      })
+      const numNodes = 2
+      const blocksPerNode = 10
+      const nodeArr = await genBitswapNetwork(numNodes)
 
       // -- actual test
-      await round(nodeArr, n)
+      await exchangeBlocks(nodeArr, blocksPerNode)
       await Promise.all(nodeArr.map(node => {
         node.bitswap.stop()
         return node.libp2p.stop()
@@ -67,18 +56,22 @@ describe('gen Bitswap network', function () {
   })
 })
 
-async function round (nodeArr, n) {
-  const blockFactor = 10
-  const blocks = await createBlocks(n, blockFactor)
+/**
+ * @private
+ * @param {Array<*>} nodes Array of Bitswap Network nodes
+ * @param {number} blocksPerNode Number of blocks to exchange per node
+ */
+async function exchangeBlocks (nodes, blocksPerNode = 10) {
+  const blocks = await createBlocks(nodes.length * blocksPerNode)
 
   const cids = blocks.map((b) => b.cid)
 
-  // put blockFactor amount of blocks per node
-  await Promise.all(nodeArr.map(async (node, i) => {
+  // put blocksPerNode amount of blocks per node
+  await Promise.all(nodes.map(async (node, i) => {
     node.bitswap.start()
 
-    const data = range(blockFactor).map((j) => {
-      const index = i * blockFactor + j
+    const data = range(blocksPerNode).map((j) => {
+      const index = i * blocksPerNode + j
       return blocks[index]
     })
 
@@ -88,7 +81,7 @@ async function round (nodeArr, n) {
   const d = Date.now()
 
   // fetch all blocks on every node
-  await Promise.all(nodeArr.map(async (node) => {
+  await Promise.all(nodes.map(async (node) => {
     const bs = await Promise.all(cids.map((cid) => node.bitswap.get(cid)))
     expect(bs).to.deep.equal(blocks)
   }))
@@ -96,9 +89,15 @@ async function round (nodeArr, n) {
   console.log('  time -- %s', (Date.now() - d))
 }
 
-function createBlocks (n, blockFactor) {
-  return Promise.all([...new Array(n * blockFactor)].map(async (k) => {
-    const d = crypto.randomBytes(n * blockFactor)
+/**
+ * Resolves `num` blocks
+ * @private
+ * @param {number} num The number of blocks to create
+ * @returns {Promise<Block[]>}
+ */
+function createBlocks (num) {
+  return Promise.all([...new Array(num)].map(async () => {
+    const d = crypto.randomBytes(num)
     const hash = await multihashing(d, 'sha2-256')
     return new Block(d, new CID(hash))
   }))

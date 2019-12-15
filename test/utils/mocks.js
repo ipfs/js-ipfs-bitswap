@@ -135,7 +135,12 @@ exports.applyNetwork = (bs, n) => {
 
 let basePort = 12000
 
-exports.genBitswapNetwork = async (n) => {
+/**
+ * @private
+ * @param {number} n The number of nodes in the network
+ * @param {boolean} enableDHT Whether or not to run the dht
+ */
+exports.genBitswapNetwork = async (n, enableDHT = false) => {
   const netArray = [] // bitswap, peerStore, libp2p, peerInfo, repo
 
   // create PeerInfo and libp2p.Node for each
@@ -147,7 +152,14 @@ exports.genBitswapNetwork = async (n) => {
     basePort++
     p.multiaddrs.add('/ip4/127.0.0.1/tcp/' + basePort + '/ipfs/' + p.id.toB58String())
 
-    const l = new Node({ peerInfo: p })
+    const l = new Node({
+      peerInfo: p,
+      config: {
+        dht: {
+          enabled: enableDHT
+        }
+      }
+    })
     netArray.push({ peerInfo: p, libp2p: l })
   })
 
@@ -189,15 +201,6 @@ exports.genBitswapNetwork = async (n) => {
   netArray.forEach((net) => {
     net.bitswap = new Bitswap(net.libp2p, net.repo.blocks, net.peerStore)
   })
-
-  // connect all the nodes between each other
-  for (const from of netArray) {
-    for (const to of netArray) {
-      if (from.peerInfo.id.toB58String() !== to.peerInfo.id.toB58String()) {
-        await from.libp2p.dial(to.peerInfo)
-      }
-    }
-  }
 
   return netArray
 }
