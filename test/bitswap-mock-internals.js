@@ -346,7 +346,7 @@ describe('bitswap with mocks', function () {
         bs.get(b.cid)
       ])
 
-      setTimeout(() => bs.unwant(b.cid), 10)
+      setTimeout(() => bs.unwant(b.cid), 1e3)
 
       const res = await p
       expect(res[1]).to.not.exist()
