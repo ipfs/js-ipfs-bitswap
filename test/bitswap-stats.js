@@ -49,7 +49,12 @@ describe('bitswap stats', () => {
 
     // create 2 libp2p nodes
     libp2pNodes = await Promise.all(nodes.map((i) => createLibp2pNode({
-      DHT: repos[i].datastore
+      datastore: repos[i].datastore,
+      config: {
+        dht: {
+          enabled: true
+        }
+      }
     })))
 
     // create bitswaps
