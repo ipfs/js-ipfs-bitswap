@@ -40,7 +40,7 @@ class Network {
 
     // All existing connections are like new ones for us
     for (const peer of this.libp2p.peerStore.peers.values()) {
-      if (peer.isConnected()) {
+      if (this.libp2p.registrar.getConnection(peer)) {
         this._onPeerConnect(peer)
       }
     }
