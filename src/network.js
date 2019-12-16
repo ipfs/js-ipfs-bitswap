@@ -65,24 +65,29 @@ class Network {
    * @param {Connection} param0.connection A libp2p Connection
    * @returns {void}
    */
-  _onConnection ({ protocol, stream, connection }) {
+  async _onConnection ({ protocol, stream, connection }) {
     if (!this._running) { return }
     this._log('incoming new bitswap %s connection from %s', protocol, connection.remotePeer.toB58String())
 
-    pipe(
-      stream,
-      lp.decode(),
-      async (source) => {
-        for await (const data of source) {
-          try {
-            const message = await Message.deserialize(data.slice())
-            this.bitswap._receiveMessage(connection.remotePeer, message)
-          } catch (err) {
-            this.bitswap._receiveError(err)
+    try {
+      await pipe(
+        stream,
+        lp.decode(),
+        async (source) => {
+          for await (const data of source) {
+            try {
+              const message = await Message.deserialize(data.slice())
+              this.bitswap._receiveMessage(connection.remotePeer, message)
+            } catch (err) {
+              this.bitswap._receiveError(err)
+              break
+            }
           }
         }
-      }
-    )
+      )
+    } catch (err) {
+      this._log(err)
+    }
   }
 
   _onPeerConnect (peerInfo) {
