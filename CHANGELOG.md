@@ -1,3 +1,13 @@
+<a name="0.26.2"></a>
+## [0.26.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.26.1...v0.26.2) (2019-12-22)
+
+
+### Bug Fixes
+
+* use multicodec correctly ([#209](https://github.com/ipfs/js-ipfs-bitswap/issues/209)) ([579ddb5](https://github.com/ipfs/js-ipfs-bitswap/commit/579ddb5))
+
+
+
 <a name="0.26.1"></a>
 ## [0.26.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.26.0...v0.26.1) (2019-12-11)
 
