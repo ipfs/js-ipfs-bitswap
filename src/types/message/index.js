@@ -3,7 +3,7 @@
 const protons = require('protons')
 const Block = require('ipfs-block')
 const CID = require('cids')
-const codecName = require('multicodec/src/name-table')
+const { getName } = require('multicodec')
 const vd = require('varint-decoder')
 const multihashing = require('multihashing-async')
 const { isMapEqual } = require('../../utils')
@@ -159,7 +159,7 @@ BitswapMessage.deserialize = async (raw) => {
       const hashAlg = values[2]
       // const hashLen = values[3] // We haven't need to use this so far
       const hash = await multihashing(p.data, hashAlg)
-      const cid = new CID(cidVersion, codecName[multicodec.toString('16')], hash)
+      const cid = new CID(cidVersion, getName(multicodec), hash)
       msg.addBlock(new Block(p.data, cid))
     }))
     return msg
