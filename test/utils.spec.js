@@ -200,6 +200,9 @@ describe('utils spec', function () {
 
       expect(sm.get('two')).to.be.undefined()
       expect(sm.size).to.eql(2)
+
+      sm.delete('two')
+      expect(sm.size).to.eql(2)
     })
 
     it('clear', () => {
@@ -235,26 +238,100 @@ describe('utils spec', function () {
       expect(collected).to.eql([...sm])
     })
 
-    it('custom order', () => {
-      const sm = new SortedMap([], (a, b) => b[1].priority - a[1].priority)
+    describe('custom order', () => {
+      const prioritySort = (a, b) => b[1].priority - a[1].priority
 
-      const data1 = { k: 'v1', priority: 1 }
-      const data2 = { k: 'v2', priority: 3 }
-      const data3 = { k: 'v3', priority: 2 }
-      sm.set('one', data1)
-      sm.set('two', data2)
-      sm.set('three', data3)
+      it('forward', () => {
+        const sm = new SortedMap([
+          ['low', { priority: 1 }],
+          ['high', { priority: 2 }]
+        ], prioritySort)
+        expect([...sm.keys()]).to.eql(['high', 'low'])
+      })
 
-      expect([...sm.keys()]).to.eql(['two', 'three', 'one'])
-      expect([...sm.values()].map(v => v.k)).to.eql(['v2', 'v3', 'v1'])
+      it('backward', () => {
+        const sm = new SortedMap([
+          ['high', { priority: 2 }],
+          ['low', { priority: 1 }]
+        ], prioritySort)
+        expect([...sm.keys()]).to.eql(['high', 'low'])
+      })
 
-      // After changing data that affects the sort order, need to call update
-      // to actually trigger the sort
-      data3.priority = 5
-      sm.update('three')
+      it('insert start', () => {
+        const sm = new SortedMap([
+          ['mid', { priority: 2 }],
+          ['low', { priority: 1 }],
+          ['high', { priority: 3 }]
+        ], prioritySort)
+        expect([...sm.keys()]).to.eql(['high', 'mid', 'low'])
+      })
 
-      expect([...sm.keys()]).to.eql(['three', 'two', 'one'])
-      expect([...sm.values()].map(v => v.k)).to.eql(['v3', 'v2', 'v1'])
+      it('insert end', () => {
+        const sm = new SortedMap([
+          ['low', { priority: 1 }],
+          ['mid', { priority: 2 }],
+          ['high', { priority: 3 }]
+        ], prioritySort)
+        expect([...sm.keys()]).to.eql(['high', 'mid', 'low'])
+      })
+
+      it('insert middle', () => {
+        const sm = new SortedMap([
+          ['low', { priority: 1 }],
+          ['high', { priority: 3 }],
+          ['mid', { priority: 2 }]
+        ], prioritySort)
+        expect([...sm.keys()]).to.eql(['high', 'mid', 'low'])
+      })
+
+      it('insert same priority start', () => {
+        const sm = new SortedMap([
+          ['low', { priority: 1 }],
+          ['high-a', { priority: 3 }],
+          ['high-b', { priority: 3 }]
+        ], prioritySort)
+        expect([...sm.keys()].map(s => s.substring(0, 4))).to.eql(['high', 'high', 'low'])
+      })
+
+      it('insert same priority end', () => {
+        const sm = new SortedMap([
+          ['hi', { priority: 3 }],
+          ['low-a', { priority: 1 }],
+          ['low-b', { priority: 1 }]
+        ], prioritySort)
+        expect([...sm.keys()].map(s => s.substring(0, 3))).to.eql(['hi', 'low', 'low'])
+      })
+
+      it('insert same key', () => {
+        const sm = new SortedMap([
+          ['low', { priority: 1 }],
+          ['high', { priority: 3 }],
+          ['high', { priority: 4 }]
+        ], prioritySort)
+        expect([...sm.keys()]).to.eql(['high', 'low'])
+      })
+
+      it('update', () => {
+        const sm = new SortedMap([], prioritySort)
+
+        const data1 = { k: 'v1', priority: 1 }
+        const data2 = { k: 'v2', priority: 3 }
+        const data3 = { k: 'v3', priority: 2 }
+        sm.set('one', data1)
+        sm.set('two', data2)
+        sm.set('three', data3)
+
+        expect([...sm.keys()]).to.eql(['two', 'three', 'one'])
+        expect([...sm.values()].map(v => v.k)).to.eql(['v2', 'v3', 'v1'])
+
+        // After changing data that affects the sort order, need to call update
+        // to actually trigger the sort
+        data3.priority = 5
+        sm.update('three')
+
+        expect([...sm.keys()]).to.eql(['three', 'two', 'one'])
+        expect([...sm.values()].map(v => v.k)).to.eql(['v3', 'v2', 'v1'])
+      })
     })
   })
 })
