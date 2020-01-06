@@ -21,21 +21,26 @@ class SortedMap extends Map {
    * Call update to update the position of the key when it should change.
    * For example if the compare function sorts by the priority field, and the
    * priority changes, call update.
+   * Call indexOf() to get the index _before_ the change happens.
    *
-   * @param {Object} [k] the key corresponding to the entry whose position
-   * should be updated.
+   * @param {Object} i - the index of entry whose position should be updated.
    */
-  update (k) {
-    if (this.has(k)) {
-      this.set(k, this.get(k))
+  update (i) {
+    if (i < 0 || i >= this._keys.length) {
+      return
     }
+
+    const k = this._keys[i]
+    this._keys.splice(i, 1)
+    const newIdx = this._find(k)
+    this._keys.splice(newIdx, 0, k)
   }
 
   set (k, v) {
     // If the key is already in the map, remove it from the ordering and
     // re-insert it below
     if (this.has(k)) {
-      const i = this._find(k)
+      const i = this.indexOf(k)
       this._keys.splice(i, 1)
     }
 
@@ -56,9 +61,31 @@ class SortedMap extends Map {
     if (!this.has(k)) {
       return
     }
-    const i = this._find(k)
+
+    const i = this.indexOf(k)
     this._keys.splice(i, 1)
     super.delete(k)
+  }
+
+  indexOf (k) {
+    if (!this.has(k)) {
+      return -1
+    }
+
+    const i = this._find(k)
+    if (this._keys[i] === k) {
+      return i
+    }
+
+    // There may be more than one key with the same ordering
+    // eg { k1: <priority 5>, k2: <priority 5> }
+    // so scan outwards until the key matches
+    for (let j = 1; j < this._keys.length; j++) {
+      if (this._keys[i + j] === k) return i + j
+      if (this._keys[i - j] === k) return i - j
+    }
+
+    return -1 // should never happen for existing key
   }
 
   _find (k) {
@@ -67,6 +94,7 @@ class SortedMap extends Map {
     while (lower < upper) {
       const pivot = (lower + upper) >>> 1 // lower + (upper - lower) / 2
       const cmp = this._kCmp(this._keys[pivot], k)
+      // console.log(`  _find ${lower}:${upper}[${pivot}] ${cmp}`)
       if (cmp < 0) { // pivot < k
         lower = pivot + 1
       } else if (cmp > 0) { // pivot > k

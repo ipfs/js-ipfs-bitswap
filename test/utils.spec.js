@@ -327,10 +327,22 @@ describe('utils spec', function () {
         // After changing data that affects the sort order, need to call update
         // to actually trigger the sort
         data3.priority = 5
-        sm.update('three')
+        sm.update(1) // 'three'
 
         expect([...sm.keys()]).to.eql(['three', 'two', 'one'])
         expect([...sm.values()].map(v => v.k)).to.eql(['v3', 'v2', 'v1'])
+      })
+
+      it('delete same priority', () => {
+        const sm = new SortedMap([
+          ['a', { priority: 1 }],
+          ['b', { priority: 1 }],
+          ['c', { priority: 1 }]
+        ], prioritySort)
+
+        sm.delete('a')
+
+        expect([...sm.keys()].sort()).to.eql(['b', 'c'])
       })
     })
   })
