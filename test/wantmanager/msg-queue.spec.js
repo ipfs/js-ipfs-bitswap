@@ -78,13 +78,13 @@ describe('MessageQueue', () => {
       expect(mq.refcnt).to.equal(1)
 
       const batch1 = [
-        new Message.Entry(cid3, 1, false),
-        new Message.Entry(cid4, 2, false)
+        new Message.Entry(cid3, 1, Message.WantType.Block, false),
+        new Message.Entry(cid4, 2, Message.WantType.Block, false)
       ]
 
       const batch2 = [
-        new Message.Entry(cid5, 1, true),
-        new Message.Entry(cid6, 2, true)
+        new Message.Entry(cid5, 1, Message.WantType.Block, true),
+        new Message.Entry(cid6, 2, Message.WantType.Block, true)
       ]
 
       mq.addEntries(batch1)

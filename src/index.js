@@ -66,11 +66,12 @@ class Bitswap {
 
   // handle messages received through the network
   async _receiveMessage (peerId, incoming) {
+    // TODO: Need to add block to blockstore _before_ calling engine.messageReceived
     try {
       await this.engine.messageReceived(peerId, incoming)
     } catch (err) {
-      // Only logging the issue to process as much as possible
-      // of the message. Currently `messageReceived` does not
+      // Log instead of throwing an error so as to process as much as
+      // possible of the message. Currently `messageReceived` does not
       // throw any errors, but this could change in the future.
       this._log('failed to receive message', incoming)
     }
@@ -279,22 +280,28 @@ class Bitswap {
   async putMany (blocks) { // eslint-disable-line require-await
     const self = this
 
-    return this.blockstore.putMany(async function * () {
+    // Add any new blocks to the blockstore
+    const newBlocks = []
+    await this.blockstore.putMany(async function * () {
       for await (const block of blocks) {
         if (await self.blockstore.has(block.cid)) {
           continue
         }
 
         yield block
-
-        self.notifications.hasBlock(block)
-        self.engine.receivedBlocks([block.cid])
-        // Note: Don't wait for provide to finish before returning
-        self.network.provide(block.cid).catch((err) => {
-          self._log.error('Failed to provide: %s', err.message)
-        })
+        newBlocks.push(block)
       }
     }())
+
+    // Notify listeners that we have received the new blocks
+    for (const block of newBlocks) {
+      self.notifications.hasBlock(block)
+      self.engine.receivedBlocks([block])
+      // Note: Don't wait for provide to finish before returning
+      self.network.provide(block.cid).catch((err) => {
+        self._log.error('Failed to provide: %s', err.message)
+      })
+    }
   }
 
   /**

@@ -89,7 +89,7 @@ describe('BitswapMessage', () => {
     expect(Array.from(msg.wantlist))
       .to.eql([[
         cid0.toString('base58btc'),
-        new BitswapMessage.Entry(cid0, 0, false)
+        new BitswapMessage.Entry(cid0, 0, BitswapMessage.WantType.Block, false)
       ]])
 
     expect(
@@ -131,7 +131,7 @@ describe('BitswapMessage', () => {
     expect(Array.from(msg.wantlist))
       .to.eql([[
         cid0.toString('base58btc'),
-        new BitswapMessage.Entry(cid0, 0, false)
+        new BitswapMessage.Entry(cid0, 0, BitswapMessage.WantType.Block, false)
       ]])
 
     expect(
@@ -218,19 +218,21 @@ describe('BitswapMessage', () => {
   describe('BitswapMessageEntry', () => {
     it('exposes the wantlist entry properties', () => {
       const cid = cids[0]
-      const entry = new BitswapMessage.Entry(cid, 5, false)
+      const entry = new BitswapMessage.Entry(cid, 5, BitswapMessage.WantType.Block, false, false)
 
       expect(entry).to.have.property('cid')
       expect(entry).to.have.property('priority', 5)
 
+      expect(entry).to.have.property('wantType', BitswapMessage.WantType.Block)
       expect(entry).to.have.property('cancel', false)
+      expect(entry).to.have.property('sendDontHave', false)
     })
 
     it('allows setting properties on the wantlist entry', () => {
       const cid1 = cids[0]
       const cid2 = cids[1]
 
-      const entry = new BitswapMessage.Entry(cid1, 5, false)
+      const entry = new BitswapMessage.Entry(cid1, 5, BitswapMessage.WantType.Block, false, false)
 
       expect(entry.entry).to.have.property('cid')
       expect(entry.entry).to.have.property('priority', 5)

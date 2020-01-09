@@ -28,8 +28,8 @@ class Ledger {
     this.accounting.bytesRecv += n
   }
 
-  wants (cid, priority) {
-    this.wantlist.add(cid, priority)
+  wants (cid, priority, wantType) {
+    this.wantlist.add(cid, priority, wantType)
   }
 
   cancelWant (cid) {

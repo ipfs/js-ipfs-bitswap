@@ -79,8 +79,8 @@ describe('bitswap with mocks', function () {
 
       const msg = new Message(false)
 
-      msg.addEntry(b1.cid, 1, false)
-      msg.addEntry(b2.cid, 1, false)
+      msg.addEntry(b1.cid, 1)
+      msg.addEntry(b2.cid, 1)
 
       await bs._receiveMessage(other, msg)
 

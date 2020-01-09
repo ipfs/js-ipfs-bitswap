@@ -15,24 +15,43 @@ class BitswapMessage {
     this.full = full
     this.wantlist = new Map()
     this.blocks = new Map()
+    this.blockPresences = new Map()
     this.pendingBytes = 0
   }
 
   get empty () {
     return this.blocks.size === 0 &&
-           this.wantlist.size === 0
+           this.wantlist.size === 0 &&
+           this.blockPresences.size === 0
   }
 
-  addEntry (cid, priority, cancel) {
+  addEntry (cid, priority, wantType, cancel, sendDontHave) {
+    if (wantType == null) {
+      wantType = BitswapMessage.WantType.Block
+    }
     const cidStr = cid.toString('base58btc')
 
     const entry = this.wantlist.get(cidStr)
 
     if (entry) {
-      entry.priority = priority
-      entry.cancel = Boolean(cancel)
+      // Only change priority if want is of the same type
+      if (entry.wantType === wantType) {
+        entry.priority = priority
+      }
+      // Only change from "dont cancel" to "do cancel"
+      if (cancel) {
+        entry.cancel = Boolean(cancel)
+      }
+      // Only change from "dont send" to "do send" DONT_HAVE
+      if (sendDontHave) {
+        entry.sendDontHave = Boolean(sendDontHave)
+      }
+      // want-block overrides existing want-have
+      if (wantType === BitswapMessage.WantType.Block && entry.wantType === BitswapMessage.WantType.Have) {
+        entry.wantType = wantType
+      }
     } else {
-      this.wantlist.set(cidStr, new Entry(cid, priority, cancel))
+      this.wantlist.set(cidStr, new Entry(cid, priority, wantType, cancel, sendDontHave))
     }
   }
 
@@ -41,10 +60,24 @@ class BitswapMessage {
     this.blocks.set(cidStr, block)
   }
 
+  addHave (cid) {
+    const cidStr = cid.toString('base58btc')
+    if (!this.blockPresences.has(cidStr)) {
+      this.blockPresences.set(cidStr, BitswapMessage.BlockPresenceType.Have)
+    }
+  }
+
+  addDontHave (cid) {
+    const cidStr = cid.toString('base58btc')
+    if (!this.blockPresences.has(cidStr)) {
+      this.blockPresences.set(cidStr, BitswapMessage.BlockPresenceType.DontHave)
+    }
+  }
+
   cancel (cid) {
     const cidStr = cid.toString('base58btc')
     this.wantlist.delete(cidStr)
-    this.addEntry(cid, 0, true)
+    this.addEntry(cid, 0, BitswapMessage.WantType.Block, true, false)
   }
 
   setPendingBytes (size) {
@@ -106,6 +139,13 @@ class BitswapMessage {
       })
     })
 
+    for (const [cidStr, bpType] of this.blockPresences) {
+      msg.blockPresences.push({
+        cid: new CID(cidStr).buffer,
+        type: bpType
+      })
+    }
+
     if (this.pendingBytes > 0) {
       msg.pendingBytes = this.pendingBytes
     }
@@ -115,8 +155,10 @@ class BitswapMessage {
 
   equals (other) {
     if (this.full !== other.full ||
+        this.pendingBytes !== other.pendingBytes ||
         !isMapEqual(this.wantlist, other.wantlist) ||
-        !isMapEqual(this.blocks, other.blocks)
+        !isMapEqual(this.blocks, other.blocks) ||
+        !isMapEqual(this.blockPresences, other.blockPresences)
     ) {
       return false
     }
@@ -141,7 +183,7 @@ BitswapMessage.deserialize = async (raw) => {
     decoded.wantlist.entries.forEach((entry) => {
       // note: entry.block is the CID here
       const cid = new CID(entry.block)
-      msg.addEntry(cid, entry.priority, entry.cancel)
+      msg.addEntry(cid, entry.priority, entry.wantType, entry.cancel, entry.sendDontHave)
     })
   }
 
@@ -178,5 +220,18 @@ BitswapMessage.deserialize = async (raw) => {
   return msg
 }
 
+BitswapMessage.blockPresenceSize = (cid) => {
+  // It doesn't really matter if this is not exactly right
+  return cid.buffer.length + 1
+}
+
 BitswapMessage.Entry = Entry
+BitswapMessage.WantType = {
+  Block: pbm.Message.Wantlist.WantType.Block,
+  Have: pbm.Message.Wantlist.WantType.Have
+}
+BitswapMessage.BlockPresenceType = {
+  Have: pbm.Message.BlockPresenceType.Have,
+  DontHave: pbm.Message.BlockPresenceType.DontHave
+}
 module.exports = BitswapMessage

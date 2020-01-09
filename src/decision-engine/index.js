@@ -1,110 +1,122 @@
 'use strict'
 
-const debounce = require('just-debounce-it')
+const CID = require('cids')
 
 const Message = require('../types/message')
+const WantType = Message.WantType
 const Wantlist = require('../types/wantlist')
 const Ledger = require('./ledger')
-const { logger, groupBy, pullAllWith, uniqWith } = require('../utils')
+const RequestQueue = require('./req-queue')
+const TaskMerger = require('./task-merger')
+const { logger } = require('../utils')
 
-const MAX_MESSAGE_SIZE = 512 * 1024
+// The ideal size of the batched payload. We try to pop this much data off the
+// request queue, but it may be a little more or less depending on what's in
+// the queue.
+const TARGET_MESSAGE_SIZE = 16 * 1024
+
+// The maximum size of the block in bytes up to which we will replace a
+// want-have with a want-block
+const MAX_BLOCK_SIZE_REPLACE_HAS_WITH_BLOCK = 1024
 
 class DecisionEngine {
-  constructor (peerId, blockstore, network, stats) {
+  constructor (peerId, blockstore, network, stats, opts) {
     this._log = logger(peerId, 'engine')
     this.blockstore = blockstore
     this.network = network
     this._stats = stats
+    this._opts = this._processOpts(opts)
 
     // A list of of ledgers by their partner id
     this.ledgerMap = new Map()
     this._running = false
 
-    // List of tasks to be processed
-    this._tasks = []
-
-    this._outbox = debounce(this._processTasks.bind(this), 100)
+    // Queue of want-have / want-block per peer
+    this._requestQueue = new RequestQueue(TaskMerger)
   }
 
-  async _sendBlocks (peer, blocks) {
-    // split into messages of max 512 * 1024 bytes
-    let total = blocks.reduce((acc, b) => {
-      return acc + b.data.byteLength
-    }, 0)
-
-    // If the blocks fit into one message, send the message right away
-    if (total < MAX_MESSAGE_SIZE) {
-      await this._sendSafeBlocks(peer, blocks, 0)
-      return
-    }
-
-    // The blocks don't all fit into one message so we need to split them up
-    let size = 0
-    let batch = []
-    let outstanding = blocks.length
-
-    for (const b of blocks) {
-      outstanding--
-      batch.push(b)
-      size += b.data.byteLength
-      total -= b.data.byteLength
-
-      if (size >= MAX_MESSAGE_SIZE ||
-          // need to ensure the last remaining items get sent
-          outstanding === 0) {
-        size = 0
-        const nextBatch = batch.slice()
-        batch = []
-        try {
-          await this._sendSafeBlocks(peer, nextBatch, total)
-        } catch (err) {
-          // catch the error so as to send as many blocks as we can
-          this._log('sendblock error: %s', err.message)
-        }
-      }
+  _processOpts (opts) {
+    return {
+      ...{
+        maxBlockSizeReplaceHasWithBlock: MAX_BLOCK_SIZE_REPLACE_HAS_WITH_BLOCK,
+        targetMessageSize: TARGET_MESSAGE_SIZE
+      },
+      ...opts
     }
   }
 
-  async _sendSafeBlocks (peer, blocks, pendingBytes) {
-    const msg = new Message(false)
-    blocks.forEach((b) => msg.addBlock(b))
-    msg.setPendingBytes(pendingBytes)
-
-    await this.network.sendMessage(peer, msg)
+  _outbox () {
+    setImmediate(() => this._processTasks())
   }
 
+  // Pull tasks off the request queue and send a message to the corresponding
+  // peer
   async _processTasks () {
-    if (!this._running || !this._tasks.length) {
+    if (!this._running) {
       return
     }
 
-    const tasks = this._tasks
-    this._tasks = []
-    const entries = tasks.map((t) => t.entry)
-    const cids = entries.map((e) => e.cid)
-    const uniqCids = uniqWith((a, b) => a.equals(b), cids)
-    const groupedTasks = groupBy(task => task.target.toB58String(), tasks)
+    const { peerId, tasks, pendingSize } = this._requestQueue.popTasks(this._opts.targetMessageSize)
 
-    const blocks = await Promise.all(uniqCids.map(cid => this.blockstore.get(cid)))
+    if (tasks.length === 0) {
+      return
+    }
 
-    await Promise.all(Object.values(groupedTasks).map(async (tasks) => {
-      // all tasks in the group have the same target
-      const peer = tasks[0].target
-      const blockList = cids.map((cid) => blocks.find(b => b.cid.equals(cid)))
+    // Create a new message
+    const msg = new Message(false)
 
-      try {
-        await this._sendBlocks(peer, blockList)
-      } catch (err) {
-        // `_sendBlocks` actually doesn't return any errors
-        this._log.error('should never happen: ', err)
-        return
+    // Amount of data in the request queue still waiting to be popped
+    msg.setPendingBytes(pendingSize)
+
+    // Split out want-blocks, want-haves and DONT_HAVEs
+    const blockCids = []
+    const blockTasks = new Map()
+    for (const task of tasks) {
+      const cid = new CID(task.topic)
+      if (task.data.haveBlock) {
+        if (task.data.isWantBlock) {
+          blockCids.push(cid)
+          blockTasks.set(cid, task.data)
+        } else {
+          // Add HAVES to the message
+          msg.addHave(cid)
+        }
+      } else {
+        // Add DONT_HAVEs to the message
+        msg.addDontHave(cid)
       }
-      for (const block of blockList) {
-        this.messageSent(peer, block)
-      }
-    }))
+    }
 
-    this._tasks = []
+    const blocks = await this._getBlocks(blockCids)
+    for (const [cid, task] of blockTasks) {
+      const blk = blocks.get(cid.toString())
+      // If the block was not found (it has been removed)
+      if (blk == null) {
+        // If the client requested DONT_HAVE, add DONT_HAVE to the message
+        if (task.sendDontHave) {
+          msg.addDontHave(cid)
+        }
+      } else {
+        // Add the block to the message
+        msg.addBlock(blk)
+      }
+    }
+
+    // If there's nothing in the message, bail out
+    if (msg.empty) {
+      this._requestQueue.tasksDone(peerId, tasks)
+      return
+    }
+
+    await this.network.sendMessage(peerId, msg)
+
+    this._requestQueue.tasksDone(peerId, tasks)
+
+    for (const block of blocks.values()) {
+      this.messageSent(peerId, block)
+    }
+
+    this._processTasks()
   }
 
   wantlistForPeer (peerId) {
@@ -136,22 +148,45 @@ class DecisionEngine {
     return Array.from(this.ledgerMap.values()).map((l) => l.partner)
   }
 
-  receivedBlocks (cids) {
-    if (!cids.length) {
+  // Receive blocks either from an incoming message from the network, or from
+  // blocks being added by the client on the localhost (eg IPFS add)
+  receivedBlocks (blocks) {
+    if (!blocks.length) {
       return
     }
-    // Check all connected peers if they want the block we received
+
+    // Get the size of each wanted block
+    const blockSizes = new Map(blocks.map(b => [b.cid.toString(), b.data.length]))
+
+    // For each connected peer, check if it wants the block we received
     this.ledgerMap.forEach((ledger) => {
-      cids
-        .map((cid) => ledger.wantlistContains(cid))
+      blocks
+        .map((block) => ledger.wantlistContains(block.cid))
         .filter(Boolean)
         .forEach((entry) => {
-          this._tasks.push({
-            entry: entry,
-            target: ledger.partner
-          })
+          const id = entry.cid.toString()
+          const blockSize = blockSizes.get(id)
+          const isWantBlock = this._sendAsBlock(entry.wantType, blockSize)
+
+          let entrySize = blockSize
+          if (!isWantBlock) {
+            entrySize = Message.blockPresenceSize(entry.cid)
+          }
+
+          this._requestQueue.pushTasks(ledger.partner, [{
+            topic: id,
+            priority: entry.priority,
+            size: entrySize,
+            data: {
+              blockSize,
+              isWantBlock,
+              haveBlock: true,
+              sendDontHave: false
+            }
+          }])
         })
     })
+
     this._outbox()
   }
 
@@ -163,74 +198,132 @@ class DecisionEngine {
       return
     }
 
-    // If the message was a full wantlist clear the current one
+    // If the message has a full wantlist, clear the current wantlist
     if (msg.full) {
       ledger.wantlist = new Wantlist()
     }
 
+    // Record the amount of block data received, and check if any peers want
+    // the blocks we just received.
     this._processBlocks(msg.blocks, ledger)
 
     if (msg.wantlist.size === 0) {
+      this._outbox()
       return
     }
 
+    // Clear cancelled wants and add new wants to the ledger
     const cancels = []
     const wants = []
     msg.wantlist.forEach((entry) => {
       if (entry.cancel) {
         ledger.cancelWant(entry.cid)
-        cancels.push(entry)
+        cancels.push(entry.cid)
       } else {
-        ledger.wants(entry.cid, entry.priority)
+        ledger.wants(entry.cid, entry.priority, entry.wantType)
         wants.push(entry)
       }
     })
 
-    this._cancelWants(ledger, peerId, cancels)
-    await this._addWants(ledger, peerId, wants)
-  }
-
-  _cancelWants (ledger, peerId, entries) {
-    const id = peerId.toB58String()
-
-    this._tasks = pullAllWith((t, e) => {
-      const sameTarget = t.target.toB58String() === id
-      const sameCid = t.entry.cid.equals(e.cid)
-      return sameTarget && sameCid
-    }, this._tasks, entries)
-  }
-
-  async _addWants (ledger, peerId, entries) {
-    await Promise.all(entries.map(async (entry) => {
-      // If we already have the block, serve it
-      let exists
-      try {
-        exists = await this.blockstore.has(entry.cid)
-      } catch (err) {
-        this._log.error('failed blockstore existence check for ' + entry.cid)
-        return
-      }
-
-      if (exists) {
-        this._tasks.push({
-          entry: entry.entry,
-          target: peerId
-        })
-      }
-    }))
+    this._cancelWants(peerId, cancels)
+    await this._addWants(peerId, wants)
 
     this._outbox()
   }
 
-  _processBlocks (blocks, ledger) {
-    const cids = []
-    blocks.forEach((b, cidStr) => {
+  _cancelWants (peerId, cids) {
+    for (const c of cids) {
+      this._requestQueue.remove(c.toString(), peerId)
+    }
+  }
+
+  async _addWants (peerId, wants) {
+    // Get the size of each wanted block
+    const blockSizes = await this._getBlockSizes(wants.map(w => w.cid))
+
+    const tasks = []
+    for (const want of wants) {
+      const id = want.cid.toString()
+      const blockSize = blockSizes.get(id)
+
+      // If the block was not found
+      if (blockSize == null) {
+        // Only add the task to the queue if the requester wants a DONT_HAVE
+        if (want.sendDontHave) {
+          tasks.push({
+            topic: id,
+            priority: want.priority,
+            size: Message.blockPresenceSize(want.cid),
+            data: {
+              isWantBlock: want.wantType === WantType.Block,
+              blockSize: 0,
+              haveBlock: false,
+              sendDontHave: want.sendDontHave
+            }
+          })
+        }
+      } else {
+        // The block was found, add it to the queue
+        const isWantBlock = this._sendAsBlock(want.wantType, blockSize)
+
+        // entrySize is the amount of space the entry takes up in the
+        // message we send to the recipient. If we're sending a block, the
+        // entrySize is the size of the block. Otherwise it's the size of
+        // a block presence entry.
+        let entrySize = blockSize
+        if (!isWantBlock) {
+          entrySize = Message.blockPresenceSize(want.cid)
+        }
+
+        tasks.push({
+          topic: id,
+          priority: want.priority,
+          size: entrySize,
+          data: {
+            isWantBlock,
+            blockSize,
+            haveBlock: true,
+            sendDontHave: want.sendDontHave
+          }
+        })
+      }
+
+      this._requestQueue.pushTasks(peerId, tasks)
+    }
+  }
+
+  _sendAsBlock (wantType, blockSize) {
+    return wantType === WantType.Block ||
+      blockSize <= this._opts.maxBlockSizeReplaceHasWithBlock
+  }
+
+  async _getBlockSizes (cids) {
+    const blocks = await this._getBlocks(cids)
+    return new Map([...blocks].map(([k, v]) => [k, v.data.length]))
+  }
+
+  async _getBlocks (cids) {
+    const res = new Map()
+    await Promise.all(cids.map(async (cid) => {
+      try {
+        const block = await this.blockstore.get(cid)
+        res.set(cid.toString(), block)
+      } catch (e) {
+        if (e.code !== 'ERR_NOT_FOUND') {
+          this._log.error('failed to query blockstore for %s: %s', cid, e)
+        }
+      }
+    }))
+    return res
+  }
+
+  _processBlocks (blocksMap, ledger) {
+    blocksMap.forEach(b => {
       this._log('got block (%s bytes)', b.data.length)
       ledger.receivedBytes(b.data.length)
-      cids.push(b.cid)
     })
 
-    this.receivedBlocks(cids)
+    this.receivedBlocks([...blocksMap.values()])
   }
 
   // Clear up all accounting things after message was sent

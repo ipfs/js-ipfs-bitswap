@@ -122,7 +122,7 @@ describe('network', () => {
     const b1 = blocks[0]
     const b2 = blocks[1]
 
-    msg.addEntry(b1.cid, 0, false)
+    msg.addEntry(b1.cid, 0)
     msg.addBlock(b1)
     msg.addBlock(b2)
 
@@ -156,7 +156,7 @@ describe('network', () => {
     const b1 = blocks[0]
     const b2 = blocks[1]
 
-    msg.addEntry(b1.cid, 0, false)
+    msg.addEntry(b1.cid, 0)
     msg.addBlock(b1)
     msg.addBlock(b2)
 
@@ -189,7 +189,7 @@ describe('network', () => {
     const b1 = blocks[0]
     const b2 = blocks[1]
 
-    msg.addEntry(b1.cid, 0, false)
+    msg.addEntry(b1.cid, 0)
     msg.addBlock(b1)
     msg.addBlock(b2)
 
@@ -244,7 +244,7 @@ describe('network', () => {
     const b1 = blocks[0]
     const b2 = blocks[1]
 
-    msg.addEntry(b1.cid, 0, false)
+    msg.addEntry(b1.cid, 0)
     msg.addBlock(b1)
     msg.addBlock(b2)
 
