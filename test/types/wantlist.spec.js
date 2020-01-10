@@ -8,6 +8,7 @@ const CID = require('cids')
 const multihashing = require('multihashing-async')
 
 const Wantlist = require('../../src/types/wantlist')
+const Message = require('../../src/types/message')
 const makeBlock = require('../utils/make-block')
 
 describe('Wantlist', () => {
@@ -76,12 +77,12 @@ describe('Wantlist', () => {
   it('entries', () => {
     const b = blocks[0]
 
-    wm.add(b.cid, 2)
+    wm.add(b.cid, 2, Message.WantType.Have)
     expect(
       Array.from(wm.entries())
     ).to.be.eql([[
       b.cid.toString('base58btc'),
-      new Wantlist.Entry(b.cid, 2)
+      new Wantlist.Entry(b.cid, 2, Message.WantType.Have)
     ]])
   })
 

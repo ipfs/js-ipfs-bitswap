@@ -29,10 +29,9 @@ class BitswapMessage {
     if (wantType == null) {
       wantType = BitswapMessage.WantType.Block
     }
+
     const cidStr = cid.toString('base58btc')
-
     const entry = this.wantlist.get(cidStr)
-
     if (entry) {
       // Only change priority if want is of the same type
       if (entry.wantType === wantType) {
@@ -121,10 +120,13 @@ class BitswapMessage {
           return {
             block: entry.cid.buffer, // cid
             priority: Number(entry.priority),
-            cancel: Boolean(entry.cancel)
+            wantType: entry.wantType,
+            cancel: Boolean(entry.cancel),
+            sendDontHave: Boolean(entry.sendDontHave)
           }
         })
       },
+      blockPresences: [],
       payload: []
     }
 
@@ -184,6 +186,17 @@ BitswapMessage.deserialize = async (raw) => {
       // note: entry.block is the CID here
       const cid = new CID(entry.block)
       msg.addEntry(cid, entry.priority, entry.wantType, entry.cancel, entry.sendDontHave)
+    })
+  }
+
+  if (decoded.blockPresences) {
+    decoded.blockPresences.forEach((blockPresence) => {
+      const cid = new CID(blockPresence.cid)
+      if (blockPresence.type === BitswapMessage.BlockPresenceType.Have) {
+        msg.addHave(cid)
+      } else {
+        msg.addDontHave(cid)
+      }
     })
   }
 
