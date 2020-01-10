@@ -30,7 +30,7 @@ exports.mockLibp2pNode = () => {
     async  dial (peer) { // eslint-disable-line require-await
     },
     async dialProtocol (peer, protocol) { // eslint-disable-line require-await
-
+      return {}
     },
     swarm: {
       setMaxListeners () {}

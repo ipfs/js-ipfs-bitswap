@@ -130,16 +130,10 @@ describe('Engine', () => {
     }
 
     async function peerSendsBlocks (dEngine, repo, blocks, peer) {
-      const message = new Message(false)
-
-      for (const block of blocks) {
-        message.addBlock(block)
-      }
-
       // Bitswap puts blocks into the blockstore then passes the blocks to the
       // Decision Engine
       await repo.blocks.putMany(blocks)
-      await dEngine.messageReceived(peer, message)
+      await dEngine.receivedBlocks(blocks)
     }
 
     const hashes = await Promise.all(alphabet.map(v => multihashing(Buffer.from(v), 'sha2-256')))

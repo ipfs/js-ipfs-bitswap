@@ -66,8 +66,10 @@ class Bitswap {
 
   // handle messages received through the network
   async _receiveMessage (peerId, incoming) {
-    // TODO: Need to add block to blockstore _before_ calling engine.messageReceived
     try {
+      // Note: this allows the engine to respond to any wants in the message.
+      // Processing of the blocks in the message happens below, after the
+      // blocks have been added to the blockstore.
       await this.engine.messageReceived(peerId, incoming)
     } catch (err) {
       // Log instead of throwing an error so as to process as much as

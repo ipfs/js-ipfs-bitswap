@@ -203,9 +203,8 @@ class DecisionEngine {
       ledger.wantlist = new Wantlist()
     }
 
-    // Record the amount of block data received, and check if any peers want
-    // the blocks we just received.
-    this._processBlocks(msg.blocks, ledger)
+    // Record the amount of block data received
+    this._updateBlockAccounting(msg.blocks, ledger)
 
     if (msg.wantlist.size === 0) {
       this._outbox()
@@ -317,13 +316,11 @@ class DecisionEngine {
     return res
   }
 
-  _processBlocks (blocksMap, ledger) {
+  _updateBlockAccounting (blocksMap, ledger) {
     blocksMap.forEach(b => {
       this._log('got block (%s bytes)', b.data.length)
       ledger.receivedBytes(b.data.length)
     })
-
-    this.receivedBlocks([...blocksMap.values()])
   }
 
   // Clear up all accounting things after message was sent
