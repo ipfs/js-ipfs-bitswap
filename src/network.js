@@ -10,6 +10,7 @@ const logger = require('./utils').logger
 
 const BITSWAP100 = '/ipfs/bitswap/1.0.0'
 const BITSWAP110 = '/ipfs/bitswap/1.1.0'
+const BITSWAP120 = '/ipfs/bitswap/1.2.0'
 
 class Network {
   constructor (libp2p, bitswap, options, stats) {
@@ -31,7 +32,10 @@ class Network {
 
     this._onConnection = this._onConnection.bind(this)
     this.libp2p.handle(BITSWAP100, this._onConnection)
-    if (!this.b100Only) { this.libp2p.handle(BITSWAP110, this._onConnection) }
+    if (!this.b100Only) {
+      this.libp2p.handle(BITSWAP110, this._onConnection)
+      this.libp2p.handle(BITSWAP120, this._onConnection)
+    }
 
     this.libp2p.on('peer:connect', this._onPeerConnect)
     this.libp2p.on('peer:disconnect', this._onPeerDisconnect)
