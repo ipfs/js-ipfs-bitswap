@@ -1,8 +1,8 @@
 'use strict'
-
+const protons = require('protons')
 // from: https://github.com/ipfs/go-ipfs/blob/master/exchange/bitswap/message/pb/message.proto
 
-module.exports = `
+module.exports = protons(`
   message Message {
     message Wantlist {
       message Entry {
@@ -25,4 +25,4 @@ module.exports = `
     repeated bytes blocks = 2;          // used to send Blocks in bitswap 1.0.0
     repeated Block payload = 3;         // used to send Blocks in bitswap 1.1.0
   }
-`
+`)

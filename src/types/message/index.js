@@ -1,13 +1,12 @@
 'use strict'
 
-const protons = require('protons')
 const Block = require('ipfs-block')
 const CID = require('cids')
 const { getName } = require('multicodec')
 const vd = require('varint-decoder')
 const multihashing = require('multihashing-async')
 const { isMapEqual } = require('../../utils')
-const pbm = protons(require('./message.proto'))
+const { Message } = require('./message.proto')
 const Entry = require('./entry')
 
 class BitswapMessage {
@@ -69,7 +68,7 @@ class BitswapMessage {
       msg.wantlist.full = true
     }
 
-    return pbm.Message.encode(msg)
+    return Message.encode(msg)
   }
 
   /*
@@ -101,7 +100,7 @@ class BitswapMessage {
       })
     })
 
-    return pbm.Message.encode(msg)
+    return Message.encode(msg)
   }
 
   equals (other) {
@@ -123,7 +122,7 @@ class BitswapMessage {
 }
 
 BitswapMessage.deserialize = async (raw) => {
-  const decoded = pbm.Message.decode(raw)
+  const decoded = Message.decode(raw)
 
   const isFull = (decoded.wantlist && decoded.wantlist.full) || false
   const msg = new BitswapMessage(isFull)

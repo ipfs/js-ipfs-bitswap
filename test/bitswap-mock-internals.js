@@ -7,7 +7,6 @@ const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
 const PeerId = require('peer-id')
-const promisify = require('promisify-es6')
 const all = require('async-iterator-all')
 const Message = require('../src/types/message')
 const Bitswap = require('../src')
@@ -347,7 +346,7 @@ describe('bitswap with mocks', function () {
         bs.get(b.cid)
       ])
 
-      setTimeout(() => bs.unwant(b.cid), 10)
+      setTimeout(() => bs.unwant(b.cid), 1e3)
 
       const res = await p
       expect(res[1]).to.not.exist()
@@ -357,7 +356,7 @@ describe('bitswap with mocks', function () {
   describe('ledgerForPeer', () => {
     it('returns null for unknown peer', async () => {
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
-      const id = await promisify(PeerId.create)({ bits: 512 })
+      const id = await PeerId.create({ bits: 512 })
       const ledger = bs.ledgerForPeer(id)
       expect(ledger).to.equal(null)
     })

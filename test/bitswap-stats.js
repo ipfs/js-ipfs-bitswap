@@ -48,7 +48,12 @@ describe('bitswap stats', () => {
 
     // create 2 libp2p nodes
     libp2pNodes = await Promise.all(nodes.map((i) => createLibp2pNode({
-      DHT: repos[i].datastore
+      datastore: repos[i].datastore,
+      config: {
+        dht: {
+          enabled: true
+        }
+      }
     })))
 
     // create bitswaps
@@ -163,13 +168,10 @@ describe('bitswap stats', () => {
     let block
 
     before(async () => {
-      await Promise.all([
-        libp2pNodes[0].dial(libp2pNodes[1].peerInfo),
-        libp2pNodes[1].dial(libp2pNodes[0].peerInfo)
-      ])
-
       bs2 = bitswaps[1]
       bs2.start()
+
+      await libp2pNodes[0].dial(libp2pNodes[1].peerInfo)
 
       block = await makeBlock()
 
@@ -193,10 +195,12 @@ describe('bitswap stats', () => {
       expect(originalStats.wantListLength.toNumber()).to.equal(0)
       expect(originalStats.peerCount.toNumber()).to.equal(1)
 
+      const deferred = pEvent(bs.stat(), 'update')
+
       // pull block from bs to bs2
       await bs2.get(block.cid)
 
-      const nextStats = await pEvent(bs.stat(), 'update')
+      const nextStats = await deferred
 
       expect(nextStats.blocksReceived.toNumber()).to.equal(4)
       expect(nextStats.dataReceived.toNumber()).to.equal(192)
