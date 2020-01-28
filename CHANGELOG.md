@@ -1,3 +1,8 @@
+<a name="0.27.0"></a>
+# [0.27.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.26.2...v0.27.0) (2020-01-28)
+
+
+
 <a name="0.26.2"></a>
 ## [0.26.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.26.1...v0.26.2) (2019-12-22)
 
