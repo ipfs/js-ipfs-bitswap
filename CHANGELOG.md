@@ -1,3 +1,13 @@
+<a name="0.27.1"></a>
+## [0.27.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.27.0...v0.27.1) (2020-02-10)
+
+
+### Bug Fixes
+
+* await result of receiving blocks ([#213](https://github.com/ipfs/js-ipfs-bitswap/issues/213)) ([dae48dd](https://github.com/ipfs/js-ipfs-bitswap/commit/dae48dd))
+
+
+
 <a name="0.27.0"></a>
 # [0.27.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.26.2...v0.27.0) (2020-01-28)
 
