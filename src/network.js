@@ -77,7 +77,7 @@ class Network {
           for await (const data of source) {
             try {
               const message = await Message.deserialize(data.slice())
-              this.bitswap._receiveMessage(connection.remotePeer, message)
+              await this.bitswap._receiveMessage(connection.remotePeer, message)
             } catch (err) {
               this.bitswap._receiveError(err)
               break
