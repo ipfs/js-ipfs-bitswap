@@ -234,7 +234,10 @@ BitswapMessage.deserialize = async (raw) => {
 }
 
 BitswapMessage.blockPresenceSize = (cid) => {
-  // It doesn't really matter if this is not exactly right
+  // It's ok if this is not exactly right: it's used to estimate the size of
+  // the HAVE / DONT_HAVE on the wire, but when doing that calculation we leave
+  // plenty of padding under the maximum message size.
+  // (It's more important for this to be fast).
   return cid.buffer.length + 1
 }
 
