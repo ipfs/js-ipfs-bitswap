@@ -44,7 +44,7 @@ class RequestQueue {
    */
   constructor (taskMerger) {
     this._taskMerger = taskMerger || DefaultTaskMerger
-    this._peerTasks = new SortedMap([], PeerTasks.compare, true)
+    this._byPeer = new SortedMap([], PeerTasks.compare, true)
   }
 
   /**
@@ -53,7 +53,7 @@ class RequestQueue {
    * @param {Task} tasks
    */
   pushTasks (peerId, tasks) {
-    let peerTasks = this._peerTasks.get(peerId.toB58String())
+    let peerTasks = this._byPeer.get(peerId.toB58String())
     if (peerTasks) {
       peerTasks.pushTasks(tasks)
       return
@@ -61,27 +61,27 @@ class RequestQueue {
 
     peerTasks = new PeerTasks(peerId, this._taskMerger)
     peerTasks.pushTasks(tasks)
-    this._peerTasks.set(peerId.toB58String(), peerTasks)
+    this._byPeer.set(peerId.toB58String(), peerTasks)
   }
 
   /**
    * Choose the peer with the least active work (or if all have the same active
    * work, the most pending tasks) and pop off the highest priority tasks until
-   * the total size is at least targetMinSize.
+   * the total size is at least targetMinBytes.
    * This puts the popped tasks into the "active" state, meaning they are
    * actively being processed (and cannot be modified).
-   * @param {number} targetMinSize - the minimum total size of tasks to pop
+   * @param {number} targetMinBytes - the minimum total size of tasks to pop
    * @returns {Object}
    */
-  popTasks (targetMinSize) {
-    if (this._peerTasks.size === 0) {
+  popTasks (targetMinBytes) {
+    if (this._byPeer.size === 0) {
       return { tasks: [], pendingSize: 0 }
     }
 
     // Get the queue of tasks for the best peer and pop off tasks up to
-    // targetMinSize
+    // targetMinBytes
     const peerTasks = this._head()
-    const { tasks, pendingSize } = peerTasks.popTasks(targetMinSize)
+    const { tasks, pendingSize } = peerTasks.popTasks(targetMinBytes)
     if (tasks.length === 0) {
       return { tasks, pendingSize }
     }
@@ -89,11 +89,11 @@ class RequestQueue {
     const peerId = peerTasks.peerId
     if (peerTasks.isIdle()) {
       // If there are no more tasks for the peer, free up its memory
-      this._peerTasks.delete(peerId.toB58String())
+      this._byPeer.delete(peerId.toB58String())
     } else {
       // If there are still tasks remaining, update the sort order of peerTasks
       // (because it depends on the number of pending tasks)
-      this._peerTasks.update(0)
+      this._byPeer.update(0)
     }
 
     return {
@@ -102,7 +102,7 @@ class RequestQueue {
   }
 
   _head () {
-    for (const [, v] of this._peerTasks) {
+    for (const [, v] of this._byPeer) {
       return v
     }
     return undefined
@@ -114,7 +114,7 @@ class RequestQueue {
    * @param {PeerId} peerId
    */
   remove (topic, peerId) {
-    const peerTasks = this._peerTasks.get(peerId.toB58String())
+    const peerTasks = this._byPeer.get(peerId.toB58String())
     peerTasks && peerTasks.remove(topic)
   }
 
@@ -124,12 +124,12 @@ class RequestQueue {
    * @param {Task[]} tasks
    */
   tasksDone (peerId, tasks) {
-    const peerTasks = this._peerTasks.get(peerId.toB58String())
+    const peerTasks = this._byPeer.get(peerId.toB58String())
     if (!peerTasks) {
       return
     }
 
-    const i = this._peerTasks.indexOf(peerId.toB58String())
+    const i = this._byPeer.indexOf(peerId.toB58String())
     for (const task of tasks) {
       peerTasks.taskDone(task)
     }
@@ -137,7 +137,7 @@ class RequestQueue {
     // Marking the tasks as done takes them out of the "active" state, and the
     // sort order depends on the size of the active tasks, so we need to update
     // the order.
-    this._peerTasks.update(i)
+    this._byPeer.update(i)
   }
 }
 
@@ -152,7 +152,7 @@ class PeerTasks {
   constructor (peerId, taskMerger) {
     this.peerId = peerId
     this._taskMerger = taskMerger
-    this._activeSize = 0
+    this._activeTotalSize = 0
     this._pending = new PendingTasks()
     this._active = new Set()
   }
@@ -214,24 +214,25 @@ class PeerTasks {
   }
 
   /**
-   * Pop tasks off the queue such that the total size is at least targetMinSize
-   * @param {number} targetMinSize
+   * Pop tasks off the queue such that the total size is at least targetMinBytes
+   * @param {number} targetMinBytes
    * @returns {Object}
    */
-  popTasks (targetMinSize) {
+  popTasks (targetMinBytes) {
     let size = 0
     const tasks = []
 
-    // Keep popping tasks until we get to targetMinSize
+    // Keep popping tasks until we get up to targetMinBytes (or one item over
+    // targetMinBytes)
     const pendingTasks = this._pending.tasks()
-    for (let i = 0; i < pendingTasks.length && size < targetMinSize; i++) {
+    for (let i = 0; i < pendingTasks.length && size < targetMinBytes; i++) {
       const task = pendingTasks[i]
       tasks.push(task)
       size += task.size
 
       // Move tasks from pending to active
       this._pending.delete(task.topic)
-      this._activeSize += task.size
+      this._activeTotalSize += task.size
       this._active.add(task)
     }
 
@@ -247,7 +248,7 @@ class PeerTasks {
    */
   taskDone (task) {
     if (this._active.has(task)) {
-      this._activeSize -= task.size
+      this._activeTotalSize -= task.size
       this._active.delete(task)
     }
   }
@@ -279,13 +280,13 @@ class PeerTasks {
     }
 
     // If the amount of active work is the same
-    if (a[1]._activeSize === b[1]._activeSize) {
+    if (a[1]._activeTotalSize === b[1]._activeTotalSize) {
       // Choose the peer with the most pending work
       return b[1]._pending.length - a[1]._pending.length
     }
 
     // Choose the peer with the least amount of active work ("keep peers busy")
-    return a[1]._activeSize - b[1]._activeSize
+    return a[1]._activeTotalSize - b[1]._activeTotalSize
   }
 }
 
