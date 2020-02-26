@@ -264,7 +264,7 @@ describe('Engine', () => {
       network = mockNetwork(blocks.length, null, resolve)
     })
     const repo = await createTempRepo()
-    const dEngine = new DecisionEngine(id, repo.blocks, network, null, { maxBlockSizeReplaceHasWithBlock: 0 })
+    const dEngine = new DecisionEngine(id, repo.blocks, network, null, { maxSizeReplaceHasWithBlock: 0 })
     dEngine.start()
 
     const message = new Message(false)
@@ -306,7 +306,7 @@ describe('Engine', () => {
       onMsg(res)
     })
     const repo = await createTempRepo()
-    const dEngine = new DecisionEngine(id, repo.blocks, network, null, { maxBlockSizeReplaceHasWithBlock: 0 })
+    const dEngine = new DecisionEngine(id, repo.blocks, network, null, { maxSizeReplaceHasWithBlock: 0 })
     dEngine.start()
 
     const message = new Message(false)
@@ -627,8 +627,8 @@ describe('Engine', () => {
 
     const repo = await createTempRepo()
     await repo.blocks.putMany(blocks)
-    const dEngine = new DecisionEngine(id, repo.blocks, network, null, { maxBlockSizeReplaceHasWithBlock: 0 })
-    dEngine._outbox = () => {}
+    const dEngine = new DecisionEngine(id, repo.blocks, network, null, { maxSizeReplaceHasWithBlock: 0 })
+    dEngine._scheduleProcessTasks = () => {}
     dEngine.start()
 
     const onlyCases = []
@@ -641,7 +641,7 @@ describe('Engine', () => {
       testCases = onlyCases
     }
 
-    for (const testCase of testCases) {
+    for (const [, testCase] of Object.entries(testCases)) {
       // console.log("Test case %d:", i)
       for (const wl of testCase.wls) {
         // console.log("  want-blocks '%s' / want-haves '%s' / sendDontHave %s",

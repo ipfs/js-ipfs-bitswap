@@ -11,13 +11,19 @@ const TaskMerger = require('./task-merger')
 const { logger } = require('../utils')
 
 // The ideal size of the batched payload. We try to pop this much data off the
-// request queue, but it may be a little more or less depending on what's in
-// the queue.
+// request queue, but
+// - if there isn't any more data in the queue we send whatever we have
+// - if there are several small items in the queue (eg HAVE response) followed
+//   by one big item (eg a block) that would exceed this target size, we
+//   include the big item in the message
 const TARGET_MESSAGE_SIZE = 16 * 1024
 
-// The maximum size of the block in bytes up to which we will replace a
-// want-have with a want-block
-const MAX_BLOCK_SIZE_REPLACE_HAS_WITH_BLOCK = 1024
+// If the client sends a want-have, and the engine has the corresponding block,
+// we check the size of the block and if it's small enough we send the block
+// itself, rather than sending a HAVE.
+// This constant defines the maximum size up to which we replace a HAVE with
+// a block.
+const MAX_SIZE_REPLACE_HAS_WITH_BLOCK = 1024
 
 class DecisionEngine {
   constructor (peerId, blockstore, network, stats, opts) {
@@ -37,15 +43,13 @@ class DecisionEngine {
 
   _processOpts (opts) {
     return {
-      ...{
-        maxBlockSizeReplaceHasWithBlock: MAX_BLOCK_SIZE_REPLACE_HAS_WITH_BLOCK,
-        targetMessageSize: TARGET_MESSAGE_SIZE
-      },
+      maxSizeReplaceHasWithBlock: MAX_SIZE_REPLACE_HAS_WITH_BLOCK,
+      targetMessageSize: TARGET_MESSAGE_SIZE,
       ...opts
     }
   }
 
-  _outbox () {
+  _scheduleProcessTasks () {
     setImmediate(() => this._processTasks())
   }
 
@@ -76,7 +80,7 @@ class DecisionEngine {
       if (task.data.haveBlock) {
         if (task.data.isWantBlock) {
           blockCids.push(cid)
-          blockTasks.set(cid, task.data)
+          blockTasks.set(task.topic, task.data)
         } else {
           // Add HAVES to the message
           msg.addHave(cid)
@@ -88,23 +92,29 @@ class DecisionEngine {
     }
 
     const blocks = await this._getBlocks(blockCids)
-    for (const [cid, task] of blockTasks) {
-      const blk = blocks.get(cid.toString())
-      // If the block was not found (it has been removed)
-      if (blk == null) {
-        // If the client requested DONT_HAVE, add DONT_HAVE to the message
-        if (task.sendDontHave) {
-          msg.addDontHave(cid)
-        }
-      } else {
+    for (const [topic, taskData] of blockTasks) {
+      const blk = blocks.get(topic)
+      // If the block was found (it has not been removed)
+      if (blk) {
         // Add the block to the message
         msg.addBlock(blk)
+      } else {
+        // The block was not found. If the client requested DONT_HAVE,
+        // add DONT_HAVE to the message.
+        if (taskData.sendDontHave) {
+          const cid = new CID(topic)
+          msg.addDontHave(cid)
+        }
       }
     }
 
     // If there's nothing in the message, bail out
     if (msg.empty) {
       this._requestQueue.tasksDone(peerId, tasks)
+
+      // Trigger the next round of task processing
+      this._scheduleProcessTasks()
+
       return
     }
 
@@ -120,7 +130,7 @@ class DecisionEngine {
     }
 
     // Trigger the next round of task processing
-    this._outbox()
+    this._scheduleProcessTasks()
   }
 
   wantlistForPeer (peerId) {
@@ -159,39 +169,40 @@ class DecisionEngine {
       return
     }
 
-    // Get the size of each wanted block
-    const blockSizes = new Map(blocks.map(b => [b.cid.toString(), b.data.length]))
-
     // For each connected peer, check if it wants the block we received
     this.ledgerMap.forEach((ledger) => {
-      blocks
-        .map((block) => ledger.wantlistContains(block.cid))
-        .filter(Boolean)
-        .forEach((entry) => {
-          const id = entry.cid.toString()
-          const blockSize = blockSizes.get(id)
-          const isWantBlock = this._sendAsBlock(entry.wantType, blockSize)
+      blocks.forEach((block) => {
+        // Filter out blocks that we don't want
+        const want = ledger.wantlistContains(block.cid)
+        if (!want) {
+          return
+        }
 
-          let entrySize = blockSize
-          if (!isWantBlock) {
-            entrySize = Message.blockPresenceSize(entry.cid)
+        // If the block is small enough, just send the block, even if the
+        // client asked for a HAVE
+        const blockSize = block.data.length
+        const isWantBlock = this._sendAsBlock(want.wantType, blockSize)
+
+        let entrySize = blockSize
+        if (!isWantBlock) {
+          entrySize = Message.blockPresenceSize(want.cid)
+        }
+
+        this._requestQueue.pushTasks(ledger.partner, [{
+          topic: want.cid.toString(),
+          priority: want.priority,
+          size: entrySize,
+          data: {
+            blockSize,
+            isWantBlock,
+            haveBlock: true,
+            sendDontHave: false
           }
-
-          this._requestQueue.pushTasks(ledger.partner, [{
-            topic: id,
-            priority: entry.priority,
-            size: entrySize,
-            data: {
-              blockSize,
-              isWantBlock,
-              haveBlock: true,
-              sendDontHave: false
-            }
-          }])
-        })
+        }])
+      })
     })
 
-    this._outbox()
+    this._scheduleProcessTasks()
   }
 
   // Handle incoming messages
@@ -211,7 +222,7 @@ class DecisionEngine {
     this._updateBlockAccounting(msg.blocks, ledger)
 
     if (msg.wantlist.size === 0) {
-      this._outbox()
+      this._scheduleProcessTasks()
       return
     }
 
@@ -231,7 +242,7 @@ class DecisionEngine {
     this._cancelWants(peerId, cancels)
     await this._addWants(peerId, wants)
 
-    this._outbox()
+    this._scheduleProcessTasks()
   }
 
   _cancelWants (peerId, cids) {
@@ -267,6 +278,9 @@ class DecisionEngine {
         }
       } else {
         // The block was found, add it to the queue
+
+        // If the block is small enough, just send the block, even if the
+        // client asked for a HAVE
         const isWantBlock = this._sendAsBlock(want.wantType, blockSize)
 
         // entrySize is the amount of space the entry takes up in the
@@ -297,7 +311,7 @@ class DecisionEngine {
 
   _sendAsBlock (wantType, blockSize) {
     return wantType === WantType.Block ||
-      blockSize <= this._opts.maxBlockSizeReplaceHasWithBlock
+      blockSize <= this._opts.maxSizeReplaceHasWithBlock
   }
 
   async _getBlockSizes (cids) {
