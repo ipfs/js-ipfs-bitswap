@@ -295,12 +295,14 @@ class Bitswap {
       }
     }())
 
+    // Notify engine that we have new blocks
+    this.engine.receivedBlocks(newBlocks)
+
     // Notify listeners that we have received the new blocks
     for (const block of newBlocks) {
-      self.notifications.hasBlock(block)
-      self.engine.receivedBlocks([block])
+      this.notifications.hasBlock(block)
       // Note: Don't wait for provide to finish before returning
-      self.network.provide(block.cid).catch((err) => {
+      this.network.provide(block.cid).catch((err) => {
         self._log.error('Failed to provide: %s', err.message)
       })
     }
