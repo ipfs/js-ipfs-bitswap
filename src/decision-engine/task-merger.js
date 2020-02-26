@@ -9,11 +9,11 @@ const TaskMerger = {
    * @returns {boolean}
    */
   hasNewInfo (task, tasksWithTopic) {
-    let haveSize = false
+    let haveBlock = false
     let isWantBlock = false
     for (const existing of tasksWithTopic) {
       if (existing.data.haveBlock) {
-        haveSize = true
+        haveBlock = true
       }
 
       if (existing.data.isWantBlock) {
@@ -27,9 +27,10 @@ const TaskMerger = {
       return true
     }
 
-    // If there is no size information for the CID and the new task has
-    // size information, the new task is better
-    if (!haveSize && task.data.haveBlock) {
+    // If we didn't have the block, and the new task indicates that we now
+    // do have the block, then we must also have size information for the
+    // block, so the new task has new information.
+    if (!haveBlock && task.data.haveBlock) {
       return true
     }
 
