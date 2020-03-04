@@ -8,6 +8,7 @@ const Ledger = require('./ledger')
 const { logger, groupBy, pullAllWith, uniqWith } = require('../utils')
 
 const MAX_MESSAGE_SIZE = 512 * 1024
+const MAX_TASK_ATTEMPTS = 6
 
 class DecisionEngine {
   constructor (peerId, blockstore, network, stats) {
@@ -80,8 +81,41 @@ class DecisionEngine {
     const cids = entries.map((e) => e.cid)
     const uniqCids = uniqWith((a, b) => a.equals(b), cids)
     const groupedTasks = groupBy(task => task.target.toB58String(), tasks)
+    const unresolvedCids = []
 
-    const blocks = await Promise.all(uniqCids.map(cid => this.blockstore.get(cid)))
+    const blocks = (await Promise.all(
+      uniqCids.map(async cid => {
+        try {
+          const block = await this.blockstore.get(cid)
+
+          return block
+        } catch (err) {
+          this._log.error(`Could not load block for cid ${cid}`, err)
+          unresolvedCids.push(cid)
+        }
+      }))
+    ).filter(Boolean)
+
+    if (blocks.length !== uniqCids.length) {
+      // put any tasks with unresolved CIDs back into the task queue
+      unresolvedCids.forEach(cid => {
+        this._tasks = this._tasks.concat(
+          tasks
+            .filter(task => task.entry.cid.equals(cid))
+            .map(task => {
+              task.attempt = (task.attempt || 0) + 1
+
+              if (task.attempt < MAX_TASK_ATTEMPTS) {
+                return task
+              }
+            })
+            .filter(Boolean)
+        )
+      })
+
+      // run queue again later
+      this._outbox()
+    }
 
     await Promise.all(Object.values(groupedTasks).map(async (tasks) => {
       // all tasks in the group have the same target
@@ -99,8 +133,6 @@ class DecisionEngine {
         this.messageSent(peer, block)
       }
     }))
-
-    this._tasks = []
   }
 
   wantlistForPeer (peerId) {

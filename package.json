@@ -69,6 +69,7 @@
     "promisify-es6": "^1.0.3",
     "rimraf": "^3.0.0",
     "safe-buffer": "^5.1.2",
+    "sinon": "^9.0.0",
     "stats-lite": "^2.2.0",
     "uuid": "^3.3.2"
   },

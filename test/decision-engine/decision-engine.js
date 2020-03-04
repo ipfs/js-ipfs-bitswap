@@ -9,9 +9,11 @@ const range = require('lodash.range')
 const difference = require('lodash.difference')
 const flatten = require('lodash.flatten')
 const Block = require('ipfs-block')
+const makeBlock = require('../utils/make-block')
 const CID = require('cids')
 const multihashing = require('multihashing-async')
 const Buffer = require('safe-buffer').Buffer
+const sinon = require('sinon')
 
 const Message = require('../../src/types/message')
 const DecisionEngine = require('../../src/decision-engine')
@@ -196,5 +198,59 @@ describe('Engine', () => {
         })
         .catch(reject)
     })
+  })
+
+  it('handles the blockstore not having all the blocks', async () => {
+    const block = await makeBlock()
+
+    const blockstore = {
+      get: sinon.stub().withArgs(block.cid).throws(new Error('Not found'))
+    }
+
+    const engine = new DecisionEngine(await PeerId.create({ bits: 512 }), blockstore)
+    engine._running = true
+
+    engine._tasks.push({
+      entry: {
+        cid: block.cid
+      },
+      target: await PeerId.create({ bits: 512 })
+    })
+
+    await engine._processTasks()
+
+    expect(engine).to.have.nested.deep.property('_tasks[0].entry.cid', block.cid)
+    expect(engine).to.have.nested.deep.property('_tasks[0].attempt', 1)
+  })
+
+  it('does not try to resolve blocks forever', async () => {
+    const block = await makeBlock()
+
+    const blockstore = {
+      get: sinon.stub().withArgs(block.cid).throws(new Error('Not found'))
+    }
+
+    const engine = new DecisionEngine(await PeerId.create({ bits: 512 }), blockstore)
+    engine._running = true
+
+    engine._tasks.push({
+      entry: {
+        cid: block.cid
+      },
+      target: await PeerId.create({ bits: 512 })
+    })
+
+    await engine._processTasks()
+    await engine._processTasks()
+    await engine._processTasks()
+    await engine._processTasks()
+    await engine._processTasks()
+
+    expect(engine).to.have.nested.deep.property('_tasks[0].entry.cid', block.cid)
+    expect(engine).to.have.nested.deep.property('_tasks[0].attempt', 5)
+
+    await engine._processTasks()
+
+    expect(engine).to.have.property('_tasks').that.has.lengthOf(0)
   })
 })
