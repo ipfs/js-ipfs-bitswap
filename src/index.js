@@ -101,6 +101,10 @@ class Bitswap {
     this._updateReceiveCounters(peerId.toB58String(), block, has)
 
     if (has || !wasWanted) {
+      if (wasWanted) {
+        this._sendHaveBlockNotifications(block)
+      }
+
       return
     }
 
@@ -287,14 +291,23 @@ class Bitswap {
 
         yield block
 
-        self.notifications.hasBlock(block)
-        self.engine.receivedBlocks([block.cid])
-        // Note: Don't wait for provide to finish before returning
-        self.network.provide(block.cid).catch((err) => {
-          self._log.error('Failed to provide: %s', err.message)
-        })
+        self._sendHaveBlockNotifications(block)
       }
     }())
+  }
+
+  /**
+   * Sends notifications about the arrival of a block
+   *
+   * @param {Block} block
+   */
+  _sendHaveBlockNotifications (block) {
+    this.notifications.hasBlock(block)
+    this.engine.receivedBlocks([block.cid])
+    // Note: Don't wait for provide to finish before returning
+    this.network.provide(block.cid).catch((err) => {
+      this._log.error('Failed to provide: %s', err.message)
+    })
   }
 
   /**
