@@ -104,6 +104,10 @@ class Bitswap {
     this._updateReceiveCounters(peerId.toB58String(), block, has)
 
     if (has || !wasWanted) {
+      if (wasWanted) {
+        this._sendHaveBlockNotifications(block)
+      }
+
       return
     }
 
@@ -282,30 +286,29 @@ class Bitswap {
   async putMany (blocks) { // eslint-disable-line require-await
     const self = this
 
-    // Add any new blocks to the blockstore
-    const newBlocks = []
-    await this.blockstore.putMany(async function * () {
-      for await (const block of blocks) {
-        if (await self.blockstore.has(block.cid)) {
-          continue
-        }
-
-        yield block
-        newBlocks.push(block)
+    for await (const block of blocks) {
+      if (await self.blockstore.has(block.cid)) {
+        continue
       }
-    }())
 
-    // Notify engine that we have new blocks
-    this.engine.receivedBlocks(newBlocks)
+      await this.blockstore.put(block)
 
-    // Notify listeners that we have received the new blocks
-    for (const block of newBlocks) {
-      this.notifications.hasBlock(block)
-      // Note: Don't wait for provide to finish before returning
-      this.network.provide(block.cid).catch((err) => {
-        self._log.error('Failed to provide: %s', err.message)
-      })
+      self._sendHaveBlockNotifications(block)
     }
+  }
+
+  /**
+   * Sends notifications about the arrival of a block
+   *
+   * @param {Block} block
+   */
+  _sendHaveBlockNotifications (block) {
+    this.notifications.hasBlock(block)
+    this.engine.receivedBlocks([block])
+    // Note: Don't wait for provide to finish before returning
+    this.network.provide(block.cid).catch((err) => {
+      this._log.error('Failed to provide: %s', err.message)
+    })
   }
 
   /**

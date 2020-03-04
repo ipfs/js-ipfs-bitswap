@@ -5,6 +5,8 @@ const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
 const delay = require('delay')
+const PeerId = require('peer-id')
+const sinon = require('sinon')
 
 const Bitswap = require('../src')
 
@@ -12,6 +14,7 @@ const createTempRepo = require('./utils/create-temp-repo-nodejs')
 const createLibp2pNode = require('./utils/create-libp2p-node')
 const makeBlock = require('./utils/make-block')
 const orderedFinish = require('./utils/helpers').orderedFinish
+const Message = require('../src/types/message')
 
 // Creates a repo + libp2pNode + Bitswap with or without DHT
 async function createThing (dht) {
@@ -69,6 +72,52 @@ describe('bitswap without DHT', function () {
     finish(2)
 
     finish.assert()
+  })
+
+  it('wants a block, receives a block, wants it again before the blockstore has it, receives it after the blockstore has it', async () => {
+    // the block we want
+    const block = await makeBlock()
+
+    // id of a peer with the block we want
+    const peerId = await PeerId.create({ bits: 512 })
+
+    // incoming message with requested block from the other peer
+    const message = new Message(false)
+    message.addEntry(block.cid, 1, false)
+    message.addBlock(block)
+
+    // slow blockstore
+    nodes[0].bitswap.blockstore = {
+      has: sinon.stub().withArgs(block.cid).returns(false),
+      put: sinon.stub()
+    }
+
+    // add the block to our want list
+    const wantBlockPromise1 = nodes[0].bitswap.get(block.cid)
+
+    // oh look, a peer has sent it to us - this will trigger a `blockstore.put` which
+    // is an async operation so `self.blockstore.has(cid)` will still return false
+    // until the write has completed
+    await nodes[0].bitswap._receiveMessage(peerId, message)
+
+    // block store did not have it
+    expect(nodes[0].bitswap.blockstore.has.calledWith(block.cid)).to.be.true()
+
+    // another context wants the same block
+    const wantBlockPromise2 = nodes[0].bitswap.get(block.cid)
+
+    // meanwhile the blockstore finishes it's batch
+    nodes[0].bitswap.blockstore.has = sinon.stub().withArgs(block.cid).returns(true)
+
+    // here it comes again
+    await nodes[0].bitswap._receiveMessage(peerId, message)
+
+    // block store had it this time
+    expect(nodes[0].bitswap.blockstore.has.calledWith(block.cid)).to.be.true()
+
+    // both requests should get the block
+    expect(await wantBlockPromise1).to.deep.equal(block)
+    expect(await wantBlockPromise2).to.deep.equal(block)
   })
 })
 
