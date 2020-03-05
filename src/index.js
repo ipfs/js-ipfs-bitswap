@@ -58,6 +58,8 @@ class Bitswap {
     this.wm = new WantManager(this.peerInfo.id, this.network, this._stats)
 
     this.notifications = new Notifications(this.peerInfo.id)
+
+    this.fetcher = new Fetcher(this)
   }
 
   get peerInfo () {
@@ -101,10 +103,6 @@ class Bitswap {
     this._updateReceiveCounters(peerId.toB58String(), block, has)
 
     if (has || !wasWanted) {
-      if (wasWanted) {
-        this._sendHaveBlockNotifications(block)
-      }
-
       return
     }
 
@@ -193,45 +191,7 @@ class Bitswap {
    * @returns {Promise<AsyncIterator<Block>>}
    */
   async * getMany (cids) {
-    let pendingStart = cids.length
-    const wantList = []
-    let promptedNetwork = false
-
-    const fetchFromNetwork = async (cid) => {
-      wantList.push(cid)
-
-      const blockP = this.notifications.wantBlock(cid)
-
-      if (!pendingStart) {
-        this.wm.wantBlocks(wantList)
-      }
-
-      const block = await blockP
-      this.wm.cancelWants([cid])
-
-      return block
-    }
-
-    for (const cid of cids) {
-      const has = await this.blockstore.has(cid)
-      pendingStart--
-      if (has) {
-        if (!pendingStart) {
-          this.wm.wantBlocks(wantList)
-        }
-        yield this.blockstore.get(cid)
-
-        continue
-      }
-
-      if (!promptedNetwork) {
-        promptedNetwork = true
-        this.network.findAndConnect(cids[0]).catch((err) => this._log.error(err))
-      }
-
-      // we don't have the block locally so fetch it from the network
-      yield fetchFromNetwork(cid)
-    }
+    yield * this.fetcher.fetchBlocks(cids)
   }
 
   /**
@@ -356,6 +316,56 @@ class Bitswap {
     this.wm.stop()
     this.network.stop()
     this.engine.stop()
+  }
+}
+
+class Fetcher {
+  constructor (bitswap) {
+    this.bitswap = bitswap
+    this.live = new Map()
+  }
+
+  async * fetchBlocks (cids) {
+    const req = { rootCid: cids[0] }
+    for (const cid of cids) {
+      this.enqueueFetch(cid, req)
+    }
+
+    for (const cid of cids) {
+      yield this.live.get(cid.toString())
+    }
+  }
+
+  enqueueFetch (cid, req) {
+    const cidstr = cid.toString()
+    const existing = this.live.get(cidstr)
+    if (existing) {
+      return existing
+    }
+
+    const block = this.get(cid, req)
+    this.live.set(cidstr, block)
+    block.finally(() => {
+      this.live.delete(cidstr)
+    })
+  }
+
+  async get (cid, req) {
+    const has = await this.bitswap.blockstore.has(cid)
+    if (has) {
+      return this.bitswap.blockstore.get(cid)
+    }
+
+    if (!req.promptedNetwork) {
+      this.bitswap.network.findAndConnect(req.rootCid).catch((err) => this.bitswap._log.error(err))
+      req.promptedNetwork = true
+    }
+
+    const block = this.bitswap.notifications.wantBlock(cid)
+    this.bitswap.wm.wantBlocks([cid])
+    block.then(() => this.bitswap.wm.cancelWants([cid]))
+
+    return block
   }
 }
 
