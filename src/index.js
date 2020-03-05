@@ -283,17 +283,15 @@ class Bitswap {
   async putMany (blocks) { // eslint-disable-line require-await
     const self = this
 
-    return this.blockstore.putMany(async function * () {
-      for await (const block of blocks) {
-        if (await self.blockstore.has(block.cid)) {
-          continue
-        }
-
-        yield block
-
-        self._sendHaveBlockNotifications(block)
+    for await (const block of blocks) {
+      if (await self.blockstore.has(block.cid)) {
+        continue
       }
-    }())
+
+      await this.blockstore.put(block)
+
+      self._sendHaveBlockNotifications(block)
+    }
   }
 
   /**

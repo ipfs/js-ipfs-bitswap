@@ -89,17 +89,15 @@ describe('bitswap without DHT', function () {
     // slow blockstore
     nodes[0].bitswap.blockstore = {
       has: sinon.stub().withArgs(block.cid).returns(false),
-      putMany: async function * (source) { // eslint-disable-line require-await
-        yield * source
-      }
+      put: sinon.stub()
     }
 
     // add the block to our want list
     const wantBlockPromise1 = nodes[0].bitswap.get(block.cid)
 
-    // oh look, a peer has sent it to us - this will trigger a `blockstore.putMany` which
-    // for our purposes is a batch operation so `self.blockstore.has(cid)` will still return
-    // false even though we've just yielded a block with that cid
+    // oh look, a peer has sent it to us - this will trigger a `blockstore.put` which
+    // is an async operation so `self.blockstore.has(cid)` will still return false
+    // until the write has completed
     await nodes[0].bitswap._receiveMessage(peerId, message)
 
     // block store did not have it
