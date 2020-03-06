@@ -6,6 +6,7 @@ const DecisionEngine = require('./decision-engine')
 const Notifications = require('./notifications')
 const logger = require('./utils').logger
 const Stats = require('./stats')
+const CID = require('cids')
 
 const defaultOptions = {
   statsEnabled: false,
@@ -190,7 +191,7 @@ class Bitswap {
    * @param {Iterable<CID>} cids
    * @returns {Promise<AsyncIterator<Block>>}
    */
-  async * getMany (cids) {
+  async * getMany (cids) { // eslint-disable-line require-await
     yield * this.fetcher.fetchBlocks(cids)
   }
 
@@ -319,37 +320,68 @@ class Bitswap {
   }
 }
 
+/**
+ * Fetcher fetches blocks from the blockstore or the network, allowing
+ * multiple concurrent fetches for the same cid.
+ * @param {Bitswap} bitswap
+ */
 class Fetcher {
   constructor (bitswap) {
     this.bitswap = bitswap
     this.live = new Map()
   }
 
-  async * fetchBlocks (cids) {
+  /**
+   * Fetch the list of cids.
+   *
+   * @param {Array<CID>} cids
+   * @returns {Iterator<Promise<Block>>}
+   */
+  async * fetchBlocks (cids) { // eslint-disable-line require-await
     const req = { rootCid: cids[0] }
-    for (const cid of cids) {
-      this.enqueueFetch(cid, req)
-    }
 
+    // Queue up the requests for each CID
     for (const cid of cids) {
-      yield this.live.get(cid.toString())
+      yield this.enqueueFetch(cid, req)
     }
   }
 
+  /**
+   * Add a cid to the fetch queue.
+   *
+   * @param {CID} cid
+   * @param {Object} req - used to keep state across a request for several blocks
+   * @returns {Promise<Block>}
+   */
   enqueueFetch (cid, req) {
-    const cidstr = cid.toString()
-    const existing = this.live.get(cidstr)
-    if (existing) {
-      return existing
+    if (!CID.isCID(cid)) {
+      throw new Error('Not a valid cid')
     }
 
-    const block = this.get(cid, req)
-    this.live.set(cidstr, block)
-    block.finally(() => {
-      this.live.delete(cidstr)
-    })
+    // Check if there is already a live fetch for the block
+    const cidstr = cid.toString()
+    let blockFetch = this.live.get(cidstr)
+    if (blockFetch) {
+      return blockFetch
+    }
+
+    // If not, add one
+    blockFetch = this.get(cid, req)
+    this.live.set(cidstr, blockFetch)
+
+    // Clean up the promise once the fetch has completed
+    blockFetch.finally(() => this.live.delete(cidstr))
+
+    return blockFetch
   }
 
+  /**
+   * Get a block from the blockstore or the network.
+   *
+   * @param {CID} cid
+   * @param {Object} req - used to keep state across a request for several blocks
+   * @returns {Promise<Block>}
+   */
   async get (cid, req) {
     const has = await this.bitswap.blockstore.has(cid)
     if (has) {
