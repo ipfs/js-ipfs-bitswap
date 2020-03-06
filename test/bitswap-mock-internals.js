@@ -190,7 +190,7 @@ describe('bitswap with mocks', function () {
       expect(retrievedBlocks).to.be.eql([b1, b2, b3])
     })
 
-    it('getMany', async () => {
+    it('multiple get', async () => {
       const b1 = blocks[5]
       const b2 = blocks[6]
       const b3 = blocks[7]
@@ -206,6 +206,22 @@ describe('bitswap with mocks', function () {
 
       const block3 = await bs.get(b3.cid)
       expect(block3).to.eql(b3)
+    })
+
+    it('getMany with iterator', async () => {
+      const blocks = await makeBlock(3)
+
+      await repo.blocks.putMany(blocks)
+      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+
+      function * it () {
+        for (const b of blocks) {
+          yield b.cid
+        }
+      }
+      const fetched = await all(bs.getMany(it()))
+
+      expect(fetched).to.eql(blocks)
     })
 
     it('block is added locally afterwards', async () => {

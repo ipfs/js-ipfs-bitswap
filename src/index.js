@@ -104,6 +104,11 @@ class Bitswap {
     this._updateReceiveCounters(peerId.toB58String(), block, has)
 
     if (has || !wasWanted) {
+      // When fetching a block, we register with the notifier and then check
+      // the blockstore, to catch syncing issues between the blockstore and
+      // wantlist. So inform the notifier that we got the block even though
+      // it may not have been in the wantlist.
+      this.notifications.hasBlock(block)
       return
     }
 
@@ -188,7 +193,7 @@ class Bitswap {
    * Fetch a a list of blocks by cid. If the blocks are in the local
    * blockstore they are returned, otherwise the blocks are added to the wantlist and returned once another node sends them to us.
    *
-   * @param {Iterable<CID>} cids
+   * @param {AsyncIterable<CID>} cids
    * @returns {Promise<AsyncIterator<Block>>}
    */
   async * getMany (cids) { // eslint-disable-line require-await
@@ -341,7 +346,7 @@ class Fetcher {
     const req = { rootCid: cids[0] }
 
     // Queue up the requests for each CID
-    for (const cid of cids) {
+    for await (const cid of cids) {
       yield this.enqueueFetch(cid, req)
     }
   }
@@ -383,21 +388,31 @@ class Fetcher {
    * @returns {Promise<Block>}
    */
   async get (cid, req) {
+    // Register with the notifier, in case the block arrives while we're
+    // checking the blockstore for it
+    const blockNotification = this.bitswap.notifications.wantBlock(cid)
+
+    // If the block is in the local blockstore, return it
     const has = await this.bitswap.blockstore.has(cid)
     if (has) {
+      // Deregister with the notifier
+      this.bitswap.notifications.unwantBlock(cid)
+      // Get the block from the blockstore
       return this.bitswap.blockstore.get(cid)
     }
 
+    // Otherwise query content routing for the block
     if (!req.promptedNetwork) {
       this.bitswap.network.findAndConnect(req.rootCid).catch((err) => this.bitswap._log.error(err))
       req.promptedNetwork = true
     }
 
-    const block = this.bitswap.notifications.wantBlock(cid)
+    // Add the block CID to the wantlist
     this.bitswap.wm.wantBlocks([cid])
-    block.then(() => this.bitswap.wm.cancelWants([cid]))
+    // Remove it from the wantlist when the block arrives
+    blockNotification.then(() => this.bitswap.wm.cancelWants([cid]))
 
-    return block
+    return blockNotification
   }
 }
 

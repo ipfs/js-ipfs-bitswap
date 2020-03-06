@@ -120,18 +120,19 @@ describe('bitswap without DHT', function () {
     // another context wants the same block
     const wantBlockPromise2 = nodes[0].bitswap.get(block.cid)
 
-    // Allow the first put to proceed
-    allowPutToProceed()
-
     // Restore the real blockstore
     nodes[0].bitswap.blockstore = realBlockstore
+
+    // Allow the first put to proceed
+    allowPutToProceed()
 
     // receive the block again
     await nodes[0].bitswap._receiveMessage(peerId, message)
 
     // both requests should get the block
-    expect(await wantBlockPromise1).to.deep.equal(block)
-    expect(await wantBlockPromise2).to.deep.equal(block)
+    const res = await Promise.all([wantBlockPromise1, wantBlockPromise2])
+    expect(res[0]).to.deep.equal(block)
+    expect(res[1]).to.deep.equal(block)
   })
 })
 
