@@ -86,38 +86,53 @@ describe('bitswap without DHT', function () {
     message.addEntry(block.cid, 1, false)
     message.addBlock(block)
 
-    // slow blockstore
+    // Control when the put completes
+    const realBlockstore = nodes[0].bitswap.blockstore
+    let putResolver
+    const allowPutToProceed = () => {
+      putResolver(realBlockstore.put(block))
+    }
+    // Create a promise that resolves when the put starts
+    let onPutCalled
+    const blockstorePutCalled = new Promise((resolve) => {
+      onPutCalled = resolve
+    })
+    const unresolvedPut = new Promise((resolve) => {
+      onPutCalled()
+      putResolver = resolve
+    })
     nodes[0].bitswap.blockstore = {
-      has: sinon.stub().withArgs(block.cid).returns(false),
-      put: sinon.stub()
+      ...nodes[0].bitswap.blockstore,
+      put: sinon.stub().withArgs(block).returns(unresolvedPut)
     }
 
     // add the block to our want list
     const wantBlockPromise1 = nodes[0].bitswap.get(block.cid)
 
     // oh look, a peer has sent it to us - this will trigger a `blockstore.put` which
-    // is an async operation so `self.blockstore.has(cid)` will still return false
-    // until the write has completed
-    await nodes[0].bitswap._receiveMessage(peerId, message)
+    // is an async operation
+    nodes[0].bitswap._receiveMessage(peerId, message)
 
-    // block store did not have it
-    expect(nodes[0].bitswap.blockstore.has.calledWith(block.cid)).to.be.true()
+    // Wait for the call to blockstore.put()
+    // (but don't allow it to proceed yet)
+    await blockstorePutCalled
 
     // another context wants the same block
     const wantBlockPromise2 = nodes[0].bitswap.get(block.cid)
 
-    // meanwhile the blockstore finishes it's batch
-    nodes[0].bitswap.blockstore.has = sinon.stub().withArgs(block.cid).returns(true)
+    // Restore the real blockstore
+    nodes[0].bitswap.blockstore = realBlockstore
 
-    // here it comes again
+    // Allow the first put to proceed
+    allowPutToProceed()
+
+    // receive the block again
     await nodes[0].bitswap._receiveMessage(peerId, message)
 
-    // block store had it this time
-    expect(nodes[0].bitswap.blockstore.has.calledWith(block.cid)).to.be.true()
-
     // both requests should get the block
-    expect(await wantBlockPromise1).to.deep.equal(block)
-    expect(await wantBlockPromise2).to.deep.equal(block)
+    const res = await Promise.all([wantBlockPromise1, wantBlockPromise2])
+    expect(res[0]).to.deep.equal(block)
+    expect(res[1]).to.deep.equal(block)
   })
 })
 

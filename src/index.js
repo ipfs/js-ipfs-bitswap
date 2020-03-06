@@ -6,6 +6,7 @@ const DecisionEngine = require('./decision-engine')
 const Notifications = require('./notifications')
 const logger = require('./utils').logger
 const Stats = require('./stats')
+const CID = require('cids')
 
 const defaultOptions = {
   statsEnabled: false,
@@ -58,6 +59,8 @@ class Bitswap {
     this.wm = new WantManager(this.peerInfo.id, this.network, this._stats)
 
     this.notifications = new Notifications(this.peerInfo.id)
+
+    this.fetcher = new Fetcher(this)
   }
 
   get peerInfo () {
@@ -101,10 +104,11 @@ class Bitswap {
     this._updateReceiveCounters(peerId.toB58String(), block, has)
 
     if (has || !wasWanted) {
-      if (wasWanted) {
-        this._sendHaveBlockNotifications(block)
-      }
-
+      // When fetching a block, we register with the notifier and then check
+      // the blockstore, to catch syncing issues between the blockstore and
+      // wantlist. So inform the notifier that we got the block even though
+      // it may not have been in the wantlist.
+      this.notifications.hasBlock(block)
       return
     }
 
@@ -189,49 +193,11 @@ class Bitswap {
    * Fetch a a list of blocks by cid. If the blocks are in the local
    * blockstore they are returned, otherwise the blocks are added to the wantlist and returned once another node sends them to us.
    *
-   * @param {Iterable<CID>} cids
+   * @param {AsyncIterable<CID>} cids
    * @returns {Promise<AsyncIterator<Block>>}
    */
-  async * getMany (cids) {
-    let pendingStart = cids.length
-    const wantList = []
-    let promptedNetwork = false
-
-    const fetchFromNetwork = async (cid) => {
-      wantList.push(cid)
-
-      const blockP = this.notifications.wantBlock(cid)
-
-      if (!pendingStart) {
-        this.wm.wantBlocks(wantList)
-      }
-
-      const block = await blockP
-      this.wm.cancelWants([cid])
-
-      return block
-    }
-
-    for (const cid of cids) {
-      const has = await this.blockstore.has(cid)
-      pendingStart--
-      if (has) {
-        if (!pendingStart) {
-          this.wm.wantBlocks(wantList)
-        }
-        yield this.blockstore.get(cid)
-
-        continue
-      }
-
-      if (!promptedNetwork) {
-        promptedNetwork = true
-        this.network.findAndConnect(cids[0]).catch((err) => this._log.error(err))
-      }
-
-      // we don't have the block locally so fetch it from the network
-      yield fetchFromNetwork(cid)
-    }
+  async * getMany (cids) { // eslint-disable-line require-await
+    yield * this.fetcher.fetchBlocks(cids)
   }
 
   /**
@@ -356,6 +322,97 @@ class Bitswap {
     this.wm.stop()
     this.network.stop()
     this.engine.stop()
+  }
+}
+
+/**
+ * Fetcher fetches blocks from the blockstore or the network, allowing
+ * multiple concurrent fetches for the same cid.
+ * @param {Bitswap} bitswap
+ */
+class Fetcher {
+  constructor (bitswap) {
+    this.bitswap = bitswap
+    this.live = new Map()
+  }
+
+  /**
+   * Fetch the list of cids.
+   *
+   * @param {Array<CID>} cids
+   * @returns {Iterator<Promise<Block>>}
+   */
+  async * fetchBlocks (cids) { // eslint-disable-line require-await
+    const req = { rootCid: cids[0] }
+
+    // Queue up the requests for each CID
+    for await (const cid of cids) {
+      yield this.enqueueFetch(cid, req)
+    }
+  }
+
+  /**
+   * Add a cid to the fetch queue.
+   *
+   * @param {CID} cid
+   * @param {Object} req - used to keep state across a request for several blocks
+   * @returns {Promise<Block>}
+   */
+  enqueueFetch (cid, req) {
+    if (!CID.isCID(cid)) {
+      throw new Error('Not a valid cid')
+    }
+
+    // Check if there is already a live fetch for the block
+    const cidstr = cid.toString()
+    let blockFetch = this.live.get(cidstr)
+    if (blockFetch) {
+      return blockFetch
+    }
+
+    // If not, add one
+    blockFetch = this.get(cid, req)
+    this.live.set(cidstr, blockFetch)
+
+    // Clean up the promise once the fetch has completed
+    blockFetch.finally(() => this.live.delete(cidstr))
+
+    return blockFetch
+  }
+
+  /**
+   * Get a block from the blockstore or the network.
+   *
+   * @param {CID} cid
+   * @param {Object} req - used to keep state across a request for several blocks
+   * @returns {Promise<Block>}
+   */
+  async get (cid, req) {
+    // Register with the notifier, in case the block arrives while we're
+    // checking the blockstore for it
+    const blockNotification = this.bitswap.notifications.wantBlock(cid)
+
+    // If the block is in the local blockstore, return it
+    const has = await this.bitswap.blockstore.has(cid)
+    if (has) {
+      // Deregister with the notifier
+      this.bitswap.notifications.unwantBlock(cid)
+      // Get the block from the blockstore
+      return this.bitswap.blockstore.get(cid)
+    }
+
+    // Otherwise query content routing for the block
+    if (!req.promptedNetwork) {
+      this.bitswap.network.findAndConnect(req.rootCid).catch((err) => this.bitswap._log.error(err))
+      req.promptedNetwork = true
+    }
+
+    // Add the block CID to the wantlist
+    this.bitswap.wm.wantBlocks([cid])
+    // Remove it from the wantlist when the block arrives
+    blockNotification.then(() => this.bitswap.wm.cancelWants([cid]))
+
+    return blockNotification
   }
 }
 
