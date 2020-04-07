@@ -5,7 +5,6 @@ const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
 const PeerId = require('peer-id')
-const promisify = require('promisify-es6')
 
 const RequestQueue = require('../../src/decision-engine/req-queue')
 const TaskMerger = require('../../src/decision-engine/task-merger')
@@ -14,7 +13,7 @@ describe('Task Merger', () => {
   let peerId
 
   before(async () => {
-    peerId = await promisify(PeerId.create)({ bits: 512 })
+    peerId = await PeerId.create({ bits: 512 })
   })
 
   it('push have vs block', () => {

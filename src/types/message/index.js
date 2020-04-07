@@ -242,11 +242,11 @@ BitswapMessage.blockPresenceSize = (cid) => {
 
 BitswapMessage.Entry = Entry
 BitswapMessage.WantType = {
-  Block: pbm.Message.Wantlist.WantType.Block,
-  Have: pbm.Message.Wantlist.WantType.Have
+  Block: Message.Wantlist.WantType.Block,
+  Have: Message.Wantlist.WantType.Have
 }
 BitswapMessage.BlockPresenceType = {
-  Have: pbm.Message.BlockPresenceType.Have,
-  DontHave: pbm.Message.BlockPresenceType.DontHave
+  Have: Message.BlockPresenceType.Have,
+  DontHave: Message.BlockPresenceType.DontHave
 }
 module.exports = BitswapMessage

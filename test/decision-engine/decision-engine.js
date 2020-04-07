@@ -137,9 +137,8 @@ describe('Engine', () => {
 
     const hashes = await Promise.all(alphabet.map(v => multihashing(Buffer.from(v), 'sha2-256')))
     const blocks = hashes.map((h, i) => new Block(Buffer.from(alphabet[i]), new CID(h)))
-    const id = await promisify(PeerId.create)({ bits: 512 })
-    const partner = await promisify(PeerId.create)({ bits: 512 })
-    const somePeer = await promisify(PeerId.create)({ bits: 512 })
+    const partner = await PeerId.create({ bits: 512 })
+    const somePeer = await PeerId.create({ bits: 512 })
 
     for (let i = 0; i < numRounds; i++) {
       // 2 test cases
@@ -160,7 +159,7 @@ describe('Engine', () => {
           })
         })
 
-        // const id = await PeerId.create({ bits: 512 })
+        const id = await PeerId.create({ bits: 512 })
         const repo = await createTempRepo()
         const dEngine = new DecisionEngine(id, repo.blocks, network)
         dEngine.start()

@@ -5,7 +5,6 @@ const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
 const PeerId = require('peer-id')
-const promisify = require('promisify-es6')
 
 const RequestQueue = require('../../src/decision-engine/req-queue')
 
@@ -14,9 +13,9 @@ describe('Request Queue', () => {
 
   before(async () => {
     peerIds = await Promise.all([
-      promisify(PeerId.create)({ bits: 512 }),
-      promisify(PeerId.create)({ bits: 512 }),
-      promisify(PeerId.create)({ bits: 512 })
+      PeerId.create({ bits: 512 }),
+      PeerId.create({ bits: 512 }),
+      PeerId.create({ bits: 512 })
     ])
   })
 

@@ -20,8 +20,8 @@ class Network {
     this.protocols = [BITSWAP100]
     if (!options.b100Only) {
       // Latest bitswap first
-      this.protocols.unshift(BITSWAP120)
       this.protocols.unshift(BITSWAP110)
+      this.protocols.unshift(BITSWAP120)
     }
 
     this._stats = stats
@@ -152,6 +152,7 @@ class Network {
         serialized = msg.serializeToBitswap100()
         break
       case BITSWAP110:
+      case BITSWAP120:
         serialized = msg.serializeToBitswap110()
         break
       default:

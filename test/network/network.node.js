@@ -123,7 +123,7 @@ describe('network', () => {
       const b2 = blocks[1]
       const deferred = pDefer()
 
-      msg.addEntry(b1.cid, 0, false)
+      msg.addEntry(b1.cid, 0)
       msg.addBlock(b1)
       msg.addBlock(b2)
 
@@ -134,7 +134,7 @@ describe('network', () => {
         deferred.resolve()
       }
 
-      bitswapMockB._receiveError = deferred.reject
+      bitswapMockB._receiveError = (err) => deferred.reject(err)
 
       const { stream } = await p2pA.dialProtocol(p2pB.peerInfo, '/ipfs/bitswap/' + version.num)
       await pipe(
@@ -147,6 +147,7 @@ describe('network', () => {
     })
   }
 
+  // From p2pA to p2pB
   it('.sendMessage on Bitswap 1.1.0', async () => {
     const msg = new Message(true)
     const b1 = blocks[0]
@@ -175,6 +176,7 @@ describe('network', () => {
     expect(protocol).to.equal('/ipfs/bitswap/1.0.0')
   })
 
+  // From p2pA to p2pC
   it('.sendMessage on Bitswap 1.1.0', async () => {
     const msg = new Message(true)
     const b1 = blocks[0]

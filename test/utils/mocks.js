@@ -75,6 +75,9 @@ exports.mockNetwork = (calls, done, onMsg) => {
     start () {
       return Promise.resolve()
     },
+    stop () {
+      return Promise.resolve()
+    },
     findAndConnect () {
       return Promise.resolve()
     },
