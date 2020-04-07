@@ -29,7 +29,7 @@ exports.mockLibp2pNode = () => {
     async  dial (peer) { // eslint-disable-line require-await
     },
     async dialProtocol (peer, protocol) { // eslint-disable-line require-await
-
+      return {}
     },
     swarm: {
       setMaxListeners () {}
@@ -41,20 +41,23 @@ exports.mockLibp2pNode = () => {
 /*
  * Create a mock network instance
  */
-exports.mockNetwork = (calls, done) => {
+exports.mockNetwork = (calls, done, onMsg) => {
   done = done || (() => {})
 
   const connects = []
   const messages = []
   let i = 0
 
-  const finish = () => {
+  const finish = (msgTo) => {
+    onMsg && onMsg(msgTo)
     if (++i === calls) {
       done({ connects: connects, messages: messages })
     }
   }
 
   return {
+    messages,
+    connects,
     connectTo (p) {
       setImmediate(() => {
         connects.push(p)
@@ -64,7 +67,7 @@ exports.mockNetwork = (calls, done) => {
       messages.push([p, msg])
 
       setImmediate(() => {
-        finish()
+        finish([p, msg])
       })
 
       return Promise.resolve()

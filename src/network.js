@@ -9,6 +9,7 @@ const logger = require('./utils').logger
 
 const BITSWAP100 = '/ipfs/bitswap/1.0.0'
 const BITSWAP110 = '/ipfs/bitswap/1.1.0'
+const BITSWAP120 = '/ipfs/bitswap/1.2.0'
 
 class Network {
   constructor (libp2p, bitswap, options, stats) {
@@ -19,6 +20,7 @@ class Network {
     this.protocols = [BITSWAP100]
     if (!options.b100Only) {
       // Latest bitswap first
+      this.protocols.unshift(BITSWAP120)
       this.protocols.unshift(BITSWAP110)
     }
 

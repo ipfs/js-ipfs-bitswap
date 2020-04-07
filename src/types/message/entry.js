@@ -3,9 +3,10 @@
 const WantlistEntry = require('../wantlist').Entry
 
 module.exports = class BitswapMessageEntry {
-  constructor (cid, priority, cancel) {
-    this.entry = new WantlistEntry(cid, priority)
+  constructor (cid, priority, wantType, cancel, sendDontHave) {
+    this.entry = new WantlistEntry(cid, priority, wantType)
     this.cancel = Boolean(cancel)
+    this.sendDontHave = Boolean(sendDontHave)
   }
 
   get cid () {
@@ -24,6 +25,14 @@ module.exports = class BitswapMessageEntry {
     this.entry.priority = val
   }
 
+  get wantType () {
+    return this.entry.wantType
+  }
+
+  set wantType (val) {
+    this.entry.wantType = val
+  }
+
   get [Symbol.toStringTag] () {
     const cidStr = this.cid.toString('base58btc')
     return `BitswapMessageEntry ${cidStr} <cancel: ${this.cancel}, priority: ${this.priority}>`
@@ -31,6 +40,8 @@ module.exports = class BitswapMessageEntry {
 
   equals (other) {
     return (this.cancel === other.cancel) &&
+           (this.sendDontHave === other.sendDontHave) &&
+           (this.wantType === other.wantType) &&
            this.entry.equals(other.entry)
   }
 }

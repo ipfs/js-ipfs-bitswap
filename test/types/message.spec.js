@@ -21,22 +21,72 @@ describe('BitswapMessage', () => {
   let cids
 
   before(async () => {
-    blocks = await makeBlock(3)
+    blocks = await makeBlock(4)
     cids = blocks.map((b) => b.cid)
   })
 
-  it('.addEntry - want block', () => {
-    const cid = cids[1]
-    const msg = new BitswapMessage(true)
-    msg.addEntry(cid, 1)
-    const serialized = msg.serializeToBitswap100()
+  describe('.addEntry', () => {
+    it('want type defaults to want block', () => {
+      const cid = cids[1]
+      const msg = new BitswapMessage(true)
+      msg.addEntry(cid, 1)
+      const serialized = msg.serializeToBitswap100()
 
-    expect(Message.decode(serialized).wantlist.entries[0]).to.be.eql({
-      block: cid.buffer,
-      priority: 1,
-      cancel: false,
-      sendDontHave: false,
-      wantType: pbm.Message.Wantlist.WantType.Block
+      expect(Message.decode(serialized).wantlist.entries[0]).to.be.eql({
+        block: cid.buffer,
+        priority: 1,
+        cancel: false,
+        sendDontHave: false,
+        wantType: Message.Wantlist.WantType.Block
+      })
+    })
+
+    it('updates priority only if same want type', () => {
+      const msg = new BitswapMessage(true)
+
+      msg.addEntry(cids[0], 1, BitswapMessage.WantType.Block, false, false)
+
+      msg.addEntry(cids[0], 2, BitswapMessage.WantType.Have, true, false)
+      expect(msg.wantlist.get(cids[0].toString('base58btc')).priority).to.eql(1)
+
+      msg.addEntry(cids[0], 2, BitswapMessage.WantType.Block, true, false)
+      expect(msg.wantlist.get(cids[0].toString('base58btc')).priority).to.eql(2)
+    })
+
+    it('only changes from dont cancel to do cancel', () => {
+      const msg = new BitswapMessage(true)
+
+      msg.addEntry(cids[0], 1, BitswapMessage.WantType.Block, true, false)
+      msg.addEntry(cids[0], 1, BitswapMessage.WantType.Block, false, false)
+      expect(msg.wantlist.get(cids[0].toString('base58btc')).cancel).to.eql(true)
+
+      msg.addEntry(cids[1], 1, BitswapMessage.WantType.Block, false, false)
+      msg.addEntry(cids[1], 1, BitswapMessage.WantType.Block, true, false)
+      expect(msg.wantlist.get(cids[1].toString('base58btc')).cancel).to.eql(true)
+    })
+
+    it('only changes from dont send to do send DONT_HAVE', () => {
+      const msg = new BitswapMessage(true)
+
+      msg.addEntry(cids[0], 1, BitswapMessage.WantType.Block, false, false)
+      msg.addEntry(cids[0], 1, BitswapMessage.WantType.Block, false, true)
+      expect(msg.wantlist.get(cids[0].toString('base58btc')).sendDontHave).to.eql(true)
+
+      msg.addEntry(cids[1], 1, BitswapMessage.WantType.Block, false, true)
+      msg.addEntry(cids[1], 1, BitswapMessage.WantType.Block, false, false)
+      expect(msg.wantlist.get(cids[1].toString('base58btc')).sendDontHave).to.eql(true)
+    })
+
+    it('only override want-have with want-block (not vice versa)', () => {
+      const msg = new BitswapMessage(true)
+
+      msg.addEntry(cids[0], 1, BitswapMessage.WantType.Block, false, false)
+      msg.addEntry(cids[0], 1, BitswapMessage.WantType.Have, false, false)
+      expect(msg.wantlist.get(cids[0].toString('base58btc')).wantType).to.eql(BitswapMessage.WantType.Block)
+
+      msg.addEntry(cids[1], 1, BitswapMessage.WantType.Have, false, false)
+      msg.addEntry(cids[1], 1, BitswapMessage.WantType.Block, false, false)
+      expect(msg.wantlist.get(cids[1].toString('base58btc')).wantType).to.eql(BitswapMessage.WantType.Block)
     })
   })
 
@@ -53,12 +103,28 @@ describe('BitswapMessage', () => {
     const msg = new BitswapMessage(true)
     msg.addBlock(block)
     msg.setPendingBytes(10)
+    msg.addEntry(cids[0], 10, BitswapMessage.WantType.Have, false, true)
+    msg.addHave(cids[1])
+    msg.addDontHave(cids[2])
 
     const serialized = msg.serializeToBitswap110()
     const decoded = Message.decode(serialized)
 
     expect(decoded.payload[0].data).to.eql(block.data)
     expect(decoded.pendingBytes).to.eql(10)
+    expect(decoded.wantlist.entries.length).to.eql(1)
+    expect(decoded.wantlist.entries[0].priority).to.eql(10)
+    expect(decoded.wantlist.entries[0].wantType).to.eql(BitswapMessage.WantType.Have)
+    expect(decoded.wantlist.entries[0].cancel).to.eql(false)
+    expect(decoded.wantlist.entries[0].sendDontHave).to.eql(true)
+    expect(decoded.blockPresences.length).to.eql(2)
+    for (const bp of decoded.blockPresences) {
+      if (bp.type === BitswapMessage.BlockPresenceType.Have) {
+        expect(bp.cid.equals(cids[1].buffer)).to.eql(true)
+      } else {
+        expect(bp.cid.equals(cids[2].buffer)).to.eql(true)
+      }
+    }
   })
 
   it('.deserialize a Bitswap100 Message', async () => {
@@ -88,7 +154,7 @@ describe('BitswapMessage', () => {
     expect(Array.from(msg.wantlist))
       .to.eql([[
         cid0.toString('base58btc'),
-        new BitswapMessage.Entry(cid0, 0, false)
+        new BitswapMessage.Entry(cid0, 0, BitswapMessage.WantType.Block, false)
       ]])
 
     expect(
@@ -103,6 +169,7 @@ describe('BitswapMessage', () => {
     const cid0 = cids[0]
     const cid1 = cids[1]
     const cid2 = cids[2]
+    const cid3 = cids[3]
 
     const b1 = blocks[1]
     const b2 = blocks[2]
@@ -111,7 +178,9 @@ describe('BitswapMessage', () => {
       wantlist: {
         entries: [{
           block: cid0.buffer,
-          cancel: false
+          cancel: false,
+          wantType: BitswapMessage.WantType.Block,
+          sendDontHave: true
         }],
         full: true
       },
@@ -122,6 +191,10 @@ describe('BitswapMessage', () => {
         data: b2.data,
         prefix: cid2.prefix
       }],
+      blockPresences: [{
+        cid: cid3.buffer,
+        type: BitswapMessage.BlockPresenceType.Have
+      }],
       pendingBytes: 10
     })
 
@@ -130,7 +203,7 @@ describe('BitswapMessage', () => {
     expect(Array.from(msg.wantlist))
       .to.eql([[
         cid0.toString('base58btc'),
-        new BitswapMessage.Entry(cid0, 0, false)
+        new BitswapMessage.Entry(cid0, 0, BitswapMessage.WantType.Block, false, true)
       ]])
 
     expect(
@@ -139,6 +212,13 @@ describe('BitswapMessage', () => {
       [cid1.toString('base58btc'), b1.data],
       [cid2.toString('base58btc'), b2.data]
     ])
+
+    expect(Array.from(msg.blockPresences))
+      .to.eql([[
+        cid3.toString('base58btc'),
+        BitswapMessage.BlockPresenceType.Have
+      ]])
+
     expect(msg.pendingBytes).to.equal(10)
   })
 
@@ -217,19 +297,21 @@ describe('BitswapMessage', () => {
   describe('BitswapMessageEntry', () => {
     it('exposes the wantlist entry properties', () => {
       const cid = cids[0]
-      const entry = new BitswapMessage.Entry(cid, 5, false)
+      const entry = new BitswapMessage.Entry(cid, 5, BitswapMessage.WantType.Block, false, false)
 
       expect(entry).to.have.property('cid')
       expect(entry).to.have.property('priority', 5)
 
+      expect(entry).to.have.property('wantType', BitswapMessage.WantType.Block)
       expect(entry).to.have.property('cancel', false)
+      expect(entry).to.have.property('sendDontHave', false)
     })
 
     it('allows setting properties on the wantlist entry', () => {
       const cid1 = cids[0]
       const cid2 = cids[1]
 
-      const entry = new BitswapMessage.Entry(cid1, 5, false)
+      const entry = new BitswapMessage.Entry(cid1, 5, BitswapMessage.WantType.Block, false, false)
 
       expect(entry.entry).to.have.property('cid')
       expect(entry.entry).to.have.property('priority', 5)

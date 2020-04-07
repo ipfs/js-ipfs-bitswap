@@ -13,15 +13,23 @@ class Wantlist {
     return this.set.size
   }
 
-  add (cid, priority) {
+  add (cid, priority, wantType) {
+    // Have to import here to avoid circular reference
+    const Message = require('../message')
+
     const cidStr = cid.toString('base58btc')
     const entry = this.set.get(cidStr)
 
     if (entry) {
       entry.inc()
       entry.priority = priority
+
+      // We can only overwrite want-have with want-block
+      if (entry.wantType === Message.WantType.Have && wantType === Message.WantType.Block) {
+        entry.wantType = wantType
+      }
     } else {
-      this.set.set(cidStr, new Entry(cid, priority))
+      this.set.set(cidStr, new Entry(cid, priority, wantType))
       if (this._stats) {
         this._stats.push(null, 'wantListSize', 1)
       }

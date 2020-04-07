@@ -1,12 +1,13 @@
 'use strict'
 
 class WantListEntry {
-  constructor (cid, priority) {
+  constructor (cid, priority, wantType) {
     // Keep track of how many requests we have for this key
     this._refCounter = 1
 
     this.cid = cid
     this.priority = priority || 1
+    this.wantType = wantType
   }
 
   inc () {
@@ -30,7 +31,8 @@ class WantListEntry {
   equals (other) {
     return (this._refCounter === other._refCounter) &&
       this.cid.equals(other.cid) &&
-      this.priority === other.priority
+      this.priority === other.priority &&
+      this.wantType === other.wantType
   }
 }
 

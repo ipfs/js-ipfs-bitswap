@@ -10,6 +10,7 @@ const BitswapMessageEntry = require('../src/types/message/entry')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
 const { groupBy, uniqWith, pullAllWith, includesWith, sortBy, isMapEqual } = require('../src/utils')
+const SortedMap = require('../src/utils/sorted-map')
 
 describe('utils spec', function () {
   it('groupBy', () => {
@@ -163,6 +164,186 @@ describe('utils spec', function () {
         new Map([['key1', block1], ['key2', block1]]),
         new Map([['key1', block1], ['key2', block1]])
       )).to.be.true()
+    })
+  })
+
+  describe('SortedMap', () => {
+    it('size', () => {
+      const sm = new SortedMap()
+      sm.set('one', 1)
+      sm.set('two', 2)
+      sm.set('three', 3)
+
+      expect(sm.size).to.eql(3)
+    })
+
+    it('get / set', () => {
+      const sm = new SortedMap()
+      sm.set('one', 1)
+      sm.set('two', 2)
+      sm.set('three', 3)
+
+      expect(sm.get('one')).to.eql(1)
+      expect(sm.get('two')).to.eql(2)
+      expect(sm.get('three')).to.eql(3)
+    })
+
+    it('delete', () => {
+      const sm = new SortedMap()
+      sm.set('one', 1)
+      sm.set('two', 2)
+      sm.set('three', 3)
+
+      expect(sm.get('two')).to.eql(2)
+
+      sm.delete('two')
+
+      expect(sm.get('two')).to.be.undefined()
+      expect(sm.size).to.eql(2)
+
+      sm.delete('two')
+      expect(sm.size).to.eql(2)
+    })
+
+    it('clear', () => {
+      const sm = new SortedMap()
+      sm.set('one', 1)
+      sm.set('two', 2)
+      sm.set('three', 3)
+
+      expect(sm.get('two')).to.eql(2)
+
+      sm.clear('two')
+
+      expect(sm.get('two')).to.be.undefined()
+      expect(sm.size).to.eql(0)
+      expect([...sm.keys()]).to.eql([])
+    })
+
+    it('default order', () => {
+      const sm = new SortedMap()
+
+      sm.set(1, 'a')
+      sm.set(3, 'c')
+      sm.set(2, 'b')
+
+      expect(sm.size).to.eql(3)
+      expect([...sm.keys()]).to.eql([1, 2, 3])
+      expect([...sm.values()]).to.eql(['a', 'b', 'c'])
+      expect([...sm.entries()]).to.eql([[1, 'a'], [2, 'b'], [3, 'c']])
+      expect([...sm]).to.eql([...sm.entries()])
+
+      const collected = []
+      sm.forEach(i => { collected.push(i) })
+      expect(collected).to.eql([...sm])
+    })
+
+    describe('custom order', () => {
+      const prioritySort = (a, b) => b[1].priority - a[1].priority
+
+      it('forward', () => {
+        const sm = new SortedMap([
+          ['low', { priority: 1 }],
+          ['high', { priority: 2 }]
+        ], prioritySort)
+        expect([...sm.keys()]).to.eql(['high', 'low'])
+      })
+
+      it('backward', () => {
+        const sm = new SortedMap([
+          ['high', { priority: 2 }],
+          ['low', { priority: 1 }]
+        ], prioritySort)
+        expect([...sm.keys()]).to.eql(['high', 'low'])
+      })
+
+      it('insert start', () => {
+        const sm = new SortedMap([
+          ['mid', { priority: 2 }],
+          ['low', { priority: 1 }],
+          ['high', { priority: 3 }]
+        ], prioritySort)
+        expect([...sm.keys()]).to.eql(['high', 'mid', 'low'])
+      })
+
+      it('insert end', () => {
+        const sm = new SortedMap([
+          ['low', { priority: 1 }],
+          ['mid', { priority: 2 }],
+          ['high', { priority: 3 }]
+        ], prioritySort)
+        expect([...sm.keys()]).to.eql(['high', 'mid', 'low'])
+      })
+
+      it('insert middle', () => {
+        const sm = new SortedMap([
+          ['low', { priority: 1 }],
+          ['high', { priority: 3 }],
+          ['mid', { priority: 2 }]
+        ], prioritySort)
+        expect([...sm.keys()]).to.eql(['high', 'mid', 'low'])
+      })
+
+      it('insert same priority start', () => {
+        const sm = new SortedMap([
+          ['low', { priority: 1 }],
+          ['high-a', { priority: 3 }],
+          ['high-b', { priority: 3 }]
+        ], prioritySort)
+        expect([...sm.keys()].map(s => s.substring(0, 4))).to.eql(['high', 'high', 'low'])
+      })
+
+      it('insert same priority end', () => {
+        const sm = new SortedMap([
+          ['hi', { priority: 3 }],
+          ['low-a', { priority: 1 }],
+          ['low-b', { priority: 1 }]
+        ], prioritySort)
+        expect([...sm.keys()].map(s => s.substring(0, 3))).to.eql(['hi', 'low', 'low'])
+      })
+
+      it('insert same key', () => {
+        const sm = new SortedMap([
+          ['low', { priority: 1 }],
+          ['high', { priority: 3 }],
+          ['high', { priority: 4 }]
+        ], prioritySort)
+        expect([...sm.keys()]).to.eql(['high', 'low'])
+      })
+
+      it('update', () => {
+        const sm = new SortedMap([], prioritySort)
+
+        const data1 = { k: 'v1', priority: 1 }
+        const data2 = { k: 'v2', priority: 3 }
+        const data3 = { k: 'v3', priority: 2 }
+        sm.set('one', data1)
+        sm.set('two', data2)
+        sm.set('three', data3)
+
+        expect([...sm.keys()]).to.eql(['two', 'three', 'one'])
+        expect([...sm.values()].map(v => v.k)).to.eql(['v2', 'v3', 'v1'])
+
+        // After changing data that affects the sort order, need to call update
+        // to actually trigger the sort
+        data3.priority = 5
+        sm.update(1) // 'three'
+
+        expect([...sm.keys()]).to.eql(['three', 'two', 'one'])
+        expect([...sm.values()].map(v => v.k)).to.eql(['v3', 'v2', 'v1'])
+      })
+
+      it('delete same priority', () => {
+        const sm = new SortedMap([
+          ['a', { priority: 1 }],
+          ['b', { priority: 1 }],
+          ['c', { priority: 1 }]
+        ], prioritySort)
+
+        sm.delete('a')
+
+        expect([...sm.keys()].sort()).to.eql(['b', 'c'])
+      })
     })
   })
 })

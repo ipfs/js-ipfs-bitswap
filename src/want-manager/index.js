@@ -20,7 +20,7 @@ module.exports = class WantManager {
 
   _addEntries (cids, cancel, force) {
     const entries = cids.map((cid, i) => {
-      return new Message.Entry(cid, CONSTANTS.kMaxPriority - i, cancel)
+      return new Message.Entry(cid, CONSTANTS.kMaxPriority - i, Message.WantType.Block, cancel)
     })
 
     entries.forEach((e) => {
