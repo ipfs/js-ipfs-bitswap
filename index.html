@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset='utf-8'>
-  <title>ipfs-bitswap 0.27.1 | Documentation</title>
+  <title>ipfs-bitswap 0.28.0 | Documentation</title>
   <meta name='description' content='Node.js implementation of the Bitswap data exchange protocol used by IPFS'>
   <meta name='viewport' content='width=device-width,initial-scale=1'>
   <link href='assets/bass.css' rel='stylesheet'>
@@ -15,7 +15,7 @@
       <div id='split-left' class='overflow-auto fs0 height-viewport-100'>
         <div class='py1 px2'>
           <h3 class='mb0 no-anchor'>ipfs-bitswap</h3>
-          <div class='mb1'><code>0.27.1</code></div>
+          <div class='mb1'><code>0.28.0</code></div>
           <input
             placeholder='Filter'
             id='filter-input'
@@ -178,6 +178,196 @@
               
                 
                 <li><a
+                  href='#task'
+                  class="">
+                  Task
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#taskmerger'
+                  class=" toggle-sibling">
+                  TaskMerger
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  <ul class='list-reset py1-ul pl1'>
+                    <li class='h5'><span>Static members</span></li>
+                    
+                      <li><a
+                        href='#taskmergerhasnewinfo'
+                        class='regular pre-open'>
+                        .hasNewInfo
+                      </a></li>
+                    
+                      <li><a
+                        href='#taskmergermerge'
+                        class='regular pre-open'>
+                        .merge
+                      </a></li>
+                    
+                    </ul>
+                  
+                  
+                  
+                  
+                </div>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#defaulttaskmerger'
+                  class="">
+                  DefaultTaskMerger
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#requestqueue'
+                  class=" toggle-sibling">
+                  RequestQueue
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  
+                    <ul class='list-reset py1-ul pl1'>
+                      <li class='h5'><span>Instance members</span></li>
+                      
+                      <li><a
+                        href='#requestqueuepushtasks'
+                        class='regular pre-open'>
+                        #pushTasks
+                      </a></li>
+                      
+                      <li><a
+                        href='#requestqueuepoptasks'
+                        class='regular pre-open'>
+                        #popTasks
+                      </a></li>
+                      
+                      <li><a
+                        href='#requestqueueremove'
+                        class='regular pre-open'>
+                        #remove
+                      </a></li>
+                      
+                      <li><a
+                        href='#requestqueuetasksdone'
+                        class='regular pre-open'>
+                        #tasksDone
+                      </a></li>
+                      
+                    </ul>
+                  
+                  
+                  
+                </div>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#peertasks'
+                  class=" toggle-sibling">
+                  PeerTasks
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  
+                    <ul class='list-reset py1-ul pl1'>
+                      <li class='h5'><span>Instance members</span></li>
+                      
+                      <li><a
+                        href='#peertaskspushtasks'
+                        class='regular pre-open'>
+                        #pushTasks
+                      </a></li>
+                      
+                      <li><a
+                        href='#peertaskspoptasks'
+                        class='regular pre-open'>
+                        #popTasks
+                      </a></li>
+                      
+                      <li><a
+                        href='#peertaskstaskdone'
+                        class='regular pre-open'>
+                        #taskDone
+                      </a></li>
+                      
+                      <li><a
+                        href='#peertasksremove'
+                        class='regular pre-open'>
+                        #remove
+                      </a></li>
+                      
+                      <li><a
+                        href='#peertasksisidle'
+                        class='regular pre-open'>
+                        #isIdle
+                      </a></li>
+                      
+                    </ul>
+                  
+                  
+                  
+                </div>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#pendingtasks'
+                  class="">
+                  PendingTasks
+                  
+                </a>
+                
+                </li>
+              
+                
+                <li><a
+                  href='#sortedmap'
+                  class=" toggle-sibling">
+                  SortedMap
+                  <span class='icon'>▸</span>
+                </a>
+                
+                <div class='toggle-target display-none'>
+                  
+                  
+                    <ul class='list-reset py1-ul pl1'>
+                      <li class='h5'><span>Instance members</span></li>
+                      
+                      <li><a
+                        href='#sortedmapupdate'
+                        class='regular pre-open'>
+                        #update
+                      </a></li>
+                      
+                    </ul>
+                  
+                  
+                  
+                </div>
+                
+                </li>
+              
+                
+                <li><a
                   href='#ismapequal'
                   class="">
                   isMapEqual
@@ -234,7 +424,7 @@
     </h3>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/index.js#L35-L349'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/index.js#L35-L360'>
       <span>src/index.js</span>
       </a>
     
@@ -314,7 +504,7 @@ used by IPFS.</p>
   <div class='clearfix'>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/index.js#L140-L142'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/index.js#L143-L145'>
       <span>src/index.js</span>
       </a>
     
@@ -377,7 +567,7 @@ used by IPFS.</p>
   <div class='clearfix'>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/index.js#L147-L149'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/index.js#L150-L152'>
       <span>src/index.js</span>
       </a>
     
@@ -440,7 +630,7 @@ used by IPFS.</p>
   <div class='clearfix'>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/index.js#L157-L159'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/index.js#L160-L162'>
       <span>src/index.js</span>
       </a>
     
@@ -517,7 +707,7 @@ used by IPFS.</p>
   <div class='clearfix'>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/index.js#L167-L169'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/index.js#L170-L172'>
       <span>src/index.js</span>
       </a>
     
@@ -594,7 +784,7 @@ used by IPFS.</p>
   <div class='clearfix'>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/index.js#L178-L182'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/index.js#L181-L185'>
       <span>src/index.js</span>
       </a>
     
@@ -672,7 +862,7 @@ blockstore it is returned, otherwise the block is added to the wantlist and retu
   <div class='clearfix'>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/index.js#L191-L231'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/index.js#L194-L234'>
       <span>src/index.js</span>
       </a>
     
@@ -750,7 +940,7 @@ blockstore they are returned, otherwise the blocks are added to the wantlist and
   <div class='clearfix'>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/index.js#L239-L246'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/index.js#L242-L249'>
       <span>src/index.js</span>
       </a>
     
@@ -827,7 +1017,7 @@ blockstore they are returned, otherwise the blocks are added to the wantlist and
   <div class='clearfix'>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/index.js#L254-L259'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/index.js#L257-L262'>
       <span>src/index.js</span>
       </a>
     
@@ -904,7 +1094,7 @@ blockstore they are returned, otherwise the blocks are added to the wantlist and
   <div class='clearfix'>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/index.js#L268-L270'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/index.js#L271-L273'>
       <span>src/index.js</span>
       </a>
     
@@ -982,7 +1172,7 @@ send it to nodes that have it in their wantlist.</p>
   <div class='clearfix'>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/index.js#L279-L298'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/index.js#L282-L309'>
       <span>src/index.js</span>
       </a>
     
@@ -1060,7 +1250,7 @@ send it to nodes that have it them their wantlist.</p>
   <div class='clearfix'>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/index.js#L305-L307'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/index.js#L316-L318'>
       <span>src/index.js</span>
       </a>
     
@@ -1124,7 +1314,7 @@ send it to nodes that have it them their wantlist.</p>
   <div class='clearfix'>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/index.js#L314-L316'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/index.js#L325-L327'>
       <span>src/index.js</span>
       </a>
     
@@ -1188,7 +1378,7 @@ send it to nodes that have it them their wantlist.</p>
   <div class='clearfix'>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/index.js#L323-L325'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/index.js#L334-L336'>
       <span>src/index.js</span>
       </a>
     
@@ -1252,7 +1442,7 @@ send it to nodes that have it them their wantlist.</p>
   <div class='clearfix'>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/index.js#L332-L336'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/index.js#L343-L347'>
       <span>src/index.js</span>
       </a>
     
@@ -1316,7 +1506,7 @@ send it to nodes that have it them their wantlist.</p>
   <div class='clearfix'>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/index.js#L343-L348'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/index.js#L354-L359'>
       <span>src/index.js</span>
       </a>
     
@@ -1388,7 +1578,7 @@ send it to nodes that have it them their wantlist.</p>
     </h3>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/network.js#L108-L116'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/network.js#L110-L118'>
       <span>src/network.js</span>
       </a>
     
@@ -1469,7 +1659,7 @@ send it to nodes that have it them their wantlist.</p>
     </h3>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/network.js#L124-L131'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/network.js#L126-L133'>
       <span>src/network.js</span>
       </a>
     
@@ -1542,7 +1732,7 @@ send it to nodes that have it them their wantlist.</p>
     </h3>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/network.js#L171-L177'>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/network.js#L174-L180'>
       <span>src/network.js</span>
       </a>
     
@@ -1610,13 +1800,1427 @@ send it to nodes that have it them their wantlist.</p>
   
   <div class='clearfix'>
     
+    <h3 class='fl m0' id='task'>
+      Task
+    </h3>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/req-queue.js#L5-L10'>
+      <span>src/decision-engine/req-queue.js</span>
+      </a>
+    
+  </div>
+  
+
+  
+    <div class='pre p1 fill-light mt0'>Task</div>
+  
+    <p>
+      Type:
+      <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>
+    </p>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Properties</div>
+    <div>
+      
+        <div class='space-bottom0'>
+          <span class='code bold'>topic</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
+          : a name for the Task (like an id but not necessarily unique)
+
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <span class='code bold'>priority</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>)</code>
+          : tasks are ordered by priority per peer
+
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <span class='code bold'>size</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>)</code>
+          : the size of the task, eg the number of bytes in a block
+
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='taskmerger'>
+      TaskMerger
+    </h3>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/req-queue.js#L12-L19'>
+      <span>src/decision-engine/req-queue.js</span>
+      </a>
+    
+  </div>
+  
+
+  
+    <div class='pre p1 fill-light mt0'>TaskMerger</div>
+  
+    <p>
+      Type:
+      <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>
+    </p>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Properties</div>
+    <div>
+      
+        <div class='space-bottom0'>
+          <span class='code bold'>hasNewInfo</span> <code class='quiet'>(function (task, tasksWithTopic))</code>
+          : given the existing
+tasks with the same topic, does the task add some new information?
+Used to decide whether to merge the task or ignore it.
+
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <span class='code bold'>merge</span> <code class='quiet'>(function (task, existingTask))</code>
+          : merge the information from
+the given task into the existing task (with the same topic)
+
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Static Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='taskmergerhasnewinfo'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>hasNewInfo(task, tasksWithTopic)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/task-merger.js#L11-L38'>
+      <span>src/decision-engine/task-merger.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>Indicates whether the given task has newer information than the active
+tasks with the same topic</p>
+
+    <div class='pre p1 fill-light mt0'>hasNewInfo(task: <a href="#task">Task</a>, tasksWithTopic: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>&#x3C;<a href="#task">Task</a>>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>task</span> <code class='quiet'>(<a href="#task">Task</a>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>tasksWithTopic</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>&#x3C;<a href="#task">Task</a>>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code>:
+        
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='taskmergermerge'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>merge(newTask, existingTask)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/task-merger.js#L45-L128'>
+      <span>src/decision-engine/task-merger.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>Merge the information from the task into the existing pending task</p>
+
+    <div class='pre p1 fill-light mt0'>merge(newTask: <a href="#task">Task</a>, existingTask: <a href="#task">Task</a>)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>newTask</span> <code class='quiet'>(<a href="#task">Task</a>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>existingTask</span> <code class='quiet'>(<a href="#task">Task</a>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='defaulttaskmerger'>
+      DefaultTaskMerger
+    </h3>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/req-queue.js#L26-L32'>
+      <span>src/decision-engine/req-queue.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>The task merger that is used by default.
+Assumes that new tasks do not add any information over existing tasks,
+and doesn't try to merge.</p>
+
+    <div class='pre p1 fill-light mt0'>DefaultTaskMerger</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='requestqueue'>
+      RequestQueue
+    </h3>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/req-queue.js#L41-L142'>
+      <span>src/decision-engine/req-queue.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>Queue of requests to be processed by the engine.
+The requests from each peer are added to the peer's queue, sorted by
+priority.
+Tasks are popped in priority order from the best peer - see popTasks()
+for more details.</p>
+
+    <div class='pre p1 fill-light mt0'>new RequestQueue(taskMerger: <a href="#taskmerger">TaskMerger</a>)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>taskMerger</span> <code class='quiet'>(<a href="#taskmerger">TaskMerger</a>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='requestqueuepushtasks'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>pushTasks(peerId, tasks)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/req-queue.js#L55-L65'>
+      <span>src/decision-engine/req-queue.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>Push tasks onto the queue for the given peer</p>
+
+    <div class='pre p1 fill-light mt0'>pushTasks(peerId: PeerId, tasks: <a href="#task">Task</a>)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>peerId</span> <code class='quiet'>(PeerId)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>tasks</span> <code class='quiet'>(<a href="#task">Task</a>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='requestqueuepoptasks'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>popTasks(targetMinBytes)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/req-queue.js#L76-L102'>
+      <span>src/decision-engine/req-queue.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>Choose the peer with the least active work (or if all have the same active
+work, the most pending tasks) and pop off the highest priority tasks until
+the total size is at least targetMinBytes.
+This puts the popped tasks into the "active" state, meaning they are
+actively being processed (and cannot be modified).</p>
+
+    <div class='pre p1 fill-light mt0'>popTasks(targetMinBytes: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>targetMinBytes</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>)</code>
+	    the minimum total size of tasks to pop
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code>:
+        
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='requestqueueremove'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>remove(topic, peerId)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/req-queue.js#L116-L119'>
+      <span>src/decision-engine/req-queue.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>Remove the task with the given topic for the given peer.</p>
+
+    <div class='pre p1 fill-light mt0'>remove(topic: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>, peerId: PeerId)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>topic</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>peerId</span> <code class='quiet'>(PeerId)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='requestqueuetasksdone'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>tasksDone(peerId, tasks)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/req-queue.js#L126-L141'>
+      <span>src/decision-engine/req-queue.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>Called when the tasks for the given peer complete.</p>
+
+    <div class='pre p1 fill-light mt0'>tasksDone(peerId: PeerId, tasks: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>&#x3C;<a href="#task">Task</a>>)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>peerId</span> <code class='quiet'>(PeerId)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>tasks</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>&#x3C;<a href="#task">Task</a>>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='peertasks'>
+      PeerTasks
+    </h3>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/req-queue.js#L147-L291'>
+      <span>src/decision-engine/req-queue.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>Queue of tasks for a particular peer, sorted by priority.</p>
+
+    <div class='pre p1 fill-light mt0'>new PeerTasks(peerId: PeerId, taskMerger: <a href="#taskmerger">TaskMerger</a>)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>peerId</span> <code class='quiet'>(PeerId)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>taskMerger</span> <code class='quiet'>(<a href="#taskmerger">TaskMerger</a>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='peertaskspushtasks'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>pushTasks(tasks)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/req-queue.js#L164-L168'>
+      <span>src/decision-engine/req-queue.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>Push tasks onto the queue.</p>
+
+    <div class='pre p1 fill-light mt0'>pushTasks(tasks: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>&#x3C;<a href="#task">Task</a>>)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>tasks</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>&#x3C;<a href="#task">Task</a>>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='peertaskspoptasks'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>popTasks(targetMinBytes)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/req-queue.js#L221-L242'>
+      <span>src/decision-engine/req-queue.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>Pop tasks off the queue such that the total size is at least targetMinBytes</p>
+
+    <div class='pre p1 fill-light mt0'>popTasks(targetMinBytes: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>targetMinBytes</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number">number</a>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a></code>:
+        
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='peertaskstaskdone'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>taskDone(task)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/req-queue.js#L249-L254'>
+      <span>src/decision-engine/req-queue.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>Called when a task completes.
+Note: must be the same reference as returned from popTasks.</p>
+
+    <div class='pre p1 fill-light mt0'>taskDone(task: <a href="#task">Task</a>)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>task</span> <code class='quiet'>(<a href="#task">Task</a>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='peertasksremove'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>remove(topic)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/req-queue.js#L260-L262'>
+      <span>src/decision-engine/req-queue.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>Remove pending tasks with the given topic</p>
+
+    <div class='pre p1 fill-light mt0'>remove(topic: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>topic</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String">string</a>)</code>
+	    
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+    <div class='border-bottom' id='peertasksisidle'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>isIdle()</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/req-queue.js#L268-L270'>
+      <span>src/decision-engine/req-queue.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>No work to be done, this PeerTasks object can be freed.</p>
+
+    <div class='pre p1 fill-light mt0'>isIdle(): <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+    
+      <div class='py1 quiet mt1 prose-big'>Returns</div>
+      <code><a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean">boolean</a></code>:
+        
+
+      
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='pendingtasks'>
+      PendingTasks
+    </h3>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/decision-engine/req-queue.js#L296-L351'>
+      <span>src/decision-engine/req-queue.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>Queue of pending tasks for a particular peer, sorted by priority.</p>
+
+    <div class='pre p1 fill-light mt0'>new PendingTasks()</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    <h3 class='fl m0' id='sortedmap'>
+      SortedMap
+    </h3>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/utils/sorted-map.js#L6-L153'>
+      <span>src/utils/sorted-map.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>SortedMap is a Map whose iterator order can be defined by the user</p>
+
+    <div class='pre p1 fill-light mt0'>new SortedMap(entries: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>&#x3C;k, v>?, cmp: function (a, b)?)</div>
+  
+  
+    <p>
+      Extends
+      
+        <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Map">Map</a>
+      
+    </p>
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>entries</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a>&#x3C;k, v>?)</code>
+	    
+          </div>
+          
+        </div>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>cmp</span> <code class='quiet'>(function (a, b)?)</code>
+	    compares 
+[k1, v1]
+ to 
+[k2, v2]
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Instance Members</div>
+    <div class="clearfix">
+  
+    <div class='border-bottom' id='sortedmapupdate'>
+      <div class="clearfix small pointer toggle-sibling">
+        <div class="py1 contain">
+            <a class='icon pin-right py1 dark-link caret-right'>▸</a>
+            <span class='code strong strong truncate'>update(i)</span>
+        </div>
+      </div>
+      <div class="clearfix display-none toggle-target">
+        <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
+    
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/utils/sorted-map.js#L28-L37'>
+      <span>src/utils/sorted-map.js</span>
+      </a>
+    
+  </div>
+  
+
+  <p>Call update to update the position of the key when it should change.
+For example if the compare function sorts by the priority field, and the
+priority changes, call update.
+Call indexOf() to get the index <em>before</em> the change happens.</p>
+
+    <div class='pre p1 fill-light mt0'>update(i: <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</div>
+  
+  
+
+  
+  
+  
+  
+  
+  
+
+  
+    <div class='py1 quiet mt1 prose-big'>Parameters</div>
+    <div class='prose'>
+      
+        <div class='space-bottom0'>
+          <div>
+            <span class='code bold'>i</span> <code class='quiet'>(<a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object">Object</a>)</code>
+	    the index of entry whose position should be updated.
+
+          </div>
+          
+        </div>
+      
+    </div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+</section>
+
+      </div>
+    </div>
+  
+</div>
+
+  
+
+  
+
+  
+</section>
+
+          
+        
+          
+          <section class='p2 mb2 clearfix bg-white minishadow'>
+
+  
+  <div class='clearfix'>
+    
     <h3 class='fl m0' id='ismapequal'>
       isMapEqual
     </h3>
     
     
-      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/936f8997908cc72ed808030c445bebd27e16334e/src/utils.js#L89-L112'>
-      <span>src/utils.js</span>
+      <a class='fr fill-darken0 round round pad1x quiet h5' href='https://github.com/ipfs/js-ipfs-bitswap/blob/3ae81cb37751479dbb5c831bae2ae7d7086fb0ce/src/utils/index.js#L89-L112'>
+      <span>src/utils/index.js</span>
       </a>
     
   </div>
