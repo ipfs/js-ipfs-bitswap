@@ -66,6 +66,8 @@ describe('bitswap with mocks', function () {
       expect(ledger.sent).to.equal(0)
       expect(ledger.recv).to.equal(96)
       expect(ledger.exchanged).to.equal(2)
+
+      bs.stop()
     })
 
     it('simple want message', async () => {
@@ -78,8 +80,8 @@ describe('bitswap with mocks', function () {
 
       const msg = new Message(false)
 
-      msg.addEntry(b1.cid, 1, false)
-      msg.addEntry(b2.cid, 1, false)
+      msg.addEntry(b1.cid, 1)
+      msg.addEntry(b2.cid, 1)
 
       await bs._receiveMessage(other, msg)
 
@@ -87,6 +89,8 @@ describe('bitswap with mocks', function () {
 
       expect(wl.has(b1.cid.toString('base58btc'))).to.eql(true)
       expect(wl.has(b2.cid.toString('base58btc'))).to.eql(true)
+
+      bs.stop()
     })
 
     it('multi peer', async function () {
@@ -116,6 +120,8 @@ describe('bitswap with mocks', function () {
         await bs._receiveMessage(other, msg)
         await storeHasBlocks(msg, repo.blocks)
       }
+
+      bs.stop()
     })
 
     it('ignore unwanted blocks', async () => {
@@ -154,6 +160,8 @@ describe('bitswap with mocks', function () {
       expect(ledger.sent).to.equal(0)
       expect(ledger.recv).to.equal(144)
       expect(ledger.exchanged).to.equal(3)
+
+      bs.stop()
     })
   })
 
@@ -230,6 +238,7 @@ describe('bitswap with mocks', function () {
       finish(2)
 
       finish.assert()
+      bs.stop()
     })
 
     it('block is sent after local add', async () => {
@@ -313,6 +322,9 @@ describe('bitswap with mocks', function () {
 
       const b1 = await p1
       expect(b1).to.eql(block)
+
+      bs1.stop()
+      bs2.stop()
     })
 
     it('double get', async () => {
@@ -350,6 +362,8 @@ describe('bitswap with mocks', function () {
 
       const res = await p
       expect(res[1]).to.not.exist()
+
+      bs.stop()
     })
   })
 

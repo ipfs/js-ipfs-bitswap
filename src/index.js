@@ -67,10 +67,13 @@ class Bitswap {
   // handle messages received through the network
   async _receiveMessage (peerId, incoming) {
     try {
+      // Note: this allows the engine to respond to any wants in the message.
+      // Processing of the blocks in the message happens below, after the
+      // blocks have been added to the blockstore.
       await this.engine.messageReceived(peerId, incoming)
     } catch (err) {
-      // Only logging the issue to process as much as possible
-      // of the message. Currently `messageReceived` does not
+      // Log instead of throwing an error so as to process as much as
+      // possible of the message. Currently `messageReceived` does not
       // throw any errors, but this could change in the future.
       this._log('failed to receive message', incoming)
     }
@@ -279,22 +282,30 @@ class Bitswap {
   async putMany (blocks) { // eslint-disable-line require-await
     const self = this
 
-    return this.blockstore.putMany(async function * () {
+    // Add any new blocks to the blockstore
+    const newBlocks = []
+    await this.blockstore.putMany(async function * () {
       for await (const block of blocks) {
         if (await self.blockstore.has(block.cid)) {
           continue
         }
 
         yield block
-
-        self.notifications.hasBlock(block)
-        self.engine.receivedBlocks([block.cid])
-        // Note: Don't wait for provide to finish before returning
-        self.network.provide(block.cid).catch((err) => {
-          self._log.error('Failed to provide: %s', err.message)
-        })
+        newBlocks.push(block)
       }
     }())
+
+    // Notify engine that we have new blocks
+    this.engine.receivedBlocks(newBlocks)
+
+    // Notify listeners that we have received the new blocks
+    for (const block of newBlocks) {
+      this.notifications.hasBlock(block)
+      // Note: Don't wait for provide to finish before returning
+      this.network.provide(block.cid).catch((err) => {
+        self._log.error('Failed to provide: %s', err.message)
+      })
+    }
   }
 
   /**

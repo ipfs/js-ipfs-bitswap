@@ -9,6 +9,7 @@ const logger = require('./utils').logger
 
 const BITSWAP100 = '/ipfs/bitswap/1.0.0'
 const BITSWAP110 = '/ipfs/bitswap/1.1.0'
+const BITSWAP120 = '/ipfs/bitswap/1.2.0'
 
 class Network {
   constructor (libp2p, bitswap, options, stats) {
@@ -20,6 +21,7 @@ class Network {
     if (!options.b100Only) {
       // Latest bitswap first
       this.protocols.unshift(BITSWAP110)
+      this.protocols.unshift(BITSWAP120)
     }
 
     this._stats = stats
@@ -150,6 +152,7 @@ class Network {
         serialized = msg.serializeToBitswap100()
         break
       case BITSWAP110:
+      case BITSWAP120:
         serialized = msg.serializeToBitswap110()
         break
       default:

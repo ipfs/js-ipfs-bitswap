@@ -109,75 +109,52 @@ describe('network', () => {
     await networkA.connectTo(p2pB.peerInfo)
   })
 
-  it('._receiveMessage success from Bitswap 1.0.0', async () => {
-    const msg = new Message(true)
-    const b1 = blocks[0]
-    const b2 = blocks[1]
-    const deferred = pDefer()
+  const versions = [{
+    num: '1.0.0', serialize: (msg) => msg.serializeToBitswap100()
+  }, {
+    num: '1.1.0', serialize: (msg) => msg.serializeToBitswap110()
+  }, {
+    num: '1.2.0', serialize: (msg) => msg.serializeToBitswap110()
+  }]
+  for (const version of versions) {
+    it('._receiveMessage success from Bitswap ' + version.num, async () => { // eslint-disable-line no-loop-func
+      const msg = new Message(true)
+      const b1 = blocks[0]
+      const b2 = blocks[1]
+      const deferred = pDefer()
 
-    msg.addEntry(b1.cid, 0, false)
-    msg.addBlock(b1)
-    msg.addBlock(b2)
+      msg.addEntry(b1.cid, 0)
+      msg.addBlock(b1)
+      msg.addBlock(b2)
 
-    bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
-      expect(msg).to.eql(msgReceived)
+      bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
+        expect(msg).to.eql(msgReceived)
+        bitswapMockB._receiveMessage = async () => {}
+        bitswapMockB._receiveError = async () => {}
+        deferred.resolve()
+      }
 
-      bitswapMockB._receiveMessage = async () => {}
-      bitswapMockB._receiveError = async () => {}
-      deferred.resolve()
-    }
+      bitswapMockB._receiveError = (err) => deferred.reject(err)
 
-    bitswapMockB._receiveError = (err) => {
-      deferred.reject(err)
-    }
+      const { stream } = await p2pA.dialProtocol(p2pB.peerInfo, '/ipfs/bitswap/' + version.num)
+      await pipe(
+        [version.serialize(msg)],
+        lp.encode(),
+        stream
+      )
 
-    const { stream } = await p2pA.dialProtocol(p2pB.peerInfo, '/ipfs/bitswap/1.0.0')
+      await deferred.promise
+    })
+  }
 
-    await pipe(
-      [msg.serializeToBitswap100()],
-      lp.encode(),
-      stream
-    )
-
-    await deferred.promise
-  })
-
-  it('._receiveMessage success from Bitswap 1.1.0', async () => {
-    const msg = new Message(true)
-    const b1 = blocks[0]
-    const b2 = blocks[1]
-    const deferred = pDefer()
-
-    msg.addEntry(b1.cid, 0, false)
-    msg.addBlock(b1)
-    msg.addBlock(b2)
-
-    bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
-      expect(msg).to.eql(msgReceived)
-      bitswapMockB._receiveMessage = async () => {}
-      bitswapMockB._receiveError = async () => {}
-      deferred.resolve()
-    }
-
-    bitswapMockB._receiveError = deferred.reject
-
-    const { stream } = await p2pA.dialProtocol(p2pB.peerInfo, '/ipfs/bitswap/1.1.0')
-    await pipe(
-      [msg.serializeToBitswap110()],
-      lp.encode(),
-      stream
-    )
-
-    await deferred.promise
-  })
-
+  // From p2pA to p2pB
   it('.sendMessage on Bitswap 1.1.0', async () => {
     const msg = new Message(true)
     const b1 = blocks[0]
     const b2 = blocks[1]
     const deferred = pDefer()
 
-    msg.addEntry(b1.cid, 0, false)
+    msg.addEntry(b1.cid, 0)
     msg.addBlock(b1)
     msg.addBlock(b2)
 
@@ -199,13 +176,14 @@ describe('network', () => {
     expect(protocol).to.equal('/ipfs/bitswap/1.0.0')
   })
 
+  // From p2pA to p2pC
   it('.sendMessage on Bitswap 1.1.0', async () => {
     const msg = new Message(true)
     const b1 = blocks[0]
     const b2 = blocks[1]
     const deferred = pDefer()
 
-    msg.addEntry(b1.cid, 0, false)
+    msg.addEntry(b1.cid, 0)
     msg.addBlock(b1)
     msg.addBlock(b2)
 
