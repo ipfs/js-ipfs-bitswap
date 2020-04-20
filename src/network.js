@@ -13,7 +13,7 @@ const BITSWAP120 = '/ipfs/bitswap/1.2.0'
 
 class Network {
   constructor (libp2p, bitswap, options, stats) {
-    this._log = logger(libp2p.peerInfo.id, 'network')
+    this._log = logger(libp2p.peerId, 'network')
     options = options || {}
     this.libp2p = libp2p
     this.bitswap = bitswap
@@ -37,14 +37,14 @@ class Network {
     this._running = true
     this.libp2p.handle(this.protocols, this._onConnection)
 
-    this.libp2p.on('peer:connect', this._onPeerConnect)
-    this.libp2p.on('peer:disconnect', this._onPeerDisconnect)
+    this.libp2p.connectionManager.on('peer:connect', this._onPeerConnect)
+    this.libp2p.connectionManager.on('peer:disconnect', this._onPeerDisconnect)
 
     // All existing connections are like new ones for us
     for (const peer of this.libp2p.peerStore.peers.values()) {
-      if (this.libp2p.registrar.getConnection(peer)) {
-        this._onPeerConnect(peer)
-      }
+      const conn = this.libp2p.connectionManager.get(peer.id)
+
+      conn && this._onPeerConnect(conn)
     }
   }
 
@@ -54,8 +54,8 @@ class Network {
     // Unhandle both, libp2p doesn't care if it's not already handled
     this.libp2p.unhandle(this.protocols)
 
-    this.libp2p.removeListener('peer:connect', this._onPeerConnect)
-    this.libp2p.removeListener('peer:disconnect', this._onPeerDisconnect)
+    this.libp2p.connectionManager.removeListener('peer:connect', this._onPeerConnect)
+    this.libp2p.connectionManager.removeListener('peer:disconnect', this._onPeerDisconnect)
   }
 
   /**
@@ -92,12 +92,12 @@ class Network {
     }
   }
 
-  _onPeerConnect (peerInfo) {
-    this.bitswap._onPeerConnected(peerInfo.id)
+  _onPeerConnect (connection) {
+    this.bitswap._onPeerConnected(connection.remotePeer)
   }
 
-  _onPeerDisconnect (peerInfo) {
-    this.bitswap._onPeerDisconnected(peerInfo.id)
+  _onPeerDisconnect (connection) {
+    this.bitswap._onPeerDisconnected(connection.remotePeer)
   }
 
   /**
@@ -181,7 +181,7 @@ class Network {
   /**
    * Connects to another peer
    *
-   * @param {PeerInfo|PeerId|Multiaddr} peer
+   * @param {PeerId|Multiaddr} peer
    * @param {Object} options
    * @param {AbortSignal} options.abortSignal
    * @returns {Promise<Connection>}
