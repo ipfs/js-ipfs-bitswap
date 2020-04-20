@@ -1,8 +1,9 @@
 'use strict'
 
 const range = require('lodash.range')
+
 const PeerId = require('peer-id')
-const PeerInfo = require('peer-info')
+
 const PeerStore = require('libp2p/src/peer-store')
 const Node = require('./create-libp2p-node').bundle
 const tmpdir = require('ipfs-utils/src/temp-dir')
@@ -15,17 +16,21 @@ const Bitswap = require('../../src')
  * Create a mock libp2p node
  */
 exports.mockLibp2pNode = () => {
-  const peerInfo = new PeerInfo(PeerId.createFromHexString('122019318b6e5e0cf93a2314bf01269a2cc23cd3dcd452d742cdb9379d8646f6e4a9'))
+  const peerId = PeerId.createFromHexString('122019318b6e5e0cf93a2314bf01269a2cc23cd3dcd452d742cdb9379d8646f6e4a9')
 
   return Object.assign(new EventEmitter(), {
-    peerInfo: peerInfo,
+    peerId,
+    multiaddrs: [],
     handle () {},
     unhandle () {},
     contentRouting: {
       provide: async (cid) => {}, // eslint-disable-line require-await
       findProviders: async (cid, timeout) => { return [] } // eslint-disable-line require-await
     },
-    on () {},
+    connectionManager: {
+      on () {},
+      removeListener () {}
+    },
     async  dial (peer) { // eslint-disable-line require-await
     },
     async dialProtocol (peer, protocol) { // eslint-disable-line require-await
@@ -139,58 +144,44 @@ exports.applyNetwork = (bs, n) => {
   bs.engine.network = n
 }
 
-let basePort = 12000
-
 /**
  * @private
  * @param {number} n The number of nodes in the network
  * @param {boolean} enableDHT Whether or not to run the dht
  */
 exports.genBitswapNetwork = async (n, enableDHT = false) => {
-  const netArray = [] // bitswap, peerStore, libp2p, peerInfo, repo
+  const netArray = [] // bitswap, peerStore, libp2p, peerId, repo
 
-  // create PeerInfo and libp2p.Node for each
+  // create PeerId and libp2p.Node for each
   const peers = await Promise.all(
-    range(n).map(i => PeerInfo.create())
+    range(n).map(i => PeerId.create())
   )
 
   peers.forEach((p, i) => {
-    basePort++
-    p.multiaddrs.add('/ip4/127.0.0.1/tcp/' + basePort + '/ipfs/' + p.id.toB58String())
-
     const l = new Node({
-      peerInfo: p,
+      peerId: p,
+      addresses: {
+        listen: ['/ip4/127.0.0.1/tcp/0']
+      },
       config: {
         dht: {
           enabled: enableDHT
         }
       }
     })
-    netArray.push({ peerInfo: p, libp2p: l })
-  })
-
-  // create PeerStore and populate peerStore
-  netArray.forEach((net, i) => {
-    const pb = netArray[i].libp2p.peerStore
-    netArray.forEach((net, j) => {
-      if (i === j) {
-        return
-      }
-      pb.put(net.peerInfo)
-    })
-    netArray[i].peerStore = pb
+    netArray.push({ peerId: p, libp2p: l })
   })
 
   // create the repos
   const tmpDir = tmpdir()
   netArray.forEach((net, i) => {
-    const repoPath = tmpDir + '/' + net.peerInfo.id.toB58String()
+    const repoPath = tmpDir + '/' + net.peerId.toB58String()
     net.repo = new Repo(repoPath)
   })
 
   await Promise.all(
     netArray.map(async (net) => {
-      const repoPath = tmpDir + '/' + net.peerInfo.id.toB58String()
+      const repoPath = tmpDir + '/' + net.peerId.toB58String()
       net.repo = new Repo(repoPath)
 
       await net.repo.init({})
@@ -202,6 +193,18 @@ exports.genBitswapNetwork = async (n, enableDHT = false) => {
   await Promise.all(
     netArray.map((net) => net.libp2p.start())
   )
+
+  // create PeerStore and populate peerStore
+  netArray.forEach((net, i) => {
+    const pb = netArray[i].libp2p.peerStore
+    netArray.forEach((net, j) => {
+      if (i === j) {
+        return
+      }
+      pb.addressBook.set(net.peerId, net.libp2p.multiaddrs)
+    })
+    netArray[i].peerStore = pb
+  })
 
   // create every BitSwap
   netArray.forEach((net) => {

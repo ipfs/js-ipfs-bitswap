@@ -37,7 +37,7 @@ const statsKeys = [
 class Bitswap {
   constructor (libp2p, blockstore, options) {
     this._libp2p = libp2p
-    this._log = logger(this.peerInfo.id)
+    this._log = logger(this.peerId)
 
     this._options = Object.assign({}, defaultOptions, options)
 
@@ -54,16 +54,16 @@ class Bitswap {
     // local database
     this.blockstore = blockstore
 
-    this.engine = new DecisionEngine(this.peerInfo.id, blockstore, this.network, this._stats)
+    this.engine = new DecisionEngine(this.peerId, blockstore, this.network, this._stats)
 
     // handle message sending
-    this.wm = new WantManager(this.peerInfo.id, this.network, this._stats)
+    this.wm = new WantManager(this.peerId, this.network, this._stats)
 
-    this.notifications = new Notifications(this.peerInfo.id)
+    this.notifications = new Notifications(this.peerId)
   }
 
-  get peerInfo () {
-    return this._libp2p.peerInfo
+  get peerId () {
+    return this._libp2p.peerId
   }
 
   // handle messages received through the network
@@ -189,10 +189,12 @@ class Bitswap {
    */
   async get (cid, options = {}) { // eslint-disable-line require-await
     const fetchFromNetwork = (cid, options) => {
+      console.log('fetchFromNetwork 1')
       // add it to the want list - n.b. later we will abort the AbortSignal
       // so no need to remove the blocks from the wantlist after we have it
       this.wm.wantBlocks([cid], options)
 
+      console.log('fetchFromNetwork 2')
       return this.notifications.wantBlock(cid, options)
     }
 

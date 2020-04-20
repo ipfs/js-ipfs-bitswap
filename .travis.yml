@@ -23,8 +23,8 @@ jobs:
     - stage: check
       script:
         - npx aegir build --bundlesize
-        - npx aegir dep-check
-        - npm run lint
+        # - npx aegir dep-check
+        # - npm run lint
 
     - stage: test
       name: chrome

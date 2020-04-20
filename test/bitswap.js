@@ -5,6 +5,7 @@ const { expect } = require('aegir/utils/chai')
 const delay = require('delay')
 const PeerId = require('peer-id')
 const sinon = require('sinon')
+const pWaitFor = require('p-wait-for')
 
 const Bitswap = require('../src')
 
@@ -38,9 +39,12 @@ describe('bitswap without DHT', function () {
     ])
 
     // connect 0 -> 1 && 1 -> 2
+    nodes[0].libp2pNode.peerStore.addressBook.set(nodes[1].libp2pNode.peerId, nodes[1].libp2pNode.multiaddrs)
+    nodes[1].libp2pNode.peerStore.addressBook.set(nodes[2].libp2pNode.peerId, nodes[2].libp2pNode.multiaddrs)
+
     await Promise.all([
-      nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerInfo),
-      nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerInfo)
+      nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerId),
+      nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerId)
     ])
   })
 
@@ -132,10 +136,38 @@ describe('bitswap with DHT', function () {
     ])
 
     // connect 0 -> 1 && 1 -> 2
+    nodes[0].libp2pNode.peerStore.addressBook.set(nodes[1].libp2pNode.peerId, nodes[1].libp2pNode.multiaddrs)
+    nodes[1].libp2pNode.peerStore.addressBook.set(nodes[2].libp2pNode.peerId, nodes[2].libp2pNode.multiaddrs)
+    nodes[1].libp2pNode.peerStore.addressBook.set(nodes[0].libp2pNode.peerId, nodes[0].libp2pNode.multiaddrs)
+
+    // await nodes[1].libp2pNode.dialProtocol(nodes[2].libp2pNode.peerId, '/ipfs/kad/1.0.0')
+    // await delay(100)
+    // await nodes[1].libp2pNode.dialProtocol(nodes[0].libp2pNode.peerId, '/ipfs/kad/1.0.0')
+
+
     await Promise.all([
-      nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerInfo),
-      nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerInfo)
+      nodes[1].libp2pNode.dialProtocol(nodes[0].libp2pNode.peerId, '/ipfs/kad/1.0.0'),
+      nodes[1].libp2pNode.dialProtocol(nodes[2].libp2pNode.peerId, '/ipfs/kad/1.0.0')
     ])
+
+    // await dht routing table are updated
+    // await Promise.all([
+    //   pWaitFor(() => nodes[0].libp2pNode._dht.routingTable.size >= 1),
+    //   pWaitFor(() => nodes[1].libp2pNode._dht.routingTable.size >= 2)
+    // ])
+    await Promise.all([
+      pWaitFor(() => {
+        console.log('0', nodes[0].libp2pNode._dht.routingTable.size)
+        return nodes[0].libp2pNode._dht.routingTable.size >= 1
+      }),
+      pWaitFor(() => {
+        console.log('1', nodes[1].libp2pNode._dht.routingTable.size)
+        return nodes[1].libp2pNode._dht.routingTable.size >= 1
+      })
+    ])
+
+    // Give time to process
+    await delay(100)
   })
 
   after(async () => {
@@ -148,11 +180,14 @@ describe('bitswap with DHT', function () {
 
   it('put a block in 2, get it in 0', async () => {
     const block = await makeBlock()
+    console.log('put')
     await nodes[2].bitswap.put(block)
+    console.log('put done')
 
     // Give put time to process
-    await delay(100)
+    await delay(1000)
 
+    console.log('get')
     const blockRetrieved = await nodes[0].bitswap.get(block.cid)
     expect(block.data).to.eql(blockRetrieved.data)
     expect(block.cid).to.eql(blockRetrieved.cid)
