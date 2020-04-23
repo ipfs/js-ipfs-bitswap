@@ -50,7 +50,9 @@ class DecisionEngine {
   }
 
   _scheduleProcessTasks () {
-    this._processTasks()
+    setTimeout(() => {
+      this._processTasks()
+    })
   }
 
   // Pull tasks off the request queue and send a message to the corresponding
