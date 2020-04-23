@@ -2,10 +2,10 @@
 
 const multihashing = require('multihashing-async')
 const CID = require('cids')
-const Block = require('ipfs-block')
+const Block = require('ipld-block')
 const crypto = require('crypto')
 const range = require('lodash.range')
-const Buffer = require('safe-buffer').Buffer
+const { Buffer } = require('buffer')
 const uuid = require('uuid/v4')
 
 module.exports = async (count, size) => {
