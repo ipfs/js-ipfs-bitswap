@@ -50,7 +50,7 @@ class DecisionEngine {
   }
 
   _scheduleProcessTasks () {
-    setImmediate(() => this._processTasks())
+    this._processTasks()
   }
 
   // Pull tasks off the request queue and send a message to the corresponding
