@@ -2,7 +2,7 @@
 'use strict'
 const chai = require('chai')
 const CID = require('cids')
-const Block = require('ipfs-block')
+const Block = require('ipld-block')
 const { Buffer } = require('buffer')
 const multihashing = require('multihashing-async')
 const BitswapMessageEntry = require('../src/types/message/entry')
