@@ -87,7 +87,7 @@
     "multihashing-async": "^0.8.0",
     "protons": "^1.0.1",
     "streaming-iterables": "^4.1.1",
-    "varint-decoder": "hugomrdias/varint-decoder#fix/is-buffer"
+    "varint-decoder": "daviddias/varint-decoder#master"
   },
   "pre-push": [
     "lint",
