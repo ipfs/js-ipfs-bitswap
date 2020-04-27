@@ -1,3 +1,13 @@
+<a name="0.29.1"></a>
+## [0.29.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.29.0...v0.29.1) (2020-04-27)
+
+
+### Bug Fixes
+
+* really remove node globals ([#219](https://github.com/ipfs/js-ipfs-bitswap/issues/219)) ([120d1c7](https://github.com/ipfs/js-ipfs-bitswap/commit/120d1c7))
+
+
+
 <a name="0.29.0"></a>
 # [0.29.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.28.0...v0.29.0) (2020-04-23)
 
