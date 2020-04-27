@@ -5,7 +5,7 @@ const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
 const PeerStore = require('libp2p/src/peer-store')
 const Node = require('./create-libp2p-node').bundle
-const os = require('os')
+const tmpdir = require('ipfs-utils/src/temp-dir')
 const Repo = require('ipfs-repo')
 const EventEmitter = require('events')
 
@@ -59,14 +59,14 @@ exports.mockNetwork = (calls, done, onMsg) => {
     messages,
     connects,
     connectTo (p) {
-      setImmediate(() => {
+      setTimeout(() => {
         connects.push(p)
       })
     },
     sendMessage (p, msg) {
       messages.push([p, msg])
 
-      setImmediate(() => {
+      setTimeout(() => {
         finish([p, msg])
       })
 
@@ -182,7 +182,7 @@ exports.genBitswapNetwork = async (n, enableDHT = false) => {
   })
 
   // create the repos
-  const tmpDir = os.tmpdir()
+  const tmpDir = tmpdir()
   netArray.forEach((net, i) => {
     const repoPath = tmpDir + '/' + net.peerInfo.id.toB58String()
     net.repo = new Repo(repoPath)
