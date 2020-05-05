@@ -8,10 +8,10 @@ const PeerId = require('peer-id')
 const range = require('lodash.range')
 const difference = require('lodash.difference')
 const flatten = require('lodash.flatten')
-const Block = require('ipfs-block')
+const Block = require('ipld-block')
 const CID = require('cids')
 const multihashing = require('multihashing-async')
-const Buffer = require('safe-buffer').Buffer
+const Buffer = require('buffer').Buffer
 
 const Message = require('../../src/types/message')
 const DecisionEngine = require('../../src/decision-engine')
