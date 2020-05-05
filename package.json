@@ -50,6 +50,7 @@
     "delay": "^4.3.0",
     "dirty-chai": "^2.0.1",
     "ipfs-repo": "^2.1.0",
+    "ipfs-utils": "^2.2.1",
     "iso-random-stream": "^1.1.1",
     "libp2p": "^0.27.0",
     "libp2p-kad-dht": "^0.18.3",
