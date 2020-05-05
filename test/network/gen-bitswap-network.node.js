@@ -5,8 +5,8 @@
 const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
-const Block = require('ipfs-block')
-const Buffer = require('safe-buffer').Buffer
+const Block = require('ipld-block')
+const Buffer = require('buffer').Buffer
 const crypto = require('crypto')
 const CID = require('cids')
 const multihashing = require('multihashing-async')

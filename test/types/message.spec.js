@@ -5,7 +5,7 @@ const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
 const CID = require('cids')
-const Buffer = require('safe-buffer').Buffer
+const Buffer = require('buffer').Buffer
 const loadFixture = require('aegir/fixtures')
 const testDataPath = 'test/fixtures/serialized-from-go'
 const rawMessageFullWantlist = loadFixture(testDataPath + '/bitswap110-message-full-wantlist')

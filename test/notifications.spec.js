@@ -6,7 +6,7 @@ chai.use(require('dirty-chai'))
 
 const expect = chai.expect
 const CID = require('cids')
-const Block = require('ipfs-block')
+const Block = require('ipld-block')
 
 const Notifications = require('../src/notifications')
 

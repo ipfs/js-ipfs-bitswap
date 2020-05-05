@@ -1,6 +1,6 @@
 'use strict'
 
-const Block = require('ipfs-block')
+const Block = require('ipld-block')
 const CID = require('cids')
 const { getName } = require('multicodec')
 const vd = require('varint-decoder')
