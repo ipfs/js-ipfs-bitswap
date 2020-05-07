@@ -1,3 +1,15 @@
+<a name="0.29.2"></a>
+## [0.29.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.29.1...v0.29.2) (2020-05-07)
+
+
+### Bug Fixes
+
+* re-sort queue after adding tasks ([#221](https://github.com/ipfs/js-ipfs-bitswap/issues/221)) ([1a5ed4a](https://github.com/ipfs/js-ipfs-bitswap/commit/1a5ed4a)), closes [ipfs/js-ipfs#2992](https://github.com/ipfs/js-ipfs/issues/2992)
+* survive bad network requests ([#222](https://github.com/ipfs/js-ipfs-bitswap/issues/222)) ([2fc7023](https://github.com/ipfs/js-ipfs-bitswap/commit/2fc7023)), closes [#221](https://github.com/ipfs/js-ipfs-bitswap/issues/221)
+* **ci:** add empty commit to fix lint checks on master ([7872a19](https://github.com/ipfs/js-ipfs-bitswap/commit/7872a19))
+
+
+
 <a name="0.29.1"></a>
 ## [0.29.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.29.0...v0.29.1) (2020-04-27)
 
