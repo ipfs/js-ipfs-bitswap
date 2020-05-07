@@ -120,16 +120,20 @@ class DecisionEngine {
       return
     }
 
-    // Send the message
-    await this.network.sendMessage(peerId, msg)
+    try {
+      // Send the message
+      await this.network.sendMessage(peerId, msg)
+
+      // Peform sent message accounting
+      for (const block of blocks.values()) {
+        this.messageSent(peerId, block)
+      }
+    } catch (err) {
+      this._log.error(err)
+    }
 
     // Free the tasks up from the request queue
     this._requestQueue.tasksDone(peerId, tasks)
-
-    // Peform sent message accounting
-    for (const block of blocks.values()) {
-      this.messageSent(peerId, block)
-    }
 
     // Trigger the next round of task processing
     this._scheduleProcessTasks()

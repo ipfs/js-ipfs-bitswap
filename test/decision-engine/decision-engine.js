@@ -683,4 +683,50 @@ describe('Engine', () => {
       }
     }
   })
+
+  it('survives not being able to send a message to peer', async () => {
+    let r
+    const failToSendPromise = new Promise((resolve) => {
+      r = resolve
+    })
+
+    const network = mockNetwork()
+    network.sendMessage = () => {
+      r()
+      throw new Error('Something is b0rken')
+    }
+
+    // who is in the network
+    const us = await newEngine(network)
+    const them = await newEngine()
+
+    // add a block to our blockstore
+    const data = Buffer.from(`this is message ${Date.now()}`)
+    const hash = await multihashing(data, 'sha2-256')
+    const cid = new CID(hash)
+    const block = new Block(data, cid)
+    await us.engine.blockstore.put(block)
+
+    // receive a message with a want for our block
+    await us.engine.messageReceived(them.peer, {
+      blocks: [],
+      wantlist: [{
+        cid,
+        priority: 1,
+        wantType: 'wanty'
+      }]
+    })
+
+    // should have added a task for the remote peer
+    const tasks = us.engine._requestQueue._byPeer.get(them.peer.toB58String())
+
+    expect(tasks).to.have.property('_pending').that.has.property('length', 1)
+
+    // wait for us.network.sendMessage to be called
+    await failToSendPromise
+
+    // should be done processing
+    expect(tasks).to.have.property('_pending').that.has.property('length', 0)
+    expect(tasks).to.have.property('_active').that.has.property('size', 0)
+  })
 })
