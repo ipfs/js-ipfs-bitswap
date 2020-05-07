@@ -43,7 +43,7 @@
   "homepage": "https://github.com/ipfs/js-ipfs-bitswap#readme",
   "devDependencies": {
     "@nodeutils/defaults-deep": "^1.1.0",
-    "aegir": "^21.9.0",
+    "aegir": "^21.10.1",
     "async-iterator-all": "^1.0.0",
     "benchmark": "^2.1.4",
     "buffer": "^5.6.0",

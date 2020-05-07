@@ -54,12 +54,11 @@ class RequestQueue {
    */
   pushTasks (peerId, tasks) {
     let peerTasks = this._byPeer.get(peerId.toB58String())
-    if (peerTasks) {
-      peerTasks.pushTasks(tasks)
-      return
+
+    if (!peerTasks) {
+      peerTasks = new PeerTasks(peerId, this._taskMerger)
     }
 
-    peerTasks = new PeerTasks(peerId, this._taskMerger)
     peerTasks.pushTasks(tasks)
     this._byPeer.set(peerId.toB58String(), peerTasks)
   }

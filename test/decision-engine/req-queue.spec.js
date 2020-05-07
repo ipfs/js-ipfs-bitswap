@@ -237,6 +237,31 @@ describe('Request Queue', () => {
     })
   })
 
+  it('resorts queue when new peer tasks are added where peer tasks already exist', () => {
+    const rq = new RequestQueue()
+
+    rq.pushTasks(peerIds[0], [{
+      topic: 'a',
+      size: 0,
+      priority: 1
+    }])
+    rq.pushTasks(peerIds[1], [{
+      topic: 'a',
+      size: 0,
+      priority: 1
+    }])
+    rq.pushTasks(peerIds[0], [{
+      topic: 'a',
+      size: 1,
+      priority: 1
+    }])
+
+    // _byPeer map should have been resorted to put peer0
+    // fist in the queue
+    const { peerId } = rq.popTasks(16)
+    expect(peerId).to.eql(peerIds[0])
+  })
+
   describe('remove', () => {
     it('removes tasks by peer and topic', () => {
       const rq = new RequestQueue()
