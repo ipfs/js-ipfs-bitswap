@@ -199,4 +199,28 @@ describe('network', () => {
     await networkA.sendMessage(p2pC.peerInfo.id, msg)
     await deferred.promise
   })
+
+  it('dials to peer using Bitswap 1.2.0', async () => {
+    networkA = new Network(p2pA, bitswapMockA)
+
+    // only supports 1.2.0
+    networkB = new Network(p2pB, bitswapMockB)
+    networkB.protocols = ['/ipfs/bitswap/1.2.0']
+
+    networkA.start()
+    networkB.start()
+
+    // FIXME: have to already be connected as sendMessage only accepts a peer id, not a PeerInfo
+    await p2pA.dial(p2pB.peerInfo)
+
+    const deferred = pDefer()
+
+    bitswapMockB._receiveMessage = () => {
+      deferred.resolve()
+    }
+
+    await networkA.sendMessage(p2pB.peerInfo.id, new Message(true))
+
+    return deferred
+  })
 })

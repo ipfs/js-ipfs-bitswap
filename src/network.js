@@ -181,7 +181,7 @@ class Network {
 
   // Dial to the peer and try to use the most recent Bitswap
   _dialPeer (peer) {
-    return this.libp2p.dialProtocol(peer, [BITSWAP110, BITSWAP100])
+    return this.libp2p.dialProtocol(peer, [BITSWAP120, BITSWAP110, BITSWAP100])
   }
 
   _updateSentStats (peer, blocks) {
