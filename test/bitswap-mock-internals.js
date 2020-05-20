@@ -7,7 +7,8 @@ const chai = require('chai')
 chai.use(require('dirty-chai'))
 const expect = chai.expect
 const PeerId = require('peer-id')
-const all = require('async-iterator-all')
+const all = require('it-all')
+const drain = require('it-drain')
 const Message = require('../src/types/message')
 const Bitswap = require('../src')
 
@@ -143,7 +144,7 @@ describe('bitswap with mocks', function () {
 
       await bs._receiveMessage(other, msg)
 
-      const res = await Promise.all([b1.cid, b2.cid, b3.cid].map((cid) => repo.blocks.has(cid)))
+      const res = await Promise.all([b1.cid, b2.cid, b3.cid].map((cid) => repo.blocks.get(cid).then(() => true, () => false)))
       expect(res).to.eql([false, true, false])
 
       const ledger = bs.ledgerForPeer(other)
@@ -190,7 +191,7 @@ describe('bitswap with mocks', function () {
       const b2 = blocks[14]
       const b3 = blocks[13]
 
-      await repo.blocks.putMany([b1, b2, b3])
+      await drain(repo.blocks.putMany([b1, b2, b3]))
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
 
       const retrievedBlocks = await all(bs.getMany([b1.cid, b2.cid, b3.cid]))
@@ -203,7 +204,7 @@ describe('bitswap with mocks', function () {
       const b2 = blocks[6]
       const b3 = blocks[7]
 
-      await repo.blocks.putMany([b1, b2, b3])
+      await drain(repo.blocks.putMany([b1, b2, b3]))
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
 
       const block1 = await bs.get(b1.cid)
@@ -337,9 +338,7 @@ describe('bitswap with mocks', function () {
         bs.get(block.cid)
       ])
 
-      bs.put(block, (err) => {
-        expect(err).to.not.exist()
-      })
+      bs.put(block)
 
       const res = await resP
       expect(res[0]).to.eql(block)

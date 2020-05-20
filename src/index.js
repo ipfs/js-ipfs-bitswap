@@ -6,6 +6,7 @@ const DecisionEngine = require('./decision-engine')
 const Notifications = require('./notifications')
 const logger = require('./utils').logger
 const Stats = require('./stats')
+const first = require('it-first')
 
 const defaultOptions = {
   statsEnabled: false,
@@ -100,7 +101,17 @@ class Bitswap {
   async _handleReceivedBlock (peerId, block, wasWanted) {
     this._log('received block')
 
-    const has = await this.blockstore.has(block.cid)
+    let has = false
+
+    try {
+      await this.blockstore.get(block.cid)
+      has = true
+    } catch (err) {
+      if (err.code !== 'ERR_NOT_FOUND') {
+        throw err
+      }
+    }
+
     this._updateReceiveCounters(peerId.toB58String(), block, has)
 
     if (has || !wasWanted) {
@@ -182,58 +193,69 @@ class Bitswap {
    * @param {CID} cid
    * @returns {Promise<Block>}
    */
-  async get (cid) {
-    for await (const block of this.getMany([cid])) {
-      return block
-    }
+  async get (cid) { // eslint-disable-line require-await
+    return first(this.getMany([cid]))
   }
 
   /**
    * Fetch a a list of blocks by cid. If the blocks are in the local
    * blockstore they are returned, otherwise the blocks are added to the wantlist and returned once another node sends them to us.
    *
-   * @param {Iterable<CID>} cids
+   * @param {AsyncIterator<CID>} cids
    * @returns {Promise<AsyncIterator<Block>>}
    */
   async * getMany (cids) {
-    let pendingStart = cids.length
-    const wantList = []
-    let promptedNetwork = false
-
     const fetchFromNetwork = async (cid) => {
-      wantList.push(cid)
+      // add it to the want list
+      this.wm.wantBlocks([cid])
 
-      const blockP = this.notifications.wantBlock(cid)
+      const block = await this.notifications.wantBlock(cid)
 
-      if (!pendingStart) {
-        this.wm.wantBlocks(wantList)
-      }
-
-      const block = await blockP
+      // we've got it, remove it from the want list
       this.wm.cancelWants([cid])
 
       return block
     }
 
-    for (const cid of cids) {
-      const has = await this.blockstore.has(cid)
-      pendingStart--
-      if (has) {
-        if (!pendingStart) {
-          this.wm.wantBlocks(wantList)
+    let promptedNetwork = false
+
+    const loadOrFetchFromNetwork = async (cid) => {
+      try {
+        // have to await here as we want to handle ERR_NOT_FOUND
+        const block = await this.blockstore.get(cid)
+
+        return block
+      } catch (err) {
+        if (err.code !== 'ERR_NOT_FOUND') {
+          throw err
         }
-        yield this.blockstore.get(cid)
 
-        continue
+        if (!promptedNetwork) {
+          promptedNetwork = true
+
+          this.network.findAndConnect(cid)
+            .catch((err) => this._log.error(err))
+        }
+
+        // we don't have the block locally so fetch it from the network
+        return fetchFromNetwork(cid)
       }
+    }
 
-      if (!promptedNetwork) {
-        promptedNetwork = true
-        this.network.findAndConnect(cids[0]).catch((err) => this._log.error(err))
-      }
+    for (const cid of cids) {
+      // depending on implementation it's possible for blocks to come in while
+      // we do the async operations to get them from the blockstore leading to
+      // a race condition, so register for incoming block notifications as well
+      // as trying to get it from the datastore
+      const block = await Promise.race([
+        this.notifications.wantBlock(cid),
+        loadOrFetchFromNetwork(cid)
+      ])
 
-      // we don't have the block locally so fetch it from the network
-      yield fetchFromNetwork(cid)
+      // since we have the block we can now remove our listener
+      this.notifications.unwantBlock(cid)
+
+      yield block
     }
   }
 
@@ -273,7 +295,7 @@ class Bitswap {
    * @returns {Promise<void>}
    */
   async put (block) { // eslint-disable-line require-await
-    return this.putMany([block])
+    return first(this.putMany([block]))
   }
 
   /**
@@ -281,19 +303,13 @@ class Bitswap {
    * send it to nodes that have it them their wantlist.
    *
    * @param {AsyncIterable<Block>|Iterable<Block>} blocks
-   * @returns {Promise<void>}
+   * @returns {AsyncIterable<Block>}
    */
-  async putMany (blocks) { // eslint-disable-line require-await
-    const self = this
+  async * putMany (blocks) { // eslint-disable-line require-await
+    for await (const block of this.blockstore.putMany(blocks)) {
+      this._sendHaveBlockNotifications(block)
 
-    for await (const block of blocks) {
-      if (await self.blockstore.has(block.cid)) {
-        continue
-      }
-
-      await this.blockstore.put(block)
-
-      self._sendHaveBlockNotifications(block)
+      yield block
     }
   }
 

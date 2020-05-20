@@ -50,6 +50,10 @@ class Notifications extends EventEmitter {
    * @returns {Promise<Block>}
    */
   wantBlock (cid) {
+    if (!cid) {
+      throw new Error('Not a valid cid')
+    }
+
     const cidStr = cid.toString('base58btc')
     this._log(`wantBlock:${cidStr}`)
 

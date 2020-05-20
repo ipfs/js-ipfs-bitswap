@@ -88,32 +88,32 @@ describe('bitswap without DHT', function () {
 
     // slow blockstore
     nodes[0].bitswap.blockstore = {
-      has: sinon.stub().withArgs(block.cid).returns(false),
-      put: sinon.stub()
+      get: sinon.stub().withArgs(block.cid).throws({ code: 'ERR_NOT_FOUND' }),
+      putMany: sinon.stub().returns([])
     }
 
     // add the block to our want list
     const wantBlockPromise1 = nodes[0].bitswap.get(block.cid)
 
     // oh look, a peer has sent it to us - this will trigger a `blockstore.put` which
-    // is an async operation so `self.blockstore.has(cid)` will still return false
+    // is an async operation so `self.blockstore.get(cid)` will still throw
     // until the write has completed
     await nodes[0].bitswap._receiveMessage(peerId, message)
 
     // block store did not have it
-    expect(nodes[0].bitswap.blockstore.has.calledWith(block.cid)).to.be.true()
+    expect(nodes[0].bitswap.blockstore.get.calledWith(block.cid)).to.be.true()
 
     // another context wants the same block
     const wantBlockPromise2 = nodes[0].bitswap.get(block.cid)
 
-    // meanwhile the blockstore finishes it's batch
-    nodes[0].bitswap.blockstore.has = sinon.stub().withArgs(block.cid).returns(true)
+    // meanwhile the blockstore has written the block
+    nodes[0].bitswap.blockstore.get = sinon.stub().withArgs(block.cid).returns(block)
 
     // here it comes again
     await nodes[0].bitswap._receiveMessage(peerId, message)
 
     // block store had it this time
-    expect(nodes[0].bitswap.blockstore.has.calledWith(block.cid)).to.be.true()
+    expect(nodes[0].bitswap.blockstore.get.calledWith(block.cid)).to.be.true()
 
     // both requests should get the block
     expect(await wantBlockPromise1).to.deep.equal(block)
@@ -150,8 +150,6 @@ describe('bitswap with DHT', function () {
 
   it('put a block in 2, get it in 0', async () => {
     const block = await makeBlock()
-    nodes[2].bitswap.put(block)
-
     await nodes[2].bitswap.put(block)
 
     // Give put time to process

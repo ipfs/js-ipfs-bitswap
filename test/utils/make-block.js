@@ -6,7 +6,7 @@ const Block = require('ipld-block')
 const randomBytes = require('iso-random-stream/src/random')
 const range = require('lodash.range')
 const { Buffer } = require('buffer')
-const uuid = require('uuid/v4')
+const { v4: uuid } = require('uuid')
 
 module.exports = async (count, size) => {
   const blocks = await Promise.all(

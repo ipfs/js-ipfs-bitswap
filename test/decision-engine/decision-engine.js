@@ -12,6 +12,7 @@ const Block = require('ipld-block')
 const CID = require('cids')
 const multihashing = require('multihashing-async')
 const { Buffer } = require('buffer')
+const drain = require('it-drain')
 
 const Message = require('../../src/types/message')
 const DecisionEngine = require('../../src/decision-engine')
@@ -131,7 +132,7 @@ describe('Engine', () => {
     async function peerSendsBlocks (dEngine, repo, blocks, peer) {
       // Bitswap puts blocks into the blockstore then passes the blocks to the
       // Decision Engine
-      await repo.blocks.putMany(blocks)
+      await drain(repo.blocks.putMany(blocks))
       await dEngine.receivedBlocks(blocks)
     }
 
@@ -192,7 +193,7 @@ describe('Engine', () => {
     }
 
     const repo = await createTempRepo()
-    await repo.blocks.putMany(blocks)
+    await drain(repo.blocks.putMany(blocks))
 
     let network
     let rcvdBlockCount = 0
@@ -276,7 +277,7 @@ describe('Engine', () => {
     // Simulate receiving message - put blocks into the blockstore then pass
     // them to the Decision Engine
     const rcvdBlocks = [blocks[0], blocks[2]]
-    await repo.blocks.putMany(rcvdBlocks)
+    await drain(repo.blocks.putMany(rcvdBlocks))
     await dEngine.receivedBlocks(rcvdBlocks)
 
     // Wait till the engine sends a message
@@ -329,7 +330,7 @@ describe('Engine', () => {
 
     // Simulate receiving message with blocks - put blocks into the blockstore
     // then pass them to the Decision Engine
-    await repo.blocks.putMany(blocks)
+    await drain(repo.blocks.putMany(blocks))
     await dEngine.receivedBlocks(blocks)
 
     const [toPeer2, msg2] = await receiveMessage()
@@ -625,7 +626,7 @@ describe('Engine', () => {
     })
 
     const repo = await createTempRepo()
-    await repo.blocks.putMany(blocks)
+    await drain(repo.blocks.putMany(blocks))
     const dEngine = new DecisionEngine(id, repo.blocks, network, null, { maxSizeReplaceHasWithBlock: 0 })
     dEngine._scheduleProcessTasks = () => {}
     dEngine.start()
