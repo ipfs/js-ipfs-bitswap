@@ -89,6 +89,7 @@ describe('bitswap without DHT', function () {
     // slow blockstore
     nodes[0].bitswap.blockstore = {
       get: sinon.stub().withArgs(block.cid).throws({ code: 'ERR_NOT_FOUND' }),
+      has: sinon.stub().withArgs(block.cid).returns(false),
       putMany: sinon.stub().returns([])
     }
 
@@ -107,7 +108,7 @@ describe('bitswap without DHT', function () {
     const wantBlockPromise2 = nodes[0].bitswap.get(block.cid)
 
     // meanwhile the blockstore has written the block
-    nodes[0].bitswap.blockstore.get = sinon.stub().withArgs(block.cid).returns(block)
+    nodes[0].bitswap.blockstore.has = sinon.stub().withArgs(block.cid).returns(true)
 
     // here it comes again
     await nodes[0].bitswap._receiveMessage(peerId, message)

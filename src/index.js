@@ -101,16 +101,7 @@ class Bitswap {
   async _handleReceivedBlock (peerId, block, wasWanted) {
     this._log('received block')
 
-    let has = false
-
-    try {
-      await this.blockstore.get(block.cid)
-      has = true
-    } catch (err) {
-      if (err.code !== 'ERR_NOT_FOUND') {
-        throw err
-      }
-    }
+    const has = await this.blockstore.has(block.cid)
 
     this._updateReceiveCounters(peerId.toB58String(), block, has)
 
