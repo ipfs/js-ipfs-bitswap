@@ -239,7 +239,11 @@ class Bitswap {
       // a race condition, so register for incoming block notifications as well
       // as trying to get it from the datastore
       const block = await Promise.race([
-        this.notifications.wantBlock(cid),
+        this.notifications.wantBlock(cid).then(block => {
+          // if block is not set it means this block was unwanted while we wanted
+          // it so we should be able to load it from the datastore now
+          return block || loadOrFetchFromNetwork(cid)
+        }),
         loadOrFetchFromNetwork(cid)
       ])
 
