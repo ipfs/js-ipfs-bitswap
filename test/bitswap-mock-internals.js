@@ -11,6 +11,8 @@ const Message = require('../src/types/message')
 const Bitswap = require('../src')
 const CID = require('cids')
 const Block = require('ipld-block')
+const AbortController = require('abort-controller')
+const delay = require('delay')
 
 const createTempRepo = require('./utils/create-temp-repo-nodejs')
 const mockNetwork = require('./utils/mocks').mockNetwork
@@ -20,6 +22,16 @@ const storeHasBlocks = require('./utils/store-has-blocks')
 const makeBlock = require('./utils/make-block')
 const makePeerId = require('./utils/make-peer-id')
 const orderedFinish = require('./utils/helpers').orderedFinish
+
+function wantsBlock (cid, bitswap) {
+  for (const [key, value] of bitswap.getWantlist()) { // eslint-disable-line no-unused-vars
+    if (value.cid.toString() === cid.toString()) {
+      return true
+    }
+  }
+
+  return false
+}
 
 describe('bitswap with mocks', function () {
   this.timeout(10 * 1000)
@@ -368,9 +380,63 @@ describe('bitswap with mocks', function () {
       const res = await resP
 
       // blocks should have the requested CID but with the same data
-      expect(res[0]).to.eql(new Block(block.data, cid1))
-      expect(res[1]).to.eql(new Block(block.data, cid2))
-      expect(res[2]).to.eql(new Block(block.data, cid3))
+      expect(res[0]).to.deep.equal(new Block(block.data, cid1))
+      expect(res[1]).to.deep.equal(new Block(block.data, cid2))
+      expect(res[2]).to.deep.equal(new Block(block.data, cid3))
+    })
+
+    it('removes a block from the wantlist when the request is aborted', async () => {
+      const block = await makeBlock()
+      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const controller = new AbortController()
+
+      const p = bs.get(block.cid, {
+        signal: controller.signal
+      })
+
+      await delay(1000)
+
+      expect(wantsBlock(block.cid, bs)).to.be.true()
+
+      controller.abort()
+
+      await expect(p).to.eventually.rejectedWith(/aborted/)
+
+      expect(wantsBlock(block.cid, bs)).to.be.false()
+    })
+
+    it('block should still be in the wantlist if only one request is aborted', async () => {
+      const block = await makeBlock()
+      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const controller = new AbortController()
+
+      // request twice
+      const p1 = bs.get(block.cid, {
+        signal: controller.signal
+      })
+      const p2 = bs.get(block.cid)
+
+      await delay(100)
+
+      // should want the block
+      expect(wantsBlock(block.cid, bs)).to.be.true()
+
+      // abort one request
+      controller.abort()
+
+      await expect(p1).to.eventually.rejectedWith(/aborted/)
+
+      // here comes the block
+      bs.put(block)
+
+      // should still want it
+      expect(wantsBlock(block.cid, bs)).to.be.true()
+
+      // second request should resolve with the block
+      await expect(p2).to.eventually.deep.equal(block)
+
+      // should not be in the want list any more
+      expect(wantsBlock(block.cid, bs)).to.be.false()
     })
   })
 

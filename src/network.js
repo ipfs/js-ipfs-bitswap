@@ -105,14 +105,17 @@ class Network {
    *
    * @param {CID} cid
    * @param {number} maxProviders
-   * @returns {Promise<Result<Array>>}
+   * @param {Object} options
+   * @param {AbortSignal} options.abortSignal
+   * @returns {AsyncIterable<PeerInfo>}
    */
-  findProviders (cid, maxProviders) {
+  findProviders (cid, maxProviders, options = {}) {
     return this.libp2p.contentRouting.findProviders(
       cid,
       {
         maxTimeout: CONSTANTS.providerRequestTimeout,
-        maxNumProviders: maxProviders
+        maxNumProviders: maxProviders,
+        signal: options.signal
       }
     )
   }
@@ -121,19 +124,29 @@ class Network {
    * Find the providers of a given `cid` and connect to them.
    *
    * @param {CID} cid
+   * @param {Object} options
+   * @param {AbortSignal} options.abortSignal
    * @returns {void}
    */
-  async findAndConnect (cid) {
+  async findAndConnect (cid, options) {
     const connectAttempts = []
-    for await (const provider of this.findProviders(cid, CONSTANTS.maxProvidersPerRequest)) {
+    for await (const provider of this.findProviders(cid, CONSTANTS.maxProvidersPerRequest, options)) {
       this._log('connecting to providers', provider.id.toB58String())
-      connectAttempts.push(this.connectTo(provider))
+      connectAttempts.push(this.connectTo(provider, options))
     }
     await Promise.all(connectAttempts)
   }
 
-  async provide (cid) {
-    await this.libp2p.contentRouting.provide(cid)
+  /**
+   * Tell the network we can provide content for the passed CID
+   *
+   * @param {CID} cid
+   * @param {Object} options
+   * @param {AbortSignal} options.abortSignal
+   * @returns {Promise<void>}
+   */
+  async provide (cid, options) {
+    await this.libp2p.contentRouting.provide(cid, options)
   }
 
   // Connect to the given peer
@@ -169,14 +182,16 @@ class Network {
    * Connects to another peer
    *
    * @param {PeerInfo|PeerId|Multiaddr} peer
-   * @returns {Promise.<Connection>}
+   * @param {Object} options
+   * @param {AbortSignal} options.abortSignal
+   * @returns {Promise<Connection>}
    */
-  async connectTo (peer) { // eslint-disable-line require-await
+  async connectTo (peer, options) { // eslint-disable-line require-await
     if (!this._running) {
       throw new Error('network isn\'t running')
     }
 
-    return this.libp2p.dial(peer)
+    return this.libp2p.dial(peer, options)
   }
 
   // Dial to the peer and try to use the most recent Bitswap

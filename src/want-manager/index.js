@@ -82,8 +82,14 @@ module.exports = class WantManager {
   }
 
   // add all the cids to the wantlist
-  wantBlocks (cids) {
+  wantBlocks (cids, options = {}) {
     this._addEntries(cids, false)
+
+    if (options && options.signal) {
+      options.signal.addEventListener('abort', () => {
+        this.cancelWants(cids)
+      })
+    }
   }
 
   // remove blocks of all the given keys without respecting refcounts

@@ -202,24 +202,20 @@ class Bitswap {
    * @returns {Promise<AsyncIterator<Block>>}
    */
   async * getMany (cids, options = {}) {
-    const fetchFromNetwork = async (cid) => {
-      // add it to the want list
-      this.wm.wantBlocks([cid])
+    const fetchFromNetwork = (cid, options) => {
+      // add it to the want list - n.b. later we will abort the AbortSignal
+      // so no need to remove the blocks from the wantlist after we have it
+      this.wm.wantBlocks([cid], options)
 
-      const block = await this.notifications.wantBlock(cid)
-
-      // we've got it, remove it from the want list
-      this.wm.cancelWants([cid])
-
-      return block
+      return this.notifications.wantBlock(cid, options)
     }
 
     let promptedNetwork = false
 
-    const loadOrFetchFromNetwork = async (cid) => {
+    const loadOrFetchFromNetwork = async (cid, options) => {
       try {
         // have to await here as we want to handle ERR_NOT_FOUND
-        const block = await this.blockstore.get(cid)
+        const block = await this.blockstore.get(cid, options)
 
         return block
       } catch (err) {
@@ -235,7 +231,7 @@ class Bitswap {
         }
 
         // we don't have the block locally so fetch it from the network
-        return fetchFromNetwork(cid)
+        return fetchFromNetwork(cid, options)
       }
     }
 
@@ -251,7 +247,9 @@ class Bitswap {
         this.notifications.wantBlock(cid, {
           signal
         }),
-        loadOrFetchFromNetwork(cid)
+        loadOrFetchFromNetwork(cid, {
+          signal
+        })
       ])
 
       // since we have the block we can now remove our listener
