@@ -1,7 +1,7 @@
 'use strict'
 
 const range = require('lodash.range')
-const expect = require('chai').expect
+const { expect } = require('aegir/utils/chai')
 
 exports.orderedFinish = (n) => {
   const r = range(1, n + 1)

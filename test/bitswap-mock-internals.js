@@ -3,14 +3,13 @@
 'use strict'
 
 const range = require('lodash.range')
-const chai = require('chai')
-chai.use(require('dirty-chai'))
-const expect = chai.expect
+const { expect } = require('aegir/utils/chai')
 const PeerId = require('peer-id')
 const all = require('it-all')
 const drain = require('it-drain')
 const Message = require('../src/types/message')
 const Bitswap = require('../src')
+const CID = require('cids')
 
 const createTempRepo = require('./utils/create-temp-repo-nodejs')
 const mockNetwork = require('./utils/mocks').mockNetwork
@@ -344,6 +343,32 @@ describe('bitswap with mocks', function () {
       expect(res[0]).to.eql(block)
       expect(res[1]).to.eql(block)
     })
+
+    it('gets for same block with different CIDs', async () => {
+      const block = blocks[11]
+
+      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+
+      expect(block).to.have.nested.property('cid.codec', 'dag-pb')
+      expect(block).to.have.nested.property('cid.version', 0)
+
+      const cid1 = new CID(0, 'dag-pb', block.cid.multihash)
+      const cid2 = new CID(1, 'dag-pb', block.cid.multihash)
+      const cid3 = new CID(1, 'raw', block.cid.multihash)
+
+      const resP = Promise.all([
+        bs.get(cid1),
+        bs.get(cid2),
+        bs.get(cid3)
+      ])
+
+      bs.put(block)
+
+      const res = await resP
+      expect(res[0]).to.eql(block)
+      expect(res[1]).to.eql(block)
+      expect(res[2]).to.eql(block)
+    })
   })
 
   describe('unwant', () => {
@@ -359,8 +384,7 @@ describe('bitswap with mocks', function () {
 
       setTimeout(() => bs.unwant(b.cid), 1e3)
 
-      const res = await p
-      expect(res[1]).to.not.exist()
+      await expect(p).to.eventually.be.rejected()
 
       bs.stop()
     })

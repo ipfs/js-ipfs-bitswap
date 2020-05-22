@@ -2,9 +2,7 @@
 /* eslint-disable no-console */
 'use strict'
 
-const chai = require('chai')
-chai.use(require('dirty-chai'))
-const expect = chai.expect
+const { expect } = require('aegir/utils/chai')
 const Block = require('ipld-block')
 const { Buffer } = require('buffer')
 const crypto = require('crypto')

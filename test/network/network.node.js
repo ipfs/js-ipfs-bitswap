@@ -1,9 +1,7 @@
 /* eslint-env mocha */
 'use strict'
 
-const chai = require('chai')
-chai.use(require('dirty-chai'))
-const expect = chai.expect
+const { expect, assert } = require('aegir/utils/chai')
 const lp = require('it-length-prefixed')
 const pipe = require('it-pipe')
 const pDefer = require('p-defer')
@@ -79,7 +77,7 @@ describe('network', () => {
   it('connectTo fail', async () => {
     try {
       await networkA.connectTo(p2pB.peerInfo.id)
-      chai.assert.fail()
+      assert.fail()
     } catch (err) {
       expect(err).to.exist()
     }

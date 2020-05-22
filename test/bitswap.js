@@ -1,9 +1,7 @@
 /* eslint-env mocha */
 'use strict'
 
-const chai = require('chai')
-chai.use(require('dirty-chai'))
-const expect = chai.expect
+const { expect } = require('aegir/utils/chai')
 const delay = require('delay')
 const PeerId = require('peer-id')
 const sinon = require('sinon')
@@ -67,8 +65,7 @@ describe('bitswap without DHT', function () {
       nodes[0].bitswap.unwant(block.cid)
     }, 200)
 
-    const b = await node0Get
-    expect(b).to.not.exist()
+    await expect(node0Get).to.eventually.be.rejectedWith(/unwanted/)
     finish(2)
 
     finish.assert()

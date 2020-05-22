@@ -7,6 +7,8 @@ const Notifications = require('./notifications')
 const logger = require('./utils').logger
 const Stats = require('./stats')
 const first = require('it-first')
+const AbortController = require('abort-controller')
+const anySignal = require('any-signal')
 
 const defaultOptions = {
   statsEnabled: false,
@@ -182,10 +184,12 @@ class Bitswap {
    * blockstore it is returned, otherwise the block is added to the wantlist and returned once another node sends it to us.
    *
    * @param {CID} cid
+   * @param {Object} options
+   * @param {AbortSignal} options.abortSignal
    * @returns {Promise<Block>}
    */
-  async get (cid) { // eslint-disable-line require-await
-    return first(this.getMany([cid]))
+  async get (cid, options) { // eslint-disable-line require-await
+    return first(this.getMany([cid], options))
   }
 
   /**
@@ -193,9 +197,11 @@ class Bitswap {
    * blockstore they are returned, otherwise the blocks are added to the wantlist and returned once another node sends them to us.
    *
    * @param {AsyncIterator<CID>} cids
+   * @param {Object} options
+   * @param {AbortSignal} options.abortSignal
    * @returns {Promise<AsyncIterator<Block>>}
    */
-  async * getMany (cids) {
+  async * getMany (cids, options = {}) {
     const fetchFromNetwork = async (cid) => {
       // add it to the want list
       this.wm.wantBlocks([cid])
@@ -238,24 +244,30 @@ class Bitswap {
       // we do the async operations to get them from the blockstore leading to
       // a race condition, so register for incoming block notifications as well
       // as trying to get it from the datastore
+      const controller = new AbortController()
+      const signal = anySignal([options.signal, controller.signal])
+
       const block = await Promise.race([
-        this.notifications.wantBlock(cid).then(block => {
-          // if block is not set it means this block was unwanted while we wanted
-          // it so we should be able to load it from the datastore now
-          return block || loadOrFetchFromNetwork(cid)
+        this.notifications.wantBlock(cid, {
+          signal
         }),
         loadOrFetchFromNetwork(cid)
       ])
 
       // since we have the block we can now remove our listener
-      this.notifications.unwantBlock(cid)
+      controller.abort()
 
       yield block
     }
   }
 
   /**
-   * Removes the given CIDs from the wantlist independent of any ref counts
+   * Removes the given CIDs from the wantlist independent of any ref counts.
+   *
+   * This will cause all outstanding promises for a given block to reject.
+   *
+   * If you want to cancel the want for a block without doing that, pass an
+   * AbortSignal in to `.get` or `.getMany` and abort it.
    *
    * @param {Iterable<CID>} cids
    * @returns {void}
@@ -270,7 +282,9 @@ class Bitswap {
   }
 
   /**
-   * Removes the given keys from the want list
+   * Removes the given keys from the want list. This may cause pending promises
+   * for blocks to never resolve.  If you wish these promises to abort instead
+   * call `unwant(cids)` instead.
    *
    * @param {Iterable<CID>} cids
    * @returns {void}
@@ -297,7 +311,7 @@ class Bitswap {
    * Put the given blocks to the underlying blockstore and
    * send it to nodes that have it them their wantlist.
    *
-   * @param {AsyncIterable<Block>|Iterable<Block>} blocks
+   * @param {AsyncIterable<Block>} blocks
    * @returns {AsyncIterable<Block>}
    */
   async * putMany (blocks) { // eslint-disable-line require-await

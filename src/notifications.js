@@ -5,8 +5,9 @@ const EventEmitter = require('events').EventEmitter
 const CONSTANTS = require('./constants')
 const logger = require('./utils').logger
 
-const unwantEvent = (c) => `unwant:${c}`
-const blockEvent = (c) => `block:${c}`
+const cidToMultihashString = (cid) => cid.multihash.toString('base64')
+const unwantEvent = (cid) => `unwant:${cidToMultihashString(cid)}`
+const blockEvent = (cid) => `block:${cidToMultihashString(cid)}`
 
 /**
  * Internal module used to track events about incoming blocks,
@@ -22,9 +23,6 @@ class Notifications extends EventEmitter {
     this.setMaxListeners(CONSTANTS.maxListeners)
 
     this._log = logger(peerId, 'notif')
-
-    this._unwantListeners = {}
-    this._blockListeners = {}
   }
 
   /**
@@ -34,10 +32,9 @@ class Notifications extends EventEmitter {
    * @return {void}
    */
   hasBlock (block) {
-    const cidStr = block.cid.toString('base58btc')
-    const str = `block:${cidStr}`
-    this._log(str)
-    this.emit(str, block)
+    const event = blockEvent(block.cid)
+    this._log(event)
+    this.emit(event, block)
   }
 
   /**
@@ -47,36 +44,41 @@ class Notifications extends EventEmitter {
    * or undefined when the block is unwanted.
    *
    * @param {CID} cid
+   * @param {Object} options
+   * @param {AbortSignal} options.abortSignal
    * @returns {Promise<Block>}
    */
-  wantBlock (cid) {
+  wantBlock (cid, options = {}) {
     if (!cid) {
       throw new Error('Not a valid cid')
     }
 
-    const cidStr = cid.toString('base58btc')
-    this._log(`wantBlock:${cidStr}`)
+    const blockEvt = blockEvent(cid)
+    const unwantEvt = unwantEvent(cid)
+
+    this._log(`wantBlock:${cid}`)
 
     return new Promise((resolve, reject) => {
-      this._unwantListeners[cidStr] = () => {
-        this._log(`manual unwant: ${cidStr}`)
-        this._cleanup(cidStr)
-        resolve()
+      const onUnwant = () => {
+        this.removeListener(blockEvt, onBlock)
+        reject(new Error(`Block for ${cid} unwanted`))
       }
-
-      this._blockListeners[cidStr] = (block) => {
-        this._cleanup(cidStr)
+      const onBlock = (block) => {
+        this.removeListener(unwantEvt, onUnwant)
         resolve(block)
       }
 
-      this.once(
-        unwantEvent(cidStr),
-        this._unwantListeners[cidStr]
-      )
-      this.once(
-        blockEvent(cidStr),
-        this._blockListeners[cidStr]
-      )
+      this.once(unwantEvt, onUnwant)
+      this.once(blockEvt, onBlock)
+
+      if (options && options.signal) {
+        options.signal.addEventListener('abort', () => {
+          this.removeListener(blockEvt, onBlock)
+          this.removeListener(unwantEvt, onUnwant)
+
+          reject(new Error(`Want for ${cid} aborted`))
+        })
+      }
     })
   }
 
@@ -87,34 +89,9 @@ class Notifications extends EventEmitter {
    * @returns {void}
    */
   unwantBlock (cid) {
-    const str = `unwant:${cid.toString('base58btc')}`
-    this._log(str)
-    this.emit(str)
-  }
-
-  /**
-   * Internal method to clean up once a block was received or unwanted.
-   *
-   * @private
-   * @param  {string} cidStr
-   * @returns {void}
-   */
-  _cleanup (cidStr) {
-    if (this._unwantListeners[cidStr]) {
-      this.removeListener(
-        unwantEvent(cidStr),
-        this._unwantListeners[cidStr]
-      )
-      delete this._unwantListeners[cidStr]
-    }
-
-    if (this._blockListeners[cidStr]) {
-      this.removeListener(
-        blockEvent(cidStr),
-        this._blockListeners[cidStr]
-      )
-      delete this._blockListeners[cidStr]
-    }
+    const event = unwantEvent(cid)
+    this._log(event)
+    this.emit(event)
   }
 }
 

@@ -1,9 +1,7 @@
 'use strict'
 
 const range = require('lodash.range')
-const chai = require('chai')
-chai.use(require('dirty-chai'))
-const expect = chai.expect
+const { expect } = require('aegir/utils/chai')
 
 const createBitswap = require('./create-bitswap')
 const makeBlock = require('./make-block')
