@@ -1,6 +1,7 @@
 'use strict'
 
 const EventEmitter = require('events').EventEmitter
+const Block = require('ipld-block')
 
 const CONSTANTS = require('./constants')
 const logger = require('./utils').logger
@@ -65,6 +66,15 @@ class Notifications extends EventEmitter {
       }
       const onBlock = (block) => {
         this.removeListener(unwantEvt, onUnwant)
+
+        if (!cid.multihash.equals(block.cid.multihash)) {
+          // wrong block
+          return reject(new Error(`Incorrect block received for ${cid}`))
+        } else if (cid.version !== block.cid.version || cid.codec !== block.cid.codec) {
+          // right block but wrong version or codec
+          block = new Block(block.data, cid)
+        }
+
         resolve(block)
       }
 

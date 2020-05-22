@@ -10,6 +10,7 @@ const drain = require('it-drain')
 const Message = require('../src/types/message')
 const Bitswap = require('../src')
 const CID = require('cids')
+const Block = require('ipld-block')
 
 const createTempRepo = require('./utils/create-temp-repo-nodejs')
 const mockNetwork = require('./utils/mocks').mockNetwork
@@ -344,7 +345,7 @@ describe('bitswap with mocks', function () {
       expect(res[1]).to.eql(block)
     })
 
-    it('gets for same block with different CIDs', async () => {
+    it('gets the same block data with different CIDs', async () => {
       const block = blocks[11]
 
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
@@ -365,9 +366,11 @@ describe('bitswap with mocks', function () {
       bs.put(block)
 
       const res = await resP
-      expect(res[0]).to.eql(block)
-      expect(res[1]).to.eql(block)
-      expect(res[2]).to.eql(block)
+
+      // blocks should have the requested CID but with the same data
+      expect(res[0]).to.eql(new Block(block.data, cid1))
+      expect(res[1]).to.eql(new Block(block.data, cid2))
+      expect(res[2]).to.eql(new Block(block.data, cid3))
     })
   })
 
