@@ -87,7 +87,7 @@ describe('bitswap without DHT', function () {
     nodes[0].bitswap.blockstore = {
       get: sinon.stub().withArgs(block.cid).throws({ code: 'ERR_NOT_FOUND' }),
       has: sinon.stub().withArgs(block.cid).returns(false),
-      putMany: sinon.stub().returns([])
+      put: sinon.stub()
     }
 
     // add the block to our want list

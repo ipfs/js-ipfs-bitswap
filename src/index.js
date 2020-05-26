@@ -6,7 +6,6 @@ const DecisionEngine = require('./decision-engine')
 const Notifications = require('./notifications')
 const logger = require('./utils').logger
 const Stats = require('./stats')
-const first = require('it-first')
 const AbortController = require('abort-controller')
 const anySignal = require('any-signal')
 
@@ -188,20 +187,7 @@ class Bitswap {
    * @param {AbortSignal} options.abortSignal
    * @returns {Promise<Block>}
    */
-  async get (cid, options) { // eslint-disable-line require-await
-    return first(this.getMany([cid], options))
-  }
-
-  /**
-   * Fetch a a list of blocks by cid. If the blocks are in the local
-   * blockstore they are returned, otherwise the blocks are added to the wantlist and returned once another node sends them to us.
-   *
-   * @param {AsyncIterator<CID>} cids
-   * @param {Object} options
-   * @param {AbortSignal} options.abortSignal
-   * @returns {Promise<AsyncIterator<Block>>}
-   */
-  async * getMany (cids, options = {}) {
+  async get (cid, options = {}) { // eslint-disable-line require-await
     const fetchFromNetwork = (cid, options) => {
       // add it to the want list - n.b. later we will abort the AbortSignal
       // so no need to remove the blocks from the wantlist after we have it
@@ -235,27 +221,40 @@ class Bitswap {
       }
     }
 
-    for (const cid of cids) {
-      // depending on implementation it's possible for blocks to come in while
-      // we do the async operations to get them from the blockstore leading to
-      // a race condition, so register for incoming block notifications as well
-      // as trying to get it from the datastore
-      const controller = new AbortController()
-      const signal = anySignal([options.signal, controller.signal])
+    // depending on implementation it's possible for blocks to come in while
+    // we do the async operations to get them from the blockstore leading to
+    // a race condition, so register for incoming block notifications as well
+    // as trying to get it from the datastore
+    const controller = new AbortController()
+    const signal = anySignal([options.signal, controller.signal])
 
-      const block = await Promise.race([
-        this.notifications.wantBlock(cid, {
-          signal
-        }),
-        loadOrFetchFromNetwork(cid, {
-          signal
-        })
-      ])
+    const block = await Promise.race([
+      this.notifications.wantBlock(cid, {
+        signal
+      }),
+      loadOrFetchFromNetwork(cid, {
+        signal
+      })
+    ])
 
-      // since we have the block we can now remove our listener
-      controller.abort()
+    // since we have the block we can now remove our listener
+    controller.abort()
 
-      yield block
+    return block
+  }
+
+  /**
+   * Fetch a a list of blocks by cid. If the blocks are in the local
+   * blockstore they are returned, otherwise the blocks are added to the wantlist and returned once another node sends them to us.
+   *
+   * @param {AsyncIterator<CID>} cids
+   * @param {Object} options
+   * @param {AbortSignal} options.abortSignal
+   * @returns {Promise<AsyncIterator<Block>>}
+   */
+  async * getMany (cids, options = {}) {
+    for await (const cid of cids) {
+      yield this.get(cid, options)
     }
   }
 
@@ -302,7 +301,8 @@ class Bitswap {
    * @returns {Promise<void>}
    */
   async put (block) { // eslint-disable-line require-await
-    return first(this.putMany([block]))
+    await this.blockstore.put(block)
+    this._sendHaveBlockNotifications(block)
   }
 
   /**
