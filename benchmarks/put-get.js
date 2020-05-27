@@ -4,7 +4,8 @@
 
 const Benchmark = require('benchmark')
 const assert = require('assert')
-const all = require('async-iterator-all')
+const all = require('it-all')
+const drain = require('it-drain')
 const makeBlock = require('../test/utils/make-block')
 const genBitswapNetwork = require('../test/utils/mocks').genBitswapNetwork
 
@@ -24,7 +25,7 @@ const blockSizes = [10, 1024, 10 * 1024]
     suite.add(`put-get ${n} blocks of size ${k}`, async (defer) => {
       const blocks = await makeBlock(n, k)
 
-      await bitswap.putMany(blocks)
+      await drain(bitswap.putMany(blocks))
 
       const res = await all(bitswap.getMany(blocks.map(block => block.cid)))
 

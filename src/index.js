@@ -6,6 +6,8 @@ const DecisionEngine = require('./decision-engine')
 const Notifications = require('./notifications')
 const logger = require('./utils').logger
 const Stats = require('./stats')
+const AbortController = require('abort-controller')
+const anySignal = require('any-signal')
 
 const defaultOptions = {
   statsEnabled: false,
@@ -101,9 +103,10 @@ class Bitswap {
     this._log('received block')
 
     const has = await this.blockstore.has(block.cid)
+
     this._updateReceiveCounters(peerId.toB58String(), block, has)
 
-    if (has || !wasWanted) {
+    if (!wasWanted) {
       return
     }
 
@@ -176,65 +179,88 @@ class Bitswap {
    * blockstore it is returned, otherwise the block is added to the wantlist and returned once another node sends it to us.
    *
    * @param {CID} cid
+   * @param {Object} options
+   * @param {AbortSignal} options.abortSignal
    * @returns {Promise<Block>}
    */
-  async get (cid) {
-    for await (const block of this.getMany([cid])) {
-      return block
+  async get (cid, options = {}) {
+    const fetchFromNetwork = (cid, options) => {
+      // add it to the want list - n.b. later we will abort the AbortSignal
+      // so no need to remove the blocks from the wantlist after we have it
+      this.wm.wantBlocks([cid], options)
+
+      return this.notifications.wantBlock(cid, options)
     }
+
+    let promptedNetwork = false
+
+    const loadOrFetchFromNetwork = async (cid, options) => {
+      try {
+        // have to await here as we want to handle ERR_NOT_FOUND
+        const block = await this.blockstore.get(cid, options)
+
+        return block
+      } catch (err) {
+        if (err.code !== 'ERR_NOT_FOUND') {
+          throw err
+        }
+
+        if (!promptedNetwork) {
+          promptedNetwork = true
+
+          this.network.findAndConnect(cid)
+            .catch((err) => this._log.error(err))
+        }
+
+        // we don't have the block locally so fetch it from the network
+        return fetchFromNetwork(cid, options)
+      }
+    }
+
+    // depending on implementation it's possible for blocks to come in while
+    // we do the async operations to get them from the blockstore leading to
+    // a race condition, so register for incoming block notifications as well
+    // as trying to get it from the datastore
+    const controller = new AbortController()
+    const signal = anySignal([options.signal, controller.signal])
+
+    const block = await Promise.race([
+      this.notifications.wantBlock(cid, {
+        signal
+      }),
+      loadOrFetchFromNetwork(cid, {
+        signal
+      })
+    ])
+
+    // since we have the block we can now remove our listener
+    controller.abort()
+
+    return block
   }
 
   /**
    * Fetch a a list of blocks by cid. If the blocks are in the local
    * blockstore they are returned, otherwise the blocks are added to the wantlist and returned once another node sends them to us.
    *
-   * @param {Iterable<CID>} cids
+   * @param {AsyncIterator<CID>} cids
+   * @param {Object} options
+   * @param {AbortSignal} options.abortSignal
    * @returns {Promise<AsyncIterator<Block>>}
    */
-  async * getMany (cids) {
-    let pendingStart = cids.length
-    const wantList = []
-    let promptedNetwork = false
-
-    const fetchFromNetwork = async (cid) => {
-      wantList.push(cid)
-
-      const blockP = this.notifications.wantBlock(cid)
-
-      if (!pendingStart) {
-        this.wm.wantBlocks(wantList)
-      }
-
-      const block = await blockP
-      this.wm.cancelWants([cid])
-
-      return block
-    }
-
-    for (const cid of cids) {
-      const has = await this.blockstore.has(cid)
-      pendingStart--
-      if (has) {
-        if (!pendingStart) {
-          this.wm.wantBlocks(wantList)
-        }
-        yield this.blockstore.get(cid)
-
-        continue
-      }
-
-      if (!promptedNetwork) {
-        promptedNetwork = true
-        this.network.findAndConnect(cids[0]).catch((err) => this._log.error(err))
-      }
-
-      // we don't have the block locally so fetch it from the network
-      yield fetchFromNetwork(cid)
+  async * getMany (cids, options = {}) {
+    for await (const cid of cids) {
+      yield this.get(cid, options)
     }
   }
 
   /**
-   * Removes the given CIDs from the wantlist independent of any ref counts
+   * Removes the given CIDs from the wantlist independent of any ref counts.
+   *
+   * This will cause all outstanding promises for a given block to reject.
+   *
+   * If you want to cancel the want for a block without doing that, pass an
+   * AbortSignal in to `.get` or `.getMany` and abort it.
    *
    * @param {Iterable<CID>} cids
    * @returns {void}
@@ -249,7 +275,9 @@ class Bitswap {
   }
 
   /**
-   * Removes the given keys from the want list
+   * Removes the given keys from the want list. This may cause pending promises
+   * for blocks to never resolve.  If you wish these promises to abort instead
+   * call `unwant(cids)` instead.
    *
    * @param {Iterable<CID>} cids
    * @returns {void}
@@ -268,44 +296,38 @@ class Bitswap {
    * @param {Block} block
    * @returns {Promise<void>}
    */
-  async put (block) { // eslint-disable-line require-await
-    return this.putMany([block])
+  async put (block) {
+    await this.blockstore.put(block)
+    this._sendHaveBlockNotifications(block)
   }
 
   /**
    * Put the given blocks to the underlying blockstore and
    * send it to nodes that have it them their wantlist.
    *
-   * @param {AsyncIterable<Block>|Iterable<Block>} blocks
-   * @returns {Promise<void>}
+   * @param {AsyncIterable<Block>} blocks
+   * @returns {AsyncIterable<Block>}
    */
-  async putMany (blocks) { // eslint-disable-line require-await
-    const self = this
+  async * putMany (blocks) {
+    for await (const block of this.blockstore.putMany(blocks)) {
+      this._sendHaveBlockNotifications(block)
 
-    // Add any new blocks to the blockstore
-    const newBlocks = []
-    await this.blockstore.putMany(async function * () {
-      for await (const block of blocks) {
-        if (await self.blockstore.has(block.cid)) {
-          continue
-        }
-
-        yield block
-        newBlocks.push(block)
-      }
-    }())
-
-    // Notify engine that we have new blocks
-    this.engine.receivedBlocks(newBlocks)
-
-    // Notify listeners that we have received the new blocks
-    for (const block of newBlocks) {
-      this.notifications.hasBlock(block)
-      // Note: Don't wait for provide to finish before returning
-      this.network.provide(block.cid).catch((err) => {
-        self._log.error('Failed to provide: %s', err.message)
-      })
+      yield block
     }
+  }
+
+  /**
+   * Sends notifications about the arrival of a block
+   *
+   * @param {Block} block
+   */
+  _sendHaveBlockNotifications (block) {
+    this.notifications.hasBlock(block)
+    this.engine.receivedBlocks([block])
+    // Note: Don't wait for provide to finish before returning
+    this.network.provide(block.cid).catch((err) => {
+      this._log.error('Failed to provide: %s', err.message)
+    })
   }
 
   /**

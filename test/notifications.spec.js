@@ -1,12 +1,10 @@
 /* eslint-env mocha */
 'use strict'
 
-const chai = require('chai')
-chai.use(require('dirty-chai'))
-
-const expect = chai.expect
+const { expect } = require('aegir/utils/chai')
 const CID = require('cids')
 const Block = require('ipld-block')
+const AbortController = require('abort-controller')
 
 const Notifications = require('../src/notifications')
 
@@ -25,7 +23,7 @@ describe('Notifications', () => {
   it('hasBlock', (done) => {
     const n = new Notifications(peerId)
     const b = blocks[0]
-    n.once(`block:${b.cid}`, (block) => {
+    n.once(`block:${b.cid.multihash.toString('base64')}`, (block) => {
       expect(b).to.eql(block)
       done()
     })
@@ -39,6 +37,10 @@ describe('Notifications', () => {
 
       const p = n.wantBlock(b.cid)
 
+      // check that listeners have been set up
+      expect(n.listenerCount(`block:${b.cid.multihash.toString('base64')}`)).to.equal(1)
+      expect(n.listenerCount(`unwant:${b.cid.multihash.toString('base64')}`)).to.equal(1)
+
       n.hasBlock(b)
 
       const block = await p
@@ -46,8 +48,8 @@ describe('Notifications', () => {
       expect(b).to.eql(block)
 
       // check that internal cleanup works as expected
-      expect(Object.keys(n._blockListeners)).to.have.length(0)
-      expect(Object.keys(n._unwantListeners)).to.have.length(0)
+      expect(n.listenerCount(`block:${b.cid.multihash.toString('base64')}`)).to.equal(0)
+      expect(n.listenerCount(`unwant:${b.cid.multihash.toString('base64')}`)).to.equal(0)
     })
 
     it('unwant block', async () => {
@@ -58,9 +60,22 @@ describe('Notifications', () => {
 
       n.unwantBlock(b.cid)
 
-      const block = await p
+      await expect(p).to.eventually.be.rejectedWith(/unwanted/)
+    })
 
-      expect(block).to.be.undefined()
+    it('abort block want', async () => {
+      const n = new Notifications()
+      const b = blocks[0]
+
+      const controller = new AbortController()
+
+      const p = n.wantBlock(b.cid, {
+        signal: controller.signal
+      })
+
+      controller.abort()
+
+      await expect(p).to.eventually.be.rejectedWith(/aborted/)
     })
   })
 
@@ -73,15 +88,17 @@ describe('Notifications', () => {
       const cid2 = new CID(b.cid.toString('base32'))
       const p = n.wantBlock(cid2)
 
+      // check that listeners have been set up
+      expect(n.listenerCount(`block:${cid2.multihash.toString('base64')}`)).to.equal(1)
+      expect(n.listenerCount(`unwant:${cid2.multihash.toString('base64')}`)).to.equal(1)
+
       n.hasBlock(b)
 
-      const block = await p
-
-      expect(b).to.eql(block)
+      await expect(p).to.eventually.be.eql(b)
 
       // check that internal cleanup works as expected
-      expect(Object.keys(n._blockListeners)).to.have.length(0)
-      expect(Object.keys(n._unwantListeners)).to.have.length(0)
+      expect(n.listenerCount(`block:${cid2.multihash.toString('base64')}`)).to.equal(0)
+      expect(n.listenerCount(`unwant:${cid2.multihash.toString('base64')}`)).to.equal(0)
     })
 
     it('unwant block', async () => {
@@ -94,9 +111,7 @@ describe('Notifications', () => {
 
       n.unwantBlock(b.cid)
 
-      const block = await p
-
-      expect(block).to.be.undefined()
+      await expect(p).to.eventually.be.rejectedWith(/unwanted/)
     })
   })
 })

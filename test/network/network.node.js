@@ -1,9 +1,7 @@
 /* eslint-env mocha */
 'use strict'
 
-const chai = require('chai')
-chai.use(require('dirty-chai'))
-const expect = chai.expect
+const { expect, assert } = require('aegir/utils/chai')
 const lp = require('it-length-prefixed')
 const pipe = require('it-pipe')
 const pDefer = require('p-defer')
@@ -79,7 +77,7 @@ describe('network', () => {
   it('connectTo fail', async () => {
     try {
       await networkA.connectTo(p2pB.peerInfo.id)
-      chai.assert.fail()
+      assert.fail()
     } catch (err) {
       expect(err).to.exist()
     }
@@ -198,5 +196,29 @@ describe('network', () => {
 
     await networkA.sendMessage(p2pC.peerInfo.id, msg)
     await deferred.promise
+  })
+
+  it('dials to peer using Bitswap 1.2.0', async () => {
+    networkA = new Network(p2pA, bitswapMockA)
+
+    // only supports 1.2.0
+    networkB = new Network(p2pB, bitswapMockB)
+    networkB.protocols = ['/ipfs/bitswap/1.2.0']
+
+    networkA.start()
+    networkB.start()
+
+    // FIXME: have to already be connected as sendMessage only accepts a peer id, not a PeerInfo
+    await p2pA.dial(p2pB.peerInfo)
+
+    const deferred = pDefer()
+
+    bitswapMockB._receiveMessage = () => {
+      deferred.resolve()
+    }
+
+    await networkA.sendMessage(p2pB.peerInfo.id, new Message(true))
+
+    return deferred
   })
 })

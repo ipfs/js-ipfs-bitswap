@@ -3,13 +3,16 @@
 'use strict'
 
 const range = require('lodash.range')
-const chai = require('chai')
-chai.use(require('dirty-chai'))
-const expect = chai.expect
+const { expect } = require('aegir/utils/chai')
 const PeerId = require('peer-id')
-const all = require('async-iterator-all')
+const all = require('it-all')
+const drain = require('it-drain')
 const Message = require('../src/types/message')
 const Bitswap = require('../src')
+const CID = require('cids')
+const Block = require('ipld-block')
+const AbortController = require('abort-controller')
+const delay = require('delay')
 
 const createTempRepo = require('./utils/create-temp-repo-nodejs')
 const mockNetwork = require('./utils/mocks').mockNetwork
@@ -19,6 +22,16 @@ const storeHasBlocks = require('./utils/store-has-blocks')
 const makeBlock = require('./utils/make-block')
 const makePeerId = require('./utils/make-peer-id')
 const orderedFinish = require('./utils/helpers').orderedFinish
+
+function wantsBlock (cid, bitswap) {
+  for (const [key, value] of bitswap.getWantlist()) { // eslint-disable-line no-unused-vars
+    if (value.cid.toString() === cid.toString()) {
+      return true
+    }
+  }
+
+  return false
+}
 
 describe('bitswap with mocks', function () {
   this.timeout(10 * 1000)
@@ -143,7 +156,7 @@ describe('bitswap with mocks', function () {
 
       await bs._receiveMessage(other, msg)
 
-      const res = await Promise.all([b1.cid, b2.cid, b3.cid].map((cid) => repo.blocks.has(cid)))
+      const res = await Promise.all([b1.cid, b2.cid, b3.cid].map((cid) => repo.blocks.get(cid).then(() => true, () => false)))
       expect(res).to.eql([false, true, false])
 
       const ledger = bs.ledgerForPeer(other)
@@ -190,7 +203,7 @@ describe('bitswap with mocks', function () {
       const b2 = blocks[14]
       const b3 = blocks[13]
 
-      await repo.blocks.putMany([b1, b2, b3])
+      await drain(repo.blocks.putMany([b1, b2, b3]))
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
 
       const retrievedBlocks = await all(bs.getMany([b1.cid, b2.cid, b3.cid]))
@@ -203,7 +216,7 @@ describe('bitswap with mocks', function () {
       const b2 = blocks[6]
       const b3 = blocks[7]
 
-      await repo.blocks.putMany([b1, b2, b3])
+      await drain(repo.blocks.putMany([b1, b2, b3]))
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
 
       const block1 = await bs.get(b1.cid)
@@ -337,13 +350,93 @@ describe('bitswap with mocks', function () {
         bs.get(block.cid)
       ])
 
-      bs.put(block, (err) => {
-        expect(err).to.not.exist()
-      })
+      bs.put(block)
 
       const res = await resP
       expect(res[0]).to.eql(block)
       expect(res[1]).to.eql(block)
+    })
+
+    it('gets the same block data with different CIDs', async () => {
+      const block = blocks[11]
+
+      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+
+      expect(block).to.have.nested.property('cid.codec', 'dag-pb')
+      expect(block).to.have.nested.property('cid.version', 0)
+
+      const cid1 = new CID(0, 'dag-pb', block.cid.multihash)
+      const cid2 = new CID(1, 'dag-pb', block.cid.multihash)
+      const cid3 = new CID(1, 'raw', block.cid.multihash)
+
+      const resP = Promise.all([
+        bs.get(cid1),
+        bs.get(cid2),
+        bs.get(cid3)
+      ])
+
+      bs.put(block)
+
+      const res = await resP
+
+      // blocks should have the requested CID but with the same data
+      expect(res[0]).to.deep.equal(new Block(block.data, cid1))
+      expect(res[1]).to.deep.equal(new Block(block.data, cid2))
+      expect(res[2]).to.deep.equal(new Block(block.data, cid3))
+    })
+
+    it('removes a block from the wantlist when the request is aborted', async () => {
+      const block = await makeBlock()
+      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const controller = new AbortController()
+
+      const p = bs.get(block.cid, {
+        signal: controller.signal
+      })
+
+      await delay(1000)
+
+      expect(wantsBlock(block.cid, bs)).to.be.true()
+
+      controller.abort()
+
+      await expect(p).to.eventually.rejectedWith(/aborted/)
+
+      expect(wantsBlock(block.cid, bs)).to.be.false()
+    })
+
+    it('block should still be in the wantlist if only one request is aborted', async () => {
+      const block = await makeBlock()
+      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const controller = new AbortController()
+
+      // request twice
+      const p1 = bs.get(block.cid, {
+        signal: controller.signal
+      })
+      const p2 = bs.get(block.cid)
+
+      await delay(100)
+
+      // should want the block
+      expect(wantsBlock(block.cid, bs)).to.be.true()
+
+      // abort one request
+      controller.abort()
+
+      await expect(p1).to.eventually.rejectedWith(/aborted/)
+
+      // here comes the block
+      bs.put(block)
+
+      // should still want it
+      expect(wantsBlock(block.cid, bs)).to.be.true()
+
+      // second request should resolve with the block
+      await expect(p2).to.eventually.deep.equal(block)
+
+      // should not be in the want list any more
+      expect(wantsBlock(block.cid, bs)).to.be.false()
     })
   })
 
@@ -360,8 +453,7 @@ describe('bitswap with mocks', function () {
 
       setTimeout(() => bs.unwant(b.cid), 1e3)
 
-      const res = await p
-      expect(res[1]).to.not.exist()
+      await expect(p).to.eventually.be.rejected()
 
       bs.stop()
     })

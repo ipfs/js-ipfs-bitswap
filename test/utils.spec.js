@@ -1,14 +1,13 @@
 /* eslint-env mocha */
 'use strict'
-const chai = require('chai')
+
+const { expect } = require('aegir/utils/chai')
 const CID = require('cids')
 const Block = require('ipld-block')
 const { Buffer } = require('buffer')
 const multihashing = require('multihashing-async')
 const BitswapMessageEntry = require('../src/types/message/entry')
 
-chai.use(require('dirty-chai'))
-const expect = chai.expect
 const { groupBy, uniqWith, pullAllWith, includesWith, sortBy, isMapEqual } = require('../src/utils')
 const SortedMap = require('../src/utils/sorted-map')
 

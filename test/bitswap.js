@@ -1,10 +1,10 @@
 /* eslint-env mocha */
 'use strict'
 
-const chai = require('chai')
-chai.use(require('dirty-chai'))
-const expect = chai.expect
+const { expect } = require('aegir/utils/chai')
 const delay = require('delay')
+const PeerId = require('peer-id')
+const sinon = require('sinon')
 
 const Bitswap = require('../src')
 
@@ -12,6 +12,7 @@ const createTempRepo = require('./utils/create-temp-repo-nodejs')
 const createLibp2pNode = require('./utils/create-libp2p-node')
 const makeBlock = require('./utils/make-block')
 const orderedFinish = require('./utils/helpers').orderedFinish
+const Message = require('../src/types/message')
 
 // Creates a repo + libp2pNode + Bitswap with or without DHT
 async function createThing (dht) {
@@ -64,11 +65,57 @@ describe('bitswap without DHT', function () {
       nodes[0].bitswap.unwant(block.cid)
     }, 200)
 
-    const b = await node0Get
-    expect(b).to.not.exist()
+    await expect(node0Get).to.eventually.be.rejectedWith(/unwanted/)
     finish(2)
 
     finish.assert()
+  })
+
+  it('wants a block, receives a block, wants it again before the blockstore has it, receives it after the blockstore has it', async () => {
+    // the block we want
+    const block = await makeBlock()
+
+    // id of a peer with the block we want
+    const peerId = await PeerId.create({ bits: 512 })
+
+    // incoming message with requested block from the other peer
+    const message = new Message(false)
+    message.addEntry(block.cid, 1, false)
+    message.addBlock(block)
+
+    // slow blockstore
+    nodes[0].bitswap.blockstore = {
+      get: sinon.stub().withArgs(block.cid).throws({ code: 'ERR_NOT_FOUND' }),
+      has: sinon.stub().withArgs(block.cid).returns(false),
+      put: sinon.stub()
+    }
+
+    // add the block to our want list
+    const wantBlockPromise1 = nodes[0].bitswap.get(block.cid)
+
+    // oh look, a peer has sent it to us - this will trigger a `blockstore.put` which
+    // is an async operation so `self.blockstore.get(cid)` will still throw
+    // until the write has completed
+    await nodes[0].bitswap._receiveMessage(peerId, message)
+
+    // block store did not have it
+    expect(nodes[0].bitswap.blockstore.get.calledWith(block.cid)).to.be.true()
+
+    // another context wants the same block
+    const wantBlockPromise2 = nodes[0].bitswap.get(block.cid)
+
+    // meanwhile the blockstore has written the block
+    nodes[0].bitswap.blockstore.has = sinon.stub().withArgs(block.cid).returns(true)
+
+    // here it comes again
+    await nodes[0].bitswap._receiveMessage(peerId, message)
+
+    // block store had it this time
+    expect(nodes[0].bitswap.blockstore.get.calledWith(block.cid)).to.be.true()
+
+    // both requests should get the block
+    expect(await wantBlockPromise1).to.deep.equal(block)
+    expect(await wantBlockPromise2).to.deep.equal(block)
   })
 })
 
@@ -101,8 +148,6 @@ describe('bitswap with DHT', function () {
 
   it('put a block in 2, get it in 0', async () => {
     const block = await makeBlock()
-    nodes[2].bitswap.put(block)
-
     await nodes[2].bitswap.put(block)
 
     // Give put time to process
