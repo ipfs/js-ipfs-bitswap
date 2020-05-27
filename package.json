@@ -90,8 +90,7 @@
     "varint-decoder": "^0.4.0"
   },
   "pre-push": [
-    "lint",
-    "test"
+    "lint"
   ],
   "contributors": [
     "David Dias <daviddias.p@gmail.com>",
