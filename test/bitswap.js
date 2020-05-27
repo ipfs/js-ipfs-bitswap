@@ -5,6 +5,7 @@ const { expect } = require('aegir/utils/chai')
 const PeerId = require('peer-id')
 const sinon = require('sinon')
 const pWaitFor = require('p-wait-for')
+const delay = require('delay')
 
 const Bitswap = require('../src')
 
@@ -161,6 +162,8 @@ describe('bitswap with DHT', function () {
   it('put a block in 2, get it in 0', async () => {
     const block = await makeBlock()
     await nodes[2].bitswap.put(block)
+
+    await delay(300)
 
     const blockRetrieved = await nodes[0].bitswap.get(block.cid)
     expect(block.data).to.eql(blockRetrieved.data)
