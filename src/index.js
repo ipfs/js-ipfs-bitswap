@@ -106,17 +106,6 @@ class Bitswap {
 
     this._updateReceiveCounters(peerId.toB58String(), block, has)
 
-    if (!wasWanted) {
-      return
-    }
-    
-    // The block was in the wantlist but was only just received, so make
-    // sure to notify any requests that are listening for it
-    if (has)
-        this._sendHaveBlockNotifications(block)
-        return
-    }
-
     await this.put(block)
   }
 
@@ -190,7 +179,7 @@ class Bitswap {
    * @param {AbortSignal} options.abortSignal
    * @returns {Promise<Block>}
    */
-  async get (cid, options = {}) { // eslint-disable-line require-await
+  async get (cid, options = {}) {
     const fetchFromNetwork = (cid, options) => {
       // add it to the want list - n.b. later we will abort the AbortSignal
       // so no need to remove the blocks from the wantlist after we have it
@@ -303,7 +292,7 @@ class Bitswap {
    * @param {Block} block
    * @returns {Promise<void>}
    */
-  async put (block) { // eslint-disable-line require-await
+  async put (block) {
     await this.blockstore.put(block)
     this._sendHaveBlockNotifications(block)
   }
@@ -315,7 +304,7 @@ class Bitswap {
    * @param {AsyncIterable<Block>} blocks
    * @returns {AsyncIterable<Block>}
    */
-  async * putMany (blocks) { // eslint-disable-line require-await
+  async * putMany (blocks) {
     for await (const block of this.blockstore.putMany(blocks)) {
       this._sendHaveBlockNotifications(block)
 
