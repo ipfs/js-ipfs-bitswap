@@ -112,16 +112,6 @@ module.exports = class WantManager {
   }
 
   start () {
-    // resend entire wantlist every so often
-    this.timer = setInterval(() => {
-      this._log('resend full-wantlist')
-      const fullwantlist = new Message(true)
-      this.wantlist.forEach((entry) => {
-        fullwantlist.addEntry(entry.cid, entry.priority)
-      })
-
-      this.peers.forEach((p) => p.addMessage(fullwantlist))
-    }, 60 * 1000)
   }
 
   stop () {
