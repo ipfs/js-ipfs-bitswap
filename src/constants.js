@@ -9,5 +9,5 @@ module.exports = {
   provideTimeout: 15 * SECOND,
   kMaxPriority: Math.pow(2, 31) - 1,
   maxListeners: 1000,
-  wantlistSendDebounceMs: 10
+  wantlistSendDebounceMs: 1
 }
