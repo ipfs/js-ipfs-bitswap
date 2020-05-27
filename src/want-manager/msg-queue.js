@@ -4,7 +4,7 @@ const debounce = require('just-debounce-it')
 
 const Message = require('../types/message')
 const logger = require('../utils').logger
-const { wantlistSendDebounceAmount } = require('../constants')
+const { wantlistSendDebounceMs } = require('../constants')
 
 module.exports = class MsgQueue {
   constructor (selfPeerId, otherPeerId, network) {
@@ -14,7 +14,7 @@ module.exports = class MsgQueue {
 
     this._entries = []
     this._log = logger(selfPeerId, 'msgqueue', otherPeerId.toB58String().slice(0, 8))
-    this.sendEntries = debounce(this._sendEntries.bind(this), wantlistSendDebounceAmount)
+    this.sendEntries = debounce(this._sendEntries.bind(this), wantlistSendDebounceMs)
   }
 
   addMessage (msg) {
