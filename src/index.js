@@ -106,12 +106,15 @@ class Bitswap {
 
     this._updateReceiveCounters(peerId.toB58String(), block, has)
 
-    if (has || !wasWanted) {
-      if (wasWanted) {
-        this._sendHaveBlockNotifications(block)
-      }
-
+    if (!wasWanted) {
       return
+    }
+    
+    // The block was in the wantlist but was only just received, so make
+    // sure to notify any requests that are listening for it
+    if (has)
+        this._sendHaveBlockNotifications(block)
+        return
     }
 
     await this.put(block)
