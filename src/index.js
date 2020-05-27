@@ -106,6 +106,10 @@ class Bitswap {
 
     this._updateReceiveCounters(peerId.toB58String(), block, has)
 
+    if (!wasWanted) {
+      return
+    }
+
     await this.put(block)
   }
 
