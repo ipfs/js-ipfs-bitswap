@@ -1,3 +1,19 @@
+<a name="1.0.0"></a>
+# [1.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.29.2...v1.0.0) (2020-05-27)
+
+
+### Bug Fixes
+
+* do not rebroadcast want list ([#225](https://github.com/ipfs/js-ipfs-bitswap/issues/225)) ([313ae3b](https://github.com/ipfs/js-ipfs-bitswap/commit/313ae3b)), closes [#160](https://github.com/ipfs/js-ipfs-bitswap/issues/160)
+* race condition when requesting the same block twice ([#214](https://github.com/ipfs/js-ipfs-bitswap/issues/214)) ([78ce032](https://github.com/ipfs/js-ipfs-bitswap/commit/78ce032))
+
+
+### Performance Improvements
+
+* decrease wantlist send debounce time ([#224](https://github.com/ipfs/js-ipfs-bitswap/issues/224)) ([46490f5](https://github.com/ipfs/js-ipfs-bitswap/commit/46490f5))
+
+
+
 <a name="0.29.2"></a>
 ## [0.29.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.29.1...v0.29.2) (2020-05-07)
 
