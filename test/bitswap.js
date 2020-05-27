@@ -5,7 +5,6 @@ const { expect } = require('aegir/utils/chai')
 const PeerId = require('peer-id')
 const sinon = require('sinon')
 const pWaitFor = require('p-wait-for')
-const delay = require('delay')
 
 const Bitswap = require('../src')
 
@@ -147,7 +146,8 @@ describe('bitswap with DHT', function () {
     // await dht routing table are updated
     await Promise.all([
       pWaitFor(() => nodes[0].libp2pNode._dht.routingTable.size >= 1),
-      pWaitFor(() => nodes[1].libp2pNode._dht.routingTable.size >= 2)
+      pWaitFor(() => nodes[1].libp2pNode._dht.routingTable.size >= 2),
+      pWaitFor(() => nodes[2].libp2pNode._dht.routingTable.size >= 1)
     ])
   })
 
@@ -161,9 +161,11 @@ describe('bitswap with DHT', function () {
 
   it('put a block in 2, get it in 0', async () => {
     const block = await makeBlock()
+    const provideSpy = sinon.spy(nodes[2].libp2pNode._dht, 'provide')
     await nodes[2].bitswap.put(block)
 
-    await delay(300)
+    // wait for the DHT to finish providing
+    await provideSpy.returnValues[0]
 
     const blockRetrieved = await nodes[0].bitswap.get(block.cid)
     expect(block.data).to.eql(blockRetrieved.data)
