@@ -3,6 +3,8 @@
 const lp = require('it-length-prefixed')
 const pipe = require('it-pipe')
 
+const MulticodecTopology = require('libp2p-interfaces/src/topology/multicodec-topology')
+
 const Message = require('./types/message')
 const CONSTANTS = require('./constants')
 const logger = require('./utils').logger
@@ -37,8 +39,15 @@ class Network {
     this._running = true
     this.libp2p.handle(this.protocols, this._onConnection)
 
-    this.libp2p.connectionManager.on('peer:connect', this._onPeerConnect)
-    this.libp2p.connectionManager.on('peer:disconnect', this._onPeerDisconnect)
+    // register protocol with topology
+    const topology = new MulticodecTopology({
+      multicodecs: this.protocols,
+      handlers: {
+        onConnect: this._onPeerConnect,
+        onDisconnect: this._onPeerDisconnect
+      }
+    })
+    this._registrarId = this.libp2p.registrar.register(topology)
 
     // All existing connections are like new ones for us
     for (const peer of this.libp2p.peerStore.peers.values()) {
@@ -54,8 +63,8 @@ class Network {
     // Unhandle both, libp2p doesn't care if it's not already handled
     this.libp2p.unhandle(this.protocols)
 
-    this.libp2p.connectionManager.removeListener('peer:connect', this._onPeerConnect)
-    this.libp2p.connectionManager.removeListener('peer:disconnect', this._onPeerDisconnect)
+    // unregister protocol and handlers
+    this.libp2p.registrar.unregister(this._registrarId)
   }
 
   /**
@@ -92,12 +101,12 @@ class Network {
     }
   }
 
-  _onPeerConnect (connection) {
-    this.bitswap._onPeerConnected(connection.remotePeer)
+  _onPeerConnect (peerId) {
+    this.bitswap._onPeerConnected(peerId)
   }
 
-  _onPeerDisconnect (connection) {
-    this.bitswap._onPeerDisconnected(connection.remotePeer)
+  _onPeerDisconnect (peerId) {
+    this.bitswap._onPeerDisconnected(peerId)
   }
 
   /**

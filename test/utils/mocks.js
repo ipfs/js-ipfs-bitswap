@@ -23,6 +23,10 @@ exports.mockLibp2pNode = () => {
     multiaddrs: [],
     handle () {},
     unhandle () {},
+    registrar: {
+      register () {},
+      unregister () {}
+    },
     contentRouting: {
       provide: async (cid) => {}, // eslint-disable-line require-await
       findProviders: async (cid, timeout) => { return [] } // eslint-disable-line require-await
