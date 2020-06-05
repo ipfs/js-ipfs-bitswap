@@ -2,9 +2,9 @@
 'use strict'
 
 const { expect } = require('aegir/utils/chai')
-const delay = require('delay')
 const PeerId = require('peer-id')
 const sinon = require('sinon')
+const pWaitFor = require('p-wait-for')
 
 const Bitswap = require('../src')
 
@@ -38,9 +38,12 @@ describe('bitswap without DHT', function () {
     ])
 
     // connect 0 -> 1 && 1 -> 2
+    const ma1 = `${nodes[1].libp2pNode.multiaddrs[0]}/p2p/${nodes[1].libp2pNode.peerId.toB58String()}`
+    const ma2 = `${nodes[2].libp2pNode.multiaddrs[0]}/p2p/${nodes[2].libp2pNode.peerId.toB58String()}`
+
     await Promise.all([
-      nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerInfo),
-      nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerInfo)
+      nodes[0].libp2pNode.dial(ma1),
+      nodes[1].libp2pNode.dial(ma2)
     ])
   })
 
@@ -132,9 +135,19 @@ describe('bitswap with DHT', function () {
     ])
 
     // connect 0 -> 1 && 1 -> 2
+    const ma1 = `${nodes[1].libp2pNode.multiaddrs[0]}/p2p/${nodes[1].libp2pNode.peerId.toB58String()}`
+    const ma2 = `${nodes[2].libp2pNode.multiaddrs[0]}/p2p/${nodes[2].libp2pNode.peerId.toB58String()}`
+
     await Promise.all([
-      nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerInfo),
-      nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerInfo)
+      nodes[0].libp2pNode.dial(ma1),
+      nodes[1].libp2pNode.dial(ma2)
+    ])
+
+    // await dht routing table are updated
+    await Promise.all([
+      pWaitFor(() => nodes[0].libp2pNode._dht.routingTable.size >= 1),
+      pWaitFor(() => nodes[1].libp2pNode._dht.routingTable.size >= 2),
+      pWaitFor(() => nodes[2].libp2pNode._dht.routingTable.size >= 1)
     ])
   })
 
@@ -148,10 +161,11 @@ describe('bitswap with DHT', function () {
 
   it('put a block in 2, get it in 0', async () => {
     const block = await makeBlock()
+    const provideSpy = sinon.spy(nodes[2].libp2pNode._dht, 'provide')
     await nodes[2].bitswap.put(block)
 
-    // Give put time to process
-    await delay(100)
+    // wait for the DHT to finish providing
+    await provideSpy.returnValues[0]
 
     const blockRetrieved = await nodes[0].bitswap.get(block.cid)
     expect(block.data).to.eql(blockRetrieved.data)

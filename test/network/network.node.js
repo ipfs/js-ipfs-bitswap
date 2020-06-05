@@ -76,7 +76,7 @@ describe('network', () => {
 
   it('connectTo fail', async () => {
     try {
-      await networkA.connectTo(p2pB.peerInfo.id)
+      await networkA.connectTo(p2pB.peerId)
       assert.fail()
     } catch (err) {
       expect(err).to.exist()
@@ -87,16 +87,17 @@ describe('network', () => {
     var counter = 0
 
     bitswapMockA._onPeerConnected = (peerId) => {
-      expect(peerId.toB58String()).to.equal(p2pB.peerInfo.id.toB58String())
+      expect(peerId.toB58String()).to.equal(p2pB.peerId.toB58String())
       counter++
     }
 
     bitswapMockB._onPeerConnected = (peerId) => {
-      expect(peerId.toB58String()).to.equal(p2pA.peerInfo.id.toB58String())
+      expect(peerId.toB58String()).to.equal(p2pA.peerId.toB58String())
       counter++
     }
 
-    await p2pA.dial(p2pB.peerInfo)
+    const ma = `${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`
+    await p2pA.dial(ma)
 
     await pWaitFor(() => counter >= 2)
     bitswapMockA._onPeerConnected = () => {}
@@ -104,7 +105,8 @@ describe('network', () => {
   })
 
   it('connectTo success', async () => {
-    await networkA.connectTo(p2pB.peerInfo)
+    const ma = `${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`
+    await networkA.connectTo(ma)
   })
 
   const versions = [{
@@ -134,7 +136,8 @@ describe('network', () => {
 
       bitswapMockB._receiveError = (err) => deferred.reject(err)
 
-      const { stream } = await p2pA.dialProtocol(p2pB.peerInfo, '/ipfs/bitswap/' + version.num)
+      const ma = `${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`
+      const { stream } = await p2pA.dialProtocol(ma, '/ipfs/bitswap/' + version.num)
       await pipe(
         [version.serialize(msg)],
         lp.encode(),
@@ -165,11 +168,12 @@ describe('network', () => {
 
     bitswapMockB._receiveError = deferred.reject
 
-    await networkA.sendMessage(p2pB.peerInfo.id, msg)
+    await networkA.sendMessage(p2pB.peerId, msg)
   })
 
   it('dial to peer on Bitswap 1.0.0', async () => {
-    const { protocol } = await p2pA.dialProtocol(p2pC.peerInfo, ['/ipfs/bitswap/1.1.0', '/ipfs/bitswap/1.0.0'])
+    const ma = `${p2pC.multiaddrs[0]}/p2p/${p2pC.peerId.toB58String()}`
+    const { protocol } = await p2pA.dialProtocol(ma, ['/ipfs/bitswap/1.1.0', '/ipfs/bitswap/1.0.0'])
 
     expect(protocol).to.equal('/ipfs/bitswap/1.0.0')
   })
@@ -194,7 +198,7 @@ describe('network', () => {
 
     bitswapMockC._receiveError = deferred.reject
 
-    await networkA.sendMessage(p2pC.peerInfo.id, msg)
+    await networkA.sendMessage(p2pC.peerId, msg)
     await deferred.promise
   })
 
@@ -208,8 +212,9 @@ describe('network', () => {
     networkA.start()
     networkB.start()
 
-    // FIXME: have to already be connected as sendMessage only accepts a peer id, not a PeerInfo
-    await p2pA.dial(p2pB.peerInfo)
+    // In a real network scenario, peers will be discovered and their addresses
+    // will be added to the addressBook before bitswap kicks in
+    p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
 
     const deferred = pDefer()
 
@@ -217,7 +222,7 @@ describe('network', () => {
       deferred.resolve()
     }
 
-    await networkA.sendMessage(p2pB.peerInfo.id, new Message(true))
+    await networkA.sendMessage(p2pB.peerId, new Message(true))
 
     return deferred
   })
