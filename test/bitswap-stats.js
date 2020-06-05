@@ -169,8 +169,8 @@ describe('bitswap stats', () => {
       bs2 = bitswaps[1]
       bs2.start()
 
-      libp2pNodes[0].peerStore.addressBook.set(libp2pNodes[1].peerId, libp2pNodes[1].multiaddrs)
-      await libp2pNodes[0].dial(libp2pNodes[1].peerId)
+      const ma = `${libp2pNodes[1].multiaddrs[0]}/p2p/${libp2pNodes[1].peerId.toB58String()}`
+      await libp2pNodes[0].dial(ma)
 
       block = await makeBlock()
 

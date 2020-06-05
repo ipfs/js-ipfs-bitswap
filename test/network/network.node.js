@@ -96,8 +96,8 @@ describe('network', () => {
       counter++
     }
 
-    p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
-    await p2pA.dial(p2pB.peerId)
+    const ma = `${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`
+    await p2pA.dial(ma)
 
     await pWaitFor(() => counter >= 2)
     bitswapMockA._onPeerConnected = () => {}
@@ -105,8 +105,8 @@ describe('network', () => {
   })
 
   it('connectTo success', async () => {
-    p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
-    await networkA.connectTo(p2pB.peerId)
+    const ma = `${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`
+    await networkA.connectTo(ma)
   })
 
   const versions = [{
@@ -136,8 +136,8 @@ describe('network', () => {
 
       bitswapMockB._receiveError = (err) => deferred.reject(err)
 
-      p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
-      const { stream } = await p2pA.dialProtocol(p2pB.peerId, '/ipfs/bitswap/' + version.num)
+      const ma = `${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`
+      const { stream } = await p2pA.dialProtocol(ma, '/ipfs/bitswap/' + version.num)
       await pipe(
         [version.serialize(msg)],
         lp.encode(),
@@ -172,8 +172,8 @@ describe('network', () => {
   })
 
   it('dial to peer on Bitswap 1.0.0', async () => {
-    p2pA.peerStore.addressBook.set(p2pC.peerId, p2pC.multiaddrs)
-    const { protocol } = await p2pA.dialProtocol(p2pC.peerId, ['/ipfs/bitswap/1.1.0', '/ipfs/bitswap/1.0.0'])
+    const ma = `${p2pC.multiaddrs[0]}/p2p/${p2pC.peerId.toB58String()}`
+    const { protocol } = await p2pA.dialProtocol(ma, ['/ipfs/bitswap/1.1.0', '/ipfs/bitswap/1.0.0'])
 
     expect(protocol).to.equal('/ipfs/bitswap/1.0.0')
   })
@@ -212,6 +212,8 @@ describe('network', () => {
     networkA.start()
     networkB.start()
 
+    // In a real network scenario, peers will be discovered and their addresses
+    // will be added to the addressBook before bitswap kicks in
     p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
 
     const deferred = pDefer()

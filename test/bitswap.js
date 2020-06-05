@@ -38,12 +38,12 @@ describe('bitswap without DHT', function () {
     ])
 
     // connect 0 -> 1 && 1 -> 2
-    nodes[0].libp2pNode.peerStore.addressBook.set(nodes[1].libp2pNode.peerId, nodes[1].libp2pNode.multiaddrs)
-    nodes[1].libp2pNode.peerStore.addressBook.set(nodes[2].libp2pNode.peerId, nodes[2].libp2pNode.multiaddrs)
+    const ma1 = `${nodes[1].libp2pNode.multiaddrs[0]}/p2p/${nodes[1].libp2pNode.peerId.toB58String()}`
+    const ma2 = `${nodes[2].libp2pNode.multiaddrs[0]}/p2p/${nodes[2].libp2pNode.peerId.toB58String()}`
 
     await Promise.all([
-      nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerId),
-      nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerId)
+      nodes[0].libp2pNode.dial(ma1),
+      nodes[1].libp2pNode.dial(ma2)
     ])
   })
 
@@ -135,12 +135,12 @@ describe('bitswap with DHT', function () {
     ])
 
     // connect 0 -> 1 && 1 -> 2
-    nodes[0].libp2pNode.peerStore.addressBook.set(nodes[1].libp2pNode.peerId, nodes[1].libp2pNode.multiaddrs)
-    nodes[1].libp2pNode.peerStore.addressBook.set(nodes[2].libp2pNode.peerId, nodes[2].libp2pNode.multiaddrs)
+    const ma1 = `${nodes[1].libp2pNode.multiaddrs[0]}/p2p/${nodes[1].libp2pNode.peerId.toB58String()}`
+    const ma2 = `${nodes[2].libp2pNode.multiaddrs[0]}/p2p/${nodes[2].libp2pNode.peerId.toB58String()}`
 
     await Promise.all([
-      nodes[0].libp2pNode.dial(nodes[1].libp2pNode.peerId),
-      nodes[1].libp2pNode.dial(nodes[2].libp2pNode.peerId)
+      nodes[0].libp2pNode.dial(ma1),
+      nodes[1].libp2pNode.dial(ma2)
     ])
 
     // await dht routing table are updated
