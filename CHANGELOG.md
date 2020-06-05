@@ -1,3 +1,20 @@
+<a name="2.0.0"></a>
+# [2.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v1.0.0...v2.0.0) (2020-06-05)
+
+
+### Features
+
+* use libp2p 0.28.x ([#217](https://github.com/ipfs/js-ipfs-bitswap/issues/217)) ([c4ede4d](https://github.com/ipfs/js-ipfs-bitswap/commit/c4ede4d))
+
+
+### BREAKING CHANGES
+
+* Requires `libp2p@0.28.x` or above
+
+Co-authored-by: Jacob Heun <jacobheun@gmail.com>
+
+
+
 <a name="1.0.0"></a>
 # [1.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.29.2...v1.0.0) (2020-05-27)
 
