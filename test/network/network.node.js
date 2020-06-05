@@ -136,7 +136,7 @@ describe('network', () => {
 
       bitswapMockB._receiveError = (err) => deferred.reject(err)
 
-      // TODO: set addr
+      p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
       const { stream } = await p2pA.dialProtocol(p2pB.peerId, '/ipfs/bitswap/' + version.num)
       await pipe(
         [version.serialize(msg)],
