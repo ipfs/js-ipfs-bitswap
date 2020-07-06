@@ -87,7 +87,7 @@
     "multicodec": "^1.0.0",
     "multihashing-async": "^0.8.0",
     "protons": "^1.0.1",
-    "streaming-iterables": "^4.1.1",
+    "streaming-iterables": "^5.0.2",
     "varint-decoder": "^0.4.0"
   },
   "pre-push": [
