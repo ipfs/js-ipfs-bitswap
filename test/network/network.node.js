@@ -5,7 +5,6 @@ const { expect, assert } = require('aegir/utils/chai')
 const lp = require('it-length-prefixed')
 const pipe = require('it-pipe')
 const pDefer = require('p-defer')
-const pWaitFor = require('p-wait-for')
 const createLibp2pNode = require('../utils/create-libp2p-node')
 const makeBlock = require('../utils/make-block')
 const Network = require('../../src/network')
@@ -73,24 +72,26 @@ describe('network', () => {
   })
 
   it('onPeerConnected success', async () => {
-    var counter = 0
+    const p2pAConnected = pDefer()
+    const p2pBConnected = pDefer()
 
     bitswapMockA._onPeerConnected = (peerId) => {
       expect(peerId.toB58String()).to.equal(p2pB.peerId.toB58String())
-      counter++
+      p2pBConnected.resolve()
     }
 
     bitswapMockB._onPeerConnected = (peerId) => {
       expect(peerId.toB58String()).to.equal(p2pA.peerId.toB58String())
-      counter++
+      p2pAConnected.resolve()
     }
 
     const ma = `${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`
     await p2pA.dial(ma)
 
-    await pWaitFor(() => counter >= 2)
-    bitswapMockA._onPeerConnected = () => {}
-    bitswapMockB._onPeerConnected = () => {}
+    await Promise.all([
+      p2pAConnected,
+      p2pBConnected
+    ])
   })
 
   it('connectTo success', async () => {
@@ -99,35 +100,40 @@ describe('network', () => {
   })
 
   it('sets up peer handlers for previously connected peers', async () => {
-    var counter = 0
+    let p2pAConnected = pDefer()
+    let p2pBConnected = pDefer()
 
     bitswapMockA._onPeerConnected = (peerId) => {
       expect(peerId.toB58String()).to.equal(p2pB.peerId.toB58String())
-      counter++
+      p2pBConnected.resolve()
     }
 
     bitswapMockB._onPeerConnected = (peerId) => {
       expect(peerId.toB58String()).to.equal(p2pA.peerId.toB58String())
-      counter++
+      p2pAConnected.resolve()
     }
 
     const ma = `${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`
     await p2pA.dial(ma)
 
-    await pWaitFor(() => counter >= 2)
-
-    counter = 0
+    await Promise.all([
+      p2pAConnected,
+      p2pBConnected
+    ])
 
     networkA.stop()
     networkB.stop()
 
+    p2pAConnected = pDefer()
+    p2pBConnected = pDefer()
+
     networkA.start()
     networkB.start()
 
-    await pWaitFor(() => counter >= 2)
-
-    bitswapMockA._onPeerConnected = () => {}
-    bitswapMockB._onPeerConnected = () => {}
+    await Promise.all([
+      p2pAConnected,
+      p2pBConnected
+    ])
   })
 
   const versions = [{
