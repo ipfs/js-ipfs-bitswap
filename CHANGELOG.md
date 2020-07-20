@@ -1,3 +1,13 @@
+<a name="2.0.1"></a>
+## [2.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v2.0.0...v2.0.1) (2020-07-20)
+
+
+### Bug Fixes
+
+* pass peer id to onPeerConnect ([#234](https://github.com/ipfs/js-ipfs-bitswap/issues/234)) ([bf3bf0c](https://github.com/ipfs/js-ipfs-bitswap/commit/bf3bf0c)), closes [ipfs/js-ipfs#3182](https://github.com/ipfs/js-ipfs/issues/3182)
+
+
+
 <a name="2.0.0"></a>
 # [2.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v1.0.0...v2.0.0) (2020-06-05)
 
