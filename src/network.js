@@ -53,7 +53,7 @@ class Network {
     for (const peer of this.libp2p.peerStore.peers.values()) {
       const conn = this.libp2p.connectionManager.get(peer.id)
 
-      conn && this._onPeerConnect(conn)
+      conn && this._onPeerConnect(conn.remotePeer)
     }
   }
 
