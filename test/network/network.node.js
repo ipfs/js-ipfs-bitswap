@@ -11,67 +11,56 @@ const makeBlock = require('../utils/make-block')
 const Network = require('../../src/network')
 const Message = require('../../src/types/message')
 
+function createBitswapMock () {
+  return {
+    _receiveMessage: async () => {},
+    _receiveError: async () => {},
+    _onPeerConnected: async () => {},
+    _onPeerDisconnected: async () => {}
+  }
+}
+
 describe('network', () => {
   let p2pA
   let networkA
+  let bitswapMockA
 
   let p2pB
   let networkB
+  let bitswapMockB
 
   let p2pC
   let networkC
+  let bitswapMockC
 
   let blocks
 
-  before(async () => {
+  beforeEach(async () => {
     [p2pA, p2pB, p2pC] = await Promise.all([
       createLibp2pNode(),
       createLibp2pNode(),
       createLibp2pNode()
     ])
     blocks = await makeBlock(2)
-  })
 
-  after(() => {
-    p2pA.stop()
-    p2pB.stop()
-    p2pC.stop()
-  })
+    bitswapMockA = createBitswapMock()
+    bitswapMockB = createBitswapMock()
+    bitswapMockC = createBitswapMock()
 
-  const bitswapMockA = {
-    _receiveMessage: async () => {},
-    _receiveError: async () => {},
-    _onPeerConnected: async () => {},
-    _onPeerDisconnected: async () => {}
-  }
-
-  const bitswapMockB = {
-    _receiveMessage: async () => {},
-    _receiveError: async () => {},
-    _onPeerConnected: async () => {},
-    _onPeerDisconnected: async () => {}
-  }
-
-  const bitswapMockC = {
-    _receiveMessage: async () => {},
-    _receiveError: async () => {},
-    _onPeerConnected: async () => {},
-    _onPeerDisconnected: async () => {}
-  }
-
-  it('instantiate the network obj', () => {
     networkA = new Network(p2pA, bitswapMockA)
     networkB = new Network(p2pB, bitswapMockB)
     // only bitswap100
     networkC = new Network(p2pC, bitswapMockC, { b100Only: true })
 
-    expect(networkA).to.exist()
-    expect(networkB).to.exist()
-    expect(networkC).to.exist()
-
     networkA.start()
     networkB.start()
     networkC.start()
+  })
+
+  afterEach(() => {
+    p2pA.stop()
+    p2pB.stop()
+    p2pC.stop()
   })
 
   it('connectTo fail', async () => {
@@ -107,6 +96,38 @@ describe('network', () => {
   it('connectTo success', async () => {
     const ma = `${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`
     await networkA.connectTo(ma)
+  })
+
+  it('sets up peer handlers for previously connected peers', async () => {
+    var counter = 0
+
+    bitswapMockA._onPeerConnected = (peerId) => {
+      expect(peerId.toB58String()).to.equal(p2pB.peerId.toB58String())
+      counter++
+    }
+
+    bitswapMockB._onPeerConnected = (peerId) => {
+      expect(peerId.toB58String()).to.equal(p2pA.peerId.toB58String())
+      counter++
+    }
+
+    const ma = `${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`
+    await p2pA.dial(ma)
+
+    await pWaitFor(() => counter >= 2)
+
+    counter = 0
+
+    networkA.stop()
+    networkB.stop()
+
+    networkA.start()
+    networkB.start()
+
+    await pWaitFor(() => counter >= 2)
+
+    bitswapMockA._onPeerConnected = () => {}
+    bitswapMockB._onPeerConnected = () => {}
   })
 
   const versions = [{
@@ -159,6 +180,10 @@ describe('network', () => {
     msg.addBlock(b1)
     msg.addBlock(b2)
 
+    // In a real network scenario, peers will be discovered and their addresses
+    // will be added to the addressBook before bitswap kicks in
+    p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
+
     bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       expect(msg).to.eql(msgReceived)
       bitswapMockB._receiveMessage = async () => {}
@@ -188,6 +213,10 @@ describe('network', () => {
     msg.addEntry(b1.cid, 0)
     msg.addBlock(b1)
     msg.addBlock(b2)
+
+    // In a real network scenario, peers will be discovered and their addresses
+    // will be added to the addressBook before bitswap kicks in
+    p2pA.peerStore.addressBook.set(p2pC.peerId, p2pC.multiaddrs)
 
     bitswapMockC._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       expect(msg).to.eql(msgReceived)
