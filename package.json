@@ -84,7 +84,7 @@
     "just-debounce-it": "^1.1.0",
     "libp2p-interfaces": "^0.3.0",
     "moving-average": "^1.0.0",
-    "multicodec": "^1.0.3",
+    "multicodec": "^2.0.0",
     "multihashing-async": "^1.0.0",
     "protons": "^1.0.1",
     "streaming-iterables": "^5.0.2",
