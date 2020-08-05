@@ -76,7 +76,7 @@
     "abort-controller": "^3.0.0",
     "any-signal": "^1.1.0",
     "bignumber.js": "^9.0.0",
-    "cids": "^0.8.3",
+    "cids": "^1.0.0",
     "debug": "^4.1.0",
     "ipld-block": "^0.9.1",
     "it-length-prefixed": "^3.0.0",
