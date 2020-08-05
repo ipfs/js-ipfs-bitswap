@@ -85,7 +85,7 @@
     "libp2p-interfaces": "^0.3.0",
     "moving-average": "^1.0.0",
     "multicodec": "^1.0.3",
-    "multihashing-async": "^1.0.0",
+    "multihashing-async": "^2.0.1",
     "protons": "^1.0.1",
     "streaming-iterables": "^5.0.2",
     "varint-decoder": "^0.4.0"
