@@ -2,13 +2,14 @@
 
 const EventEmitter = require('events').EventEmitter
 const Block = require('ipld-block')
+const uint8ArrayEquals = require('uint8arrays/equals')
+const uint8ArrayToString = require('uint8arrays/to-string')
 
 const CONSTANTS = require('./constants')
 const logger = require('./utils').logger
 
-const cidToMultihashString = (cid) => cid.multihash.toString('base64')
-const unwantEvent = (cid) => `unwant:${cidToMultihashString(cid)}`
-const blockEvent = (cid) => `block:${cidToMultihashString(cid)}`
+const unwantEvent = (cid) => `unwant:${uint8ArrayToString(cid.multihash, 'base64')}`
+const blockEvent = (cid) => `block:${uint8ArrayToString(cid.multihash, 'base64')}`
 
 /**
  * Internal module used to track events about incoming blocks,
@@ -67,7 +68,7 @@ class Notifications extends EventEmitter {
       const onBlock = (block) => {
         this.removeListener(unwantEvt, onUnwant)
 
-        if (!cid.multihash.equals(block.cid.multihash)) {
+        if (!uint8ArrayEquals(cid.multihash, block.cid.multihash)) {
           // wrong block
           return reject(new Error(`Incorrect block received for ${cid}`))
         } else if (cid.version !== block.cid.version || cid.codec !== block.cid.codec) {

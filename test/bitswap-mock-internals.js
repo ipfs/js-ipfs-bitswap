@@ -332,7 +332,6 @@ describe('bitswap with mocks', function () {
       setTimeout(() => {
         bs2.put(block, () => {})
       }, 1000)
-
       const b1 = await p1
       expect(b1).to.eql(block)
 
