@@ -1,14 +1,19 @@
 language: node_js
 cache: npm
 
+branches:
+  only:
+  - master
+  - /^release\/.*$/
+
+node_js:
+  - 'lts/*'
+  - 'node'
+
 stages:
   - check
   - test
   - cov
-
-node_js:
-  - '12'
-  - '10'
 
 os:
   - linux
