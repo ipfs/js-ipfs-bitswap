@@ -73,10 +73,10 @@ describe('bitswap stats', () => {
       bitswaps.map((bs) => bs.stop())
     )
     await Promise.all(
-      repos.map(repo => repo.teardown())
+      libp2pNodes.map((n) => n.stop())
     )
     await Promise.all(
-      libp2pNodes.map((n) => n.stop())
+      repos.map(repo => repo.teardown())
     )
   })
 
