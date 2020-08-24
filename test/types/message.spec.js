@@ -3,7 +3,8 @@
 
 const { expect } = require('aegir/utils/chai')
 const CID = require('cids')
-const { Buffer } = require('buffer')
+const uint8ArrayFromString = require('uint8arrays/from-string')
+const uint8ArrayEquals = require('uint8arrays/equals')
 const loadFixture = require('aegir/fixtures')
 const testDataPath = 'test/fixtures/serialized-from-go'
 const rawMessageFullWantlist = loadFixture(testDataPath + '/bitswap110-message-full-wantlist')
@@ -31,7 +32,7 @@ describe('BitswapMessage', () => {
       const serialized = msg.serializeToBitswap100()
 
       expect(Message.decode(serialized).wantlist.entries[0]).to.be.eql({
-        block: cid.buffer,
+        block: cid.bytes,
         priority: 1,
         cancel: false,
         sendDontHave: false,
@@ -118,9 +119,9 @@ describe('BitswapMessage', () => {
     expect(decoded.blockPresences.length).to.eql(2)
     for (const bp of decoded.blockPresences) {
       if (bp.type === BitswapMessage.BlockPresenceType.Have) {
-        expect(bp.cid.equals(cids[1].buffer)).to.eql(true)
+        expect(uint8ArrayEquals(bp.cid, cids[1].bytes)).to.eql(true)
       } else {
-        expect(bp.cid.equals(cids[2].buffer)).to.eql(true)
+        expect(uint8ArrayEquals(bp.cid, cids[2].bytes)).to.eql(true)
       }
     }
   })
@@ -136,7 +137,7 @@ describe('BitswapMessage', () => {
     const raw = Message.encode({
       wantlist: {
         entries: [{
-          block: cid0.buffer,
+          block: cid0.bytes,
           cancel: false
         }],
         full: true
@@ -175,7 +176,7 @@ describe('BitswapMessage', () => {
     const raw = Message.encode({
       wantlist: {
         entries: [{
-          block: cid0.buffer,
+          block: cid0.bytes,
           cancel: false,
           wantType: BitswapMessage.WantType.Block,
           sendDontHave: true
@@ -190,7 +191,7 @@ describe('BitswapMessage', () => {
         prefix: cid2.prefix
       }],
       blockPresences: [{
-        cid: cid3.buffer,
+        cid: cid3.bytes,
         type: BitswapMessage.BlockPresenceType.Have
       }],
       pendingBytes: 10
@@ -278,8 +279,8 @@ describe('BitswapMessage', () => {
     it('true, same cid derived from distinct encoding', () => {
       const b = blocks[0]
       const cid = cids[0].toV1()
-      const cid1 = new CID(cid.toBaseEncodedString('base32'))
-      const cid2 = new CID(cid.toBaseEncodedString('base64'))
+      const cid1 = new CID(cid.toString('base32'))
+      const cid2 = new CID(cid.toString('base64'))
       const m1 = new BitswapMessage(true)
       const m2 = new BitswapMessage(true)
 
@@ -325,7 +326,7 @@ describe('BitswapMessage', () => {
 
   describe('go interop', () => {
     it('bitswap 1.0.0 message', async () => {
-      const goEncoded = Buffer.from('CioKKAoiEiAs8k26X7CjDiboOyrFueKeGxYeXB+nQl5zBDNik4uYJBAKGAA=', 'base64')
+      const goEncoded = uint8ArrayFromString('CioKKAoiEiAs8k26X7CjDiboOyrFueKeGxYeXB+nQl5zBDNik4uYJBAKGAA=', 'base64pad')
 
       const msg = new BitswapMessage(false)
       const cid = new CID('QmRN6wdp1S2A5EtjW9A3M1vKSBuQQGcgvuhoMUoEz4iiT5')

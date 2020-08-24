@@ -1,6 +1,7 @@
 'use strict'
 
 const debug = require('debug')
+const uint8ArrayEquals = require('uint8arrays/equals')
 
 /**
  * Creates a logger for the given subsystem
@@ -103,7 +104,7 @@ const isMapEqual = (a, b) => {
       return false
     }
     // Support Blocks
-    if (valueA._data && !valueA._data.equals(valueB._data)) {
+    if (valueA._data && !uint8ArrayEquals(valueA._data, valueB._data)) {
       return false
     }
   }

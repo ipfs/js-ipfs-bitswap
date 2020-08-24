@@ -5,6 +5,7 @@ const { expect } = require('aegir/utils/chai')
 const CID = require('cids')
 const Block = require('ipld-block')
 const AbortController = require('abort-controller')
+const uint8ArrayToString = require('uint8arrays/to-string')
 
 const Notifications = require('../src/notifications')
 
@@ -23,7 +24,7 @@ describe('Notifications', () => {
   it('hasBlock', (done) => {
     const n = new Notifications(peerId)
     const b = blocks[0]
-    n.once(`block:${b.cid.multihash.toString('base64')}`, (block) => {
+    n.once(`block:${uint8ArrayToString(b.cid.multihash, 'base64')}`, (block) => {
       expect(b).to.eql(block)
       done()
     })
@@ -38,8 +39,8 @@ describe('Notifications', () => {
       const p = n.wantBlock(b.cid)
 
       // check that listeners have been set up
-      expect(n.listenerCount(`block:${b.cid.multihash.toString('base64')}`)).to.equal(1)
-      expect(n.listenerCount(`unwant:${b.cid.multihash.toString('base64')}`)).to.equal(1)
+      expect(n.listenerCount(`block:${uint8ArrayToString(b.cid.multihash, 'base64')}`)).to.equal(1)
+      expect(n.listenerCount(`unwant:${uint8ArrayToString(b.cid.multihash, 'base64')}`)).to.equal(1)
 
       n.hasBlock(b)
 
@@ -48,8 +49,8 @@ describe('Notifications', () => {
       expect(b).to.eql(block)
 
       // check that internal cleanup works as expected
-      expect(n.listenerCount(`block:${b.cid.multihash.toString('base64')}`)).to.equal(0)
-      expect(n.listenerCount(`unwant:${b.cid.multihash.toString('base64')}`)).to.equal(0)
+      expect(n.listenerCount(`block:${uint8ArrayToString(b.cid.multihash, 'base64')}`)).to.equal(0)
+      expect(n.listenerCount(`unwant:${uint8ArrayToString(b.cid.multihash, 'base64')}`)).to.equal(0)
     })
 
     it('unwant block', async () => {
@@ -89,16 +90,16 @@ describe('Notifications', () => {
       const p = n.wantBlock(cid2)
 
       // check that listeners have been set up
-      expect(n.listenerCount(`block:${cid2.multihash.toString('base64')}`)).to.equal(1)
-      expect(n.listenerCount(`unwant:${cid2.multihash.toString('base64')}`)).to.equal(1)
+      expect(n.listenerCount(`block:${uint8ArrayToString(cid2.multihash, 'base64')}`)).to.equal(1)
+      expect(n.listenerCount(`unwant:${uint8ArrayToString(cid2.multihash, 'base64')}`)).to.equal(1)
 
       n.hasBlock(b)
 
       await expect(p).to.eventually.be.eql(b)
 
       // check that internal cleanup works as expected
-      expect(n.listenerCount(`block:${cid2.multihash.toString('base64')}`)).to.equal(0)
-      expect(n.listenerCount(`unwant:${cid2.multihash.toString('base64')}`)).to.equal(0)
+      expect(n.listenerCount(`block:${uint8ArrayToString(cid2.multihash, 'base64')}`)).to.equal(0)
+      expect(n.listenerCount(`unwant:${uint8ArrayToString(cid2.multihash, 'base64')}`)).to.equal(0)
     })
 
     it('unwant block', async () => {

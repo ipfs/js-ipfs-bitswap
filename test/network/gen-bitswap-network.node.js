@@ -4,7 +4,6 @@
 
 const { expect } = require('aegir/utils/chai')
 const Block = require('ipld-block')
-const { Buffer } = require('buffer')
 const crypto = require('crypto')
 const CID = require('cids')
 const multihashing = require('multihashing-async')
@@ -21,7 +20,7 @@ describe('gen Bitswap network', function () {
 
     const node = nodes[0]
     const blocks = await Promise.all(range(100).map(async (k) => {
-      const b = Buffer.alloc(1024)
+      const b = new Uint8Array(1024)
       b.fill(k)
       const hash = await multihashing(b, 'sha2-256')
       const cid = new CID(hash)

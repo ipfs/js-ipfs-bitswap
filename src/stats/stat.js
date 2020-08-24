@@ -91,9 +91,11 @@ class Stats extends EventEmitter {
   _updateFrequency (latestTime) {
     const timeDiff = latestTime - this._frequencyLastTime
 
-    Object.keys(this._stats).forEach((key) => {
-      this._updateFrequencyFor(key, timeDiff, latestTime)
-    })
+    if (timeDiff) {
+      Object.keys(this._stats).forEach((key) => {
+        this._updateFrequencyFor(key, timeDiff, latestTime)
+      })
+    }
 
     this._frequencyLastTime = latestTime
   }

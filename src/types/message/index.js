@@ -91,7 +91,7 @@ class BitswapMessage {
       wantlist: {
         entries: Array.from(this.wantlist.values()).map((entry) => {
           return {
-            block: entry.cid.buffer, // cid
+            block: entry.cid.bytes, // cid
             priority: Number(entry.priority),
             cancel: Boolean(entry.cancel)
           }
@@ -117,7 +117,7 @@ class BitswapMessage {
       wantlist: {
         entries: Array.from(this.wantlist.values()).map((entry) => {
           return {
-            block: entry.cid.buffer, // cid
+            block: entry.cid.bytes, // cid
             priority: Number(entry.priority),
             wantType: entry.wantType,
             cancel: Boolean(entry.cancel),
@@ -142,7 +142,7 @@ class BitswapMessage {
 
     for (const [cidStr, bpType] of this.blockPresences) {
       msg.blockPresences.push({
-        cid: new CID(cidStr).buffer,
+        cid: new CID(cidStr).bytes,
         type: bpType
       })
     }
@@ -237,7 +237,7 @@ BitswapMessage.blockPresenceSize = (cid) => {
   // the HAVE / DONT_HAVE on the wire, but when doing that calculation we leave
   // plenty of padding under the maximum message size.
   // (It's more important for this to be fast).
-  return cid.buffer.length + 1
+  return cid.bytes.length + 1
 }
 
 BitswapMessage.Entry = Entry

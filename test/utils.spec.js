@@ -4,9 +4,9 @@
 const { expect } = require('aegir/utils/chai')
 const CID = require('cids')
 const Block = require('ipld-block')
-const { Buffer } = require('buffer')
 const multihashing = require('multihashing-async')
 const BitswapMessageEntry = require('../src/types/message/entry')
+const uint8ArrayFromString = require('uint8arrays/from-string')
 
 const { groupBy, uniqWith, pullAllWith, includesWith, sortBy, isMapEqual } = require('../src/utils')
 const SortedMap = require('../src/utils/sorted-map')
@@ -123,7 +123,7 @@ describe('utils spec', function () {
     })
 
     it('should on be false if BitswapMessageEntry dont match', async () => {
-      const hash1 = await multihashing(Buffer.from('OMG!1'), 'sha2-256')
+      const hash1 = await multihashing(uint8ArrayFromString('OMG!1'), 'sha2-256')
       const cid1 = new CID(1, 'dag-pb', hash1)
 
       expect(isMapEqual(
@@ -133,7 +133,7 @@ describe('utils spec', function () {
     })
 
     it('should on be true if BitswapMessageEntry match', async () => {
-      const hash1 = await multihashing(Buffer.from('OMG!1'), 'sha2-256')
+      const hash1 = await multihashing(uint8ArrayFromString('OMG!1'), 'sha2-256')
       const cid1 = new CID(1, 'dag-pb', hash1)
 
       expect(isMapEqual(
@@ -143,10 +143,10 @@ describe('utils spec', function () {
     })
 
     it('should on be false if Blocks dont match', async () => {
-      const hash1 = await multihashing(Buffer.from('OMG!1'), 'sha2-256')
+      const hash1 = await multihashing(uint8ArrayFromString('OMG!1'), 'sha2-256')
       const cid1 = new CID(1, 'dag-pb', hash1)
-      const block1 = new Block(Buffer.from('hello world'), cid1)
-      const block2 = new Block(Buffer.from('hello world 2'), cid1)
+      const block1 = new Block(uint8ArrayFromString('hello world'), cid1)
+      const block2 = new Block(uint8ArrayFromString('hello world 2'), cid1)
 
       expect(isMapEqual(
         new Map([['key1', block1], ['key2', block1]]),
@@ -155,9 +155,9 @@ describe('utils spec', function () {
     })
 
     it('should on be true if Blocks match', async () => {
-      const hash1 = await multihashing(Buffer.from('OMG!1'), 'sha2-256')
+      const hash1 = await multihashing(uint8ArrayFromString('OMG!1'), 'sha2-256')
       const cid1 = new CID(1, 'dag-pb', hash1)
-      const block1 = new Block(Buffer.from('hello world'), cid1)
+      const block1 = new Block(uint8ArrayFromString('hello world'), cid1)
 
       expect(isMapEqual(
         new Map([['key1', block1], ['key2', block1]]),
