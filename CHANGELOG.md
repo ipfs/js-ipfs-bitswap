@@ -1,3 +1,19 @@
+<a name="3.0.0"></a>
+# [3.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v2.0.1...v3.0.0) (2020-08-24)
+
+
+### Bug Fixes
+
+* replace node buffers with uint8arrays ([#251](https://github.com/ipfs/js-ipfs-bitswap/issues/251)) ([4f9d7cd](https://github.com/ipfs/js-ipfs-bitswap/commit/4f9d7cd))
+
+
+### BREAKING CHANGES
+
+* - All use of node Buffers have been replaced with Uint8Arrays
+- All deps now use Uint8Arrays in place of node Buffers
+
+
+
 <a name="2.0.1"></a>
 ## [2.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v2.0.0...v2.0.1) (2020-07-20)
 
