@@ -43,7 +43,7 @@ exports.mockLibp2pNode = () => {
     swarm: {
       setMaxListeners () {}
     },
-    peerStore: new PeerStore()
+    peerStore: new PeerStore({ peerId })
   })
 }
 
