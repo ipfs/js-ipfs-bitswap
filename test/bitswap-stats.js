@@ -216,10 +216,13 @@ describe('bitswap stats', () => {
       const peerStats = bs2.stat().forPeer(libp2pNodes[0].peerId)
       expect(peerStats).to.exist()
 
+      // trigger an update
+      peerStats.push('dataReceived', 1)
+
       const stats = await pEvent(peerStats, 'update')
 
       expect(stats.blocksReceived.toNumber()).to.equal(1)
-      expect(stats.dataReceived.toNumber()).to.equal(48)
+      expect(stats.dataReceived.toNumber()).to.equal(49)
       expect(stats.dupBlksReceived.toNumber()).to.equal(0)
       expect(stats.dupDataReceived.toNumber()).to.equal(0)
       expect(stats.blocksSent.toNumber()).to.equal(0)
