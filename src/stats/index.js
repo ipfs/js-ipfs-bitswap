@@ -17,7 +17,7 @@ const defaultOptions = {
 class Stats extends EventEmitter {
   /**
    *
-   * @param {*} initialCounters
+   * @param {string[]} initialCounters
    * @param {Object} _options
    * @param {boolean} _options.enabled
    * @param {number} _options.computeThrottleTimeout

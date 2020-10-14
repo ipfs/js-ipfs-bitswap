@@ -29,7 +29,7 @@ class DecisionEngine {
   /**
    *
    * @param {PeerId} peerId
-   * @param {*} blockstore
+   * @param {BlockStore} blockstore
    * @param {import('../network')} network
    * @param {Stats} stats
    * @param {Object} [opts]
@@ -485,4 +485,5 @@ module.exports = DecisionEngine
  * @typedef {import('../types').Block} Block
  * @typedef {import('../types/message/entry')} BitswapMessageEntry
  * @typedef {import('../types/wantlist/entry')} WantListEntry
+ * @typedef {import('../types').BlockStore} BlockStore
  */
