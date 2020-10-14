@@ -1,6 +1,6 @@
 'use strict'
 
-const EventEmitter = require('events').EventEmitter
+const { EventEmitter } = require('events')
 const Block = require('ipld-block')
 const uint8ArrayEquals = require('uint8arrays/equals')
 const uint8ArrayToString = require('uint8arrays/to-string')
@@ -8,17 +8,23 @@ const uint8ArrayToString = require('uint8arrays/to-string')
 const CONSTANTS = require('./constants')
 const logger = require('./utils').logger
 
+/**
+ * @param {CID} cid
+ */
 const unwantEvent = (cid) => `unwant:${uint8ArrayToString(cid.multihash, 'base64')}`
-const blockEvent = (cid) => `block:${uint8ArrayToString(cid.multihash, 'base64')}`
 
 /**
- * Internal module used to track events about incoming blocks,
- * wants and unwants.
- *
- * @param {PeerId} peerId
- * @private
+ * @param {CID} cid
  */
+const blockEvent = (cid) => `block:${uint8ArrayToString(cid.multihash, 'base64')}`
+
 class Notifications extends EventEmitter {
+  /**
+   * Internal module used to track events about incoming blocks,
+   * wants and unwants.
+   *
+   * @param {PeerId} peerId
+   */
   constructor (peerId) {
     super()
 
@@ -31,7 +37,7 @@ class Notifications extends EventEmitter {
    * Signal the system that we received `block`.
    *
    * @param {Block} block
-   * @return {void}
+   * @returns {void}
    */
   hasBlock (block) {
     const event = blockEvent(block.cid)
@@ -46,8 +52,8 @@ class Notifications extends EventEmitter {
    * or undefined when the block is unwanted.
    *
    * @param {CID} cid
-   * @param {Object} options
-   * @param {AbortSignal} options.abortSignal
+   * @param {Object} [options]
+   * @param {AbortSignal} [options.signal]
    * @returns {Promise<Block>}
    */
   wantBlock (cid, options = {}) {
@@ -107,3 +113,8 @@ class Notifications extends EventEmitter {
 }
 
 module.exports = Notifications
+
+/**
+ * @typedef {import('./types').CID} CID
+ * @typedef {import('./types').PeerId} PeerId
+ */

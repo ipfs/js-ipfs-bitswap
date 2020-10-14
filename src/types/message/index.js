@@ -10,10 +10,19 @@ const { Message } = require('./message.proto')
 const Entry = require('./entry')
 
 class BitswapMessage {
+  /**
+   * @param {boolean} full
+   */
   constructor (full) {
     this.full = full
+    /** @type {Map<string, Entry>} */
     this.wantlist = new Map()
+
+    /** @type {Map<string, Block>}
+     */
     this.blocks = new Map()
+
+    /** @type {Map<string, BlockPresenceType>} */
     this.blockPresences = new Map()
     this.pendingBytes = 0
   }
@@ -24,6 +33,15 @@ class BitswapMessage {
            this.blockPresences.size === 0
   }
 
+  /**
+   *
+   * @param {CID} cid
+   * @param {number} priority
+   * @param {WantType} [wantType]
+   * @param {boolean} [cancel]
+   * @param {boolean} [sendDontHave]
+   * @returns {void}
+   */
   addEntry (cid, priority, wantType, cancel, sendDontHave) {
     if (wantType == null) {
       wantType = BitswapMessage.WantType.Block
@@ -53,11 +71,18 @@ class BitswapMessage {
     }
   }
 
+  /**
+   * @param {Block} block
+   * @returns {void}
+   */
   addBlock (block) {
     const cidStr = block.cid.toString('base58btc')
     this.blocks.set(cidStr, block)
   }
 
+  /**
+   * @param {CID} cid
+   */
   addHave (cid) {
     const cidStr = cid.toString('base58btc')
     if (!this.blockPresences.has(cidStr)) {
@@ -65,6 +90,9 @@ class BitswapMessage {
     }
   }
 
+  /**
+   * @param {CID} cid
+   */
   addDontHave (cid) {
     const cidStr = cid.toString('base58btc')
     if (!this.blockPresences.has(cidStr)) {
@@ -72,21 +100,30 @@ class BitswapMessage {
     }
   }
 
+  /**
+   * @param {CID} cid
+   */
   cancel (cid) {
     const cidStr = cid.toString('base58btc')
     this.wantlist.delete(cidStr)
     this.addEntry(cid, 0, BitswapMessage.WantType.Block, true, false)
   }
 
+  /**
+   * @param {number} size
+   */
   setPendingBytes (size) {
     this.pendingBytes = size
   }
 
-  /*
+  /**
    * Serializes to Bitswap Message protobuf of
    * version 1.0.0
+   *
+   * @returns {Uint8Array}
    */
   serializeToBitswap100 () {
+    /** @type {Message100} */
     const msg = {
       wantlist: {
         entries: Array.from(this.wantlist.values()).map((entry) => {
@@ -108,11 +145,14 @@ class BitswapMessage {
     return Message.encode(msg)
   }
 
-  /*
+  /**
    * Serializes to Bitswap Message protobuf of
    * version 1.1.0
+   *
+   * @returns {Uint8Array}
    */
   serializeToBitswap110 () {
+    /** @type {Message110} */
     const msg = {
       wantlist: {
         entries: Array.from(this.wantlist.values()).map((entry) => {
@@ -154,11 +194,18 @@ class BitswapMessage {
     return Message.encode(msg)
   }
 
+  /**
+   * @param {BitswapMessage} other
+   * @returns {boolean}
+   */
   equals (other) {
     if (this.full !== other.full ||
         this.pendingBytes !== other.pendingBytes ||
         !isMapEqual(this.wantlist, other.wantlist) ||
         !isMapEqual(this.blocks, other.blocks) ||
+        // @TODO - Is this a bug ? `isMapEqual` only compare maps of blocks and
+        // wants
+        // @ts-ignore
         !isMapEqual(this.blockPresences, other.blockPresences)
     ) {
       return false
@@ -174,6 +221,11 @@ class BitswapMessage {
   }
 }
 
+/**
+ *
+ * @param {Uint8Array} raw
+ * @returns {Promise<BitswapMessage>}
+ */
 BitswapMessage.deserialize = async (raw) => {
   const decoded = Message.decode(raw)
 
@@ -232,6 +284,9 @@ BitswapMessage.deserialize = async (raw) => {
   return msg
 }
 
+/**
+ * @param {CID} cid
+ */
 BitswapMessage.blockPresenceSize = (cid) => {
   // It's ok if this is not exactly right: it's used to estimate the size of
   // the HAVE / DONT_HAVE on the wire, but when doing that calculation we leave
@@ -242,11 +297,22 @@ BitswapMessage.blockPresenceSize = (cid) => {
 
 BitswapMessage.Entry = Entry
 BitswapMessage.WantType = {
+  /** @type {import('../../types').WantBlock} */
   Block: Message.Wantlist.WantType.Block,
+  /** @type {import('../../types').HaveBlock} */
   Have: Message.Wantlist.WantType.Have
 }
 BitswapMessage.BlockPresenceType = {
+  /** @type {import('../../types').Have} */
   Have: Message.BlockPresenceType.Have,
+  /** @type {import('../../types').DontHave} */
   DontHave: Message.BlockPresenceType.DontHave
 }
 module.exports = BitswapMessage
+
+/**
+ * @typedef {import('../../types').WantType} WantType
+ * @typedef {import('../../types').Message110} Message110
+ * @typedef {import('../../types').Message100} Message100
+ * @typedef {import('../../types').BlockPresenceType} BlockPresenceType
+ */

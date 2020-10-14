@@ -3,25 +3,11 @@
 const SortedMap = require('../utils/sorted-map')
 
 /**
- * @typedef {Object} Task
- * @property {string} topic - a name for the Task (like an id but not necessarily unique)
- * @property {number} priority - tasks are ordered by priority per peer
- * @property {number} size - the size of the task, eg the number of bytes in a block
- */
-
-/**
- * @typedef {Object} TaskMerger
- * @property {function(task, tasksWithTopic)} hasNewInfo - given the existing
- *   tasks with the same topic, does the task add some new information?
- *   Used to decide whether to merge the task or ignore it.
- * @property {function(task, existingTask)} merge - merge the information from
- *   the given task into the existing task (with the same topic)
- */
-
-/**
  * The task merger that is used by default.
  * Assumes that new tasks do not add any information over existing tasks,
  * and doesn't try to merge.
+ *
+ * @type {TaskMerger}
  */
 const DefaultTaskMerger = {
   hasNewInfo () {
@@ -44,13 +30,16 @@ class RequestQueue {
    */
   constructor (taskMerger) {
     this._taskMerger = taskMerger || DefaultTaskMerger
-    this._byPeer = new SortedMap([], PeerTasks.compare, true)
+    /** @type {SortedMap<string, PeerTasks>} */
+    this._byPeer = new SortedMap([], PeerTasks.compare)
   }
 
   /**
    * Push tasks onto the queue for the given peer
+   *
    * @param {PeerId} peerId
-   * @param {Task} tasks
+   * @param {Task[]} tasks
+   * @returns {void}
    */
   pushTasks (peerId, tasks) {
     let peerTasks = this._byPeer.get(peerId.toB58String())
@@ -69,17 +58,18 @@ class RequestQueue {
    * the total size is at least targetMinBytes.
    * This puts the popped tasks into the "active" state, meaning they are
    * actively being processed (and cannot be modified).
+   *
    * @param {number} targetMinBytes - the minimum total size of tasks to pop
-   * @returns {Object}
+   * @returns {PopTaskResult}
    */
   popTasks (targetMinBytes) {
-    if (this._byPeer.size === 0) {
-      return { tasks: [], pendingSize: 0 }
-    }
-
     // Get the queue of tasks for the best peer and pop off tasks up to
     // targetMinBytes
     const peerTasks = this._head()
+    if (peerTasks === undefined) {
+      return { tasks: [], pendingSize: 0 }
+    }
+
     const { tasks, pendingSize } = peerTasks.popTasks(targetMinBytes)
     if (tasks.length === 0) {
       return { tasks, pendingSize }
@@ -100,7 +90,16 @@ class RequestQueue {
     }
   }
 
+  /**
+   * @private
+   * @returns {PeerTasks|undefined}
+   */
   _head () {
+    // Shortcut
+    if (this._byPeer.size === 0) {
+      return undefined
+    }
+
     for (const [, v] of this._byPeer) {
       return v
     }
@@ -109,8 +108,10 @@ class RequestQueue {
 
   /**
    * Remove the task with the given topic for the given peer.
+   *
    * @param {string} topic
    * @param {PeerId} peerId
+   * @returns {void}
    */
   remove (topic, peerId) {
     const peerTasks = this._byPeer.get(peerId.toB58String())
@@ -119,8 +120,10 @@ class RequestQueue {
 
   /**
    * Called when the tasks for the given peer complete.
+   *
    * @param {PeerId} peerId
    * @param {Task[]} tasks
+   * @returns {void}
    */
   tasksDone (peerId, tasks) {
     const peerTasks = this._byPeer.get(peerId.toB58String())
@@ -158,13 +161,21 @@ class PeerTasks {
 
   /**
    * Push tasks onto the queue.
+   *
    * @param {Task[]} tasks
+   * @returns {void}
    */
   pushTasks (tasks) {
     for (const t of tasks) {
       this._pushTask(t)
     }
   }
+
+  /**
+   * @private
+   * @param {Task} task
+   * @returns {void}
+   */
 
   _pushTask (task) {
     // If the new task doesn't add any more information over what we
@@ -194,8 +205,14 @@ class PeerTasks {
     this._pending.add(task)
   }
 
-  // Indicates whether the new task adds any more information over tasks that are
-  // already in the active task queue
+  /**
+   * Indicates whether the new task adds any more information over tasks that are
+   * already in the active task queue
+   *
+   * @private
+   * @param {Task} task
+   * @returns {boolean}
+   */
   _taskHasMoreInfoThanActiveTasks (task) {
     const tasksWithTopic = []
     for (const activeTask of this._active) {
@@ -214,6 +231,7 @@ class PeerTasks {
 
   /**
    * Pop tasks off the queue such that the total size is at least targetMinBytes
+   *
    * @param {number} targetMinBytes
    * @returns {Object}
    */
@@ -243,7 +261,9 @@ class PeerTasks {
   /**
    * Called when a task completes.
    * Note: must be the same reference as returned from popTasks.
+   *
    * @param {Task} task
+   * @returns {void}
    */
   taskDone (task) {
     if (this._active.has(task)) {
@@ -254,7 +274,9 @@ class PeerTasks {
 
   /**
    * Remove pending tasks with the given topic
+   *
    * @param {string} topic
+   * @returns {void}
    */
   remove (topic) {
     this._pending.delete(topic)
@@ -262,13 +284,21 @@ class PeerTasks {
 
   /**
    * No work to be done, this PeerTasks object can be freed.
+   *
    * @returns {boolean}
    */
   isIdle () {
-    return this._pending.length === 0 && this._active.length === 0
+    return this._pending.length === 0 && this._active.size === 0
   }
 
-  // Compare PeerTasks
+  /**
+   * Compare PeerTasks
+   *
+   * @template Key
+   * @param {[Key, PeerTasks]} a
+   * @param {[Key, PeerTasks]} b
+   * @returns {number}
+   */
   static compare (a, b) {
     // Move peers with no pending tasks to the back of the queue
     if (a[1]._pending.length === 0) {
@@ -294,6 +324,7 @@ class PeerTasks {
  */
 class PendingTasks {
   constructor () {
+    /** @type {SortedMap<string, PendingTask>} */
     this._tasks = new SortedMap([], this._compare)
   }
 
@@ -301,15 +332,26 @@ class PendingTasks {
     return this._tasks.size
   }
 
-  // Sum of the size of all pending tasks
+  /**
+   * Sum of the size of all pending tasks
+   *
+   * @type {number}
+   **/
   get totalSize () {
     return [...this._tasks.values()].reduce((a, t) => a + t.task.size, 0)
   }
 
+  /**
+   * @param {string} topic
+   * @returns {Task|void}
+   */
   get (topic) {
     return (this._tasks.get(topic) || {}).task
   }
 
+  /**
+   * @param {Task} task
+   */
   add (task) {
     this._tasks.set(task.topic, {
       created: Date.now(),
@@ -317,6 +359,10 @@ class PendingTasks {
     })
   }
 
+  /**
+   * @param {string} topic
+   * @returns {void}
+   */
   delete (topic) {
     this._tasks.delete(topic)
   }
@@ -326,7 +372,13 @@ class PendingTasks {
     return [...this._tasks.values()].map(i => i.task)
   }
 
-  // Update the priority of the task with the given topic, and update the order
+  /**
+   * Update the priority of the task with the given topic, and update the order
+   *
+   * @param {string} topic
+   * @param {number} priority
+   * @returns {void}
+   **/
   updatePriority (topic, priority) {
     const obj = this._tasks.get(topic)
     if (!obj) {
@@ -338,7 +390,14 @@ class PendingTasks {
     this._tasks.update(i)
   }
 
-  // Sort by priority desc then FIFO
+  /**
+   * Sort by priority desc then FIFO
+   *
+   * @param {[string, PendingTask]} a
+   * @param {[string, PendingTask]} b
+   * @returns {number}
+   * @private
+   */
   _compare (a, b) {
     if (a[1].task.priority === b[1].task.priority) {
       // FIFO
@@ -350,3 +409,18 @@ class PendingTasks {
 }
 
 module.exports = RequestQueue
+
+/**
+ * @typedef {Object} PopTaskResult
+ * @property {PeerId} [peerId]
+ * @property {Task[]} tasks
+ * @property {number} pendingSize
+ *
+ * @typedef {Object} PendingTask
+ * @property {number} created
+ * @property {Task} task
+ *
+ * @typedef {import('../types').PeerId} PeerId
+ * @typedef {import('./interface').Task} Task
+ * @typedef {import('./interface').TaskMerger} TaskMerger
+ */

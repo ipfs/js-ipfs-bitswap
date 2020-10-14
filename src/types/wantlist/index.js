@@ -4,7 +4,12 @@ const { sortBy } = require('../../utils')
 const Entry = require('./entry')
 
 class Wantlist {
+  /**
+   *
+   * @param {Stats} [stats]
+   */
   constructor (stats) {
+    /** @type {Map<string, Entry>} */
     this.set = new Map()
     this._stats = stats
   }
@@ -13,6 +18,12 @@ class Wantlist {
     return this.set.size
   }
 
+  /**
+   * @param {CID} cid
+   * @param {number} priority
+   * @param {WantType} [wantType]
+   * @returns {void}
+   */
   add (cid, priority, wantType) {
     // Have to import here to avoid circular reference
     const Message = require('../message')
@@ -36,6 +47,10 @@ class Wantlist {
     }
   }
 
+  /**
+   * @param {CID} cid
+   * @returns {void}
+   */
   remove (cid) {
     const cidStr = cid.toString('base58btc')
     const entry = this.set.get(cidStr)
@@ -57,12 +72,18 @@ class Wantlist {
     }
   }
 
+  /**
+   * @param {string} cidStr
+   */
   removeForce (cidStr) {
     if (this.set.has(cidStr)) {
       this.set.delete(cidStr)
     }
   }
 
+  /**
+   * @param {(entry:Entry, key:string) => void} fn
+   */
   forEach (fn) {
     return this.set.forEach(fn)
   }
@@ -72,9 +93,16 @@ class Wantlist {
   }
 
   sortedEntries () {
+    // @ts-ignore - Property 'key' does not exist on type 'WantListEntry'.ts(2339)
+    // TODO: Figure out if this is an actual bug.
     return new Map(sortBy(o => o[1].key, Array.from(this.set.entries())))
   }
 
+  /**
+   *
+   * @param {CID} cid
+   * @returns {Entry|undefined}
+   */
   contains (cid) {
     const cidStr = cid.toString('base58btc')
     return this.set.get(cidStr)
@@ -83,3 +111,9 @@ class Wantlist {
 
 Wantlist.Entry = Entry
 module.exports = Wantlist
+
+/**
+ * @typedef {import('../../types').CID} CID
+ * @typedef {import('../../types').WantType} WantType
+ * @typedef {import('../../stats')} Stats
+ */

@@ -1,17 +1,28 @@
 'use strict'
 
-const EventEmitter = require('events')
+const { EventEmitter } = require('events')
 const Stat = require('./stat')
 
+/**
+ * @typedef {[number, number, number]} AvarageIntervals
+ */
 const defaultOptions = {
-  movingAverageIntervals: [
+  movingAverageIntervals: /** @type {AvarageIntervals} */ ([
     60 * 1000, // 1 minute
     5 * 60 * 1000, // 5 minutes
     15 * 60 * 1000 // 15 minutes
-  ]
+  ])
 }
 
 class Stats extends EventEmitter {
+  /**
+   *
+   * @param {*} initialCounters
+   * @param {Object} _options
+   * @param {boolean} _options.enabled
+   * @param {number} _options.computeThrottleTimeout
+   * @param {number} _options.computeThrottleMaxQueueSize
+   */
   constructor (initialCounters, _options) {
     super()
 
@@ -32,6 +43,7 @@ class Stats extends EventEmitter {
     this._global = new Stat(initialCounters, options)
     this._global.on('update', (stats) => this.emit('update', stats))
 
+    /** @type {Map<string, Stat>} */
     this._peers = new Map()
   }
 
@@ -63,14 +75,24 @@ class Stats extends EventEmitter {
     return this._global.movingAverages
   }
 
+  /**
+   * @param {PeerId|string} peerId
+   * @returns {Stat|void}
+   */
   forPeer (peerId) {
-    if (peerId.toB58String) {
-      peerId = peerId.toB58String()
-    }
+    const peerIdStr = (typeof peerId !== 'string' && peerId.toB58String)
+      ? peerId.toB58String()
+      : `${peerId}`
 
-    return this._peers.get(peerId)
+    return this._peers.get(peerIdStr)
   }
 
+  /**
+   *
+   * @param {string|null} peer
+   * @param {string} counter
+   * @param {number} inc
+   */
   push (peer, counter, inc) {
     if (this._enabled) {
       this._global.push(counter, inc)
@@ -98,3 +120,7 @@ class Stats extends EventEmitter {
 }
 
 module.exports = Stats
+
+/**
+ * @typedef {import('../types').PeerId} PeerId
+ */

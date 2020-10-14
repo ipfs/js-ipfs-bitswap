@@ -7,6 +7,12 @@ const MsgQueue = require('./msg-queue')
 const logger = require('../utils').logger
 
 module.exports = class WantManager {
+  /**
+   *
+   * @param {PeerId} peerId
+   * @param {Network} network
+   * @param {Stats} stats
+   */
   constructor (peerId, network, stats) {
     this.peers = new Map()
     this.wantlist = new Wantlist(stats)
@@ -122,7 +128,11 @@ module.exports = class WantManager {
 
   stop () {
     this.peers.forEach((mq) => this.disconnected(mq.peerId))
-
-    clearInterval(this.timer)
   }
 }
+
+/**
+ * @typedef {import('../types').PeerId} PeerId
+ * @typedef {import('../network')} Network
+ * @typedef {import('../stats')} Stats
+ */

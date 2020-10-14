@@ -3,6 +3,13 @@
 const WantlistEntry = require('../wantlist').Entry
 
 module.exports = class BitswapMessageEntry {
+  /**
+   * @param {CID} cid
+   * @param {number} priority
+   * @param {WantType} wantType
+   * @param {boolean} [cancel]
+   * @param {boolean} [sendDontHave]
+   */
   constructor (cid, priority, wantType, cancel, sendDontHave) {
     this.entry = new WantlistEntry(cid, priority, wantType)
     this.cancel = Boolean(cancel)
@@ -45,3 +52,8 @@ module.exports = class BitswapMessageEntry {
            this.entry.equals(other.entry)
   }
 }
+
+/**
+ * @typedef {import('../../types').WantType} WantType
+ * @typedef {import('../../types').CID} CID
+ */

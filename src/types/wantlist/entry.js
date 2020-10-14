@@ -1,6 +1,11 @@
 'use strict'
 
 class WantListEntry {
+  /**
+   * @param {CID} cid
+   * @param {number} priority
+   * @param {WantType} [wantType]
+   */
   constructor (cid, priority, wantType) {
     // Keep track of how many requests we have for this key
     this._refCounter = 1
@@ -28,6 +33,10 @@ class WantListEntry {
     return `WantlistEntry <key: ${cidStr}, priority: ${this.priority}, refs: ${this._refCounter}>`
   }
 
+  /**
+   * @param {WantListEntry} other
+   * @returns {boolean}
+   */
   equals (other) {
     return (this._refCounter === other._refCounter) &&
       this.cid.equals(other.cid) &&
@@ -37,3 +46,8 @@ class WantListEntry {
 }
 
 module.exports = WantListEntry
+
+/**
+ * @typedef {import('../../types').WantType} WantType
+ * @typedef {import('../../types').CID} CID
+ */

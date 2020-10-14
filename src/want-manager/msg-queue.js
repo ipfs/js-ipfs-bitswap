@@ -7,13 +7,19 @@ const logger = require('../utils').logger
 const { wantlistSendDebounceMs } = require('../constants')
 
 module.exports = class MsgQueue {
+  /**
+   *
+   * @param {PeerId} selfPeerId
+   * @param {PeerId} otherPeerId
+   * @param {Network} network
+   */
   constructor (selfPeerId, otherPeerId, network) {
     this.peerId = otherPeerId
     this.network = network
     this.refcnt = 1
 
     this._entries = []
-    this._log = logger(selfPeerId, 'msgqueue', otherPeerId.toB58String().slice(0, 8))
+    this._log = logger(selfPeerId, 'msgqueue')
     this.sendEntries = debounce(this._sendEntries.bind(this), wantlistSendDebounceMs)
   }
 
@@ -63,3 +69,8 @@ module.exports = class MsgQueue {
     })
   }
 }
+
+/**
+ * @typedef {import('../types').PeerId} PeerId
+ * @typedef {import('../network')} Network
+ */

@@ -26,6 +26,16 @@ const TARGET_MESSAGE_SIZE = 16 * 1024
 const MAX_SIZE_REPLACE_HAS_WITH_BLOCK = 1024
 
 class DecisionEngine {
+  /**
+   *
+   * @param {PeerId} peerId
+   * @param {*} blockstore
+   * @param {import('../network')} network
+   * @param {Stats} stats
+   * @param {Object} [opts]
+   * @param {number} [opts.targetMessageSize]
+   * @param {number} [opts.maxSizeReplaceHasWithBlock]
+   */
   constructor (peerId, blockstore, network, stats, opts) {
     this._log = logger(peerId, 'engine')
     this.blockstore = blockstore
@@ -34,6 +44,7 @@ class DecisionEngine {
     this._opts = this._processOpts(opts)
 
     // A list of of ledgers by their partner id
+    /** @type {Map<string, Ledger>} */
     this.ledgerMap = new Map()
     this._running = false
 
@@ -112,7 +123,7 @@ class DecisionEngine {
 
     // If there's nothing in the message, bail out
     if (msg.empty) {
-      this._requestQueue.tasksDone(peerId, tasks)
+      peerId && this._requestQueue.tasksDone(peerId, tasks)
 
       // Trigger the next round of task processing
       this._scheduleProcessTasks()
@@ -122,32 +133,36 @@ class DecisionEngine {
 
     try {
       // Send the message
-      await this.network.sendMessage(peerId, msg)
+      peerId && await this.network.sendMessage(peerId, msg)
 
       // Peform sent message accounting
       for (const block of blocks.values()) {
-        this.messageSent(peerId, block)
+        peerId && this.messageSent(peerId, block)
       }
     } catch (err) {
       this._log.error(err)
     }
 
     // Free the tasks up from the request queue
-    this._requestQueue.tasksDone(peerId, tasks)
+    peerId && this._requestQueue.tasksDone(peerId, tasks)
 
     // Trigger the next round of task processing
     this._scheduleProcessTasks()
   }
 
+  /**
+   * @param {PeerId} peerId
+   * @returns {Map<string, WantListEntry>}
+   */
   wantlistForPeer (peerId) {
     const peerIdStr = peerId.toB58String()
-    if (!this.ledgerMap.has(peerIdStr)) {
-      return new Map()
-    }
-
-    return this.ledgerMap.get(peerIdStr).wantlist.sortedEntries()
+    const ledger = this.ledgerMap.get(peerIdStr)
+    return ledger ? ledger.wantlist.sortedEntries() : new Map()
   }
 
+  /**
+   * @param {PeerId} peerId
+   */
   ledgerForPeer (peerId) {
     const peerIdStr = peerId.toB58String()
 
@@ -164,12 +179,20 @@ class DecisionEngine {
     }
   }
 
+  /**
+   * @returns {PeerId[]}
+   */
   peers () {
     return Array.from(this.ledgerMap.values()).map((l) => l.partner)
   }
 
-  // Receive blocks either from an incoming message from the network, or from
-  // blocks being added by the client on the localhost (eg IPFS add)
+  /**
+   * Receive blocks either from an incoming message from the network, or from
+   * blocks being added by the client on the localhost (eg IPFS add)
+   *
+   * @param {Block[]} blocks
+   * @returns {void}
+   */
   receivedBlocks (blocks) {
     if (!blocks.length) {
       return
@@ -211,7 +234,13 @@ class DecisionEngine {
     this._scheduleProcessTasks()
   }
 
-  // Handle incoming messages
+  /**
+   * Handle incoming messages
+   *
+   * @param {PeerId} peerId
+   * @param {Message} msg
+   * @returns {Promise<void>}
+   */
   async messageReceived (peerId, msg) {
     const ledger = this._findOrCreate(peerId)
 
@@ -251,12 +280,24 @@ class DecisionEngine {
     this._scheduleProcessTasks()
   }
 
+  /**
+   * @private
+   * @param {PeerId} peerId
+   * @param {CID[]} cids
+   * @returns {void}
+   */
   _cancelWants (peerId, cids) {
     for (const c of cids) {
       this._requestQueue.remove(c.toString(), peerId)
     }
   }
 
+  /**
+   * @private
+   * @param {PeerId} peerId
+   * @param {BitswapMessageEntry[]} wants
+   * @returns {Promise<void>}
+   */
   async _addWants (peerId, wants) {
     // Get the size of each wanted block
     const blockSizes = await this._getBlockSizes(wants.map(w => w.cid))
@@ -320,11 +361,21 @@ class DecisionEngine {
       blockSize <= this._opts.maxSizeReplaceHasWithBlock
   }
 
+  /**
+   * @private
+   * @param {CID[]} cids
+   * @returns {Promise<Map<string, number>>}
+   */
   async _getBlockSizes (cids) {
     const blocks = await this._getBlocks(cids)
     return new Map([...blocks].map(([k, v]) => [k, v.data.length]))
   }
 
+  /**
+   * @private
+   * @param {CID[]} cids
+   * @returns {Promise<Map<string, Block>>}
+   */
   async _getBlocks (cids) {
     const res = new Map()
     await Promise.all(cids.map(async (cid) => {
@@ -347,7 +398,14 @@ class DecisionEngine {
     })
   }
 
-  // Clear up all accounting things after message was sent
+  /**
+   * Clear up all accounting things after message was sent
+   *
+   * @param {PeerId} peerId
+   * @param {Object} [block]
+   * @param {Uint8Array} block.data
+   * @param {CID} [block.cid]
+   */
   messageSent (peerId, block) {
     const ledger = this._findOrCreate(peerId)
     ledger.sentBytes(block ? block.data.length : 0)
@@ -356,15 +414,29 @@ class DecisionEngine {
     }
   }
 
+  /**
+   * @param {PeerId} peerId
+   * @returns {number}
+   */
   numBytesSentTo (peerId) {
     return this._findOrCreate(peerId).accounting.bytesSent
   }
+
+  /**
+   * @param {PeerId} peerId
+   * @returns {number}
+   */
 
   numBytesReceivedFrom (peerId) {
     return this._findOrCreate(peerId).accounting.bytesRecv
   }
 
-  peerDisconnected (peerId) {
+  /**
+   *
+   * @param {PeerId} _peerId
+   * @returns {void}
+   */
+  peerDisconnected (_peerId) {
     // if (this.ledgerMap.has(peerId.toB58String())) {
     //   this.ledgerMap.delete(peerId.toB58String())
     // }
@@ -373,10 +445,16 @@ class DecisionEngine {
     // in the peer request queue
   }
 
+  /**
+   * @private
+   * @param {PeerId} peerId
+   * @returns {Ledger}
+   */
   _findOrCreate (peerId) {
     const peerIdStr = peerId.toB58String()
-    if (this.ledgerMap.has(peerIdStr)) {
-      return this.ledgerMap.get(peerIdStr)
+    const ledger = this.ledgerMap.get(peerIdStr)
+    if (ledger) {
+      return ledger
     }
 
     const l = new Ledger(peerId)
@@ -399,3 +477,12 @@ class DecisionEngine {
 }
 
 module.exports = DecisionEngine
+
+/**
+ * @typedef {import('../types').PeerId} PeerId
+ * @typedef {import('../stats')} Stats
+ * @typedef {import('../types').BlockData} BlockData
+ * @typedef {import('../types').Block} Block
+ * @typedef {import('../types/message/entry')} BitswapMessageEntry
+ * @typedef {import('../types/wantlist/entry')} WantListEntry
+ */
