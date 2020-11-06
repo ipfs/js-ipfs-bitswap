@@ -11,11 +11,8 @@ const SortedMap = require('../utils/sorted-map')
 
 /**
  * @typedef {Object} TaskMerger
- * @property {function(task, tasksWithTopic)} hasNewInfo - given the existing
- *   tasks with the same topic, does the task add some new information?
- *   Used to decide whether to merge the task or ignore it.
- * @property {function(task, existingTask)} merge - merge the information from
- *   the given task into the existing task (with the same topic)
+ * @property {function(task, tasksWithTopic)} hasNewInfo - given the existing tasks with the same topic, does the task add some new information? Used to decide whether to merge the task or ignore it.
+ * @property {function(task, existingTask)} merge - merge the information from the given task into the existing task (with the same topic)
  */
 
 /**
@@ -49,6 +46,7 @@ class RequestQueue {
 
   /**
    * Push tasks onto the queue for the given peer
+   *
    * @param {PeerId} peerId
    * @param {Task} tasks
    */
@@ -69,6 +67,7 @@ class RequestQueue {
    * the total size is at least targetMinBytes.
    * This puts the popped tasks into the "active" state, meaning they are
    * actively being processed (and cannot be modified).
+   *
    * @param {number} targetMinBytes - the minimum total size of tasks to pop
    * @returns {Object}
    */
@@ -109,6 +108,7 @@ class RequestQueue {
 
   /**
    * Remove the task with the given topic for the given peer.
+   *
    * @param {string} topic
    * @param {PeerId} peerId
    */
@@ -119,6 +119,7 @@ class RequestQueue {
 
   /**
    * Called when the tasks for the given peer complete.
+   *
    * @param {PeerId} peerId
    * @param {Task[]} tasks
    */
@@ -158,6 +159,7 @@ class PeerTasks {
 
   /**
    * Push tasks onto the queue.
+   *
    * @param {Task[]} tasks
    */
   pushTasks (tasks) {
@@ -214,6 +216,7 @@ class PeerTasks {
 
   /**
    * Pop tasks off the queue such that the total size is at least targetMinBytes
+   *
    * @param {number} targetMinBytes
    * @returns {Object}
    */
@@ -243,6 +246,7 @@ class PeerTasks {
   /**
    * Called when a task completes.
    * Note: must be the same reference as returned from popTasks.
+   *
    * @param {Task} task
    */
   taskDone (task) {
@@ -254,6 +258,7 @@ class PeerTasks {
 
   /**
    * Remove pending tasks with the given topic
+   *
    * @param {string} topic
    */
   remove (topic) {
@@ -262,6 +267,7 @@ class PeerTasks {
 
   /**
    * No work to be done, this PeerTasks object can be freed.
+   *
    * @returns {boolean}
    */
   isIdle () {

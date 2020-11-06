@@ -150,8 +150,8 @@ exports.applyNetwork = (bs, n) => {
 
 /**
  * @private
- * @param {number} n The number of nodes in the network
- * @param {boolean} enableDHT Whether or not to run the dht
+ * @param {number} n - The number of nodes in the network
+ * @param {boolean} enableDHT - Whether or not to run the dht
  */
 exports.genBitswapNetwork = async (n, enableDHT = false) => {
   const netArray = [] // bitswap, peerStore, libp2p, peerId, repo

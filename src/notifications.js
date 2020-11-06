@@ -31,7 +31,7 @@ class Notifications extends EventEmitter {
    * Signal the system that we received `block`.
    *
    * @param {Block} block
-   * @return {void}
+   * @returns {void}
    */
   hasBlock (block) {
     const event = blockEvent(block.cid)
