@@ -6,7 +6,7 @@
 class SortedMap extends Map {
   /**
    * @param {Array<k, v>} [entries]
-   * @param {function(a, b)} [cmp] compares [k1, v1] to [k2, v2]
+   * @param {function(a, b)} [cmp] - compares [k1, v1] to [k2, v2]
    */
   constructor (entries, cmp) {
     super()

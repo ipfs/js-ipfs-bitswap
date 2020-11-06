@@ -55,8 +55,8 @@ describe('gen Bitswap network', function () {
 
 /**
  * @private
- * @param {Array<*>} nodes Array of Bitswap Network nodes
- * @param {number} blocksPerNode Number of blocks to exchange per node
+ * @param {Array<*>} nodes - Array of Bitswap Network nodes
+ * @param {number} blocksPerNode - Number of blocks to exchange per node
  */
 async function exchangeBlocks (nodes, blocksPerNode = 10) {
   const blocks = await createBlocks(nodes.length * blocksPerNode)
@@ -88,8 +88,9 @@ async function exchangeBlocks (nodes, blocksPerNode = 10) {
 
 /**
  * Resolves `num` blocks
+ *
  * @private
- * @param {number} num The number of blocks to create
+ * @param {number} num - The number of blocks to create
  * @returns {Promise<Block[]>}
  */
 function createBlocks (num) {

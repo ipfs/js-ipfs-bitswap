@@ -83,6 +83,7 @@ const sortBy = (fn, list) => {
 
 /**
  * Is equal for Maps of BitswapMessageEntry or Blocks
+ *
  * @param {Map} a
  * @param {Map} b
  * @returns {boolean}

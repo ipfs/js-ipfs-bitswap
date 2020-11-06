@@ -69,11 +69,12 @@ class Network {
 
   /**
    * Handles both types of incoming bitswap messages
+   *
    * @private
    * @param {object} param0
-   * @param {string} param0.protocol The protocol the stream is running
-   * @param {Stream} param0.stream A duplex iterable stream
-   * @param {Connection} param0.connection A libp2p Connection
+   * @param {string} param0.protocol - The protocol the stream is running
+   * @param {Stream} param0.stream - A duplex iterable stream
+   * @param {Connection} param0.connection - A libp2p Connection
    * @returns {void}
    */
   async _onConnection ({ protocol, stream, connection }) {

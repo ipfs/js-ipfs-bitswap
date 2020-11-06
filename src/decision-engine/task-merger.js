@@ -4,6 +4,7 @@ const TaskMerger = {
   /**
    * Indicates whether the given task has newer information than the active
    * tasks with the same topic
+   *
    * @param {Task} task
    * @param {Task[]} tasksWithTopic
    * @returns {boolean}
@@ -39,6 +40,7 @@ const TaskMerger = {
 
   /**
    * Merge the information from the task into the existing pending task
+   *
    * @param {Task} newTask
    * @param {Task} existingTask
    */
