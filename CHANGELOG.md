@@ -1,3 +1,7 @@
+# [4.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v3.0.0...v4.0.0) (2020-11-06)
+
+
+
 <a name="3.0.0"></a>
 # [3.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v2.0.1...v3.0.0) (2020-08-24)
 
