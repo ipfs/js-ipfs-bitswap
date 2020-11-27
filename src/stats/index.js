@@ -4,10 +4,10 @@ const { EventEmitter } = require('events')
 const Stat = require('./stat')
 
 /**
- * @typedef {[number, number, number]} AvarageIntervals
+ * @typedef {[number, number, number]} AverageIntervals
  */
 const defaultOptions = {
-  movingAverageIntervals: /** @type {AvarageIntervals} */ ([
+  movingAverageIntervals: /** @type {AverageIntervals} */ ([
     60 * 1000, // 1 minute
     5 * 60 * 1000, // 5 minutes
     15 * 60 * 1000 // 15 minutes

@@ -62,3 +62,18 @@ export interface BlockStore {
   put(block:Block, options?:AbortOptions):Promise<Block>
   putMany(blocks:AsyncIterable<Block>|Iterable<Block>, options?:AbortOptions):AsyncIterable<Block>
 }
+
+export type MessageProto = {
+  encode(value:any): Uint8Array
+  decode(bytes: Uint8Array): any
+  BlockPresenceType: {
+    Have: Have,
+    DontHave: DontHave
+  },
+  Wantlist: {
+    WantType: {
+      Block: WantBlock
+      Have: HaveBlock
+    }
+  }
+}

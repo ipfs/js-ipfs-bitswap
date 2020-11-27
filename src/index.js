@@ -7,7 +7,7 @@ const Notifications = require('./notifications')
 const logger = require('./utils').logger
 const Stats = require('./stats')
 const AbortController = require('abort-controller').default
-const anySignal = require('any-signal')
+const { anySignal } = require('any-signal')
 
 const defaultOptions = {
   statsEnabled: false,
@@ -274,7 +274,9 @@ class Bitswap {
     // a race condition, so register for incoming block notifications as well
     // as trying to get it from the datastore
     const controller = new AbortController()
-    const signal = anySignal([options.signal, controller.signal])
+    const signal = options.signal
+      ? anySignal([options.signal, controller.signal])
+      : controller.signal
 
     const block = await Promise.race([
       this.notifications.wantBlock(cid, {

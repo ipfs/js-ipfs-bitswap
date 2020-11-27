@@ -12,7 +12,7 @@ class Stats extends EventEmitter {
    * @param {boolean} options.enabled
    * @param {number} options.computeThrottleTimeout
    * @param {number} options.computeThrottleMaxQueueSize
-   * @param {import('.').AvarageIntervals} options.movingAverageIntervals
+   * @param {import('.').AverageIntervals} options.movingAverageIntervals
    */
   constructor (initialCounters, options) {
     super()

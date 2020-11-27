@@ -1,6 +1,6 @@
 export interface TaskMerger {
   /**
-   * Ggiven the existing tasks with the same topic, does the task add some new
+   * Given the existing tasks with the same topic, does the task add some new
    * information? Used to decide whether to merge the task or ignore it.
    */
   hasNewInfo (task:Task, tasksWithTopic:Task[]): boolean

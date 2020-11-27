@@ -8,12 +8,17 @@
     "./test/utils/create-libp2p-node": false,
     "./test/utils/create-temp-repo-nodejs.js": "./test/utils/create-temp-repo-browser.js"
   },
+  "types": "dist/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "*": [
-        "dist/*"
+      "src/*": [
+        "dist/src/*",
+        "dist/src/*/index"
       ]
     }
+  },
+  "eslintConfig": {
+    "extends": "ipfs"
   },
   "files": [
     "dist",
@@ -24,18 +29,15 @@
     "test:browser": "aegir test -t browser -t webworker",
     "test:node": "aegir test -t node",
     "lint": "aegir lint",
-    "check": "tsc --noEmit",
+    "check": "aegir ts -p check",
     "release": "aegir release",
     "release-minor": "aegir release --type minor",
     "release-major": "aegir release --type major",
     "bench": "node benchmarks/index",
-    "build": "npm run build:js & npm run build:types",
-    "build:js": "aegir build",
-    "build:types": "tsc --emitDeclarationOnly --declarationDir dist",
+    "build": "aegir build",
     "coverage": "aegir coverage --provider codecov",
     "docs": "aegir docs",
-    "benchmarks": "node test/benchmarks/get-many",
-    "prepare": "npm run build:types"
+    "benchmarks": "node test/benchmarks/get-many"
   },
   "repository": {
     "type": "git",
@@ -54,10 +56,10 @@
   "homepage": "https://github.com/ipfs/js-ipfs-bitswap#readme",
   "devDependencies": {
     "@nodeutils/defaults-deep": "^1.1.0",
-    "aegir": "^27.0.0",
+    "aegir": "^29.1.0",
     "benchmark": "^2.1.4",
     "delay": "^4.3.0",
-    "ipfs-repo": "^6.0.1",
+    "ipfs-repo": "^7.0.0",
     "ipfs-utils": "^3.0.0",
     "iso-random-stream": "^1.1.1",
     "it-all": "^1.0.2",
@@ -81,16 +83,15 @@
     "sinon": "^9.0.0",
     "stats-lite": "^2.2.0",
     "uuid": "^8.0.0",
-    "typescript": "^4.0.3",
     "@types/debug": "^4.1.5"
   },
   "dependencies": {
     "abort-controller": "^3.0.0",
-    "any-signal": "^1.1.0",
+    "any-signal": "^2.1.1",
     "bignumber.js": "^9.0.0",
     "cids": "^1.0.0",
     "debug": "^4.2.0",
-    "ipld-block": "git://github.com/ipld/js-ipld-block#typegen",
+    "ipld-block": "^0.11.0",
     "it-length-prefixed": "^3.0.0",
     "it-pipe": "^1.1.0",
     "just-debounce-it": "^1.1.0",
