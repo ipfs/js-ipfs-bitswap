@@ -95,7 +95,7 @@
     "it-length-prefixed": "^3.0.0",
     "it-pipe": "^1.1.0",
     "just-debounce-it": "^1.1.0",
-    "libp2p-interfaces": "^0.7.1",
+    "libp2p-interfaces": "git://github.com/libp2p/js-libp2p-interfaces.git#fix/types-of-multicodec-topology",
     "moving-average": "^1.0.0",
     "multicodec": "^2.0.0",
     "multihashing-async": "^2.0.1",
