@@ -83,7 +83,8 @@
     "sinon": "^9.0.0",
     "stats-lite": "^2.2.0",
     "uuid": "^8.0.0",
-    "@types/debug": "^4.1.5"
+    "@types/debug": "^4.1.5",
+    "typescript": "^4.0.5"
   },
   "dependencies": {
     "abort-controller": "^3.0.0",
