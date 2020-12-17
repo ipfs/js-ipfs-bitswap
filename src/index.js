@@ -6,7 +6,7 @@ const DecisionEngine = require('./decision-engine')
 const Notifications = require('./notifications')
 const logger = require('./utils').logger
 const Stats = require('./stats')
-const AbortController = require('abort-controller').default
+const AbortController = require('native-abort-controller')
 const { anySignal } = require('any-signal')
 
 const defaultOptions = {
@@ -34,12 +34,12 @@ class Bitswap {
   /**
    * @param {LibP2P} libp2p
    * @param {BlockStore} blockstore
-   * @param {Object} options
+   * @param {Object} [options]
    * @param {boolean} [options.statsEnabled=false]
    * @param {number} [options.statsComputeThrottleTimeout=1000]
    * @param {number} [options.statsComputeThrottleMaxQueueSize=1000]
    */
-  constructor (libp2p, blockstore, options) {
+  constructor (libp2p, blockstore, options = {}) {
     this._libp2p = libp2p
     this._log = logger(this.peerId)
 
@@ -53,7 +53,7 @@ class Bitswap {
     })
 
     // the network delivers messages
-    this.network = new Network(libp2p, this, {}, this._stats)
+    this.network = new Network(libp2p, this, this._stats)
 
     // local database
     this.blockstore = blockstore
@@ -434,11 +434,11 @@ class Bitswap {
 module.exports = Bitswap
 
 /**
- * @typedef {import('./types').LibP2P} LibP2P
+ * @typedef {import('libp2p')} LibP2P
  * @typedef {import('./types').BlockStore} BlockStore
- * @typedef {import('./types').PeerId} PeerId
+ * @typedef {import('peer-id')} PeerId
  * @typedef {import('./types/message')} BitswapMessage
- * @typedef {import('./types').Block} Block
- * @typedef {import('./types').CID} CID
+ * @typedef {import('ipld-block')} Block
+ * @typedef {import('cids')} CID
  * @typedef {import('./types/wantlist/entry')} WantListEntry
  */

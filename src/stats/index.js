@@ -7,6 +7,9 @@ const Stat = require('./stat')
  * @typedef {[number, number, number]} AverageIntervals
  */
 const defaultOptions = {
+  enabled: false,
+  computeThrottleTimeout: 1000,
+  computeThrottleMaxQueueSize: 1000,
   movingAverageIntervals: /** @type {AverageIntervals} */ ([
     60 * 1000, // 1 minute
     5 * 60 * 1000, // 5 minutes
@@ -16,14 +19,13 @@ const defaultOptions = {
 
 class Stats extends EventEmitter {
   /**
-   *
-   * @param {string[]} initialCounters
+   * @param {string[]} [initialCounters]
    * @param {Object} _options
    * @param {boolean} _options.enabled
    * @param {number} _options.computeThrottleTimeout
    * @param {number} _options.computeThrottleMaxQueueSize
    */
-  constructor (initialCounters, _options) {
+  constructor (initialCounters = [], _options = defaultOptions) {
     super()
 
     const options = Object.assign({}, defaultOptions, _options)
@@ -122,5 +124,5 @@ class Stats extends EventEmitter {
 module.exports = Stats
 
 /**
- * @typedef {import('../types').PeerId} PeerId
+ * @typedef {import('peer-id')} PeerId
  */

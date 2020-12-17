@@ -26,10 +26,10 @@ const DefaultTaskMerger = {
  */
 class RequestQueue {
   /**
-   * @param {TaskMerger} taskMerger
+   * @param {TaskMerger} [taskMerger]
    */
-  constructor (taskMerger) {
-    this._taskMerger = taskMerger || DefaultTaskMerger
+  constructor (taskMerger = DefaultTaskMerger) {
+    this._taskMerger = taskMerger
     /** @type {SortedMap<string, PeerTasks>} */
     this._byPeer = new SortedMap([], PeerTasks.compare)
   }
@@ -420,7 +420,7 @@ module.exports = RequestQueue
  * @property {number} created
  * @property {Task} task
  *
- * @typedef {import('../types').PeerId} PeerId
+ * @typedef {import('peer-id')} PeerId
  * @typedef {import('./interface').Task} Task
  * @typedef {import('./interface').TaskMerger} TaskMerger
  */

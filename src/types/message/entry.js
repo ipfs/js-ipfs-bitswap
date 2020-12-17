@@ -55,5 +55,5 @@ module.exports = class BitswapMessageEntry {
 
 /**
  * @typedef {import('../../types').WantType} WantType
- * @typedef {import('../../types').CID} CID
+ * @typedef {import('cids')} CID
  */

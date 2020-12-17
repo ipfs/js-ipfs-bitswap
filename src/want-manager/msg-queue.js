@@ -71,6 +71,6 @@ module.exports = class MsgQueue {
 }
 
 /**
- * @typedef {import('../types').PeerId} PeerId
+ * @typedef {import('peer-id')} PeerId
  * @typedef {import('../network')} Network
  */

@@ -7,6 +7,7 @@ const Block = require('ipld-block')
 const multihashing = require('multihashing-async')
 const BitswapMessageEntry = require('../src/types/message/entry')
 const uint8ArrayFromString = require('uint8arrays/from-string')
+const BitswapMessage = require('../src/types/message')
 
 const { groupBy, uniqWith, pullAllWith, includesWith, sortBy, isMapEqual } = require('../src/utils')
 const SortedMap = require('../src/utils/sorted-map')
@@ -96,7 +97,7 @@ describe('utils spec', function () {
       }
     ]
 
-    const groupedList1 = sortBy(o => o.name, list)
+    const groupedList1 = sortBy(o => o.name.charCodeAt(0), list)
     const groupedList2 = sortBy(o => o.id, list)
 
     expect(groupedList1).to.be.deep.equal([{ id: 2, name: 'a' },
@@ -110,25 +111,25 @@ describe('utils spec', function () {
   describe('isMapEqual', () => {
     it('should on be false when !== size', () => {
       expect(isMapEqual(
-        new Map([['key1', 'value1'], ['key2', 'value2']]),
-        new Map([['key1', 'value1']])
+        new Map([['key1', { data: uint8ArrayFromString('value1') }], ['key2', { data: uint8ArrayFromString('value2') }]]),
+        new Map([['key1', { data: uint8ArrayFromString('value1') }]])
       )).to.be.false()
     })
 
     it('should on be false if one key is missing', () => {
       expect(isMapEqual(
-        new Map([['key1', 'value1'], ['key2', 'value2']]),
-        new Map([['key1', 'value1'], ['key3', 'value2']])
+        new Map([['key1', { data: uint8ArrayFromString('value1') }], ['key2', { data: uint8ArrayFromString('value2') }]]),
+        new Map([['key1', { data: uint8ArrayFromString('value1') }], ['key3', { data: uint8ArrayFromString('value2') }]])
       )).to.be.false()
     })
 
-    it('should on be false if BitswapMessageEntry dont match', async () => {
+    it('should on be false if BitswapMessageEntry don\'t match', async () => {
       const hash1 = await multihashing(uint8ArrayFromString('OMG!1'), 'sha2-256')
       const cid1 = new CID(1, 'dag-pb', hash1)
 
       expect(isMapEqual(
-        new Map([['key1', new BitswapMessageEntry(cid1, 1, true)], ['key2', new BitswapMessageEntry(cid1, 2, true)]]),
-        new Map([['key1', new BitswapMessageEntry(cid1, 1, true)], ['key2', new BitswapMessageEntry(cid1, 1, true)]])
+        new Map([['key1', new BitswapMessageEntry(cid1, 1, BitswapMessage.WantType.Block)], ['key2', new BitswapMessageEntry(cid1, 2, BitswapMessage.WantType.Block)]]),
+        new Map([['key1', new BitswapMessageEntry(cid1, 1, BitswapMessage.WantType.Block)], ['key2', new BitswapMessageEntry(cid1, 1, BitswapMessage.WantType.Block)]])
       )).to.be.false()
     })
 
@@ -137,8 +138,8 @@ describe('utils spec', function () {
       const cid1 = new CID(1, 'dag-pb', hash1)
 
       expect(isMapEqual(
-        new Map([['key1', new BitswapMessageEntry(cid1, 1, true)], ['key2', new BitswapMessageEntry(cid1, 1, true)]]),
-        new Map([['key1', new BitswapMessageEntry(cid1, 1, true)], ['key2', new BitswapMessageEntry(cid1, 1, true)]])
+        new Map([['key1', new BitswapMessageEntry(cid1, 1, BitswapMessage.WantType.Block)], ['key2', new BitswapMessageEntry(cid1, 1, BitswapMessage.WantType.Block)]]),
+        new Map([['key1', new BitswapMessageEntry(cid1, 1, BitswapMessage.WantType.Block)], ['key2', new BitswapMessageEntry(cid1, 1, BitswapMessage.WantType.Block)]])
       )).to.be.true()
     })
 
@@ -212,7 +213,7 @@ describe('utils spec', function () {
 
       expect(sm.get('two')).to.eql(2)
 
-      sm.clear('two')
+      sm.clear()
 
       expect(sm.get('two')).to.be.undefined()
       expect(sm.size).to.eql(0)

@@ -155,6 +155,6 @@ module.exports = {
 }
 
 /**
- * @typedef {import('../types').PeerId} PeerId
+ * @typedef {import('peer-id')} PeerId
  * @typedef {import('../types/message')} BitswapMessageEntry
  */

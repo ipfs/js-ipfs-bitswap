@@ -132,7 +132,7 @@ module.exports = class WantManager {
 }
 
 /**
- * @typedef {import('../types').PeerId} PeerId
+ * @typedef {import('peer-id')} PeerId
  * @typedef {import('../network')} Network
  * @typedef {import('../stats')} Stats
  */

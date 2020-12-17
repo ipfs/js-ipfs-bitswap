@@ -113,7 +113,7 @@ Wantlist.Entry = Entry
 module.exports = Wantlist
 
 /**
- * @typedef {import('../../types').CID} CID
+ * @typedef {import('cids')} CID
  * @typedef {import('../../types').WantType} WantType
  * @typedef {import('../../stats')} Stats
  */

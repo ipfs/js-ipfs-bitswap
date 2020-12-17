@@ -11,7 +11,7 @@ const Message = require('../src/types/message')
 const Bitswap = require('../src')
 const CID = require('cids')
 const Block = require('ipld-block')
-const AbortController = require('abort-controller')
+const AbortController = require('native-abort-controller')
 const delay = require('delay')
 
 const createTempRepo = require('./utils/create-temp-repo-nodejs')
@@ -20,11 +20,11 @@ const applyNetwork = require('./utils/mocks').applyNetwork
 const mockLibp2pNode = require('./utils/mocks').mockLibp2pNode
 const storeHasBlocks = require('./utils/store-has-blocks')
 const makeBlock = require('./utils/make-block')
-const makePeerId = require('./utils/make-peer-id')
+const { makePeerIds } = require('./utils/make-peer-id')
 const orderedFinish = require('./utils/helpers').orderedFinish
 
 function wantsBlock (cid, bitswap) {
-  for (const [key, value] of bitswap.getWantlist()) { // eslint-disable-line no-unused-vars
+  for (const [, value] of bitswap.getWantlist()) {
     if (value.cid.toString() === cid.toString()) {
       return true
     }
@@ -43,7 +43,7 @@ describe('bitswap with mocks', function () {
   before(async () => {
     repo = await createTempRepo()
     blocks = await makeBlock(15)
-    ids = await makePeerId(2)
+    ids = await makePeerIds(2)
   })
 
   after(() => repo.teardown())
@@ -112,7 +112,7 @@ describe('bitswap with mocks', function () {
 
       bs.start()
 
-      const others = await makePeerId(5)
+      const others = await makePeerIds(5)
       const blocks = await makeBlock(10)
 
       const messages = await Promise.all(range(5).map((i) => {
@@ -182,6 +182,7 @@ describe('bitswap with mocks', function () {
     it('fails on requesting empty block', async () => {
       const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
       try {
+        // @ts-expect-error we want this to fail
         await bs.get(null)
       } catch (err) {
         expect(err).to.exist()
@@ -243,7 +244,7 @@ describe('bitswap with mocks', function () {
 
       setTimeout(() => {
         finish(1)
-        bs.put(block, () => {})
+        bs.put(block)
       }, 200)
 
       const res = await get
@@ -330,7 +331,7 @@ describe('bitswap with mocks', function () {
 
       const p1 = bs1.get(block.cid)
       setTimeout(() => {
-        bs2.put(block, () => {})
+        bs2.put(block)
       }, 1000)
       const b1 = await p1
       expect(b1).to.eql(block)

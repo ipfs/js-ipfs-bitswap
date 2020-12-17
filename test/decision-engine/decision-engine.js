@@ -12,12 +12,14 @@ const multihashing = require('multihashing-async')
 const uint8ArrayFromString = require('uint8arrays/from-string')
 const uint8ArrayToString = require('uint8arrays/to-string')
 const drain = require('it-drain')
+const defer = require('p-defer')
 
 const Message = require('../../src/types/message')
 const DecisionEngine = require('../../src/decision-engine')
+const Stats = require('../../src/stats')
 const createTempRepo = require('../utils/create-temp-repo-nodejs.js')
 const makeBlock = require('../utils/make-block')
-const makePeerId = require('../utils/make-peer-id')
+const { makePeerId, makePeerIds } = require('../utils/make-peer-id')
 
 const mockNetwork = require('../utils/mocks').mockNetwork
 const sum = (nums) => nums.reduce((a, b) => a + b, 0)
@@ -31,6 +33,10 @@ function stringifyMessages (messages) {
   return flatten(messages.map(messageToString))
 }
 
+/**
+ *
+ * @param {import('../../src/network')} network
+ */
 async function newEngine (network) {
   const results = await Promise.all([
     createTempRepo(),
@@ -38,7 +44,7 @@ async function newEngine (network) {
   ])
   const blockstore = results[0].blocks
   const peerId = results[1]
-  const engine = new DecisionEngine(peerId, blockstore, network || mockNetwork())
+  const engine = new DecisionEngine(peerId, blockstore, network, new Stats())
   engine.start()
   return { peer: peerId, engine: engine }
 }
@@ -46,8 +52,8 @@ async function newEngine (network) {
 describe('Engine', () => {
   it('consistent accounting', async () => {
     const res = await Promise.all([
-      newEngine(false),
-      newEngine(false)
+      newEngine(mockNetwork()),
+      newEngine(mockNetwork())
     ])
 
     const sender = res[0]
@@ -79,8 +85,8 @@ describe('Engine', () => {
 
   it('peer is added to peers when message received or sent', async () => {
     const res = await Promise.all([
-      newEngine(false),
-      newEngine(false)
+      newEngine(mockNetwork()),
+      newEngine(mockNetwork())
     ])
 
     const sanfrancisco = res[0]
@@ -149,19 +155,15 @@ describe('Engine', () => {
         const set = testcase[0]
         const cancels = testcase[1]
         const keeps = difference(set, cancels)
-
-        let network
-        const done = new Promise((resolve, reject) => {
-          network = mockNetwork(1, (res) => {
-            const msgs = stringifyMessages(res.messages)
-            expect(msgs.sort()).to.eql(keeps.sort())
-            resolve()
-          })
+        const deferred = defer()
+        const network = mockNetwork(1, (res) => {
+          const msgs = stringifyMessages(res.messages)
+          expect(msgs.sort()).to.eql(keeps.sort())
+          deferred.resolve()
         })
-
         const id = await PeerId.create({ bits: 512 })
         const repo = await createTempRepo()
-        const dEngine = new DecisionEngine(id, repo.blocks, network)
+        const dEngine = new DecisionEngine(id, repo.blocks, network, new Stats())
         dEngine.start()
 
         // Send wants then cancels for some of the wants
@@ -171,14 +173,14 @@ describe('Engine', () => {
         // Simulate receiving blocks from the network
         await peerSendsBlocks(dEngine, repo, blocks, somePeer)
 
-        await done
+        await deferred.promise
       }
     }
   })
 
   it('round-robins incoming wants', async () => {
-    const id = await makePeerId(1)[0]
-    const peers = await makePeerId(3)
+    const id = await makePeerId()
+    const peers = await makePeerIds(3)
     const blockSize = 256 * 1024
     const blocks = await makeBlock(20, blockSize)
 
@@ -194,76 +196,90 @@ describe('Engine', () => {
     const repo = await createTempRepo()
     await drain(repo.blocks.putMany(blocks))
 
-    let network
     let rcvdBlockCount = 0
     const received = new Map(peers.map(p => [p.toB58String(), { count: 0, bytes: 0 }]))
-    const done = new Promise((resolve) => {
-      network = mockNetwork(blocks.length, null, ([peer, msg]) => {
-        const pid = peer.toB58String()
-        const rcvd = received.get(pid)
+    const deferred = defer()
+    const network = mockNetwork(blocks.length, undefined, ([peer, msg]) => {
+      const pid = peer.toB58String()
+      const rcvd = received.get(pid)
 
-        // Blocks should arrive in priority order.
-        // Note: we requested the blocks such that the priority order was
-        // highest at the start to lowest at the end.
-        for (const block of msg.blocks.values()) {
-          expect(blockIndex(block)).to.gte(rcvd.count)
-        }
+      if (!rcvd) {
+        return deferred.reject(new Error(`Could not get received for peer ${pid}`))
+      }
 
-        rcvd.count += msg.blocks.size
-        rcvd.bytes += sum([...msg.blocks.values()].map(b => b.data.length))
+      // Blocks should arrive in priority order.
+      // Note: we requested the blocks such that the priority order was
+      // highest at the start to lowest at the end.
+      for (const block of msg.blocks.values()) {
+        expect(blockIndex(block)).to.gte(rcvd.count)
+      }
 
-        // pendingBytes should be equal to the remaining data we're expecting
-        expect(msg.pendingBytes).to.eql(blockSize * blocks.length - rcvd.bytes)
+      rcvd.count += msg.blocks.size
+      rcvd.bytes += sum([...msg.blocks.values()].map(b => b.data.length))
 
-        // Expect each peer to receive blocks in a roughly round-robin fashion,
-        // in other words one peer shouldn't receive a bunch more blocks than
-        // the others at any given time.
-        for (const p of peers) {
-          if (p !== peer) {
-            const pCount = received.get(p.toB58String()).count
-            expect(rcvd.count - pCount).to.lt(blocks.length * 0.8)
+      // pendingBytes should be equal to the remaining data we're expecting
+      expect(msg.pendingBytes).to.eql(blockSize * blocks.length - rcvd.bytes)
+
+      // Expect each peer to receive blocks in a roughly round-robin fashion,
+      // in other words one peer shouldn't receive a bunch more blocks than
+      // the others at any given time.
+      for (const p of peers) {
+        if (p !== peer) {
+          const peerCount = received.get(p.toB58String())
+
+          if (!peerCount) {
+            return deferred.reject(new Error(`Could not get peer count for ${p.toB58String()}`))
           }
+
+          const pCount = peerCount.count
+          expect(rcvd.count - pCount).to.lt(blocks.length * 0.8)
+        }
+      }
+
+      // When all peers have received all the blocks, we're done
+      rcvdBlockCount += msg.blocks.size
+      if (rcvdBlockCount === blocks.length * peers.length) {
+        // Make sure each peer received all blocks it was expecting
+        for (const peer of peers) {
+          const pid = peer.toB58String()
+          const rcvd = received.get(pid)
+
+          if (!rcvd) {
+            return deferred.reject(new Error(`Could not get peer count for ${pid}`))
+          }
+
+          expect(rcvd.count).to.eql(blocks.length)
         }
 
-        // When all peers have received all the blocks, we're done
-        rcvdBlockCount += msg.blocks.size
-        if (rcvdBlockCount === blocks.length * peers.length) {
-          // Make sure each peer received all blocks it was expecting
-          for (const peer of peers) {
-            const pid = peer.toB58String()
-            const rcvd = received.get(pid)
-            expect(rcvd.count).to.eql(blocks.length)
-          }
-          resolve()
-        }
-      })
+        deferred.resolve()
+      }
     })
 
-    const dEngine = new DecisionEngine(id, repo.blocks, network)
+    const dEngine = new DecisionEngine(id, repo.blocks, network, new Stats())
     dEngine.start()
 
     // Each peer requests all blocks
     for (const peer of peers) {
       const message = new Message(false)
+
       for (const [i, block] of blocks.entries()) {
         message.addEntry(block.cid, blocks.length - i)
       }
+
       await dEngine.messageReceived(peer, message)
     }
 
-    await done
+    await deferred.promise
   })
 
   it('sends received blocks to peers that want them', async () => {
-    const [id, peer] = await makePeerId(2)
+    const [id, peer] = await makePeerIds(2)
     const blocks = await makeBlock(4, 8 * 1024)
 
-    let network
-    const receiveMessage = new Promise(resolve => {
-      network = mockNetwork(blocks.length, null, resolve)
-    })
+    const deferred = defer()
+    const network = mockNetwork(blocks.length, undefined, ([peer, msg]) => deferred.resolve([peer, msg]))
     const repo = await createTempRepo()
-    const dEngine = new DecisionEngine(id, repo.blocks, network, null, { maxSizeReplaceHasWithBlock: 0 })
+    const dEngine = new DecisionEngine(id, repo.blocks, network, new Stats(), { maxSizeReplaceHasWithBlock: 0 })
     dEngine.start()
 
     const message = new Message(false)
@@ -280,7 +296,7 @@ describe('Engine', () => {
     await dEngine.receivedBlocks(rcvdBlocks)
 
     // Wait till the engine sends a message
-    const [toPeer, msg] = await receiveMessage
+    const [toPeer, msg] = await deferred.promise
 
     // Expect the message to be sent to the peer that wanted the blocks
     expect(toPeer.toB58String()).to.eql(peer.toB58String())
@@ -294,18 +310,18 @@ describe('Engine', () => {
   })
 
   it('sends DONT_HAVE', async () => {
-    const [id, peer] = await makePeerId(2)
+    const [id, peer] = await makePeerIds(2)
     const blocks = await makeBlock(4, 8 * 1024)
 
     let onMsg
     const receiveMessage = () => new Promise(resolve => {
       onMsg = resolve
     })
-    const network = mockNetwork(blocks.length, null, (res) => {
+    const network = mockNetwork(blocks.length, undefined, (res) => {
       onMsg(res)
     })
     const repo = await createTempRepo()
-    const dEngine = new DecisionEngine(id, repo.blocks, network, null, { maxSizeReplaceHasWithBlock: 0 })
+    const dEngine = new DecisionEngine(id, repo.blocks, network, new Stats(), { maxSizeReplaceHasWithBlock: 0 })
     dEngine.start()
 
     const message = new Message(false)
@@ -344,7 +360,7 @@ describe('Engine', () => {
   })
 
   it('handles want-have and want-block', async () => {
-    const [id, partner] = await makePeerId(2)
+    const [id, partner] = await makePeerIds(2)
 
     const alphabet = 'abcdefghijklmnopqrstuvwxyz'
     const vowels = 'aeiou'
@@ -619,14 +635,14 @@ describe('Engine', () => {
         dEngine._processTasks()
       })
     }
-    const network = mockNetwork(blocks.length, null, ([peer, msg]) => {
+    const network = mockNetwork(blocks.length, undefined, ([peer, msg]) => {
       onMsg && onMsg(msg)
       onMsg = undefined
     })
 
     const repo = await createTempRepo()
     await drain(repo.blocks.putMany(blocks))
-    const dEngine = new DecisionEngine(id, repo.blocks, network, null, { maxSizeReplaceHasWithBlock: 0 })
+    const dEngine = new DecisionEngine(id, repo.blocks, network, new Stats(), { maxSizeReplaceHasWithBlock: 0 })
     dEngine._scheduleProcessTasks = () => {}
     dEngine.start()
 
@@ -698,7 +714,7 @@ describe('Engine', () => {
 
     // who is in the network
     const us = await newEngine(network)
-    const them = await newEngine()
+    const them = await newEngine(mockNetwork())
 
     // add a block to our blockstore
     const data = uint8ArrayFromString(`this is message ${Date.now()}`)
@@ -707,15 +723,11 @@ describe('Engine', () => {
     const block = new Block(data, cid)
     await us.engine.blockstore.put(block)
 
+    const message = new Message(false)
+    message.addEntry(cid, 1, Message.WantType.Block, false, false)
+
     // receive a message with a want for our block
-    await us.engine.messageReceived(them.peer, {
-      blocks: [],
-      wantlist: [{
-        cid,
-        priority: 1,
-        wantType: 'wanty'
-      }]
-    })
+    await us.engine.messageReceived(them.peer, message)
 
     // should have added a task for the remote peer
     const tasks = us.engine._requestQueue._byPeer.get(them.peer.toB58String())

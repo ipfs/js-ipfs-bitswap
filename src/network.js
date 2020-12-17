@@ -17,20 +17,20 @@ class Network {
   /**
    * @param {LibP2P} libp2p
    * @param {BitSwap} bitswap
-   * @param {Object} options
-   * @param {boolean} [options.b100Only]
    * @param {Stats} stats
+   * @param {Object} [options]
+   * @param {boolean} [options.b100Only]
    */
-  constructor (libp2p, bitswap, options, stats) {
+  constructor (libp2p, bitswap, stats, options = {}) {
     this._log = logger(libp2p.peerId, 'network')
-    options = options || {}
-    this.libp2p = libp2p
-    this.bitswap = bitswap
-    this.protocols = [BITSWAP100]
+    this._libp2p = libp2p
+    this._bitswap = bitswap
+    this._protocols = [BITSWAP100]
+
     if (!options.b100Only) {
       // Latest bitswap first
-      this.protocols.unshift(BITSWAP110)
-      this.protocols.unshift(BITSWAP120)
+      this._protocols.unshift(BITSWAP110)
+      this._protocols.unshift(BITSWAP120)
     }
 
     this._stats = stats
@@ -44,21 +44,21 @@ class Network {
 
   start () {
     this._running = true
-    this.libp2p.handle(this.protocols, this._onConnection)
+    this._libp2p.handle(this._protocols, this._onConnection)
 
     // register protocol with topology
     const topology = new MulticodecTopology({
-      multicodecs: this.protocols,
+      multicodecs: this._protocols,
       handlers: {
         onConnect: this._onPeerConnect,
         onDisconnect: this._onPeerDisconnect
       }
     })
-    this._registrarId = this.libp2p.registrar.register(topology)
+    this._registrarId = this._libp2p.registrar.register(topology)
 
     // All existing connections are like new ones for us
-    for (const peer of this.libp2p.peerStore.peers.values()) {
-      const conn = this.libp2p.connectionManager.get(peer.id)
+    for (const peer of this._libp2p.peerStore.peers.values()) {
+      const conn = this._libp2p.connectionManager.get(peer.id)
 
       conn && this._onPeerConnect(conn.remotePeer)
     }
@@ -68,10 +68,10 @@ class Network {
     this._running = false
 
     // Unhandle both, libp2p doesn't care if it's not already handled
-    this.libp2p.unhandle(this.protocols)
+    this._libp2p.unhandle(this._protocols)
 
     // unregister protocol and handlers
-    this.libp2p.registrar.unregister(this._registrarId)
+    this._libp2p.registrar.unregister(this._registrarId)
   }
 
   /**
@@ -96,9 +96,9 @@ class Network {
           for await (const data of source) {
             try {
               const message = await Message.deserialize(data.slice())
-              await this.bitswap._receiveMessage(connection.remotePeer, message)
+              await this._bitswap._receiveMessage(connection.remotePeer, message)
             } catch (err) {
-              this.bitswap._receiveError(err)
+              this._bitswap._receiveError(err)
               break
             }
           }
@@ -114,7 +114,7 @@ class Network {
    * @param {PeerId} peerId
    */
   _onPeerConnect (peerId) {
-    this.bitswap._onPeerConnected(peerId)
+    this._bitswap._onPeerConnected(peerId)
   }
 
   /**
@@ -123,7 +123,7 @@ class Network {
    * @returns {void}
    */
   _onPeerDisconnect (peerId) {
-    this.bitswap._onPeerDisconnected(peerId)
+    this._bitswap._onPeerDisconnected(peerId)
   }
 
   /**
@@ -136,7 +136,7 @@ class Network {
    * @returns {AsyncIterable<Provider>}
    */
   findProviders (cid, maxProviders, options = {}) {
-    return this.libp2p.contentRouting.findProviders(
+    return this._libp2p.contentRouting.findProviders(
       cid,
       {
         maxTimeout: CONSTANTS.providerRequestTimeout,
@@ -172,7 +172,7 @@ class Network {
    * @returns {Promise<void>}
    */
   async provide (cid, options) {
-    await this.libp2p.contentRouting.provide(cid, options)
+    await this._libp2p.contentRouting.provide(cid, options)
   }
 
   /**
@@ -224,7 +224,7 @@ class Network {
       throw new Error('network isn\'t running')
     }
 
-    return this.libp2p.dial(peer, options)
+    return this._libp2p.dial(peer, options)
   }
 
   /**
@@ -234,7 +234,7 @@ class Network {
    * @param {PeerId|Multiaddr|Provider} peer
    */
   _dialPeer (peer) {
-    return this.libp2p.dialProtocol(peer, [BITSWAP120, BITSWAP110, BITSWAP100])
+    return this._libp2p.dialProtocol(peer, [BITSWAP120, BITSWAP110, BITSWAP100])
   }
 
   /**
@@ -273,10 +273,10 @@ async function writeMessage (stream, msg, log) {
 module.exports = Network
 
 /**
- * @typedef {import('./types').PeerId} PeerId
- * @typedef {import('./types').CID} CID
- * @typedef {import('./types').Multiaddr} Multiaddr
- * @typedef {import('./types').LibP2P} LibP2P
+ * @typedef {import('peer-id')} PeerId
+ * @typedef {import('cids')} CID
+ * @typedef {import('multiaddr')} Multiaddr
+ * @typedef {import('libp2p')} LibP2P
  * @typedef {import('./stats')} Stats
  * @typedef {import('./index')} BitSwap
  *

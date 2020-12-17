@@ -3,14 +3,19 @@
 
 const { expect, assert } = require('aegir/utils/chai')
 const lp = require('it-length-prefixed')
-const pipe = require('it-pipe')
+const { pipe } = require('it-pipe')
 const pDefer = require('p-defer')
 const createLibp2pNode = require('../utils/create-libp2p-node')
 const makeBlock = require('../utils/make-block')
 const Network = require('../../src/network')
 const Message = require('../../src/types/message')
+const Stats = require('../../src/stats')
 
+/**
+ * @returns {import('../../src')}
+ */
 function createBitswapMock () {
+  // @ts-ignore
   return {
     _receiveMessage: async () => {},
     _receiveError: async () => {},
@@ -46,10 +51,10 @@ describe('network', () => {
     bitswapMockB = createBitswapMock()
     bitswapMockC = createBitswapMock()
 
-    networkA = new Network(p2pA, bitswapMockA)
-    networkB = new Network(p2pB, bitswapMockB)
+    networkA = new Network(p2pA, bitswapMockA, new Stats())
+    networkB = new Network(p2pB, bitswapMockB, new Stats())
     // only bitswap100
-    networkC = new Network(p2pC, bitswapMockC, { b100Only: true })
+    networkC = new Network(p2pC, bitswapMockC, new Stats(), { b100Only: true })
 
     networkA.start()
     networkB.start()
@@ -165,6 +170,7 @@ describe('network', () => {
 
       const ma = `${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`
       const { stream } = await p2pA.dialProtocol(ma, '/ipfs/bitswap/' + version.num)
+
       await pipe(
         [version.serialize(msg)],
         lp.encode(),
@@ -238,11 +244,11 @@ describe('network', () => {
   })
 
   it('dials to peer using Bitswap 1.2.0', async () => {
-    networkA = new Network(p2pA, bitswapMockA)
+    networkA = new Network(p2pA, bitswapMockA, new Stats())
 
     // only supports 1.2.0
-    networkB = new Network(p2pB, bitswapMockB)
-    networkB.protocols = ['/ipfs/bitswap/1.2.0']
+    networkB = new Network(p2pB, bitswapMockB, new Stats())
+    networkB._protocols = ['/ipfs/bitswap/1.2.0']
 
     networkA.start()
     networkB.start()

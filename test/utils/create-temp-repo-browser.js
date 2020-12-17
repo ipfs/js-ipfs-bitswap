@@ -3,10 +3,8 @@
 
 const IPFSRepo = require('ipfs-repo')
 
-const idb = self.indexedDB ||
-  self.mozIndexedDB ||
-  self.webkitIndexedDB ||
-  self.msIndexedDB
+// @ts-ignore
+const idb = self.indexedDB || self.mozIndexedDB || self.webkitIndexedDB || self.msIndexedDB
 
 async function createTempRepo () {
   const date = Date.now().toString()

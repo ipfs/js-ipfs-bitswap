@@ -479,10 +479,10 @@ class DecisionEngine {
 module.exports = DecisionEngine
 
 /**
- * @typedef {import('../types').PeerId} PeerId
+ * @typedef {import('peer-id')} PeerId
  * @typedef {import('../stats')} Stats
  * @typedef {import('../types').BlockData} BlockData
- * @typedef {import('../types').Block} Block
+ * @typedef {import('ipld-block')} Block
  * @typedef {import('../types/message/entry')} BitswapMessageEntry
  * @typedef {import('../types/wantlist/entry')} WantListEntry
  * @typedef {import('../types').BlockStore} BlockStore

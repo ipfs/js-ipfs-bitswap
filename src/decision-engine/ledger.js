@@ -76,8 +76,8 @@ class Ledger {
 module.exports = Ledger
 
 /**
- * @typedef {import('../types').PeerId} PeerId
- * @typedef {import('../types').CID} CID
+ * @typedef {import('peer-id')} PeerId
+ * @typedef {import('cids')} CID
  * @typedef {import('../types').WantType} WantType
  * @typedef {import('../types/wantlist/entry')} WantListEntry
  */

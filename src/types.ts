@@ -1,10 +1,5 @@
 import CID from 'cids'
-import PeerId from 'peer-id'
-import Multiaddr from 'multiaddr'
-import LibP2P from 'libp2p'
 import Block from 'ipld-block'
-
-export { CID, PeerId, Multiaddr, Block, LibP2P }
 
 export type WantBlock = 0
 export type HaveBlock = 1
