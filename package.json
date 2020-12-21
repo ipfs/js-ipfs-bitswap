@@ -87,7 +87,7 @@
     "multihashing-async": "^2.0.1",
     "protons": "^2.0.0",
     "streaming-iterables": "^5.0.2",
-    "uint8arrays": "^1.1.0",
+    "uint8arrays": "^2.0.5",
     "varint-decoder": "^1.0.0"
   },
   "pre-push": [
