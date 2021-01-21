@@ -1,3 +1,12 @@
+## [4.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v4.0.0...v4.0.1) (2021-01-21)
+
+
+### Bug Fixes
+
+* update provider multiaddrs before dial ([#286](https://github.com/ipfs/js-ipfs-bitswap/issues/286)) ([49cc66c](https://github.com/ipfs/js-ipfs-bitswap/commit/49cc66cf387a27c146f8f0a111c3dff90101f47a))
+
+
+
 # [4.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v3.0.0...v4.0.0) (2020-11-06)
 
 
