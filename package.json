@@ -1,6 +1,6 @@
 {
   "name": "ipfs-bitswap",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "Node.js implementation of the Bitswap data exchange protocol used by IPFS",
   "leadMaintainer": "Dirk McCormick <dirk@protocol.ai>",
   "main": "src/index.js",
@@ -97,8 +97,8 @@
     "David Dias <daviddias.p@gmail.com>",
     "Friedel Ziegelmayer <dignifiedquire@gmail.com>",
     "Dirk McCormick <dirkmdev@gmail.com>",
-    "Volker Mische <volker.mische@gmail.com>",
     "achingbrain <alex@achingbrain.net>",
+    "Volker Mische <volker.mische@gmail.com>",
     "Jacob Heun <jacobheun@gmail.com>",
     "Pedro Teixeira <i@pgte.me>",
     "Hugo Dias <hugomrdias@gmail.com>",
