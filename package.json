@@ -46,7 +46,7 @@
     "aegir": "^28.1.0",
     "benchmark": "^2.1.4",
     "delay": "^4.3.0",
-    "ipfs-repo": "^7.0.0",
+    "ipfs-repo": "^8.0.0",
     "ipfs-utils": "^6.0.0",
     "iso-random-stream": "^1.1.1",
     "it-all": "^1.0.2",
