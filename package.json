@@ -82,7 +82,7 @@
     "just-debounce-it": "^1.1.0",
     "libp2p-interfaces": "^0.8.3",
     "moving-average": "^1.0.0",
-    "multicodec": "^2.0.0",
+    "multicodec": "^3.0.1",
     "multihashing-async": "^2.0.1",
     "protons": "^2.0.0",
     "streaming-iterables": "^5.0.2",
