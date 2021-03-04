@@ -182,8 +182,8 @@ class Network {
   async findAndConnect (cid, options) {
     const connectAttempts = []
     for await (const provider of this.findProviders(cid, CONSTANTS.maxProvidersPerRequest, options)) {
-      this._log('connecting to providers', provider.id.toB58String())
-      connectAttempts.push(this.connectTo(provider, options))
+      this._log(`connecting to provider ${provider.id}`)
+      connectAttempts.push(this.connectTo(provider.id, options))
     }
     await Promise.all(connectAttempts)
   }
