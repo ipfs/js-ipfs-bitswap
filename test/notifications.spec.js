@@ -4,7 +4,7 @@
 const { expect } = require('aegir/utils/chai')
 const CID = require('cids')
 const Block = require('ipld-block')
-const AbortController = require('native-abort-controller')
+const { AbortController } = require('native-abort-controller')
 const uint8ArrayToString = require('uint8arrays/to-string')
 
 const Notifications = require('../src/notifications')

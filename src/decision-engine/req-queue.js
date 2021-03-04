@@ -3,6 +3,21 @@
 const SortedMap = require('../utils/sorted-map')
 
 /**
+ * @typedef {Object} PopTaskResult
+ * @property {PeerId} [peerId]
+ * @property {Task[]} tasks
+ * @property {number} pendingSize
+ *
+ * @typedef {Object} PendingTask
+ * @property {number} created
+ * @property {Task} task
+ *
+ * @typedef {import('peer-id')} PeerId
+ * @typedef {import('./types').Task} Task
+ * @typedef {import('./types').TaskMerger} TaskMerger
+ */
+
+/**
  * The task merger that is used by default.
  * Assumes that new tasks do not add any information over existing tasks,
  * and doesn't try to merge.
@@ -100,9 +115,11 @@ class RequestQueue {
       return undefined
     }
 
+    // eslint-disable-next-line no-unreachable-loop
     for (const [, v] of this._byPeer) {
       return v
     }
+
     return undefined
   }
 
@@ -233,7 +250,7 @@ class PeerTasks {
    * Pop tasks off the queue such that the total size is at least targetMinBytes
    *
    * @param {number} targetMinBytes
-   * @returns {Object}
+   * @returns {PopTaskResult}
    */
   popTasks (targetMinBytes) {
     let size = 0
@@ -409,18 +426,3 @@ class PendingTasks {
 }
 
 module.exports = RequestQueue
-
-/**
- * @typedef {Object} PopTaskResult
- * @property {PeerId} [peerId]
- * @property {Task[]} tasks
- * @property {number} pendingSize
- *
- * @typedef {Object} PendingTask
- * @property {number} created
- * @property {Task} task
- *
- * @typedef {import('peer-id')} PeerId
- * @typedef {import('./interface').Task} Task
- * @typedef {import('./interface').TaskMerger} TaskMerger
- */

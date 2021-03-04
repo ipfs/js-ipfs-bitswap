@@ -1,5 +1,10 @@
 'use strict'
 
+/**
+ * @typedef {import('./types').Task} Task
+ * @typedef {import('./types').TaskMerger} TaskMergerAPI
+ */
+
 /** @type {TaskMergerAPI} */
 const TaskMerger = {
   /**
@@ -96,7 +101,3 @@ const TaskMerger = {
 }
 
 module.exports = TaskMerger
-/**
- * @typedef {import('./interface').Task} Task
- * @typedef {import('./interface').TaskMerger} TaskMergerAPI
- */

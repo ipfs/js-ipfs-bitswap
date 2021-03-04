@@ -3,10 +3,14 @@
 const { sortBy } = require('../../utils')
 const Entry = require('./entry')
 
+/**
+ * @typedef {import('cids')} CID
+ */
+
 class Wantlist {
   /**
    *
-   * @param {Stats} [stats]
+   * @param {import('../../stats')} [stats]
    */
   constructor (stats) {
     /** @type {Map<string, Entry>} */
@@ -21,7 +25,7 @@ class Wantlist {
   /**
    * @param {CID} cid
    * @param {number} priority
-   * @param {WantType} [wantType]
+   * @param {import('../message/message.proto').WantType} wantType
    * @returns {void}
    */
   add (cid, priority, wantType) {
@@ -93,8 +97,8 @@ class Wantlist {
   }
 
   sortedEntries () {
-    // @ts-ignore - Property 'key' does not exist on type 'WantListEntry'.ts(2339)
     // TODO: Figure out if this is an actual bug.
+    // @ts-expect-error - Property 'key' does not exist on type 'WantListEntry'
     return new Map(sortBy(o => o[1].key, Array.from(this.set.entries())))
   }
 
@@ -111,9 +115,3 @@ class Wantlist {
 
 Wantlist.Entry = Entry
 module.exports = Wantlist
-
-/**
- * @typedef {import('cids')} CID
- * @typedef {import('../../types').WantType} WantType
- * @typedef {import('../../stats')} Stats
- */

@@ -172,13 +172,19 @@ class SortedMap extends Map {
     yield * this.entries()
   }
 
+  /**
+   * @template This
+   * @param {(entry:[Key, Value]) => void} cb
+   * @param {This} [thisArg]
+   */
+  // @ts-expect-error - Callback in Map forEach is (V, K, Map<K, V>) => void
   forEach (cb, thisArg) {
     if (!cb) {
       return
     }
 
     for (const k of this._keys) {
-      cb.apply(thisArg, [[k, this.get(k)]])
+      cb.apply(thisArg, [[k, /** @type {Value} */(this.get(k))]])
     }
   }
 

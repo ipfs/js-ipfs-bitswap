@@ -1,8 +1,9 @@
+// @ts-nocheck
 'use strict'
+
 const protons = require('protons')
 // from: https://github.com/ipfs/go-ipfs/blob/master/exchange/bitswap/message/pb/message.proto
 
-/** @type {{Message: import('../../types').MessageProto}} */
 module.exports = protons(`
   message Message {
     message Wantlist {

@@ -4,6 +4,10 @@ const { EventEmitter } = require('events')
 const Big = require('bignumber.js').default
 const MovingAverage = require('moving-average')
 
+/**
+ * @typedef {[string, number, number]} Op
+ */
+
 class Stats extends EventEmitter {
   /**
    *
@@ -24,6 +28,7 @@ class Stats extends EventEmitter {
     this._stats = {}
 
     this._frequencyLastTime = Date.now()
+    /** @type {Record<string, number>} */
     this._frequencyAccumulators = {}
 
     /** @type {Record<string, Record<number, MovingAverage>>} */
@@ -185,7 +190,3 @@ class Stats extends EventEmitter {
 }
 
 module.exports = Stats
-
-/**
- * @typedef {[string, number, number]} Op
- */

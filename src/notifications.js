@@ -1,12 +1,16 @@
 'use strict'
 
 const { EventEmitter } = require('events')
-const Block = require('ipld-block')
+const IPLDBlock = require('ipld-block')
 const uint8ArrayEquals = require('uint8arrays/equals')
 const uint8ArrayToString = require('uint8arrays/to-string')
 
 const CONSTANTS = require('./constants')
 const logger = require('./utils').logger
+
+/**
+ * @typedef {import('ipfs-core-types/src/block-service').Block} Block
+ */
 
 /**
  * @param {CID} cid
@@ -71,6 +75,10 @@ class Notifications extends EventEmitter {
         this.removeListener(blockEvt, onBlock)
         reject(new Error(`Block for ${cid} unwanted`))
       }
+
+      /**
+       * @param {Block} block
+       */
       const onBlock = (block) => {
         this.removeListener(unwantEvt, onUnwant)
 
@@ -79,7 +87,7 @@ class Notifications extends EventEmitter {
           return reject(new Error(`Incorrect block received for ${cid}`))
         } else if (cid.version !== block.cid.version || cid.codec !== block.cid.codec) {
           // right block but wrong version or codec
-          block = new Block(block.data, cid)
+          block = new IPLDBlock(block.data, cid)
         }
 
         resolve(block)

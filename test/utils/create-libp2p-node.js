@@ -1,15 +1,21 @@
 'use strict'
 
+// @ts-ignore
 const TCP = require('libp2p-tcp')
+// @ts-ignore
 const MPLEX = require('libp2p-mplex')
+// @ts-ignore
 const SECIO = require('libp2p-secio')
 const libp2p = require('libp2p')
 const KadDHT = require('libp2p-kad-dht')
 const PeerId = require('peer-id')
-
+// @ts-ignore
 const defaultsDeep = require('@nodeutils/defaults-deep')
 
 class Node extends libp2p {
+  /**
+   * @param {Partial<import('libp2p').Libp2pOptions> & import('libp2p').constructorOptions & { DHT?: boolean}} _options
+   */
   constructor (_options) {
     const defaults = {
       modules: {

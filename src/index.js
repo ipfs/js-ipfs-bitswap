@@ -6,8 +6,19 @@ const DecisionEngine = require('./decision-engine')
 const Notifications = require('./notifications')
 const logger = require('./utils').logger
 const Stats = require('./stats')
-const AbortController = require('native-abort-controller')
+const { AbortController } = require('native-abort-controller')
 const { anySignal } = require('any-signal')
+
+/**
+ * @typedef {import('ipfs-core-types/src/basic').AbortOptions} AbortOptions
+ * @typedef {import('ipfs-core-types/src/bitswap').Bitswap} API
+ * @typedef {import('ipfs-core-types/src/bitswap').WantListEntry} WantListEntry
+ * @typedef {import('ipfs-core-types/src/bitswap').LedgerForPeer} LedgerForPeer
+ * @typedef {import('ipfs-core-types/src/block-service').Block} Block
+ * @typedef {import('peer-id')} PeerId
+ * @typedef {import('./types/message')} BitswapMessage
+ * @typedef {import('cids')} CID
+ */
 
 const defaultOptions = {
   statsEnabled: false,
@@ -29,11 +40,13 @@ const statsKeys = [
 /**
  * JavaScript implementation of the Bitswap 'data exchange' protocol
  * used by IPFS.
+ *
+ * @implements {API}
  */
 class Bitswap {
   /**
-   * @param {LibP2P} libp2p
-   * @param {BlockStore} blockstore
+   * @param {import('libp2p')} libp2p
+   * @param {import('ipfs-core-types/src/block-store').BlockStore} blockstore
    * @param {Object} [options]
    * @param {boolean} [options.statsEnabled=false]
    * @param {number} [options.statsComputeThrottleTimeout=1000]
@@ -197,9 +210,10 @@ class Bitswap {
    * Return the current wantlist for a given `peerId`
    *
    * @param {PeerId} peerId
+   * @param {AbortOptions} [_options]
    * @returns {Map<string, WantListEntry>}
    */
-  wantlistForPeer (peerId) {
+  wantlistForPeer (peerId, _options) {
     return this.engine.wantlistForPeer(peerId)
   }
 
@@ -207,7 +221,7 @@ class Bitswap {
    * Return ledger information for a given `peerId`
    *
    * @param {PeerId} peerId
-   * @returns {Object}
+   * @returns {null|LedgerForPeer}
    */
   ledgerForPeer (peerId) {
     return this.engine.ledgerForPeer(peerId)
@@ -343,9 +357,10 @@ class Bitswap {
    * send it to nodes that have it in their wantlist.
    *
    * @param {Block} block
+   * @param {AbortOptions} [_options]
    * @returns {Promise<void>}
    */
-  async put (block) {
+  async put (block, _options) {
     await this.blockstore.put(block)
     this._sendHaveBlockNotifications(block)
   }
@@ -401,7 +416,7 @@ class Bitswap {
   /**
    * Get stats about the bitswap node.
    *
-   * @returns {Stats}
+   * @returns {import('ipfs-core-types/src/bitswap').Stats}
    */
   stat () {
     return this._stats
@@ -432,13 +447,3 @@ class Bitswap {
 }
 
 module.exports = Bitswap
-
-/**
- * @typedef {import('libp2p')} LibP2P
- * @typedef {import('./types').BlockStore} BlockStore
- * @typedef {import('peer-id')} PeerId
- * @typedef {import('./types/message')} BitswapMessage
- * @typedef {import('ipld-block')} Block
- * @typedef {import('cids')} CID
- * @typedef {import('./types/wantlist/entry')} WantListEntry
- */

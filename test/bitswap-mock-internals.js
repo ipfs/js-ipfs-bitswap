@@ -11,7 +11,7 @@ const Message = require('../src/types/message')
 const Bitswap = require('../src')
 const CID = require('cids')
 const Block = require('ipld-block')
-const AbortController = require('native-abort-controller')
+const { AbortController } = require('native-abort-controller')
 const delay = require('delay')
 
 const createTempRepo = require('./utils/create-temp-repo-nodejs')

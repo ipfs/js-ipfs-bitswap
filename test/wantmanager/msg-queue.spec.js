@@ -13,7 +13,9 @@ const {
 } = require('../utils/mocks')
 
 describe('MessageQueue', () => {
+  /** @type {PeerId[]} */
   let peerIds
+  /** @type {CID[]} */
   let cids
 
   before(async () => {

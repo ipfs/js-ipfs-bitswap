@@ -3,12 +3,12 @@ export interface TaskMerger {
    * Given the existing tasks with the same topic, does the task add some new
    * information? Used to decide whether to merge the task or ignore it.
    */
-  hasNewInfo (task:Task, tasksWithTopic:Task[]): boolean
+  hasNewInfo: (task: Task, tasksWithTopic: Task[]) => boolean
 
   /**
    * Merge the information from the task into the existing pending task.
    */
-  merge (newTask, existingTask): void
+  merge: (newTask: Task, existingTask: Task) => void
 }
 
 export interface Task {

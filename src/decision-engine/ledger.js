@@ -2,9 +2,13 @@
 
 const Wantlist = require('../types/wantlist')
 
+/**
+ * @typedef {import('cids')} CID
+ */
+
 class Ledger {
   /**
-   * @param {PeerId} peerId
+   * @param {import('peer-id')} peerId
    */
   constructor (peerId) {
     this.partner = peerId
@@ -41,7 +45,7 @@ class Ledger {
    *
    * @param {CID} cid
    * @param {number} priority
-   * @param {WantType} [wantType]
+   * @param {import('../types/message/message.proto').WantType} wantType
    * @returns {void}
    */
   wants (cid, priority, wantType) {
@@ -59,7 +63,7 @@ class Ledger {
 
   /**
    * @param {CID} cid
-   * @returns {WantListEntry|void}
+   * @returns {import('../types/wantlist/entry')|void}
    */
   wantlistContains (cid) {
     return this.wantlist.contains(cid)
@@ -74,10 +78,3 @@ class Ledger {
 }
 
 module.exports = Ledger
-
-/**
- * @typedef {import('peer-id')} PeerId
- * @typedef {import('cids')} CID
- * @typedef {import('../types').WantType} WantType
- * @typedef {import('../types/wantlist/entry')} WantListEntry
- */

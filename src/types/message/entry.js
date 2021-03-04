@@ -4,9 +4,9 @@ const WantlistEntry = require('../wantlist').Entry
 
 module.exports = class BitswapMessageEntry {
   /**
-   * @param {CID} cid
+   * @param {import('cids')} cid
    * @param {number} priority
-   * @param {WantType} wantType
+   * @param {import('./message.proto').WantType} wantType
    * @param {boolean} [cancel]
    * @param {boolean} [sendDontHave]
    */
@@ -45,6 +45,9 @@ module.exports = class BitswapMessageEntry {
     return `BitswapMessageEntry ${cidStr} <cancel: ${this.cancel}, priority: ${this.priority}>`
   }
 
+  /**
+   * @param {this} other
+   */
   equals (other) {
     return (this.cancel === other.cancel) &&
            (this.sendDontHave === other.sendDontHave) &&
@@ -52,8 +55,3 @@ module.exports = class BitswapMessageEntry {
            this.entry.equals(other.entry)
   }
 }
-
-/**
- * @typedef {import('../../types').WantType} WantType
- * @typedef {import('cids')} CID
- */

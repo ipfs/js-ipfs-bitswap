@@ -1,8 +1,9 @@
 'use strict'
 
-const Block = require('ipld-block')
+const IPLDBlock = require('ipld-block')
 const CID = require('cids')
 const { getName } = require('multicodec')
+// @ts-ignore
 const vd = require('varint-decoder')
 const multihashing = require('multihashing-async')
 const { isMapEqual } = require('../../utils')
@@ -18,11 +19,10 @@ class BitswapMessage {
     /** @type {Map<string, Entry>} */
     this.wantlist = new Map()
 
-    /** @type {Map<string, Block>}
-     */
+    /** @type {Map<string, import('ipfs-core-types/src/block-service').Block>} */
     this.blocks = new Map()
 
-    /** @type {Map<string, BlockPresenceType>} */
+    /** @type {Map<string, import('./message.proto').BlockPresenceType>} */
     this.blockPresences = new Map()
     this.pendingBytes = 0
   }
@@ -37,7 +37,7 @@ class BitswapMessage {
    *
    * @param {CID} cid
    * @param {number} priority
-   * @param {WantType} [wantType]
+   * @param {import('./message.proto').WantType} [wantType]
    * @param {boolean} [cancel]
    * @param {boolean} [sendDontHave]
    * @returns {void}
@@ -72,7 +72,7 @@ class BitswapMessage {
   }
 
   /**
-   * @param {Block} block
+   * @param {import('ipfs-core-types/src/block-service').Block} block
    * @returns {void}
    */
   addBlock (block) {
@@ -123,7 +123,7 @@ class BitswapMessage {
    * @returns {Uint8Array}
    */
   serializeToBitswap100 () {
-    /** @type {Message100} */
+    /** @type {import('./message.proto').Message100} */
     const msg = {
       wantlist: {
         entries: Array.from(this.wantlist.values()).map((entry) => {
@@ -152,7 +152,7 @@ class BitswapMessage {
    * @returns {Uint8Array}
    */
   serializeToBitswap110 () {
-    /** @type {Message110} */
+    /** @type {import('./message.proto').Message110}  */
     const msg = {
       wantlist: {
         entries: Array.from(this.wantlist.values()).map((entry) => {
@@ -166,7 +166,8 @@ class BitswapMessage {
         })
       },
       blockPresences: [],
-      payload: []
+      payload: [],
+      pendingBytes: this.pendingBytes
     }
 
     if (this.full) {
@@ -203,9 +204,8 @@ class BitswapMessage {
         this.pendingBytes !== other.pendingBytes ||
         !isMapEqual(this.wantlist, other.wantlist) ||
         !isMapEqual(this.blocks, other.blocks) ||
-        // @TODO - Is this a bug ? `isMapEqual` only compare maps of blocks and
-        // wants
-        // @ts-ignore
+        // @TODO - Is this a bug ?
+        // @ts-expect-error - isMap equals map values to be objects not numbers
         !isMapEqual(this.blockPresences, other.blockPresences)
     ) {
       return false
@@ -257,7 +257,7 @@ BitswapMessage.deserialize = async (raw) => {
     await Promise.all(decoded.blocks.map(async (b) => {
       const hash = await multihashing(b, 'sha2-256')
       const cid = new CID(hash)
-      msg.addBlock(new Block(b, cid))
+      msg.addBlock(new IPLDBlock(b, cid))
     }))
     return msg
   }
@@ -275,7 +275,7 @@ BitswapMessage.deserialize = async (raw) => {
       // const hashLen = values[3] // We haven't need to use this so far
       const hash = await multihashing(p.data, hashAlg)
       const cid = new CID(cidVersion, getName(multicodec), hash)
-      msg.addBlock(new Block(p.data, cid))
+      msg.addBlock(new IPLDBlock(p.data, cid))
     }))
     msg.setPendingBytes(decoded.pendingBytes)
     return msg
@@ -297,22 +297,15 @@ BitswapMessage.blockPresenceSize = (cid) => {
 
 BitswapMessage.Entry = Entry
 BitswapMessage.WantType = {
-  /** @type {import('../../types').WantBlock} */
+  /** @type {import('./message.proto').WantBlock} */
   Block: Message.Wantlist.WantType.Block,
-  /** @type {import('../../types').HaveBlock} */
+  /** @type {import('./message.proto').HaveBlock} */
   Have: Message.Wantlist.WantType.Have
 }
 BitswapMessage.BlockPresenceType = {
-  /** @type {import('../../types').Have} */
+  /** @type {import('./message.proto').Have} */
   Have: Message.BlockPresenceType.Have,
-  /** @type {import('../../types').DontHave} */
+  /** @type {import('./message.proto').DontHave} */
   DontHave: Message.BlockPresenceType.DontHave
 }
 module.exports = BitswapMessage
-
-/**
- * @typedef {import('../../types').WantType} WantType
- * @typedef {import('../../types').Message110} Message110
- * @typedef {import('../../types').Message100} Message100
- * @typedef {import('../../types').BlockPresenceType} BlockPresenceType
- */

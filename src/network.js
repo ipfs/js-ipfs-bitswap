@@ -9,15 +9,33 @@ const Message = require('./types/message')
 const CONSTANTS = require('./constants')
 const logger = require('./utils').logger
 
+/**
+ * @typedef {import('peer-id')} PeerId
+ * @typedef {import('cids')} CID
+ * @typedef {import('multiaddr')} Multiaddr
+ *
+ * @typedef {Object} Connection
+ * @property {string} id
+ * @property {PeerId} remotePeer
+ *
+ * @typedef {Object} Provider
+ * @property {PeerId} id
+ * @property {Multiaddr[]} multiaddrs
+ *
+ * @typedef {Object} Stream
+ * @property {AsyncIterable<Uint8Array>} source
+ * @property {(output:AsyncIterable<Uint8Array>) => Promise<void>} sink
+ */
+
 const BITSWAP100 = '/ipfs/bitswap/1.0.0'
 const BITSWAP110 = '/ipfs/bitswap/1.1.0'
 const BITSWAP120 = '/ipfs/bitswap/1.2.0'
 
 class Network {
   /**
-   * @param {LibP2P} libp2p
-   * @param {BitSwap} bitswap
-   * @param {Stats} stats
+   * @param {import('libp2p')} libp2p
+   * @param {import('./index')} bitswap
+   * @param {import('./stats')} stats
    * @param {Object} [options]
    * @param {boolean} [options.b100Only]
    */
@@ -71,7 +89,9 @@ class Network {
     this._libp2p.unhandle(this._protocols)
 
     // unregister protocol and handlers
-    this._libp2p.registrar.unregister(this._registrarId)
+    if (this._registrarId != null) {
+      this._libp2p.registrar.unregister(this._registrarId)
+    }
   }
 
   /**
@@ -92,6 +112,9 @@ class Network {
       await pipe(
         stream,
         lp.decode(),
+        /**
+         * @param {AsyncIterable<Uint8Array>} source
+         */
         async (source) => {
           for await (const data of source) {
             try {
@@ -139,6 +162,8 @@ class Network {
     return this._libp2p.contentRouting.findProviders(
       cid,
       {
+        // TODO: Should this be a timeout options insetad ?
+        // @ts-expect-error - 'maxTimeout' does not exist in type
         maxTimeout: CONSTANTS.providerRequestTimeout,
         maxNumProviders: maxProviders,
         signal: options.signal
@@ -172,6 +197,7 @@ class Network {
    * @returns {Promise<void>}
    */
   async provide (cid, options) {
+    // @ts-expect-error - contentRouting takes no options
     await this._libp2p.contentRouting.provide(cid, options)
   }
 
@@ -224,6 +250,8 @@ class Network {
       throw new Error('network isn\'t running')
     }
 
+    // TODO: Figure out inconsistency here.
+    // @ts-expect-error - dial does not expects Provider
     return this._libp2p.dial(peer, options)
   }
 
@@ -231,7 +259,7 @@ class Network {
    * Dial to the peer and try to use the most recent Bitswap
    *
    * @private
-   * @param {PeerId|Multiaddr|Provider} peer
+   * @param {PeerId|Multiaddr} peer
    */
   _dialPeer (peer) {
     return this._libp2p.dialProtocol(peer, [BITSWAP120, BITSWAP110, BITSWAP100])
@@ -271,24 +299,3 @@ async function writeMessage (stream, msg, log) {
 }
 
 module.exports = Network
-
-/**
- * @typedef {import('peer-id')} PeerId
- * @typedef {import('cids')} CID
- * @typedef {import('multiaddr')} Multiaddr
- * @typedef {import('libp2p')} LibP2P
- * @typedef {import('./stats')} Stats
- * @typedef {import('./index')} BitSwap
- *
- * @typedef {Object} Connection
- * @property {string} id
- * @property {PeerId} remotePeer
- *
- * @typedef {Object} Provider
- * @property {PeerId} id
- * @property {Multiaddr[]} multiaddrs
- *
- * @typedef {Object} Stream
- * @property {AsyncIterable<Uint8Array>} source
- * @property {(output:AsyncIterable<Uint8Array>) => Promise<void>} sink
- */

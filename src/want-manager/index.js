@@ -6,14 +6,20 @@ const CONSTANTS = require('../constants')
 const MsgQueue = require('./msg-queue')
 const logger = require('../utils').logger
 
+/**
+ * @typedef {import('peer-id')} PeerId
+ * @typedef {import('cids')} CID
+ */
+
 module.exports = class WantManager {
   /**
    *
    * @param {PeerId} peerId
-   * @param {Network} network
-   * @param {Stats} stats
+   * @param {import('../network')} network
+   * @param {import('../stats')} stats
    */
   constructor (peerId, network, stats) {
+    /** @type {Map<string, MsgQueue>} */
     this.peers = new Map()
     this.wantlist = new Wantlist(stats)
 
@@ -24,6 +30,12 @@ module.exports = class WantManager {
     this._log = logger(peerId, 'want')
   }
 
+  /**
+   * @private
+   * @param {CID[]} cids
+   * @param {boolean} cancel
+   * @param {boolean} [force]
+   */
   _addEntries (cids, cancel, force) {
     const entries = cids.map((cid, i) => {
       return new Message.Entry(cid, CONSTANTS.kMaxPriority - i, Message.WantType.Block, cancel)
@@ -33,12 +45,14 @@ module.exports = class WantManager {
       // add changes to our wantlist
       if (e.cancel) {
         if (force) {
-          this.wantlist.removeForce(e.cid)
+          this.wantlist.removeForce(e.cid.toString())
         } else {
           this.wantlist.remove(e.cid)
         }
       } else {
         this._log('adding to wl')
+        // TODO: Figure out the wantType
+        // @ts-expect-error - requires wantType
         this.wantlist.add(e.cid, e.priority)
       }
     })
@@ -49,6 +63,10 @@ module.exports = class WantManager {
     }
   }
 
+  /**
+   * @private
+   * @param {PeerId} peerId
+   */
   _startPeerHandler (peerId) {
     let mq = this.peers.get(peerId.toB58String())
 
@@ -72,6 +90,10 @@ module.exports = class WantManager {
     return mq
   }
 
+  /**
+   * @private
+   * @param {PeerId} peerId
+   */
   _stopPeerHandler (peerId) {
     const mq = this.peers.get(peerId.toB58String())
 
@@ -87,7 +109,13 @@ module.exports = class WantManager {
     this.peers.delete(peerId.toB58String())
   }
 
-  // add all the cids to the wantlist
+  /**
+   * add all the cids to the wantlist
+   *
+   * @param {CID[]} cids
+   * @param {Object} [options]
+   * @param {AbortSignal} [options.signal]
+   */
   wantBlocks (cids, options = {}) {
     this._addEntries(cids, false)
 
@@ -98,26 +126,45 @@ module.exports = class WantManager {
     }
   }
 
-  // remove blocks of all the given keys without respecting refcounts
+  /**
+   * Remove blocks of all the given keys without respecting refcounts
+   *
+   * @param {CID[]} cids
+   */
   unwantBlocks (cids) {
     this._log('unwant blocks: %s', cids.length)
     this._addEntries(cids, true, true)
   }
 
-  // cancel wanting all of the given keys
+  /**
+   * Cancel wanting all of the given keys
+   *
+   * @param {CID[]} cids
+   */
   cancelWants (cids) {
     this._log('cancel wants: %s', cids.length)
     this._addEntries(cids, true)
   }
 
-  // Returns a list of all currently connected peers
+  /**
+   * Returns a list of all currently connected peers
+   *
+   * @returns {string[]}
+   */
   connectedPeers () {
     return Array.from(this.peers.keys())
   }
 
+  /**
+   * @param {PeerId} peerId
+   */
   connected (peerId) {
     this._startPeerHandler(peerId)
   }
+
+  /**
+   * @param {PeerId} peerId
+   */
 
   disconnected (peerId) {
     this._stopPeerHandler(peerId)
@@ -130,9 +177,3 @@ module.exports = class WantManager {
     this.peers.forEach((mq) => this.disconnected(mq.peerId))
   }
 }
-
-/**
- * @typedef {import('peer-id')} PeerId
- * @typedef {import('../network')} Network
- * @typedef {import('../stats')} Stats
- */

@@ -6,7 +6,7 @@ const uint8ArrayEquals = require('uint8arrays/equals')
 /**
  * Creates a logger for the given subsystem
  *
- * @param {PeerId} [id]
+ * @param {import('peer-id')} [id]
  * @param {string} [subsystem]
  */
 const logger = (id, subsystem) => {
@@ -136,7 +136,7 @@ const isMapEqual = (a, b) => {
       return false
     }
     // Support Blocks
-    if (valueA.data && !uint8ArrayEquals(valueA.data, valueB.data)) {
+    if (valueA.data && !(valueB.data && uint8ArrayEquals(valueA.data, valueB.data))) {
       return false
     }
   }
@@ -153,8 +153,3 @@ module.exports = {
   sortBy,
   isMapEqual
 }
-
-/**
- * @typedef {import('peer-id')} PeerId
- * @typedef {import('../types/message')} BitswapMessageEntry
- */

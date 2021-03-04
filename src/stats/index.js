@@ -4,6 +4,11 @@ const { EventEmitter } = require('events')
 const Stat = require('./stat')
 
 /**
+ * @typedef {import('peer-id')} PeerId
+ * @typedef {import('ipfs-core-types/src/bitswap').Stats} API
+ */
+
+/**
  * @typedef {[number, number, number]} AverageIntervals
  */
 const defaultOptions = {
@@ -17,6 +22,9 @@ const defaultOptions = {
   ])
 }
 
+/**
+ * @implements {API}
+ */
 class Stats extends EventEmitter {
   /**
    * @param {string[]} [initialCounters]
@@ -111,6 +119,9 @@ class Stats extends EventEmitter {
     }
   }
 
+  /**
+   * @param {PeerId} peer
+   */
   disconnected (peer) {
     const peerId = peer.toB58String()
     const peerStats = this._peers.get(peerId)
@@ -122,7 +133,3 @@ class Stats extends EventEmitter {
 }
 
 module.exports = Stats
-
-/**
- * @typedef {import('peer-id')} PeerId
- */

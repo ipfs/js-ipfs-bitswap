@@ -1,5 +1,11 @@
 'use strict'
 
+/**
+ * @typedef {import('peer-id')} PeerId
+ * @typedef {import('ipfs-core-types/src/block-service').Block} Block
+ * @typedef {import('../types/message/entry')} BitswapMessageEntry
+ */
+
 const CID = require('cids')
 
 const Message = require('../types/message')
@@ -27,16 +33,15 @@ const MAX_SIZE_REPLACE_HAS_WITH_BLOCK = 1024
 
 class DecisionEngine {
   /**
-   *
    * @param {PeerId} peerId
-   * @param {BlockStore} blockstore
+   * @param {import('ipfs-core-types/src/block-store').BlockStore} blockstore
    * @param {import('../network')} network
-   * @param {Stats} stats
+   * @param {import('../stats')} stats
    * @param {Object} [opts]
    * @param {number} [opts.targetMessageSize]
    * @param {number} [opts.maxSizeReplaceHasWithBlock]
    */
-  constructor (peerId, blockstore, network, stats, opts) {
+  constructor (peerId, blockstore, network, stats, opts = {}) {
     this._log = logger(peerId, 'engine')
     this.blockstore = blockstore
     this.network = network
@@ -52,6 +57,12 @@ class DecisionEngine {
     this._requestQueue = new RequestQueue(TaskMerger)
   }
 
+  /**
+   * @template {Object} Opts
+   * @param {Opts} opts
+   * @returns {Opts & {maxSizeReplaceHasWithBlock:number, targetMessageSize:number}}
+   * @private
+   */
   _processOpts (opts) {
     return {
       maxSizeReplaceHasWithBlock: MAX_SIZE_REPLACE_HAS_WITH_BLOCK,
@@ -60,14 +71,21 @@ class DecisionEngine {
     }
   }
 
+  /**
+   * @private
+   */
   _scheduleProcessTasks () {
     setTimeout(() => {
       this._processTasks()
     })
   }
 
-  // Pull tasks off the request queue and send a message to the corresponding
-  // peer
+  /**
+   * Pull tasks off the request queue and send a message to the corresponding
+   * peer
+   *
+   * @private
+   */
   async _processTasks () {
     if (!this._running) {
       return
@@ -152,7 +170,7 @@ class DecisionEngine {
 
   /**
    * @param {PeerId} peerId
-   * @returns {Map<string, WantListEntry>}
+   * @returns {Map<string, import('../types/wantlist/entry')>}
    */
   wantlistForPeer (peerId) {
     const peerIdStr = peerId.toB58String()
@@ -162,6 +180,7 @@ class DecisionEngine {
 
   /**
    * @param {PeerId} peerId
+   * @returns {import('ipfs-core-types/src/bitswap').LedgerForPeer|null}
    */
   ledgerForPeer (peerId) {
     const peerIdStr = peerId.toB58String()
@@ -262,7 +281,9 @@ class DecisionEngine {
     }
 
     // Clear cancelled wants and add new wants to the ledger
+    /** @type {CID[]} */
     const cancels = []
+    /** @type {BitswapMessageEntry[]} */
     const wants = []
     msg.wantlist.forEach((entry) => {
       if (entry.cancel) {
@@ -356,6 +377,11 @@ class DecisionEngine {
     }
   }
 
+  /**
+   * @private
+   * @param {import('../types/message/message.proto').WantType} wantType
+   * @param {number} blockSize
+   */
   _sendAsBlock (wantType, blockSize) {
     return wantType === WantType.Block ||
       blockSize <= this._opts.maxSizeReplaceHasWithBlock
@@ -391,6 +417,11 @@ class DecisionEngine {
     return res
   }
 
+  /**
+   * @private
+   * @param {Map<string, Block>} blocksMap
+   * @param {Ledger} ledger
+   */
   _updateBlockAccounting (blocksMap, ledger) {
     blocksMap.forEach(b => {
       this._log('got block (%s bytes)', b.data.length)
@@ -477,13 +508,3 @@ class DecisionEngine {
 }
 
 module.exports = DecisionEngine
-
-/**
- * @typedef {import('peer-id')} PeerId
- * @typedef {import('../stats')} Stats
- * @typedef {import('../types').BlockData} BlockData
- * @typedef {import('ipld-block')} Block
- * @typedef {import('../types/message/entry')} BitswapMessageEntry
- * @typedef {import('../types/wantlist/entry')} WantListEntry
- * @typedef {import('../types').BlockStore} BlockStore
- */
