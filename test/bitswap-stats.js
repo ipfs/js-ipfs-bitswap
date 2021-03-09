@@ -9,7 +9,7 @@ const Bitswap = require('../src')
 const createTempRepo = require('./utils/create-temp-repo-nodejs')
 const createLibp2pNode = require('./utils/create-libp2p-node')
 const makeBlock = require('./utils/make-block')
-const makePeerId = require('./utils/make-peer-id')
+const { makePeerIds } = require('./utils/make-peer-id')
 
 const expectedStats = [
   'blocksReceived',
@@ -39,7 +39,7 @@ describe('bitswap stats', () => {
   before(async () => {
     const nodes = [0, 1]
     blocks = await makeBlock(2)
-    ids = await makePeerId(2)
+    ids = await makePeerIds(2)
 
     // create 2 temp repos
     repos = await Promise.all(nodes.map(() => createTempRepo()))

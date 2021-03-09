@@ -1,4 +1,6 @@
+// @ts-nocheck
 'use strict'
+
 const protons = require('protons')
 // from: https://github.com/ipfs/go-ipfs/blob/master/exchange/bitswap/message/pb/message.proto
 

@@ -1,25 +1,43 @@
 'use strict'
 
-const EventEmitter = require('events')
-const Big = require('bignumber.js')
+const { EventEmitter } = require('events')
+const Big = require('bignumber.js').default
 const MovingAverage = require('moving-average')
 
+/**
+ * @typedef {[string, number, number]} Op
+ */
+
 class Stats extends EventEmitter {
+  /**
+   *
+   * @param {string[]} initialCounters
+   * @param {Object} options
+   * @param {boolean} options.enabled
+   * @param {number} options.computeThrottleTimeout
+   * @param {number} options.computeThrottleMaxQueueSize
+   * @param {import('.').AverageIntervals} options.movingAverageIntervals
+   */
   constructor (initialCounters, options) {
     super()
 
     this._options = options
+    /** @type {Op[]} */
     this._queue = []
+    /** @type {Record<string, Big>} */
     this._stats = {}
 
     this._frequencyLastTime = Date.now()
+    /** @type {Record<string, number>} */
     this._frequencyAccumulators = {}
+
+    /** @type {Record<string, Record<number, MovingAverage>>} */
     this._movingAverages = {}
 
     this._update = this._update.bind(this)
 
     initialCounters.forEach((key) => {
-      this._stats[key] = Big(0)
+      this._stats[key] = new Big(0)
       this._movingAverages[key] = {}
       this._options.movingAverageIntervals.forEach((interval) => {
         const ma = this._movingAverages[key][interval] = MovingAverage(interval)
@@ -52,6 +70,10 @@ class Stats extends EventEmitter {
     return Object.assign({}, this._movingAverages)
   }
 
+  /**
+   * @param {string} counter
+   * @param {number} inc
+   */
   push (counter, inc) {
     if (this._enabled) {
       this._queue.push([counter, inc, Date.now()])
@@ -59,6 +81,9 @@ class Stats extends EventEmitter {
     }
   }
 
+  /**
+   * @private
+   */
   _resetComputeTimeout () {
     if (this._timeout) {
       clearTimeout(this._timeout)
@@ -66,12 +91,19 @@ class Stats extends EventEmitter {
     this._timeout = setTimeout(this._update, this._nextTimeout())
   }
 
+  /**
+   * @private
+   * @returns {number}
+   */
   _nextTimeout () {
     // calculate the need for an update, depending on the queue length
     const urgency = this._queue.length / this._options.computeThrottleMaxQueueSize
     return Math.max(this._options.computeThrottleTimeout * (1 - urgency), 0)
   }
 
+  /**
+   * @private
+   */
   _update () {
     this._timeout = null
 
@@ -79,15 +111,19 @@ class Stats extends EventEmitter {
       let last
       while (this._queue.length) {
         const op = last = this._queue.shift()
-        this._applyOp(op)
+        op && this._applyOp(op)
       }
 
-      this._updateFrequency(last[2]) // contains timestamp of last op
+      last && this._updateFrequency(last[2]) // contains timestamp of last op
 
       this.emit('update', this._stats)
     }
   }
 
+  /**
+   * @private
+   * @param {number} latestTime
+   */
   _updateFrequency (latestTime) {
     const timeDiff = latestTime - this._frequencyLastTime
 
@@ -100,6 +136,13 @@ class Stats extends EventEmitter {
     this._frequencyLastTime = latestTime
   }
 
+  /**
+   * @private
+   * @param {string} key
+   * @param {number} timeDiffMS
+   * @param {number} latestTime
+   * @returns {void}
+   */
   _updateFrequencyFor (key, timeDiffMS, latestTime) {
     const count = this._frequencyAccumulators[key] || 0
     this._frequencyAccumulators[key] = 0
@@ -118,18 +161,22 @@ class Stats extends EventEmitter {
     })
   }
 
+  /**
+   * @private
+   * @param {Op} op
+   */
   _applyOp (op) {
     const key = op[0]
     const inc = op[1]
 
     if (typeof inc !== 'number') {
-      throw new Error('invalid increment number:', inc)
+      throw new Error(`invalid increment number: ${inc}`)
     }
 
     let n
 
     if (!Object.prototype.hasOwnProperty.call(this._stats, key)) {
-      n = this._stats[key] = Big(0)
+      n = this._stats[key] = new Big(0)
     } else {
       n = this._stats[key]
     }

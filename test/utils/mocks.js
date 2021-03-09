@@ -8,9 +8,43 @@ const PeerStore = require('libp2p/src/peer-store')
 const Node = require('./create-libp2p-node').bundle
 const tmpdir = require('ipfs-utils/src/temp-dir')
 const Repo = require('ipfs-repo')
-const EventEmitter = require('events')
+const { EventEmitter } = require('events')
+const toString = require('uint8arrays/to-string')
 
 const Bitswap = require('../../src')
+const Network = require('../../src/network')
+const Stats = require('../../src/stats')
+
+/**
+ * @typedef {import('../../src/types').BlockStore} BlockStore
+ */
+
+/**
+ *
+ * @returns {BlockStore}
+ */
+function mockBlockStore () {
+  const blocks = {}
+
+  const store = {
+    has: (cid) => Promise.resolve(Boolean(blocks[toString(cid.multihash)])),
+    get: (cid) => Promise.resolve(blocks[toString(cid.multihash)]),
+    put: (block) => {
+      blocks[toString(block.cid.multihash)] = block
+
+      return Promise.resolve(block)
+    },
+    putMany: async function * (blocks) {
+      for await (const block of blocks) {
+        store.put(block)
+
+        yield block
+      }
+    }
+  }
+
+  return store
+}
 
 /*
  * Create a mock libp2p node
@@ -47,12 +81,15 @@ exports.mockLibp2pNode = () => {
   })
 }
 
-/*
+/**
  * Create a mock network instance
+ *
+ * @param {number} [calls]
+ * @param {Function} [done]
+ * @param {Function} [onMsg]
+ * @returns {import('../../src/network')}
  */
-exports.mockNetwork = (calls, done, onMsg) => {
-  done = done || (() => {})
-
+exports.mockNetwork = (calls = Infinity, done = () => {}, onMsg = () => {}) => {
   const connects = []
   const messages = []
   let i = 0
@@ -60,18 +97,27 @@ exports.mockNetwork = (calls, done, onMsg) => {
   const finish = (msgTo) => {
     onMsg && onMsg(msgTo)
     if (++i === calls) {
-      done({ connects: connects, messages: messages })
+      done && done({ connects: connects, messages: messages })
     }
   }
 
-  return {
-    messages,
-    connects,
+  class MockNetwork extends Network {
+    constructor () {
+      super({}, new Bitswap({}, mockBlockStore()), new Stats())
+
+      this.connects = connects
+      this.messages = messages
+    }
+
+    // @ts-ignore
     connectTo (p) {
       setTimeout(() => {
         connects.push(p)
       })
-    },
+
+      return Promise.resolve({ id: '', remotePeer: '' })
+    }
+
     sendMessage (p, msg) {
       messages.push([p, msg])
 
@@ -80,20 +126,27 @@ exports.mockNetwork = (calls, done, onMsg) => {
       })
 
       return Promise.resolve()
-    },
+    }
+
     start () {
       return Promise.resolve()
-    },
+    }
+
     stop () {
       return Promise.resolve()
-    },
+    }
+
     findAndConnect () {
       return Promise.resolve()
-    },
+    }
+
     provide () {
       return Promise.resolve()
     }
   }
+
+  // @ts-ignore
+  return new MockNetwork()
 }
 
 /*
@@ -115,7 +168,7 @@ exports.createMockTestNet = async (repo, count) => {
       connectTo (id) {
         return new Promise((resolve, reject) => {
           if (!hexIds.includes(hexIds, id.toHexString())) {
-            return reject(new Error('unkown peer'))
+            return reject(new Error('unknown peer'))
           }
           resolve()
         })

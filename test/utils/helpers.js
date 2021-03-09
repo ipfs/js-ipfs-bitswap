@@ -1,12 +1,20 @@
 'use strict'
 
+// @ts-ignore
 const range = require('lodash.range')
 const { expect } = require('aegir/utils/chai')
 
+/**
+ * @param {number} n
+ */
 exports.orderedFinish = (n) => {
   const r = range(1, n + 1)
+  /** @type {number[]} */
   const finishes = []
 
+  /**
+   * @param {number} i
+   */
   const output = (i) => {
     finishes.push(i)
   }

@@ -1,5 +1,7 @@
 'use strict'
 
+/** @type {(n:number) => any[]} */
+// @ts-ignore
 const range = require('lodash.range')
 const { expect } = require('aegir/utils/chai')
 
@@ -7,6 +9,13 @@ const createBitswap = require('./create-bitswap')
 const makeBlock = require('./make-block')
 const connectAll = require('./connect-all')
 
+/**
+ *
+ * @param {number} instanceCount
+ * @param {number} blockCount
+ * @param {number} repeats
+ * @param {*} events
+ */
 module.exports = async (instanceCount, blockCount, repeats, events) => {
   let pendingRepeats = repeats
 

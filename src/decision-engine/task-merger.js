@@ -1,9 +1,15 @@
 'use strict'
 
+/**
+ * @typedef {import('./types').Task} Task
+ * @typedef {import('./types').TaskMerger} TaskMergerAPI
+ */
+
+/** @type {TaskMergerAPI} */
 const TaskMerger = {
   /**
    * Indicates whether the given task has newer information than the active
-   * tasks with the same topic
+   * tasks with the same topic.
    *
    * @param {Task} task
    * @param {Task[]} tasksWithTopic
@@ -39,47 +45,13 @@ const TaskMerger = {
   },
 
   /**
-   * Merge the information from the task into the existing pending task
+   * Merge the information from the given task into the existing task (with the
+   * same topic)
    *
    * @param {Task} newTask
    * @param {Task} existingTask
    */
   merge (newTask, existingTask) {
-    // Tasks look like this:
-    // {
-    //   topic: "some topic",
-    //   priority: 5,
-    //
-    //   # The size of the response on the wire. This is used to calculate
-    //   # how many tasks to pop off the request queue and add to a message.
-    //   # If the response is
-    //   # - a HAVE or DONT_HAVE
-    //   #   it is the size of the CID + type (HAVE/DONT_HAVE)
-    //   # - a block
-    //   #   it is the size of the block
-    //   size: 32,
-    //
-    //   data: {
-    //
-    //     # The size of the block, if known (if we don't have the block this is zero)
-    //     blockSize: 128 * 1024,
-    //
-    //     # Indicates if the request is for a block or for a HAVE
-    //     isWantBlock: false,
-    //
-    //     # Do we have the block?
-    //     # Note: a block can have size zero.
-    //     haveBlock: true,
-    //
-    //     # Indicates whether to send a DONT_HAVE response if we don't have
-    //     # the block.
-    //     # If this is false and we don't have the block, we just ignore the
-    //     # want-block request (useful for discovery where we query lots of
-    //     # peers but don't want a response unless the peer has the block).
-    //     sendDontHave: false
-    //   }
-    // }
-    //
     // The merge function ignores the topic and priority as these don't change.
     //
     // We may receive new information about a want before the want has been
@@ -97,8 +69,6 @@ const TaskMerger = {
     //   3. Local node receives block for CID1 from peer
     //   In this case we should replace DONT_HAVE with the want, including
     //   updating the task size and block size.
-    //
-
     const taskData = newTask.data
     const existingData = existingTask.data
 

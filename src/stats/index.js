@@ -1,18 +1,39 @@
 'use strict'
 
-const EventEmitter = require('events')
+const { EventEmitter } = require('events')
 const Stat = require('./stat')
 
+/**
+ * @typedef {import('peer-id')} PeerId
+ * @typedef {import('ipfs-core-types/src/bitswap').Stats} API
+ */
+
+/**
+ * @typedef {[number, number, number]} AverageIntervals
+ */
 const defaultOptions = {
-  movingAverageIntervals: [
+  enabled: false,
+  computeThrottleTimeout: 1000,
+  computeThrottleMaxQueueSize: 1000,
+  movingAverageIntervals: /** @type {AverageIntervals} */ ([
     60 * 1000, // 1 minute
     5 * 60 * 1000, // 5 minutes
     15 * 60 * 1000 // 15 minutes
-  ]
+  ])
 }
 
+/**
+ * @implements {API}
+ */
 class Stats extends EventEmitter {
-  constructor (initialCounters, _options) {
+  /**
+   * @param {string[]} [initialCounters]
+   * @param {Object} _options
+   * @param {boolean} _options.enabled
+   * @param {number} _options.computeThrottleTimeout
+   * @param {number} _options.computeThrottleMaxQueueSize
+   */
+  constructor (initialCounters = [], _options = defaultOptions) {
     super()
 
     const options = Object.assign({}, defaultOptions, _options)
@@ -32,6 +53,7 @@ class Stats extends EventEmitter {
     this._global = new Stat(initialCounters, options)
     this._global.on('update', (stats) => this.emit('update', stats))
 
+    /** @type {Map<string, Stat>} */
     this._peers = new Map()
   }
 
@@ -63,14 +85,24 @@ class Stats extends EventEmitter {
     return this._global.movingAverages
   }
 
+  /**
+   * @param {PeerId|string} peerId
+   * @returns {Stat|void}
+   */
   forPeer (peerId) {
-    if (peerId.toB58String) {
-      peerId = peerId.toB58String()
-    }
+    const peerIdStr = (typeof peerId !== 'string' && peerId.toB58String)
+      ? peerId.toB58String()
+      : `${peerId}`
 
-    return this._peers.get(peerId)
+    return this._peers.get(peerIdStr)
   }
 
+  /**
+   *
+   * @param {string|null} peer
+   * @param {string} counter
+   * @param {number} inc
+   */
   push (peer, counter, inc) {
     if (this._enabled) {
       this._global.push(counter, inc)
@@ -87,6 +119,9 @@ class Stats extends EventEmitter {
     }
   }
 
+  /**
+   * @param {PeerId} peer
+   */
   disconnected (peer) {
     const peerId = peer.toB58String()
     const peerStats = this._peers.get(peerId)

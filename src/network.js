@@ -1,7 +1,7 @@
 'use strict'
 
 const lp = require('it-length-prefixed')
-const pipe = require('it-pipe')
+const { pipe } = require('it-pipe')
 
 const MulticodecTopology = require('libp2p-interfaces/src/topology/multicodec-topology')
 
@@ -9,21 +9,46 @@ const Message = require('./types/message')
 const CONSTANTS = require('./constants')
 const logger = require('./utils').logger
 
+/**
+ * @typedef {import('peer-id')} PeerId
+ * @typedef {import('cids')} CID
+ * @typedef {import('multiaddr')} Multiaddr
+ *
+ * @typedef {Object} Connection
+ * @property {string} id
+ * @property {PeerId} remotePeer
+ *
+ * @typedef {Object} Provider
+ * @property {PeerId} id
+ * @property {Multiaddr[]} multiaddrs
+ *
+ * @typedef {Object} Stream
+ * @property {AsyncIterable<Uint8Array>} source
+ * @property {(output:AsyncIterable<Uint8Array>) => Promise<void>} sink
+ */
+
 const BITSWAP100 = '/ipfs/bitswap/1.0.0'
 const BITSWAP110 = '/ipfs/bitswap/1.1.0'
 const BITSWAP120 = '/ipfs/bitswap/1.2.0'
 
 class Network {
-  constructor (libp2p, bitswap, options, stats) {
+  /**
+   * @param {import('libp2p')} libp2p
+   * @param {import('./index')} bitswap
+   * @param {import('./stats')} stats
+   * @param {Object} [options]
+   * @param {boolean} [options.b100Only]
+   */
+  constructor (libp2p, bitswap, stats, options = {}) {
     this._log = logger(libp2p.peerId, 'network')
-    options = options || {}
-    this.libp2p = libp2p
-    this.bitswap = bitswap
-    this.protocols = [BITSWAP100]
+    this._libp2p = libp2p
+    this._bitswap = bitswap
+    this._protocols = [BITSWAP100]
+
     if (!options.b100Only) {
       // Latest bitswap first
-      this.protocols.unshift(BITSWAP110)
-      this.protocols.unshift(BITSWAP120)
+      this._protocols.unshift(BITSWAP110)
+      this._protocols.unshift(BITSWAP120)
     }
 
     this._stats = stats
@@ -37,21 +62,21 @@ class Network {
 
   start () {
     this._running = true
-    this.libp2p.handle(this.protocols, this._onConnection)
+    this._libp2p.handle(this._protocols, this._onConnection)
 
     // register protocol with topology
     const topology = new MulticodecTopology({
-      multicodecs: this.protocols,
+      multicodecs: this._protocols,
       handlers: {
         onConnect: this._onPeerConnect,
         onDisconnect: this._onPeerDisconnect
       }
     })
-    this._registrarId = this.libp2p.registrar.register(topology)
+    this._registrarId = this._libp2p.registrar.register(topology)
 
     // All existing connections are like new ones for us
-    for (const peer of this.libp2p.peerStore.peers.values()) {
-      const conn = this.libp2p.connectionManager.get(peer.id)
+    for (const peer of this._libp2p.peerStore.peers.values()) {
+      const conn = this._libp2p.connectionManager.get(peer.id)
 
       conn && this._onPeerConnect(conn.remotePeer)
     }
@@ -61,21 +86,23 @@ class Network {
     this._running = false
 
     // Unhandle both, libp2p doesn't care if it's not already handled
-    this.libp2p.unhandle(this.protocols)
+    this._libp2p.unhandle(this._protocols)
 
     // unregister protocol and handlers
-    this.libp2p.registrar.unregister(this._registrarId)
+    if (this._registrarId != null) {
+      this._libp2p.registrar.unregister(this._registrarId)
+    }
   }
 
   /**
    * Handles both types of incoming bitswap messages
    *
    * @private
-   * @param {object} param0
-   * @param {string} param0.protocol - The protocol the stream is running
-   * @param {Stream} param0.stream - A duplex iterable stream
-   * @param {Connection} param0.connection - A libp2p Connection
-   * @returns {void}
+   * @param {object} connection
+   * @param {string} connection.protocol - The protocol the stream is running
+   * @param {Stream} connection.stream - A duplex iterable stream
+   * @param {Connection} connection.connection - A libp2p Connection
+   * @returns {Promise<void>}
    */
   async _onConnection ({ protocol, stream, connection }) {
     if (!this._running) { return }
@@ -85,13 +112,16 @@ class Network {
       await pipe(
         stream,
         lp.decode(),
+        /**
+         * @param {AsyncIterable<Uint8Array>} source
+         */
         async (source) => {
           for await (const data of source) {
             try {
               const message = await Message.deserialize(data.slice())
-              await this.bitswap._receiveMessage(connection.remotePeer, message)
+              await this._bitswap._receiveMessage(connection.remotePeer, message)
             } catch (err) {
-              this.bitswap._receiveError(err)
+              this._bitswap._receiveError(err)
               break
             }
           }
@@ -102,12 +132,21 @@ class Network {
     }
   }
 
+  /**
+   * @private
+   * @param {PeerId} peerId
+   */
   _onPeerConnect (peerId) {
-    this.bitswap._onPeerConnected(peerId)
+    this._bitswap._onPeerConnected(peerId)
   }
 
+  /**
+   * @private
+   * @param {PeerId} peerId
+   * @returns {void}
+   */
   _onPeerDisconnect (peerId) {
-    this.bitswap._onPeerDisconnected(peerId)
+    this._bitswap._onPeerDisconnected(peerId)
   }
 
   /**
@@ -115,14 +154,16 @@ class Network {
    *
    * @param {CID} cid
    * @param {number} maxProviders
-   * @param {Object} options
-   * @param {AbortSignal} options.abortSignal
-   * @returns {AsyncIterable<PeerInfo>}
+   * @param {Object} [options]
+   * @param {AbortSignal} [options.signal]
+   * @returns {AsyncIterable<Provider>}
    */
   findProviders (cid, maxProviders, options = {}) {
-    return this.libp2p.contentRouting.findProviders(
+    return this._libp2p.contentRouting.findProviders(
       cid,
       {
+        // TODO: Should this be a timeout options insetad ?
+        // @ts-expect-error - 'maxTimeout' does not exist in type
         maxTimeout: CONSTANTS.providerRequestTimeout,
         maxNumProviders: maxProviders,
         signal: options.signal
@@ -134,9 +175,9 @@ class Network {
    * Find the providers of a given `cid` and connect to them.
    *
    * @param {CID} cid
-   * @param {Object} options
-   * @param {AbortSignal} options.abortSignal
-   * @returns {void}
+   * @param {Object} [options]
+   * @param {AbortSignal} [options.signal]
+   * @returns {Promise<void>}
    */
   async findAndConnect (cid, options) {
     const connectAttempts = []
@@ -151,16 +192,23 @@ class Network {
    * Tell the network we can provide content for the passed CID
    *
    * @param {CID} cid
-   * @param {Object} options
-   * @param {AbortSignal} options.abortSignal
+   * @param {Object} [options]
+   * @param {AbortSignal} [options.signal]
    * @returns {Promise<void>}
    */
   async provide (cid, options) {
-    await this.libp2p.contentRouting.provide(cid, options)
+    // @ts-expect-error - contentRouting takes no options
+    await this._libp2p.contentRouting.provide(cid, options)
   }
 
-  // Connect to the given peer
-  // Send the given msg (instance of Message) to the given peer
+  /**
+   * Connect to the given peer
+   * Send the given msg (instance of Message) to the given peer
+   *
+   * @param {PeerId} peer
+   * @param {Message} msg
+   * @returns {Promise<void>}
+   */
   async sendMessage (peer, msg) {
     if (!this._running) throw new Error('network isn\'t running')
 
@@ -169,6 +217,7 @@ class Network {
 
     const { stream, protocol } = await this._dialPeer(peer)
 
+    /** @type {Uint8Array} */
     let serialized
     switch (protocol) {
       case BITSWAP100:
@@ -191,9 +240,9 @@ class Network {
   /**
    * Connects to another peer
    *
-   * @param {PeerId|Multiaddr} peer
-   * @param {Object} options
-   * @param {AbortSignal} options.abortSignal
+   * @param {PeerId|Multiaddr|Provider} peer
+   * @param {Object} [options]
+   * @param {AbortSignal} [options.signal]
    * @returns {Promise<Connection>}
    */
   async connectTo (peer, options) { // eslint-disable-line require-await
@@ -201,14 +250,26 @@ class Network {
       throw new Error('network isn\'t running')
     }
 
-    return this.libp2p.dial(peer, options)
+    // TODO: Figure out inconsistency here.
+    // @ts-expect-error - dial does not expects Provider
+    return this._libp2p.dial(peer, options)
   }
 
-  // Dial to the peer and try to use the most recent Bitswap
+  /**
+   * Dial to the peer and try to use the most recent Bitswap
+   *
+   * @private
+   * @param {PeerId|Multiaddr} peer
+   */
   _dialPeer (peer) {
-    return this.libp2p.dialProtocol(peer, [BITSWAP120, BITSWAP110, BITSWAP100])
+    return this._libp2p.dialProtocol(peer, [BITSWAP120, BITSWAP110, BITSWAP100])
   }
 
+  /**
+   * @private
+   * @param {PeerId} peer
+   * @param {Map<string, {data:Uint8Array}>} blocks
+   */
   _updateSentStats (peer, blocks) {
     const peerId = peer.toB58String()
 
@@ -219,6 +280,12 @@ class Network {
   }
 }
 
+/**
+ *
+ * @param {Stream} stream
+ * @param {Uint8Array} msg
+ * @param {*} log
+ */
 async function writeMessage (stream, msg, log) {
   try {
     await pipe(

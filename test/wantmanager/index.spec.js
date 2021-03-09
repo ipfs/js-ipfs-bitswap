@@ -6,16 +6,17 @@ const { expect } = require('aegir/utils/chai')
 const cs = require('../../src/constants')
 const Message = require('../../src/types/message')
 const WantManager = require('../../src/want-manager')
+const Stats = require('../../src/stats')
 
 const mockNetwork = require('../utils/mocks').mockNetwork
 const makeBlock = require('../utils/make-block')
-const makePeerId = require('../utils/make-peer-id')
+const { makePeerIds } = require('../utils/make-peer-id')
 
 describe('WantManager', () => {
   it('sends wantlist to all connected peers', async function () {
     this.timeout(80 * 1000)
 
-    const peerIds = await makePeerId(3)
+    const peerIds = await makePeerIds(3)
     const blocks = await makeBlock(3)
     const cids = blocks.map((b) => b.cid)
 
@@ -56,7 +57,7 @@ describe('WantManager', () => {
         resolve()
       })
 
-      const wantManager = new WantManager(peerIds[2], network)
+      const wantManager = new WantManager(peerIds[2], network, new Stats())
 
       wantManager.start()
       wantManager.wantBlocks([cid1, cid2])

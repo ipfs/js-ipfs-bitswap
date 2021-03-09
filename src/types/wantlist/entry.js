@@ -1,6 +1,18 @@
 'use strict'
 
+/**
+ * @typedef {import('ipfs-core-types/src/bitswap').WantListEntry} API
+ */
+
+/**
+ * @implements {API}
+ */
 class WantListEntry {
+  /**
+   * @param {import('cids')} cid
+   * @param {number} priority
+   * @param {import('../message/message.proto').WantType} wantType
+   */
   constructor (cid, priority, wantType) {
     // Keep track of how many requests we have for this key
     this._refCounter = 1
@@ -28,10 +40,16 @@ class WantListEntry {
     return `WantlistEntry <key: ${cidStr}, priority: ${this.priority}, refs: ${this._refCounter}>`
   }
 
+  /**
+   * @param {API} other
+   * @returns {boolean}
+   */
   equals (other) {
+    // @ts-expect-error _refCounter is not specified by the interface
     return (this._refCounter === other._refCounter) &&
       this.cid.equals(other.cid) &&
       this.priority === other.priority &&
+      // @ts-expect-error - wantType is not specified by the interface
       this.wantType === other.wantType
   }
 }

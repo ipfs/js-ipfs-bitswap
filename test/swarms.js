@@ -5,7 +5,7 @@
 
 const stats = require('stats-lite')
 const distributionTest = require('./utils/distribution-test')
-const EventEmitter = require('events')
+const { EventEmitter } = require('events')
 const test = it
 
 describe.skip('swarms', () => {

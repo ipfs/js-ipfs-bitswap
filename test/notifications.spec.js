@@ -4,13 +4,13 @@
 const { expect } = require('aegir/utils/chai')
 const CID = require('cids')
 const Block = require('ipld-block')
-const AbortController = require('abort-controller')
+const { AbortController } = require('native-abort-controller')
 const uint8ArrayToString = require('uint8arrays/to-string')
 
 const Notifications = require('../src/notifications')
 
 const makeBlock = require('./utils/make-block')
-const makePeerId = require('./utils/make-peer-id')
+const { makePeerId } = require('./utils/make-peer-id')
 
 describe('Notifications', () => {
   let blocks
@@ -54,7 +54,7 @@ describe('Notifications', () => {
     })
 
     it('unwant block', async () => {
-      const n = new Notifications()
+      const n = new Notifications(peerId)
       const b = blocks[0]
 
       const p = n.wantBlock(b.cid)
@@ -65,7 +65,7 @@ describe('Notifications', () => {
     })
 
     it('abort block want', async () => {
-      const n = new Notifications()
+      const n = new Notifications(peerId)
       const b = blocks[0]
 
       const controller = new AbortController()
@@ -103,7 +103,7 @@ describe('Notifications', () => {
     })
 
     it('unwant block', async () => {
-      const n = new Notifications()
+      const n = new Notifications(peerId)
       const cid = new CID(blocks[0].cid.toV1().toString('base64'))
       const b = new Block(blocks[0].data, cid)
 

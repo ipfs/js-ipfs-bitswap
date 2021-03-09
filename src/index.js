@@ -6,8 +6,19 @@ const DecisionEngine = require('./decision-engine')
 const Notifications = require('./notifications')
 const logger = require('./utils').logger
 const Stats = require('./stats')
-const AbortController = require('abort-controller')
-const anySignal = require('any-signal')
+const { AbortController } = require('native-abort-controller')
+const { anySignal } = require('any-signal')
+
+/**
+ * @typedef {import('ipfs-core-types/src/basic').AbortOptions} AbortOptions
+ * @typedef {import('ipfs-core-types/src/bitswap').Bitswap} API
+ * @typedef {import('ipfs-core-types/src/bitswap').WantListEntry} WantListEntry
+ * @typedef {import('ipfs-core-types/src/bitswap').LedgerForPeer} LedgerForPeer
+ * @typedef {import('ipfs-core-types/src/block-service').Block} Block
+ * @typedef {import('peer-id')} PeerId
+ * @typedef {import('./types/message')} BitswapMessage
+ * @typedef {import('cids')} CID
+ */
 
 const defaultOptions = {
   statsEnabled: false,
@@ -30,12 +41,18 @@ const statsKeys = [
  * JavaScript implementation of the Bitswap 'data exchange' protocol
  * used by IPFS.
  *
- * @param {Libp2p} libp2p
- * @param {Blockstore} blockstore
- * @param {Object} options
+ * @implements {API}
  */
 class Bitswap {
-  constructor (libp2p, blockstore, options) {
+  /**
+   * @param {import('libp2p')} libp2p
+   * @param {import('ipfs-core-types/src/block-store').BlockStore} blockstore
+   * @param {Object} [options]
+   * @param {boolean} [options.statsEnabled=false]
+   * @param {number} [options.statsComputeThrottleTimeout=1000]
+   * @param {number} [options.statsComputeThrottleMaxQueueSize=1000]
+   */
+  constructor (libp2p, blockstore, options = {}) {
     this._libp2p = libp2p
     this._log = logger(this.peerId)
 
@@ -49,7 +66,7 @@ class Bitswap {
     })
 
     // the network delivers messages
-    this.network = new Network(libp2p, this, {}, this._stats)
+    this.network = new Network(libp2p, this, this._stats)
 
     // local database
     this.blockstore = blockstore
@@ -62,11 +79,20 @@ class Bitswap {
     this.notifications = new Notifications(this.peerId)
   }
 
+  /**
+   * @type {PeerId}
+   */
   get peerId () {
     return this._libp2p.peerId
   }
 
-  // handle messages received through the network
+  /**
+   * handle messages received through the network
+   *
+   * @param {PeerId} peerId
+   * @param {BitswapMessage} incoming
+   * @returns {Promise<void>}
+   */
   async _receiveMessage (peerId, incoming) {
     try {
       // Note: this allows the engine to respond to any wants in the message.
@@ -99,6 +125,13 @@ class Bitswap {
     }))
   }
 
+  /**
+   * @private
+   * @param {PeerId} peerId
+   * @param {Block} block
+   * @param {boolean} wasWanted
+   * @returns {Promise<void>}
+   */
   async _handleReceivedBlock (peerId, block, wasWanted) {
     this._log('received block')
 
@@ -113,27 +146,46 @@ class Bitswap {
     await this.put(block)
   }
 
-  _updateReceiveCounters (peerId, block, exists) {
-    this._stats.push(peerId, 'blocksReceived', 1)
-    this._stats.push(peerId, 'dataReceived', block.data.length)
+  /**
+   * @private
+   * @param {string} peerIdStr
+   * @param {Block} block
+   * @param {boolean} exists
+   */
+  _updateReceiveCounters (peerIdStr, block, exists) {
+    this._stats.push(peerIdStr, 'blocksReceived', 1)
+    this._stats.push(peerIdStr, 'dataReceived', block.data.length)
 
     if (exists) {
-      this._stats.push(peerId, 'dupBlksReceived', 1)
-      this._stats.push(peerId, 'dupDataReceived', block.data.length)
+      this._stats.push(peerIdStr, 'dupBlksReceived', 1)
+      this._stats.push(peerIdStr, 'dupDataReceived', block.data.length)
     }
   }
 
-  // handle errors on the receiving channel
+  /**
+   * handle errors on the receiving channel
+   *
+   * @param {Error} err
+   * @returns {void}
+   */
   _receiveError (err) {
     this._log.error('ReceiveError: %s', err.message)
   }
 
-  // handle new peers
+  /**
+   * handle new peers
+   *
+   * @param {PeerId} peerId
+   */
   _onPeerConnected (peerId) {
     this.wm.connected(peerId)
   }
 
-  // handle peers being disconnected
+  /**
+   * handle peers being disconnected
+   *
+   * @param {PeerId} peerId
+   */
   _onPeerDisconnected (peerId) {
     this.wm.disconnected(peerId)
     this.engine.peerDisconnected(peerId)
@@ -158,9 +210,10 @@ class Bitswap {
    * Return the current wantlist for a given `peerId`
    *
    * @param {PeerId} peerId
-   * @returns {Map}
+   * @param {AbortOptions} [_options]
+   * @returns {Map<string, WantListEntry>}
    */
-  wantlistForPeer (peerId) {
+  wantlistForPeer (peerId, _options) {
     return this.engine.wantlistForPeer(peerId)
   }
 
@@ -168,7 +221,7 @@ class Bitswap {
    * Return ledger information for a given `peerId`
    *
    * @param {PeerId} peerId
-   * @returns {Object}
+   * @returns {null|LedgerForPeer}
    */
   ledgerForPeer (peerId) {
     return this.engine.ledgerForPeer(peerId)
@@ -179,11 +232,17 @@ class Bitswap {
    * blockstore it is returned, otherwise the block is added to the wantlist and returned once another node sends it to us.
    *
    * @param {CID} cid
-   * @param {Object} options
-   * @param {AbortSignal} options.abortSignal
+   * @param {Object} [options]
+   * @param {AbortSignal} [options.signal]
    * @returns {Promise<Block>}
    */
   async get (cid, options = {}) {
+    /**
+     * @param {CID} cid
+     * @param {Object} options
+     * @param {AbortSignal} options.signal
+     * @returns {Promise<Block>}
+     */
     const fetchFromNetwork = (cid, options) => {
       // add it to the want list - n.b. later we will abort the AbortSignal
       // so no need to remove the blocks from the wantlist after we have it
@@ -194,6 +253,13 @@ class Bitswap {
 
     let promptedNetwork = false
 
+    /**
+     *
+     * @param {CID} cid
+     * @param {Object} options
+     * @param {AbortSignal} options.signal
+     * @returns {Promise<Block>}
+     */
     const loadOrFetchFromNetwork = async (cid, options) => {
       try {
         // have to await here as we want to handle ERR_NOT_FOUND
@@ -222,7 +288,9 @@ class Bitswap {
     // a race condition, so register for incoming block notifications as well
     // as trying to get it from the datastore
     const controller = new AbortController()
-    const signal = anySignal([options.signal, controller.signal])
+    const signal = options.signal
+      ? anySignal([options.signal, controller.signal])
+      : controller.signal
 
     const block = await Promise.race([
       this.notifications.wantBlock(cid, {
@@ -243,10 +311,10 @@ class Bitswap {
    * Fetch a a list of blocks by cid. If the blocks are in the local
    * blockstore they are returned, otherwise the blocks are added to the wantlist and returned once another node sends them to us.
    *
-   * @param {AsyncIterator<CID>} cids
-   * @param {Object} options
-   * @param {AbortSignal} options.abortSignal
-   * @returns {Promise<AsyncIterator<Block>>}
+   * @param {AsyncIterable<CID>|Iterable<CID>} cids
+   * @param {Object} [options]
+   * @param {AbortSignal} [options.signal]
+   * @returns {AsyncIterable<Block>}
    */
   async * getMany (cids, options = {}) {
     for await (const cid of cids) {
@@ -262,16 +330,14 @@ class Bitswap {
    * If you want to cancel the want for a block without doing that, pass an
    * AbortSignal in to `.get` or `.getMany` and abort it.
    *
-   * @param {Iterable<CID>} cids
+   * @param {CID[]|CID} cids
    * @returns {void}
    */
   unwant (cids) {
-    if (!Array.isArray(cids)) {
-      cids = [cids]
-    }
+    const cidsArray = Array.isArray(cids) ? cids : [cids]
 
-    this.wm.unwantBlocks(cids)
-    cids.forEach((cid) => this.notifications.unwantBlock(cid))
+    this.wm.unwantBlocks(cidsArray)
+    cidsArray.forEach((cid) => this.notifications.unwantBlock(cid))
   }
 
   /**
@@ -279,14 +345,11 @@ class Bitswap {
    * for blocks to never resolve.  If you wish these promises to abort instead
    * call `unwant(cids)` instead.
    *
-   * @param {Iterable<CID>} cids
+   * @param {CID[]|CID} cids
    * @returns {void}
    */
   cancelWants (cids) {
-    if (!Array.isArray(cids)) {
-      cids = [cids]
-    }
-    this.wm.cancelWants(cids)
+    this.wm.cancelWants(Array.isArray(cids) ? cids : [cids])
   }
 
   /**
@@ -294,9 +357,10 @@ class Bitswap {
    * send it to nodes that have it in their wantlist.
    *
    * @param {Block} block
+   * @param {AbortOptions} [_options]
    * @returns {Promise<void>}
    */
-  async put (block) {
+  async put (block, _options) {
     await this.blockstore.put(block)
     this._sendHaveBlockNotifications(block)
   }
@@ -305,7 +369,7 @@ class Bitswap {
    * Put the given blocks to the underlying blockstore and
    * send it to nodes that have it them their wantlist.
    *
-   * @param {AsyncIterable<Block>} blocks
+   * @param {AsyncIterable<Block>|Iterable<Block>} blocks
    * @returns {AsyncIterable<Block>}
    */
   async * putMany (blocks) {
@@ -319,6 +383,7 @@ class Bitswap {
   /**
    * Sends notifications about the arrival of a block
    *
+   * @private
    * @param {Block} block
    */
   _sendHaveBlockNotifications (block) {
@@ -333,7 +398,7 @@ class Bitswap {
   /**
    * Get the current list of wants.
    *
-   * @returns {Iterator<WantlistEntry>}
+   * @returns {Iterable<[string, WantListEntry]>}
    */
   getWantlist () {
     return this.wm.wantlist.entries()
@@ -342,7 +407,7 @@ class Bitswap {
   /**
    * Get the current list of partners.
    *
-   * @returns {Iterator<PeerId>}
+   * @returns {PeerId[]}
    */
   peers () {
     return this.engine.peers()
@@ -351,7 +416,7 @@ class Bitswap {
   /**
    * Get stats about the bitswap node.
    *
-   * @returns {Object}
+   * @returns {import('ipfs-core-types/src/bitswap').Stats}
    */
   stat () {
     return this._stats

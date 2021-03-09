@@ -1,16 +1,19 @@
 'use strict'
 
 /**
+ * @template Key, Value
  * SortedMap is a Map whose iterator order can be defined by the user
+ * @extends {Map<Key, Value>}
  */
 class SortedMap extends Map {
   /**
-   * @param {Array<k, v>} [entries]
-   * @param {function(a, b)} [cmp] - compares [k1, v1] to [k2, v2]
+   * @param {Array<[Key, Value]>} [entries]
+   * @param {(a:[Key, Value], b:[Key, Value]) => number} [cmp] - compares [k1, v1] to [k2, v2]
    */
   constructor (entries, cmp) {
     super()
     this._cmp = cmp || this._defaultSort
+    /** @type {Key[]} */
     this._keys = []
     for (const [k, v] of entries || []) {
       this.set(k, v)
@@ -23,7 +26,8 @@ class SortedMap extends Map {
    * priority changes, call update.
    * Call indexOf() to get the index _before_ the change happens.
    *
-   * @param {Object} i - the index of entry whose position should be updated.
+   * @param {number} i - the index of entry whose position should be updated.
+   * @returns {void}
    */
   update (i) {
     if (i < 0 || i >= this._keys.length) {
@@ -36,6 +40,10 @@ class SortedMap extends Map {
     this._keys.splice(newIdx, 0, k)
   }
 
+  /**
+   * @param {Key} k
+   * @param {Value} v
+   */
   set (k, v) {
     // If the key is already in the map, remove it from the ordering and
     // re-insert it below
@@ -50,6 +58,8 @@ class SortedMap extends Map {
     // Find the correct position of the newly inserted k/v in the order
     const i = this._find(k)
     this._keys.splice(i, 0, k)
+
+    return this
   }
 
   clear () {
@@ -57,16 +67,23 @@ class SortedMap extends Map {
     this._keys = []
   }
 
+  /**
+   * @param {Key} k
+   */
   delete (k) {
     if (!this.has(k)) {
-      return
+      return false
     }
 
     const i = this.indexOf(k)
     this._keys.splice(i, 1)
-    super.delete(k)
+    return super.delete(k)
   }
 
+  /**
+   * @param {Key} k
+   * @returns {number}
+   */
   indexOf (k) {
     if (!this.has(k)) {
       return -1
@@ -88,6 +105,12 @@ class SortedMap extends Map {
     return -1 // should never happen for existing key
   }
 
+  /**
+   * @private
+   * @param {Key} k
+   * @returns {number}
+   */
+
   _find (k) {
     let lower = 0
     let upper = this._keys.length
@@ -106,47 +129,88 @@ class SortedMap extends Map {
     return lower
   }
 
+  /**
+   * @returns {IterableIterator<Key>}
+   */
   * keys () {
     for (const k of this._keys) {
       yield k
     }
+
+    return undefined
   }
 
+  /**
+   * @returns {IterableIterator<Value>}
+   */
   * values () {
     for (const k of this._keys) {
+      // @ts-ignore - return of `this.get(k)` is `Value|undefined` which is
+      // incompatible with `Value`. Typechecker can't that this contains values
+      // for all the `_keys`. ts(2322)
       yield this.get(k)
     }
+
+    return undefined
   }
 
+  /**
+   * @returns {IterableIterator<[Key, Value]>}
+   */
   * entries () {
     for (const k of this._keys) {
+      // @ts-ignore - return of `this.get(k)` is `Value|undefined` which is
+      // incompatible with `Value`. Typechecker can't that this contains values
+      // for all the `_keys`. ts(2322)
       yield [k, this.get(k)]
     }
+
+    return undefined
   }
 
   * [Symbol.iterator] () {
     yield * this.entries()
   }
 
+  /**
+   * @template This
+   * @param {(entry:[Key, Value]) => void} cb
+   * @param {This} [thisArg]
+   */
+  // @ts-expect-error - Callback in Map forEach is (V, K, Map<K, V>) => void
   forEach (cb, thisArg) {
     if (!cb) {
       return
     }
 
     for (const k of this._keys) {
-      cb.apply(thisArg, [[k, this.get(k)]])
+      cb.apply(thisArg, [[k, /** @type {Value} */(this.get(k))]])
     }
   }
 
+  /**
+   * @private
+   * @param {[Key, Value]} a
+   * @param {[Key, Value]} b
+   * @returns {0|1|-1}
+   */
   _defaultSort (a, b) {
     if (a[0] < b[0]) return -1
     if (b[0] < a[0]) return 1
     return 0
   }
 
+  /**
+   * @private
+   * @param {Key} a
+   * @param {Key} b
+   * @returns {number}
+   */
   _kCmp (a, b) {
     return this._cmp(
+      // @ts-ignore - get may return undefined
       [a, this.get(a)],
+      // @ts-ignore - get may return undefined
       [b, this.get(b)]
     )
   }

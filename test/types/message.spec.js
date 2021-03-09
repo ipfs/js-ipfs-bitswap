@@ -5,7 +5,7 @@ const { expect } = require('aegir/utils/chai')
 const CID = require('cids')
 const uint8ArrayFromString = require('uint8arrays/from-string')
 const uint8ArrayEquals = require('uint8arrays/equals')
-const loadFixture = require('aegir/fixtures')
+const loadFixture = require('aegir/utils/fixtures')
 const testDataPath = 'test/fixtures/serialized-from-go'
 const rawMessageFullWantlist = loadFixture(testDataPath + '/bitswap110-message-full-wantlist')
 const rawMessageOneBlock = loadFixture(testDataPath + '/bitswap110-message-one-block')
@@ -46,10 +46,10 @@ describe('BitswapMessage', () => {
       msg.addEntry(cids[0], 1, BitswapMessage.WantType.Block, false, false)
 
       msg.addEntry(cids[0], 2, BitswapMessage.WantType.Have, true, false)
-      expect(msg.wantlist.get(cids[0].toString('base58btc')).priority).to.eql(1)
+      expect(msg.wantlist.get(cids[0].toString('base58btc'))).to.have.property('priority', 1)
 
       msg.addEntry(cids[0], 2, BitswapMessage.WantType.Block, true, false)
-      expect(msg.wantlist.get(cids[0].toString('base58btc')).priority).to.eql(2)
+      expect(msg.wantlist.get(cids[0].toString('base58btc'))).to.have.property('priority', 2)
     })
 
     it('only changes from dont cancel to do cancel', () => {
@@ -57,11 +57,11 @@ describe('BitswapMessage', () => {
 
       msg.addEntry(cids[0], 1, BitswapMessage.WantType.Block, true, false)
       msg.addEntry(cids[0], 1, BitswapMessage.WantType.Block, false, false)
-      expect(msg.wantlist.get(cids[0].toString('base58btc')).cancel).to.eql(true)
+      expect(msg.wantlist.get(cids[0].toString('base58btc'))).to.have.property('cancel', true)
 
       msg.addEntry(cids[1], 1, BitswapMessage.WantType.Block, false, false)
       msg.addEntry(cids[1], 1, BitswapMessage.WantType.Block, true, false)
-      expect(msg.wantlist.get(cids[1].toString('base58btc')).cancel).to.eql(true)
+      expect(msg.wantlist.get(cids[1].toString('base58btc'))).to.have.property('cancel', true)
     })
 
     it('only changes from dont send to do send DONT_HAVE', () => {
@@ -69,11 +69,11 @@ describe('BitswapMessage', () => {
 
       msg.addEntry(cids[0], 1, BitswapMessage.WantType.Block, false, false)
       msg.addEntry(cids[0], 1, BitswapMessage.WantType.Block, false, true)
-      expect(msg.wantlist.get(cids[0].toString('base58btc')).sendDontHave).to.eql(true)
+      expect(msg.wantlist.get(cids[0].toString('base58btc'))).to.have.property('sendDontHave', true)
 
       msg.addEntry(cids[1], 1, BitswapMessage.WantType.Block, false, true)
       msg.addEntry(cids[1], 1, BitswapMessage.WantType.Block, false, false)
-      expect(msg.wantlist.get(cids[1].toString('base58btc')).sendDontHave).to.eql(true)
+      expect(msg.wantlist.get(cids[1].toString('base58btc'))).to.have.property('sendDontHave', true)
     })
 
     it('only override want-have with want-block (not vice versa)', () => {
@@ -81,11 +81,11 @@ describe('BitswapMessage', () => {
 
       msg.addEntry(cids[0], 1, BitswapMessage.WantType.Block, false, false)
       msg.addEntry(cids[0], 1, BitswapMessage.WantType.Have, false, false)
-      expect(msg.wantlist.get(cids[0].toString('base58btc')).wantType).to.eql(BitswapMessage.WantType.Block)
+      expect(msg.wantlist.get(cids[0].toString('base58btc'))).to.have.property('wantType', BitswapMessage.WantType.Block)
 
       msg.addEntry(cids[1], 1, BitswapMessage.WantType.Have, false, false)
       msg.addEntry(cids[1], 1, BitswapMessage.WantType.Block, false, false)
-      expect(msg.wantlist.get(cids[1].toString('base58btc')).wantType).to.eql(BitswapMessage.WantType.Block)
+      expect(msg.wantlist.get(cids[1].toString('base58btc'))).to.have.property('wantType', BitswapMessage.WantType.Block)
     })
   })
 

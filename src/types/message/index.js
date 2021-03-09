@@ -1,8 +1,9 @@
 'use strict'
 
-const Block = require('ipld-block')
+const IPLDBlock = require('ipld-block')
 const CID = require('cids')
 const { getName } = require('multicodec')
+// @ts-ignore
 const vd = require('varint-decoder')
 const multihashing = require('multihashing-async')
 const { isMapEqual } = require('../../utils')
@@ -10,10 +11,18 @@ const { Message } = require('./message.proto')
 const Entry = require('./entry')
 
 class BitswapMessage {
+  /**
+   * @param {boolean} full
+   */
   constructor (full) {
     this.full = full
+    /** @type {Map<string, Entry>} */
     this.wantlist = new Map()
+
+    /** @type {Map<string, import('ipfs-core-types/src/block-service').Block>} */
     this.blocks = new Map()
+
+    /** @type {Map<string, import('./message.proto').BlockPresenceType>} */
     this.blockPresences = new Map()
     this.pendingBytes = 0
   }
@@ -24,6 +33,15 @@ class BitswapMessage {
            this.blockPresences.size === 0
   }
 
+  /**
+   *
+   * @param {CID} cid
+   * @param {number} priority
+   * @param {import('./message.proto').WantType} [wantType]
+   * @param {boolean} [cancel]
+   * @param {boolean} [sendDontHave]
+   * @returns {void}
+   */
   addEntry (cid, priority, wantType, cancel, sendDontHave) {
     if (wantType == null) {
       wantType = BitswapMessage.WantType.Block
@@ -53,11 +71,18 @@ class BitswapMessage {
     }
   }
 
+  /**
+   * @param {import('ipfs-core-types/src/block-service').Block} block
+   * @returns {void}
+   */
   addBlock (block) {
     const cidStr = block.cid.toString('base58btc')
     this.blocks.set(cidStr, block)
   }
 
+  /**
+   * @param {CID} cid
+   */
   addHave (cid) {
     const cidStr = cid.toString('base58btc')
     if (!this.blockPresences.has(cidStr)) {
@@ -65,6 +90,9 @@ class BitswapMessage {
     }
   }
 
+  /**
+   * @param {CID} cid
+   */
   addDontHave (cid) {
     const cidStr = cid.toString('base58btc')
     if (!this.blockPresences.has(cidStr)) {
@@ -72,21 +100,30 @@ class BitswapMessage {
     }
   }
 
+  /**
+   * @param {CID} cid
+   */
   cancel (cid) {
     const cidStr = cid.toString('base58btc')
     this.wantlist.delete(cidStr)
     this.addEntry(cid, 0, BitswapMessage.WantType.Block, true, false)
   }
 
+  /**
+   * @param {number} size
+   */
   setPendingBytes (size) {
     this.pendingBytes = size
   }
 
-  /*
+  /**
    * Serializes to Bitswap Message protobuf of
    * version 1.0.0
+   *
+   * @returns {Uint8Array}
    */
   serializeToBitswap100 () {
+    /** @type {import('./message.proto').Message100} */
     const msg = {
       wantlist: {
         entries: Array.from(this.wantlist.values()).map((entry) => {
@@ -108,11 +145,14 @@ class BitswapMessage {
     return Message.encode(msg)
   }
 
-  /*
+  /**
    * Serializes to Bitswap Message protobuf of
    * version 1.1.0
+   *
+   * @returns {Uint8Array}
    */
   serializeToBitswap110 () {
+    /** @type {import('./message.proto').Message110}  */
     const msg = {
       wantlist: {
         entries: Array.from(this.wantlist.values()).map((entry) => {
@@ -126,7 +166,8 @@ class BitswapMessage {
         })
       },
       blockPresences: [],
-      payload: []
+      payload: [],
+      pendingBytes: this.pendingBytes
     }
 
     if (this.full) {
@@ -154,11 +195,17 @@ class BitswapMessage {
     return Message.encode(msg)
   }
 
+  /**
+   * @param {BitswapMessage} other
+   * @returns {boolean}
+   */
   equals (other) {
     if (this.full !== other.full ||
         this.pendingBytes !== other.pendingBytes ||
         !isMapEqual(this.wantlist, other.wantlist) ||
         !isMapEqual(this.blocks, other.blocks) ||
+        // @TODO - Is this a bug ?
+        // @ts-expect-error - isMap equals map values to be objects not numbers
         !isMapEqual(this.blockPresences, other.blockPresences)
     ) {
       return false
@@ -174,6 +221,11 @@ class BitswapMessage {
   }
 }
 
+/**
+ *
+ * @param {Uint8Array} raw
+ * @returns {Promise<BitswapMessage>}
+ */
 BitswapMessage.deserialize = async (raw) => {
   const decoded = Message.decode(raw)
 
@@ -205,7 +257,7 @@ BitswapMessage.deserialize = async (raw) => {
     await Promise.all(decoded.blocks.map(async (b) => {
       const hash = await multihashing(b, 'sha2-256')
       const cid = new CID(hash)
-      msg.addBlock(new Block(b, cid))
+      msg.addBlock(new IPLDBlock(b, cid))
     }))
     return msg
   }
@@ -223,7 +275,7 @@ BitswapMessage.deserialize = async (raw) => {
       // const hashLen = values[3] // We haven't need to use this so far
       const hash = await multihashing(p.data, hashAlg)
       const cid = new CID(cidVersion, getName(multicodec), hash)
-      msg.addBlock(new Block(p.data, cid))
+      msg.addBlock(new IPLDBlock(p.data, cid))
     }))
     msg.setPendingBytes(decoded.pendingBytes)
     return msg
@@ -232,6 +284,9 @@ BitswapMessage.deserialize = async (raw) => {
   return msg
 }
 
+/**
+ * @param {CID} cid
+ */
 BitswapMessage.blockPresenceSize = (cid) => {
   // It's ok if this is not exactly right: it's used to estimate the size of
   // the HAVE / DONT_HAVE on the wire, but when doing that calculation we leave
@@ -242,11 +297,15 @@ BitswapMessage.blockPresenceSize = (cid) => {
 
 BitswapMessage.Entry = Entry
 BitswapMessage.WantType = {
+  /** @type {import('./message.proto').WantBlock} */
   Block: Message.Wantlist.WantType.Block,
+  /** @type {import('./message.proto').HaveBlock} */
   Have: Message.Wantlist.WantType.Have
 }
 BitswapMessage.BlockPresenceType = {
+  /** @type {import('./message.proto').Have} */
   Have: Message.BlockPresenceType.Have,
+  /** @type {import('./message.proto').DontHave} */
   DontHave: Message.BlockPresenceType.DontHave
 }
 module.exports = BitswapMessage

@@ -83,7 +83,7 @@ describe('bitswap without DHT', function () {
 
     // incoming message with requested block from the other peer
     const message = new Message(false)
-    message.addEntry(block.cid, 1, false)
+    message.addEntry(block.cid, 1, Message.WantType.Block)
     message.addBlock(block)
 
     // slow blockstore

@@ -4,7 +4,7 @@
 
 const distributionTest = require('../utils/distribution-test')
 const print = require('./helpers/print-swarm-results')
-const EventEmitter = require('events')
+const { EventEmitter } = require('events')
 
 ;(async function () {
   const emitter = new EventEmitter()

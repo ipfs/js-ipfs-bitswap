@@ -32,15 +32,33 @@ describe('Request Queue', () => {
       rq.pushTasks(peerIds[0], [{
         topic: 'a',
         size: 10,
-        priority: 3
+        priority: 3,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }, {
         topic: 'b',
         size: 5,
-        priority: 2
+        priority: 2,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }, {
         topic: 'c',
         size: 5,
-        priority: 1
+        priority: 1,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
 
       const { peerId, tasks, pendingSize } = rq.popTasks(11)
@@ -59,11 +77,23 @@ describe('Request Queue', () => {
       rq.pushTasks(peerIds[0], [{
         topic: 'a',
         size: 1,
-        priority: 2
+        priority: 2,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }, {
         topic: 'b',
         size: 1,
-        priority: 1
+        priority: 1,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
 
       const { tasks, pendingSize } = rq.popTasks(0)
@@ -77,7 +107,13 @@ describe('Request Queue', () => {
       rq.pushTasks(peerIds[0], [{
         topic: 'a',
         size: 1,
-        priority: 1
+        priority: 1,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
 
       const res = rq.popTasks(1)
@@ -95,15 +131,33 @@ describe('Request Queue', () => {
       rq.pushTasks(peerIds[0], [{
         topic: 'a',
         size: 1,
-        priority: 10
+        priority: 10,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }, {
         topic: 'b',
         size: 1,
-        priority: 5
+        priority: 5,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }, {
         topic: 'c',
         size: 1,
-        priority: 7
+        priority: 7,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
 
       const { peerId, tasks, pendingSize } = rq.popTasks(10)
@@ -118,7 +172,13 @@ describe('Request Queue', () => {
       rq.pushTasks(peerIds[0], [{
         topic: 'a',
         size: 1,
-        priority: 1
+        priority: 1,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
 
       // Pop all tasks for peer0
@@ -129,7 +189,13 @@ describe('Request Queue', () => {
       rq.pushTasks(peerIds[0], [{
         topic: 'b',
         size: 1,
-        priority: 1
+        priority: 1,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
 
       // Pop tasks for peer0
@@ -143,29 +209,65 @@ describe('Request Queue', () => {
       rq.pushTasks(peerIds[0], [{
         topic: 'a',
         size: 5,
-        priority: 1
+        priority: 1,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
       rq.pushTasks(peerIds[1], [{
         topic: 'b',
         size: 10,
-        priority: 3
+        priority: 3,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }, {
         topic: 'c',
         size: 3,
-        priority: 2
+        priority: 2,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }, {
         topic: 'd',
         size: 1,
-        priority: 1
+        priority: 1,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
       rq.pushTasks(peerIds[2], [{
         topic: 'e',
         size: 7,
-        priority: 2
+        priority: 2,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }, {
         topic: 'f',
         size: 2,
-        priority: 1
+        priority: 1,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
 
       //          Active   Pending
@@ -241,17 +343,35 @@ describe('Request Queue', () => {
     rq.pushTasks(peerIds[0], [{
       topic: 'a',
       size: 0,
-      priority: 1
+      priority: 1,
+      data: {
+        blockSize: 0,
+        haveBlock: false,
+        isWantBlock: false,
+        sendDontHave: false
+      }
     }])
     rq.pushTasks(peerIds[1], [{
       topic: 'a',
       size: 0,
-      priority: 1
+      priority: 1,
+      data: {
+        blockSize: 0,
+        haveBlock: false,
+        isWantBlock: false,
+        sendDontHave: false
+      }
     }])
     rq.pushTasks(peerIds[0], [{
       topic: 'a',
       size: 1,
-      priority: 1
+      priority: 1,
+      data: {
+        blockSize: 0,
+        haveBlock: false,
+        isWantBlock: false,
+        sendDontHave: false
+      }
     }])
 
     // _byPeer map should have been resorted to put peer0
@@ -267,25 +387,55 @@ describe('Request Queue', () => {
       rq.pushTasks(peerIds[0], [{
         topic: 'a',
         size: 1,
-        priority: 2
+        priority: 2,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }, {
         topic: 'b',
         size: 1,
-        priority: 1
+        priority: 1,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
 
       rq.pushTasks(peerIds[1], [{
         topic: 'a',
         size: 1,
-        priority: 3
+        priority: 3,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }, {
         topic: 'b',
         size: 1,
-        priority: 2
+        priority: 2,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }, {
         topic: 'c',
         size: 1,
-        priority: 1
+        priority: 1,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
 
       rq.remove('a', peerIds[0])
@@ -308,7 +458,13 @@ describe('Request Queue', () => {
       rq.pushTasks(peerIds[0], [{
         topic: 'a',
         size: 1,
-        priority: 2
+        priority: 2,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
 
       rq.remove('a', peerIds[1])
@@ -323,7 +479,13 @@ describe('Request Queue', () => {
       rq.pushTasks(peerIds[0], [{
         topic: 'a',
         size: 1,
-        priority: 2
+        priority: 2,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
 
       rq.remove('b', peerIds[0])
@@ -340,17 +502,35 @@ describe('Request Queue', () => {
       rq.pushTasks(peerIds[0], [{
         topic: 'a',
         size: 1,
-        priority: 2
+        priority: 2,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }, {
         topic: 'b',
         size: 1,
-        priority: 1
+        priority: 1,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
 
       rq.pushTasks(peerIds[0], [{
         topic: 'b',
         size: 1,
-        priority: 3
+        priority: 3,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
 
       const { tasks } = rq.popTasks(10)
@@ -363,21 +543,45 @@ describe('Request Queue', () => {
       rq.pushTasks(peerIds[0], [{
         topic: 'a',
         size: 2,
-        priority: 2
+        priority: 2,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }, {
         topic: 'b',
         size: 1,
-        priority: 1
+        priority: 1,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
 
       rq.pushTasks(peerIds[1], [{
         topic: 'c',
         size: 1,
-        priority: 3
+        priority: 3,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }, {
         topic: 'd',
         size: 1,
-        priority: 2
+        priority: 2,
+        data: {
+          blockSize: 0,
+          haveBlock: false,
+          isWantBlock: false,
+          sendDontHave: false
+        }
       }])
 
       // Pop one task for each peer

@@ -7,9 +7,15 @@ const CID = require('cids')
 const multihashing = require('multihashing-async')
 const Message = require('../../src/types/message')
 const MsgQueue = require('../../src/want-manager/msg-queue')
+const defer = require('p-defer')
+const {
+  mockNetwork
+} = require('../utils/mocks')
 
 describe('MessageQueue', () => {
+  /** @type {PeerId[]} */
   let peerIds
+  /** @type {CID[]} */
   let cids
 
   before(async () => {
@@ -20,7 +26,7 @@ describe('MessageQueue', () => {
     cids = hashes.map((h) => new CID(h))
   })
 
-  it('connects and sends messages', () => {
+  it('connects and sends messages', async () => {
     const msg = new Message(true)
     const cid1 = cids[0]
     const cid2 = cids[1]
@@ -32,60 +38,45 @@ describe('MessageQueue', () => {
     msg.addEntry(cid1, 3)
     msg.addEntry(cid2, 1)
 
-    const messages = []
-    const connects = []
-    let i = 0
+    const deferred = defer()
 
-    return new Promise((resolve) => {
-      const finish = () => {
-        i++
-        if (i === 2) {
-          expect(connects).to.be.eql([peerIds[1], peerIds[1]])
+    const network = mockNetwork(2, ({ connects, messages }) => {
+      expect(connects).to.be.eql([peerIds[1], peerIds[1]])
 
-          const m1 = new Message(false)
-          m1.addEntry(cid3, 1)
-          m1.addEntry(cid4, 2)
-          m1.cancel(cid5)
-          m1.cancel(cid6)
+      const m1 = new Message(false)
+      m1.addEntry(cid3, 1)
+      m1.addEntry(cid4, 2)
+      m1.cancel(cid5)
+      m1.cancel(cid6)
 
-          expect(
-            messages
-          ).to.be.eql([
-            [peerIds[1], msg],
-            [peerIds[1], m1]
-          ])
+      expect(
+        messages
+      ).to.be.eql([
+        [peerIds[1], msg],
+        [peerIds[1], m1]
+      ])
 
-          resolve()
-        }
-      }
-
-      const network = {
-        async connectTo (p) { // eslint-disable-line require-await
-          connects.push(p)
-        },
-        async sendMessage (p, msg) { // eslint-disable-line require-await
-          messages.push([p, msg])
-          finish()
-        }
-      }
-
-      const mq = new MsgQueue(peerIds[0], peerIds[1], network)
-
-      expect(mq.refcnt).to.equal(1)
-
-      const batch1 = [
-        new Message.Entry(cid3, 1, Message.WantType.Block, false),
-        new Message.Entry(cid4, 2, Message.WantType.Block, false)
-      ]
-
-      const batch2 = [
-        new Message.Entry(cid5, 1, Message.WantType.Block, true),
-        new Message.Entry(cid6, 2, Message.WantType.Block, true)
-      ]
-
-      mq.addEntries(batch1)
-      mq.addEntries(batch2)
-      mq.addMessage(msg)
+      deferred.resolve()
     })
+
+    const mq = new MsgQueue(peerIds[0], peerIds[1], network)
+
+    expect(mq.refcnt).to.equal(1)
+
+    const batch1 = [
+      new Message.Entry(cid3, 1, Message.WantType.Block, false),
+      new Message.Entry(cid4, 2, Message.WantType.Block, false)
+    ]
+
+    const batch2 = [
+      new Message.Entry(cid5, 1, Message.WantType.Block, true),
+      new Message.Entry(cid6, 2, Message.WantType.Block, true)
+    ]
+
+    mq.addEntries(batch1)
+    mq.addEntries(batch2)
+    mq.addMessage(msg)
+
+    await deferred.promise
   })
 })
