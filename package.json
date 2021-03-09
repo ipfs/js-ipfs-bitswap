@@ -22,7 +22,9 @@
   },
   "eslintConfig": {
     "extends": "ipfs",
-    "ignorePatterns": ["scripts/*"]
+    "ignorePatterns": [
+      "scripts/*"
+    ]
   },
   "files": [
     "dist",
@@ -65,7 +67,7 @@
     "assert": "^2.0.0",
     "benchmark": "^2.1.4",
     "delay": "^5.0.0",
-    "ipfs-repo": "^7.0.0",
+    "ipfs-repo": "^9.0.0",
     "ipfs-utils": "^6.0.1",
     "iso-random-stream": "^1.1.1",
     "it-all": "^1.0.5",
@@ -95,13 +97,13 @@
     "bignumber.js": "^9.0.0",
     "cids": "^1.1.6",
     "debug": "^4.2.0",
-    "ipfs-core-types": "^0.3.0",
+    "ipfs-core-types": "^0.3.1",
     "ipld-block": "^0.11.0",
     "it-length-prefixed": "^3.1.0",
     "it-pipe": "^1.1.0",
     "just-debounce-it": "^1.1.0",
     "libp2p-interfaces": "^0.8.3",
-    "moving-average": "git://github.com/gozala/moving-average#types",
+    "moving-average": "^1.0.1",
     "multicodec": "^3.0.1",
     "multihashing-async": "^2.1.2",
     "native-abort-controller": "^1.0.3",
