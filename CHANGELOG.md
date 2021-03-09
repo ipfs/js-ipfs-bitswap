@@ -1,3 +1,12 @@
+# [5.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v4.0.2...v5.0.0) (2021-03-09)
+
+
+### Features
+
+* typedef generation & type checking ([#261](https://github.com/ipfs/js-ipfs-bitswap/issues/261)) ([fca78c8](https://github.com/ipfs/js-ipfs-bitswap/commit/fca78c8c501a92a9726eea0d5e6942cdd6cba983))
+
+
+
 ## [4.0.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v4.0.1...v4.0.2) (2021-01-29)
 
 
