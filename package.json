@@ -1,6 +1,6 @@
 {
   "name": "ipfs-bitswap",
-  "version": "4.0.2",
+  "version": "5.0.0",
   "description": "Node.js implementation of the Bitswap data exchange protocol used by IPFS",
   "leadMaintainer": "Dirk McCormick <dirk@protocol.ai>",
   "main": "src/index.js",
@@ -123,8 +123,8 @@
   "contributors": [
     "David Dias <daviddias.p@gmail.com>",
     "Friedel Ziegelmayer <dignifiedquire@gmail.com>",
-    "Dirk McCormick <dirkmdev@gmail.com>",
     "achingbrain <alex@achingbrain.net>",
+    "Dirk McCormick <dirkmdev@gmail.com>",
     "Volker Mische <volker.mische@gmail.com>",
     "Jacob Heun <jacobheun@gmail.com>",
     "Pedro Teixeira <i@pgte.me>",
@@ -133,15 +133,15 @@
     "Hector Sanjuan <code@hector.link>",
     "Alan Shaw <alan.shaw@protocol.ai>",
     "ᴠɪᴄᴛᴏʀ ʙᴊᴇʟᴋʜᴏʟᴍ <victorbjelkholm@gmail.com>",
+    "Richard Schneider <makaretu@gmail.com>",
     "Stephen Whitmore <stephen.whitmore@gmail.com>",
     "Vasco Santos <vasco.santos@moxy.studio>",
-    "Richard Littauer <richard.littauer@gmail.com>",
     "Maciej Krüger <mkg20001@gmail.com>",
+    "Irakli Gozalishvili <contact@gozala.io>",
     "Henrique Dias <hacdias@gmail.com>",
     "dmitriy ryajov <dryajov@dmitriys-MBP.HomeNET>",
     "Dmitriy Ryajov <dryajov@gmail.com>",
     "Bryan Stenson <bryan.stenson@gmail.com>",
-    "Richard Schneider <makaretu@gmail.com>",
-    "Irakli Gozalishvili <dev@gozala.io>"
+    "Richard Littauer <richard.littauer@gmail.com>"
   ]
 }
