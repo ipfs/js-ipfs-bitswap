@@ -1,3 +1,12 @@
+## [5.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v5.0.0...v5.0.1) (2021-03-10)
+
+
+### Bug Fixes
+
+* fixes bignumber import for type gen ([#301](https://github.com/ipfs/js-ipfs-bitswap/issues/301)) ([5c09a2e](https://github.com/ipfs/js-ipfs-bitswap/commit/5c09a2ee20f438e33da71a061e662bfae3701c9d))
+
+
+
 # [5.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v4.0.2...v5.0.0) (2021-03-09)
 
 
