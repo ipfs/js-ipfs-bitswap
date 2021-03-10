@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: npm install
-      - run: npx aegir test -t node --bail --cov
+      - run: npx aegir test -t node --bail --cov -- --exit # TODO remove - https://mochajs.org/#-exit
       - uses: codecov/codecov-action@v1
   test-chrome:
     needs: check
@@ -53,7 +53,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: microsoft/playwright-github-action@v1
       - run: npm install
-      - run: npx aegir test -t browser -t webworker --bail -- --browser firefox
+      - run: npx aegir test -t browser -t webworker --bail -- --browser firefox --exit # TODO remove - https://mochajs.org/#-exit
   test-webkit:
     needs: check
     runs-on: ubuntu-latest
@@ -61,18 +61,18 @@ jobs:
       - uses: actions/checkout@v2
       - uses: microsoft/playwright-github-action@v1
       - run: npm install
-      - run: npx aegir test -t browser -t webworker --bail --timeout 10000 -- --browser webkit
+      - run: npx aegir test -t browser -t webworker --bail --timeout 10000 -- --browser webkit --exit # TODO remove - https://mochajs.org/#-exit
   test-electron-main:
     needs: check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - run: npm install
-      - run: npx xvfb-maybe aegir test -t electron-main --bail
+      - run: npx xvfb-maybe aegir test -t electron-main --bail -- --exit # TODO remove - https://mochajs.org/#-exit
   test-electron-renderer:
     needs: check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - run: npm install
-      - run: npx xvfb-maybe aegir test -t electron-renderer --bail
+      - run: npx xvfb-maybe aegir test -t electron-renderer --bail -- --exit # TODO remove - https://mochajs.org/#-exit
