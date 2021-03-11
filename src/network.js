@@ -240,7 +240,7 @@ class Network {
   /**
    * Connects to another peer
    *
-   * @param {PeerId|Multiaddr|Provider} peer
+   * @param {PeerId|Multiaddr} peer
    * @param {Object} [options]
    * @param {AbortSignal} [options.signal]
    * @returns {Promise<Connection>}
@@ -250,8 +250,6 @@ class Network {
       throw new Error('network isn\'t running')
     }
 
-    // TODO: Figure out inconsistency here.
-    // @ts-expect-error - dial does not expects Provider
     return this._libp2p.dial(peer, options)
   }
 
