@@ -7,7 +7,7 @@ const { getName } = require('multicodec')
 const vd = require('varint-decoder')
 const multihashing = require('multihashing-async')
 const { isMapEqual } = require('../../utils')
-const { Message } = require('./message.proto')
+const { Message } = require('./message')
 const Entry = require('./entry')
 
 class BitswapMessage {
@@ -22,7 +22,7 @@ class BitswapMessage {
     /** @type {Map<string, import('ipfs-core-types/src/block-service').Block>} */
     this.blocks = new Map()
 
-    /** @type {Map<string, import('./message.proto').BlockPresenceType>} */
+    /** @type {Map<string, import('./message').Message.BlockPresenceType>} */
     this.blockPresences = new Map()
     this.pendingBytes = 0
   }
@@ -37,7 +37,7 @@ class BitswapMessage {
    *
    * @param {CID} cid
    * @param {number} priority
-   * @param {import('./message.proto').WantType} [wantType]
+   * @param {import('./message').Message.Wantlist.WantType | null} [wantType]
    * @param {boolean} [cancel]
    * @param {boolean} [sendDontHave]
    * @returns {void}
@@ -123,7 +123,6 @@ class BitswapMessage {
    * @returns {Uint8Array}
    */
   serializeToBitswap100 () {
-    /** @type {import('./message.proto').Message100} */
     const msg = {
       wantlist: {
         entries: Array.from(this.wantlist.values()).map((entry) => {
@@ -132,17 +131,14 @@ class BitswapMessage {
             priority: Number(entry.priority),
             cancel: Boolean(entry.cancel)
           }
-        })
+        }),
+        full: this.full ? true : undefined
       },
       blocks: Array.from(this.blocks.values())
         .map((block) => block.data)
     }
 
-    if (this.full) {
-      msg.wantlist.full = true
-    }
-
-    return Message.encode(msg)
+    return Message.encode(msg).finish()
   }
 
   /**
@@ -152,7 +148,6 @@ class BitswapMessage {
    * @returns {Uint8Array}
    */
   serializeToBitswap110 () {
-    /** @type {import('./message.proto').Message110}  */
     const msg = {
       wantlist: {
         entries: Array.from(this.wantlist.values()).map((entry) => {
@@ -163,36 +158,38 @@ class BitswapMessage {
             cancel: Boolean(entry.cancel),
             sendDontHave: Boolean(entry.sendDontHave)
           }
-        })
+        }),
+        full: this.full ? true : undefined
       },
+      /** @type {import('./message').Message.BlockPresence[]} */
       blockPresences: [],
+
+      /** @type {{ prefix: Uint8Array, data: Uint8Array }[]} */
       payload: [],
       pendingBytes: this.pendingBytes
     }
 
-    if (this.full) {
-      msg.wantlist.full = true
-    }
-
     this.blocks.forEach((block) => {
-      msg.payload.push({
-        prefix: block.cid.prefix,
-        data: block.data
-      })
+      msg.payload.push(
+        new Message.Block({
+          prefix: block.cid.prefix,
+          data: block.data
+        })
+      )
     })
 
     for (const [cidStr, bpType] of this.blockPresences) {
-      msg.blockPresences.push({
+      msg.blockPresences.push(new Message.BlockPresence({
         cid: new CID(cidStr).bytes,
         type: bpType
-      })
+      }))
     }
 
     if (this.pendingBytes > 0) {
       msg.pendingBytes = this.pendingBytes
     }
 
-    return Message.encode(msg)
+    return Message.encode(msg).finish()
   }
 
   /**
@@ -222,9 +219,7 @@ class BitswapMessage {
 }
 
 /**
- *
  * @param {Uint8Array} raw
- * @returns {Promise<BitswapMessage>}
  */
 BitswapMessage.deserialize = async (raw) => {
   const decoded = Message.decode(raw)
@@ -232,17 +227,25 @@ BitswapMessage.deserialize = async (raw) => {
   const isFull = (decoded.wantlist && decoded.wantlist.full) || false
   const msg = new BitswapMessage(isFull)
 
-  if (decoded.wantlist) {
+  if (decoded.wantlist && decoded.wantlist.entries) {
     decoded.wantlist.entries.forEach((entry) => {
+      if (!entry.block) {
+        return
+      }
       // note: entry.block is the CID here
       const cid = new CID(entry.block)
-      msg.addEntry(cid, entry.priority, entry.wantType, entry.cancel, entry.sendDontHave)
+      msg.addEntry(cid, entry.priority || 0, entry.wantType, Boolean(entry.cancel), Boolean(entry.sendDontHave))
     })
   }
 
   if (decoded.blockPresences) {
     decoded.blockPresences.forEach((blockPresence) => {
+      if (!blockPresence.cid) {
+        return
+      }
+
       const cid = new CID(blockPresence.cid)
+
       if (blockPresence.type === BitswapMessage.BlockPresenceType.Have) {
         msg.addHave(cid)
       } else {
@@ -297,15 +300,11 @@ BitswapMessage.blockPresenceSize = (cid) => {
 
 BitswapMessage.Entry = Entry
 BitswapMessage.WantType = {
-  /** @type {import('./message.proto').WantBlock} */
   Block: Message.Wantlist.WantType.Block,
-  /** @type {import('./message.proto').HaveBlock} */
   Have: Message.Wantlist.WantType.Have
 }
 BitswapMessage.BlockPresenceType = {
-  /** @type {import('./message.proto').Have} */
   Have: Message.BlockPresenceType.Have,
-  /** @type {import('./message.proto').DontHave} */
   DontHave: Message.BlockPresenceType.DontHave
 }
 module.exports = BitswapMessage

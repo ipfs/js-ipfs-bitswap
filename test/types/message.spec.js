@@ -10,7 +10,7 @@ const testDataPath = 'test/fixtures/serialized-from-go'
 const rawMessageFullWantlist = loadFixture(testDataPath + '/bitswap110-message-full-wantlist')
 const rawMessageOneBlock = loadFixture(testDataPath + '/bitswap110-message-one-block')
 
-const { Message } = require('../../src/types/message/message.proto')
+const { Message } = require('../../src/types/message/message')
 
 const BitswapMessage = require('../../src/types/message')
 const makeBlock = require('../utils/make-block')
@@ -25,19 +25,14 @@ describe('BitswapMessage', () => {
   })
 
   describe('.addEntry', () => {
-    it('want type defaults to want block', () => {
+    it('want type defaults to want block', async () => {
       const cid = cids[1]
       const msg = new BitswapMessage(true)
       msg.addEntry(cid, 1)
       const serialized = msg.serializeToBitswap100()
 
-      expect(Message.decode(serialized).wantlist.entries[0]).to.be.eql({
-        block: cid.bytes,
-        priority: 1,
-        cancel: false,
-        sendDontHave: false,
-        wantType: Message.Wantlist.WantType.Block
-      })
+      const deserialized = await BitswapMessage.deserialize(serialized)
+      expect(deserialized.wantlist.get(cid.toString())).to.have.nested.property('entry.wantType', Message.Wantlist.WantType.Block)
     })
 
     it('updates priority only if same want type', () => {
@@ -146,7 +141,7 @@ describe('BitswapMessage', () => {
         b1.data,
         b2.data
       ]
-    })
+    }).finish()
 
     const msg = await BitswapMessage.deserialize(raw)
     expect(msg.full).to.equal(true)
@@ -195,7 +190,7 @@ describe('BitswapMessage', () => {
         type: BitswapMessage.BlockPresenceType.Have
       }],
       pendingBytes: 10
-    })
+    }).finish()
 
     const msg = await BitswapMessage.deserialize(raw)
     expect(msg.full).to.equal(true)
@@ -334,7 +329,7 @@ describe('BitswapMessage', () => {
 
       const res = await BitswapMessage.deserialize(goEncoded)
       expect(res).to.eql(msg)
-      expect(msg.serializeToBitswap100()).to.eql(goEncoded)
+      expect(msg.serializeToBitswap100()).to.equalBytes(goEncoded)
     })
 
     describe.skip('bitswap 1.1.0 message', () => {

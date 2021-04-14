@@ -379,7 +379,7 @@ class DecisionEngine {
 
   /**
    * @private
-   * @param {import('../types/message/message.proto').WantType} wantType
+   * @param {import('../types/message/message').Message.Wantlist.WantType} wantType
    * @param {number} blockSize
    */
   _sendAsBlock (wantType, blockSize) {
