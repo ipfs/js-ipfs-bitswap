@@ -7,6 +7,6 @@
     "src"
   ],
   "exclude": [
-    "src/types/message/message.js"
+    "src/types/message/message.js" // generated file
   ]
 }
