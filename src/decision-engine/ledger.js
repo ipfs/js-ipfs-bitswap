@@ -45,7 +45,7 @@ class Ledger {
    *
    * @param {CID} cid
    * @param {number} priority
-   * @param {import('../types/message/message.proto').WantType} wantType
+   * @param {import('../types/message/message').Message.Wantlist.WantType} wantType
    * @returns {void}
    */
   wants (cid, priority, wantType) {

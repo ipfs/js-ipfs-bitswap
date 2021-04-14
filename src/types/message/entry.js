@@ -6,7 +6,7 @@ module.exports = class BitswapMessageEntry {
   /**
    * @param {import('cids')} cid
    * @param {number} priority
-   * @param {import('./message.proto').WantType} wantType
+   * @param {import('./message').Message.Wantlist.WantType} wantType
    * @param {boolean} [cancel]
    * @param {boolean} [sendDontHave]
    */

@@ -11,7 +11,7 @@ class WantListEntry {
   /**
    * @param {import('cids')} cid
    * @param {number} priority
-   * @param {import('../message/message.proto').WantType} wantType
+   * @param {import('../message/message').Message.Wantlist.WantType} wantType
    */
   constructor (cid, priority, wantType) {
     // Keep track of how many requests we have for this key

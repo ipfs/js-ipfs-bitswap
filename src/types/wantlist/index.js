@@ -25,7 +25,7 @@ class Wantlist {
   /**
    * @param {CID} cid
    * @param {number} priority
-   * @param {import('../message/message.proto').WantType} wantType
+   * @param {import('../message/message').Message.Wantlist.WantType} wantType
    * @returns {void}
    */
   add (cid, priority, wantType) {
