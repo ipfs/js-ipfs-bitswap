@@ -1,3 +1,12 @@
+## [5.0.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v5.0.1...v5.0.2) (2021-04-16)
+
+
+### Bug Fixes
+
+* fix wrong type signature ([#304](https://github.com/ipfs/js-ipfs-bitswap/issues/304)) ([47fdb2a](https://github.com/ipfs/js-ipfs-bitswap/commit/47fdb2a8f8fc6142e9879869402401a65b04cb0a))
+
+
+
 ## [5.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v5.0.0...v5.0.1) (2021-03-10)
 
 
