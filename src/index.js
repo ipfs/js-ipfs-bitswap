@@ -10,11 +10,7 @@ const { AbortController } = require('native-abort-controller')
 const { anySignal } = require('any-signal')
 
 /**
- * @typedef {import('ipfs-core-types/src/basic').AbortOptions} AbortOptions
- * @typedef {import('ipfs-core-types/src/bitswap').Bitswap} API
- * @typedef {import('ipfs-core-types/src/bitswap').WantListEntry} WantListEntry
- * @typedef {import('ipfs-core-types/src/bitswap').LedgerForPeer} LedgerForPeer
- * @typedef {import('ipfs-core-types/src/block-service').Block} Block
+ * @typedef {import('ipld-block')} Block
  * @typedef {import('peer-id')} PeerId
  * @typedef {import('./types/message')} BitswapMessage
  * @typedef {import('cids')} CID
@@ -40,13 +36,11 @@ const statsKeys = [
 /**
  * JavaScript implementation of the Bitswap 'data exchange' protocol
  * used by IPFS.
- *
- * @implements {API}
  */
 class Bitswap {
   /**
    * @param {import('libp2p')} libp2p
-   * @param {import('ipfs-core-types/src/block-store').BlockStore} blockstore
+   * @param {import('ipfs-repo').Blockstore} blockstore
    * @param {Object} [options]
    * @param {boolean} [options.statsEnabled=false]
    * @param {number} [options.statsComputeThrottleTimeout=1000]
@@ -91,7 +85,6 @@ class Bitswap {
    *
    * @param {PeerId} peerId
    * @param {BitswapMessage} incoming
-   * @returns {Promise<void>}
    */
   async _receiveMessage (peerId, incoming) {
     try {
@@ -130,7 +123,6 @@ class Bitswap {
    * @param {PeerId} peerId
    * @param {Block} block
    * @param {boolean} wasWanted
-   * @returns {Promise<void>}
    */
   async _handleReceivedBlock (peerId, block, wasWanted) {
     this._log('received block')
@@ -166,7 +158,6 @@ class Bitswap {
    * handle errors on the receiving channel
    *
    * @param {Error} err
-   * @returns {void}
    */
   _receiveError (err) {
     this._log.error('ReceiveError: %s', err.message)
@@ -192,16 +183,10 @@ class Bitswap {
     this._stats.disconnected(peerId)
   }
 
-  /**
-   * @returns {void}
-   */
   enableStats () {
     this._stats.enable()
   }
 
-  /**
-   * @returns {void}
-   */
   disableStats () {
     this._stats.disable()
   }
@@ -210,8 +195,7 @@ class Bitswap {
    * Return the current wantlist for a given `peerId`
    *
    * @param {PeerId} peerId
-   * @param {AbortOptions} [_options]
-   * @returns {Map<string, WantListEntry>}
+   * @param {any} [_options]
    */
   wantlistForPeer (peerId, _options) {
     return this.engine.wantlistForPeer(peerId)
@@ -221,7 +205,6 @@ class Bitswap {
    * Return ledger information for a given `peerId`
    *
    * @param {PeerId} peerId
-   * @returns {null|LedgerForPeer}
    */
   ledgerForPeer (peerId) {
     return this.engine.ledgerForPeer(peerId)
@@ -234,14 +217,12 @@ class Bitswap {
    * @param {CID} cid
    * @param {Object} [options]
    * @param {AbortSignal} [options.signal]
-   * @returns {Promise<Block>}
    */
   async get (cid, options = {}) {
     /**
      * @param {CID} cid
      * @param {Object} options
      * @param {AbortSignal} options.signal
-     * @returns {Promise<Block>}
      */
     const fetchFromNetwork = (cid, options) => {
       // add it to the want list - n.b. later we will abort the AbortSignal
@@ -258,7 +239,6 @@ class Bitswap {
      * @param {CID} cid
      * @param {Object} options
      * @param {AbortSignal} options.signal
-     * @returns {Promise<Block>}
      */
     const loadOrFetchFromNetwork = async (cid, options) => {
       try {
@@ -314,7 +294,6 @@ class Bitswap {
    * @param {AsyncIterable<CID>|Iterable<CID>} cids
    * @param {Object} [options]
    * @param {AbortSignal} [options.signal]
-   * @returns {AsyncIterable<Block>}
    */
   async * getMany (cids, options = {}) {
     for await (const cid of cids) {
@@ -331,7 +310,6 @@ class Bitswap {
    * AbortSignal in to `.get` or `.getMany` and abort it.
    *
    * @param {CID[]|CID} cids
-   * @returns {void}
    */
   unwant (cids) {
     const cidsArray = Array.isArray(cids) ? cids : [cids]
@@ -346,7 +324,6 @@ class Bitswap {
    * call `unwant(cids)` instead.
    *
    * @param {CID[]|CID} cids
-   * @returns {void}
    */
   cancelWants (cids) {
     this.wm.cancelWants(Array.isArray(cids) ? cids : [cids])
@@ -357,8 +334,7 @@ class Bitswap {
    * send it to nodes that have it in their wantlist.
    *
    * @param {Block} block
-   * @param {AbortOptions} [_options]
-   * @returns {Promise<void>}
+   * @param {any} [_options]
    */
   async put (block, _options) {
     await this.blockstore.put(block)
@@ -370,7 +346,6 @@ class Bitswap {
    * send it to nodes that have it them their wantlist.
    *
    * @param {AsyncIterable<Block>|Iterable<Block>} blocks
-   * @returns {AsyncIterable<Block>}
    */
   async * putMany (blocks) {
     for await (const block of this.blockstore.putMany(blocks)) {
@@ -396,36 +371,28 @@ class Bitswap {
   }
 
   /**
-   * Get the current list of wants.
-   *
-   * @returns {Iterable<[string, WantListEntry]>}
+   * Get the current list of wants
    */
   getWantlist () {
     return this.wm.wantlist.entries()
   }
 
   /**
-   * Get the current list of partners.
-   *
-   * @returns {PeerId[]}
+   * Get the current list of partners
    */
   peers () {
     return this.engine.peers()
   }
 
   /**
-   * Get stats about the bitswap node.
-   *
-   * @returns {import('ipfs-core-types/src/bitswap').Stats}
+   * Get stats about the bitswap node
    */
   stat () {
     return this._stats
   }
 
   /**
-   * Start the bitswap node.
-   *
-   * @returns {void}
+   * Start the bitswap node
    */
   start () {
     this.wm.start()
@@ -434,9 +401,7 @@ class Bitswap {
   }
 
   /**
-   * Stop the bitswap node.
-   *
-   * @returns {void}
+   * Stop the bitswap node
    */
   stop () {
     this._stats.stop()

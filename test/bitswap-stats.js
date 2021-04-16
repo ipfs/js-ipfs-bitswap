@@ -86,7 +86,7 @@ describe('bitswap stats', () => {
 
     expectedStats.forEach((key) => {
       expect(snapshot).to.have.property(key)
-      expect(snapshot[key].eq(0)).to.be.true()
+      expect(snapshot[key]).to.equal(0n)
     })
 
     const movingAverages = stats.movingAverages
@@ -103,15 +103,15 @@ describe('bitswap stats', () => {
 
   it('updates blocks received', (done) => {
     bs.stat().once('update', (stats) => {
-      expect(stats.blocksReceived.eq(2)).to.be.true()
-      expect(stats.dataReceived.eq(96)).to.be.true()
-      expect(stats.dupBlksReceived.eq(0)).to.be.true()
-      expect(stats.dupDataReceived.eq(0)).to.be.true()
-      expect(stats.blocksSent.eq(0)).to.be.true()
-      expect(stats.dataSent.eq(0)).to.be.true()
-      expect(stats.providesBufferLength.eq(0)).to.be.true()
-      expect(stats.wantListLength.eq(0)).to.be.true()
-      expect(stats.peerCount.eq(1)).to.be.true()
+      expect(stats.blocksReceived).to.equal(2n)
+      expect(stats.dataReceived).to.equal(96n)
+      expect(stats.dupBlksReceived).to.equal(0n)
+      expect(stats.dupDataReceived).to.equal(0n)
+      expect(stats.blocksSent).to.equal(0n)
+      expect(stats.dataSent).to.equal(0n)
+      expect(stats.providesBufferLength).to.equal(0n)
+      expect(stats.wantListLength).to.equal(0n)
+      expect(stats.peerCount).to.equal(1n)
 
       // test moving averages
       const movingAverages = bs.stat().movingAverages
@@ -143,13 +143,13 @@ describe('bitswap stats', () => {
 
   it('updates duplicate blocks counters', (done) => {
     bs.stat().once('update', (stats) => {
-      expect(stats.blocksReceived.eq(4)).to.be.true()
-      expect(stats.dataReceived.eq(192)).to.be.true()
-      expect(stats.dupBlksReceived.eq(2)).to.be.true()
-      expect(stats.dupDataReceived.eq(96)).to.be.true()
-      expect(stats.blocksSent.eq(0)).to.be.true()
-      expect(stats.dataSent.eq(0)).to.be.true()
-      expect(stats.providesBufferLength.eq(0)).to.be.true()
+      expect(stats.blocksReceived).to.equal(4n)
+      expect(stats.dataReceived).to.equal(192n)
+      expect(stats.dupBlksReceived).to.equal(2n)
+      expect(stats.dupDataReceived).to.equal(96n)
+      expect(stats.blocksSent).to.equal(0n)
+      expect(stats.dataSent).to.equal(0n)
+      expect(stats.providesBufferLength).to.equal(0n)
       done()
     })
 
@@ -184,15 +184,15 @@ describe('bitswap stats', () => {
     it('updates stats on transfer', async () => {
       const originalStats = bs.stat().snapshot
 
-      expect(originalStats.blocksReceived.toNumber()).to.equal(4)
-      expect(originalStats.dataReceived.toNumber()).to.equal(192)
-      expect(originalStats.dupBlksReceived.toNumber()).to.equal(2)
-      expect(originalStats.dupDataReceived.toNumber()).to.equal(96)
-      expect(originalStats.blocksSent.toNumber()).to.equal(0)
-      expect(originalStats.dataSent.toNumber()).to.equal(0)
-      expect(originalStats.providesBufferLength.toNumber()).to.equal(0)
-      expect(originalStats.wantListLength.toNumber()).to.equal(0)
-      expect(originalStats.peerCount.toNumber()).to.equal(1)
+      expect(originalStats.blocksReceived).to.equal(4n)
+      expect(originalStats.dataReceived).to.equal(192n)
+      expect(originalStats.dupBlksReceived).to.equal(2n)
+      expect(originalStats.dupDataReceived).to.equal(96n)
+      expect(originalStats.blocksSent).to.equal(0n)
+      expect(originalStats.dataSent).to.equal(0n)
+      expect(originalStats.providesBufferLength).to.equal(0n)
+      expect(originalStats.wantListLength).to.equal(0n)
+      expect(originalStats.peerCount).to.equal(1n)
 
       const deferred = pEvent(bs.stat(), 'update')
 
@@ -201,15 +201,15 @@ describe('bitswap stats', () => {
 
       const nextStats = await deferred
 
-      expect(nextStats.blocksReceived.toNumber()).to.equal(4)
-      expect(nextStats.dataReceived.toNumber()).to.equal(192)
-      expect(nextStats.dupBlksReceived.toNumber()).to.equal(2)
-      expect(nextStats.dupDataReceived.toNumber()).to.equal(96)
-      expect(nextStats.blocksSent.toNumber()).to.equal(1)
-      expect(nextStats.dataSent.toNumber()).to.equal(48)
-      expect(nextStats.providesBufferLength.toNumber()).to.equal(0)
-      expect(nextStats.wantListLength.toNumber()).to.equal(0)
-      expect(nextStats.peerCount.toNumber()).to.equal(2)
+      expect(nextStats.blocksReceived).to.equal(4n)
+      expect(nextStats.dataReceived).to.equal(192n)
+      expect(nextStats.dupBlksReceived).to.equal(2n)
+      expect(nextStats.dupDataReceived).to.equal(96n)
+      expect(nextStats.blocksSent).to.equal(1n)
+      expect(nextStats.dataSent).to.equal(48n)
+      expect(nextStats.providesBufferLength).to.equal(0n)
+      expect(nextStats.wantListLength).to.equal(0n)
+      expect(nextStats.peerCount).to.equal(2n)
     })
 
     it('has peer stats', async () => {
@@ -221,15 +221,15 @@ describe('bitswap stats', () => {
 
       const stats = await pEvent(peerStats, 'update')
 
-      expect(stats.blocksReceived.toNumber()).to.equal(1)
-      expect(stats.dataReceived.toNumber()).to.equal(49)
-      expect(stats.dupBlksReceived.toNumber()).to.equal(0)
-      expect(stats.dupDataReceived.toNumber()).to.equal(0)
-      expect(stats.blocksSent.toNumber()).to.equal(0)
-      expect(stats.dataSent.toNumber()).to.equal(0)
-      expect(stats.providesBufferLength.toNumber()).to.equal(0)
-      expect(stats.wantListLength.toNumber()).to.equal(0)
-      expect(stats.peerCount.toNumber()).to.equal(1)
+      expect(stats.blocksReceived).to.equal(1n)
+      expect(stats.dataReceived).to.equal(49n)
+      expect(stats.dupBlksReceived).to.equal(0n)
+      expect(stats.dupDataReceived).to.equal(0n)
+      expect(stats.blocksSent).to.equal(0n)
+      expect(stats.dataSent).to.equal(0n)
+      expect(stats.providesBufferLength).to.equal(0n)
+      expect(stats.wantListLength).to.equal(0n)
+      expect(stats.peerCount).to.equal(1n)
 
       const ma = peerStats.movingAverages.dataReceived[60000]
       expect(ma.movingAverage()).to.be.above(0)

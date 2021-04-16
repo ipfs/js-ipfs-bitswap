@@ -13,7 +13,6 @@ const logger = require('../utils').logger
 
 module.exports = class WantManager {
   /**
-   *
    * @param {PeerId} peerId
    * @param {import('../network')} network
    * @param {import('../stats')} stats
@@ -148,8 +147,6 @@ module.exports = class WantManager {
 
   /**
    * Returns a list of all currently connected peers
-   *
-   * @returns {string[]}
    */
   connectedPeers () {
     return Array.from(this.peers.keys())
@@ -165,7 +162,6 @@ module.exports = class WantManager {
   /**
    * @param {PeerId} peerId
    */
-
   disconnected (peerId) {
     this._stopPeerHandler(peerId)
   }

@@ -26,7 +26,6 @@ class Wantlist {
    * @param {CID} cid
    * @param {number} priority
    * @param {import('../message/message').Message.Wantlist.WantType} wantType
-   * @returns {void}
    */
   add (cid, priority, wantType) {
     // Have to import here to avoid circular reference
@@ -53,7 +52,6 @@ class Wantlist {
 
   /**
    * @param {CID} cid
-   * @returns {void}
    */
   remove (cid) {
     const cidStr = cid.toString('base58btc')
@@ -103,9 +101,7 @@ class Wantlist {
   }
 
   /**
-   *
    * @param {CID} cid
-   * @returns {Entry|undefined}
    */
   contains (cid) {
     const cidStr = cid.toString('base58btc')

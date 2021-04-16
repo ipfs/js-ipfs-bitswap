@@ -102,7 +102,6 @@ class Network {
    * @param {string} connection.protocol - The protocol the stream is running
    * @param {Stream} connection.stream - A duplex iterable stream
    * @param {Connection} connection.connection - A libp2p Connection
-   * @returns {Promise<void>}
    */
   async _onConnection ({ protocol, stream, connection }) {
     if (!this._running) { return }
@@ -143,7 +142,6 @@ class Network {
   /**
    * @private
    * @param {PeerId} peerId
-   * @returns {void}
    */
   _onPeerDisconnect (peerId) {
     this._bitswap._onPeerDisconnected(peerId)
@@ -177,7 +175,6 @@ class Network {
    * @param {CID} cid
    * @param {Object} [options]
    * @param {AbortSignal} [options.signal]
-   * @returns {Promise<void>}
    */
   async findAndConnect (cid, options) {
     const connectAttempts = []
@@ -194,7 +191,6 @@ class Network {
    * @param {CID} cid
    * @param {Object} [options]
    * @param {AbortSignal} [options.signal]
-   * @returns {Promise<void>}
    */
   async provide (cid, options) {
     // @ts-expect-error - contentRouting takes no options
@@ -207,7 +203,6 @@ class Network {
    *
    * @param {PeerId} peer
    * @param {Message} msg
-   * @returns {Promise<void>}
    */
   async sendMessage (peer, msg) {
     if (!this._running) throw new Error('network isn\'t running')

@@ -9,7 +9,7 @@ const CONSTANTS = require('./constants')
 const logger = require('./utils').logger
 
 /**
- * @typedef {import('ipfs-core-types/src/block-service').Block} Block
+ * @typedef {import('ipld-block')} Block
  */
 
 /**

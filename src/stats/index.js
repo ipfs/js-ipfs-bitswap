@@ -4,8 +4,8 @@ const { EventEmitter } = require('events')
 const Stat = require('./stat')
 
 /**
+ * @typedef {import('cids')} CID
  * @typedef {import('peer-id')} PeerId
- * @typedef {import('ipfs-core-types/src/bitswap').Stats} API
  */
 
 /**
@@ -22,9 +22,6 @@ const defaultOptions = {
   ])
 }
 
-/**
- * @implements {API}
- */
 class Stats extends EventEmitter {
   /**
    * @param {string[]} [initialCounters]
