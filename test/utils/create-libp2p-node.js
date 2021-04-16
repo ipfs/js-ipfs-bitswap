@@ -4,8 +4,7 @@
 const TCP = require('libp2p-tcp')
 // @ts-ignore
 const MPLEX = require('libp2p-mplex')
-// @ts-ignore
-const NOISE = require('libp2p-noise')
+const { NOISE } = require('libp2p-noise')
 const libp2p = require('libp2p')
 const KadDHT = require('libp2p-kad-dht')
 const PeerId = require('peer-id')
