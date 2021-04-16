@@ -1,9 +1,9 @@
 'use strict'
 
 /**
- * @typedef {import('peer-id')} PeerId
- * @typedef {import('ipfs-core-types/src/block-service').Block} Block
+ * @typedef {import('ipld-block')} Block
  * @typedef {import('../types/message/entry')} BitswapMessageEntry
+ * @typedef {import('peer-id')} PeerId
  */
 
 const CID = require('cids')
@@ -34,7 +34,7 @@ const MAX_SIZE_REPLACE_HAS_WITH_BLOCK = 1024
 class DecisionEngine {
   /**
    * @param {PeerId} peerId
-   * @param {import('ipfs-core-types/src/block-store').BlockStore} blockstore
+   * @param {import('ipfs-repo').Blockstore} blockstore
    * @param {import('../network')} network
    * @param {import('../stats')} stats
    * @param {Object} [opts]
@@ -180,15 +180,16 @@ class DecisionEngine {
 
   /**
    * @param {PeerId} peerId
-   * @returns {import('ipfs-core-types/src/bitswap').LedgerForPeer|null}
    */
   ledgerForPeer (peerId) {
     const peerIdStr = peerId.toB58String()
 
     const ledger = this.ledgerMap.get(peerIdStr)
+
     if (!ledger) {
       return null
     }
+
     return {
       peer: ledger.partner.toPrint(),
       value: ledger.debtRatio(),

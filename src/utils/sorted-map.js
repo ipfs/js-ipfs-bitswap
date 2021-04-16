@@ -27,7 +27,6 @@ class SortedMap extends Map {
    * Call indexOf() to get the index _before_ the change happens.
    *
    * @param {number} i - the index of entry whose position should be updated.
-   * @returns {void}
    */
   update (i) {
     if (i < 0 || i >= this._keys.length) {
@@ -82,7 +81,6 @@ class SortedMap extends Map {
 
   /**
    * @param {Key} k
-   * @returns {number}
    */
   indexOf (k) {
     if (!this.has(k)) {
@@ -129,9 +127,6 @@ class SortedMap extends Map {
     return lower
   }
 
-  /**
-   * @returns {IterableIterator<Key>}
-   */
   * keys () {
     for (const k of this._keys) {
       yield k
@@ -204,7 +199,6 @@ class SortedMap extends Map {
    * @private
    * @param {Key} a
    * @param {Key} b
-   * @returns {number}
    */
   _kCmp (a, b) {
     return this._cmp(

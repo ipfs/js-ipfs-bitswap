@@ -31,7 +31,7 @@ describe('utils spec', function () {
   })
 
   it('pullAllWith', () => {
-    var array = [{ x: 1, y: 2 }, { x: 3, y: 4 }, { x: 5, y: 6 }]
+    const array = [{ x: 1, y: 2 }, { x: 3, y: 4 }, { x: 5, y: 6 }]
 
     const actual = pullAllWith(
       (a, b) => (a.x === b.x && a.y === b.y),

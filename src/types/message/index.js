@@ -19,7 +19,7 @@ class BitswapMessage {
     /** @type {Map<string, Entry>} */
     this.wantlist = new Map()
 
-    /** @type {Map<string, import('ipfs-core-types/src/block-service').Block>} */
+    /** @type {Map<string, import('ipld-block')>} */
     this.blocks = new Map()
 
     /** @type {Map<string, import('./message').Message.BlockPresenceType>} */
@@ -72,7 +72,7 @@ class BitswapMessage {
   }
 
   /**
-   * @param {import('ipfs-core-types/src/block-service').Block} block
+   * @param {import('ipld-block')} block
    * @returns {void}
    */
   addBlock (block) {

@@ -12,11 +12,9 @@ const logger = require('./utils').logger
 /**
  * @typedef {import('peer-id')} PeerId
  * @typedef {import('cids')} CID
- * @typedef {import('multiaddr')} Multiaddr
- *
- * @typedef {Object} Connection
- * @property {string} id
- * @property {PeerId} remotePeer
+ * @typedef {import('multiaddr').Multiaddr} Multiaddr
+ * @typedef {import('libp2p-interfaces/src/connection').Connection} Connection
+ * @typedef {import('libp2p-interfaces/src/stream-muxer/types').MuxedStream} MuxedStream
  *
  * @typedef {Object} Provider
  * @property {PeerId} id
@@ -100,9 +98,8 @@ class Network {
    * @private
    * @param {object} connection
    * @param {string} connection.protocol - The protocol the stream is running
-   * @param {Stream} connection.stream - A duplex iterable stream
+   * @param {MuxedStream} connection.stream - A duplex iterable stream
    * @param {Connection} connection.connection - A libp2p Connection
-   * @returns {Promise<void>}
    */
   async _onConnection ({ protocol, stream, connection }) {
     if (!this._running) { return }
@@ -143,7 +140,6 @@ class Network {
   /**
    * @private
    * @param {PeerId} peerId
-   * @returns {void}
    */
   _onPeerDisconnect (peerId) {
     this._bitswap._onPeerDisconnected(peerId)
@@ -177,7 +173,6 @@ class Network {
    * @param {CID} cid
    * @param {Object} [options]
    * @param {AbortSignal} [options.signal]
-   * @returns {Promise<void>}
    */
   async findAndConnect (cid, options) {
     const connectAttempts = []
@@ -194,7 +189,6 @@ class Network {
    * @param {CID} cid
    * @param {Object} [options]
    * @param {AbortSignal} [options.signal]
-   * @returns {Promise<void>}
    */
   async provide (cid, options) {
     // @ts-expect-error - contentRouting takes no options
@@ -207,7 +201,6 @@ class Network {
    *
    * @param {PeerId} peer
    * @param {Message} msg
-   * @returns {Promise<void>}
    */
   async sendMessage (peer, msg) {
     if (!this._running) throw new Error('network isn\'t running')
@@ -215,7 +208,8 @@ class Network {
     const stringId = peer.toB58String()
     this._log('sendMessage to %s', stringId, msg)
 
-    const { stream, protocol } = await this._dialPeer(peer)
+    const connection = await this._libp2p.dial(peer)
+    const { stream, protocol } = await connection.newStream([BITSWAP120, BITSWAP110, BITSWAP100])
 
     /** @type {Uint8Array} */
     let serialized
@@ -254,16 +248,6 @@ class Network {
   }
 
   /**
-   * Dial to the peer and try to use the most recent Bitswap
-   *
-   * @private
-   * @param {PeerId|Multiaddr} peer
-   */
-  _dialPeer (peer) {
-    return this._libp2p.dialProtocol(peer, [BITSWAP120, BITSWAP110, BITSWAP100])
-  }
-
-  /**
    * @private
    * @param {PeerId} peer
    * @param {Map<string, {data:Uint8Array}>} blocks
@@ -280,7 +264,7 @@ class Network {
 
 /**
  *
- * @param {Stream} stream
+ * @param {MuxedStream} stream
  * @param {Uint8Array} msg
  * @param {*} log
  */

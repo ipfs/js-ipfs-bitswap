@@ -1,7 +1,6 @@
 'use strict'
 
 const { EventEmitter } = require('events')
-const { BigNumber: Big } = require('bignumber.js')
 const MovingAverage = require('moving-average')
 
 /**
@@ -24,7 +23,7 @@ class Stats extends EventEmitter {
     this._options = options
     /** @type {Op[]} */
     this._queue = []
-    /** @type {Record<string, Big>} */
+    /** @type {Record<string, bigint>} */
     this._stats = {}
 
     this._frequencyLastTime = Date.now()
@@ -37,7 +36,7 @@ class Stats extends EventEmitter {
     this._update = this._update.bind(this)
 
     initialCounters.forEach((key) => {
-      this._stats[key] = new Big(0)
+      this._stats[key] = BigInt(0)
       this._movingAverages[key] = {}
       this._options.movingAverageIntervals.forEach((interval) => {
         const ma = this._movingAverages[key][interval] = MovingAverage(interval)
@@ -173,14 +172,11 @@ class Stats extends EventEmitter {
       throw new Error(`invalid increment number: ${inc}`)
     }
 
-    let n
-
     if (!Object.prototype.hasOwnProperty.call(this._stats, key)) {
-      n = this._stats[key] = new Big(0)
-    } else {
-      n = this._stats[key]
+      this._stats[key] = BigInt(0)
     }
-    this._stats[key] = n.plus(inc)
+
+    this._stats[key] = BigInt(this._stats[key]) + BigInt(inc)
 
     if (!this._frequencyAccumulators[key]) {
       this._frequencyAccumulators[key] = 0
