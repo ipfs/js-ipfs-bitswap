@@ -31,6 +31,7 @@
     "src"
   ],
   "scripts": {
+    "prepare": "npm run build",
     "build": "npm run build:proto && npm run build:proto-types && npm run build:bundle",
     "build:proto": "pbjs -t static-module -w commonjs --force-number --no-verify --no-delimited --no-create --no-beautify --no-defaults --lint eslint-disable -o src/types/message/message.js src/types/message/message.proto",
     "build:proto-types": "pbts -o src/types/message/message.d.ts src/types/message/message.js",
