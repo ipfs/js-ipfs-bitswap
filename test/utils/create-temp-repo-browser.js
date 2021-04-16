@@ -1,7 +1,6 @@
 /* global self */
 'use strict'
 
-// @ts-ignore
 const IPFSRepo = require('ipfs-repo')
 
 // @ts-ignore
@@ -11,7 +10,6 @@ async function createTempRepo () {
   const date = Date.now().toString()
   const path = `/bitswap-tests-${date}-${Math.random()}`
 
-  /** @type {import('ipfs-core-types/src/repo').Repo & { teardown: () => void}} */
   const repo = new IPFSRepo(path)
   await repo.init({})
   await repo.open()

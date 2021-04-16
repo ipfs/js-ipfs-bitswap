@@ -6,7 +6,7 @@ const uint8ArrayEquals = require('uint8arrays/equals')
 /**
  * Creates a logger for the given subsystem
  *
- * @param {any} [id]
+ * @param {import('peer-id')} [id]
  * @param {string} [subsystem]
  */
 const logger = (id, subsystem) => {
@@ -15,7 +15,7 @@ const logger = (id, subsystem) => {
     name.push(subsystem)
   }
   if (id) {
-    name.push(`${id.toString().slice(0, 8)}`)
+    name.push(`${id.toB58String().slice(0, 8)}`)
   }
 
   return Object.assign(debug(name.join(':')), {
