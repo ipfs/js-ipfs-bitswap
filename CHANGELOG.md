@@ -1,3 +1,12 @@
+## [5.0.3](https://github.com/ipfs/js-ipfs-bitswap/compare/v5.0.2...v5.0.3) (2021-04-20)
+
+
+### Bug Fixes
+
+* specify pbjs root ([#323](https://github.com/ipfs/js-ipfs-bitswap/issues/323)) ([2bf0c2e](https://github.com/ipfs/js-ipfs-bitswap/commit/2bf0c2e51cb5ee63e88868e84ae67b4e3ee0ce9b))
+
+
+
 ## [5.0.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v5.0.1...v5.0.2) (2021-04-16)
 
 
