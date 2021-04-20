@@ -7,7 +7,7 @@ var $protobuf = require("protobufjs/minimal");
 var $Reader = $protobuf.Reader, $Writer = $protobuf.Writer, $util = $protobuf.util;
 
 // Exported root namespace
-var $root = $protobuf.roots.bitswap || ($protobuf.roots.bitswap = {});
+var $root = $protobuf.roots["ipfs-bitswap"] || ($protobuf.roots["ipfs-bitswap"] = {});
 
 $root.Message = (function() {
 
