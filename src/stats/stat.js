@@ -1,9 +1,10 @@
 'use strict'
 
 const { EventEmitter } = require('events')
-const MovingAverage = require('moving-average')
+const MovingAverage = require('@vascosantos/moving-average')
 
 /**
+ * @typedef {import('@vascosantos/moving-average').IMovingAverage} IMovingAverage
  * @typedef {[string, number, number]} Op
  */
 
@@ -30,7 +31,7 @@ class Stats extends EventEmitter {
     /** @type {Record<string, number>} */
     this._frequencyAccumulators = {}
 
-    /** @type {Record<string, Record<number, MovingAverage>>} */
+    /** @type {Record<string, Record<number, IMovingAverage>>} */
     this._movingAverages = {}
 
     this._update = this._update.bind(this)
