@@ -71,7 +71,7 @@
     "assert": "^2.0.0",
     "benchmark": "^2.1.4",
     "delay": "^5.0.0",
-    "ipfs-repo": "^9.1.0",
+    "ipfs-repo": "^10.0.0",
     "ipfs-utils": "^6.0.1",
     "iso-random-stream": "^2.0.0",
     "it-all": "^1.0.5",
