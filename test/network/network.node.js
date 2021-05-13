@@ -10,6 +10,8 @@ const makeBlock = require('../utils/make-block')
 const Network = require('../../src/network')
 const Message = require('../../src/types/message')
 const Stats = require('../../src/stats')
+const sinon = require('sinon')
+const CID = require('cids')
 
 /**
  * @returns {import('../../src')}
@@ -266,5 +268,46 @@ describe('network', () => {
     await networkA.sendMessage(p2pB.peerId, new Message(true))
 
     return deferred
+  })
+
+  it('survives connection failures', async () => {
+    const libp2p = {
+      contentRouting: {
+        findProviders: sinon.stub()
+      },
+      registrar: {
+        register: sinon.stub()
+      },
+      peerStore: {
+        peers: new Map()
+      },
+      dial: sinon.stub(),
+      handle: sinon.stub()
+    }
+
+    const network = new Network(libp2p, bitswapMockA, new Stats())
+
+    const cid = new CID('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn')
+    const provider1 = {
+      id: 'provider1'
+    }
+    const provider2 = {
+      id: 'provider2'
+    }
+
+    libp2p.contentRouting.findProviders.withArgs(cid).returns([
+      provider1,
+      provider2
+    ])
+
+    libp2p.dial.withArgs(provider1.id).returns(Promise.reject(new Error('Could not dial')))
+    libp2p.dial.withArgs(provider2.id).returns(Promise.resolve())
+
+    network.start()
+
+    await network.findAndConnect(cid)
+
+    expect(libp2p.dial.calledWith(provider1.id)).to.be.true()
+    expect(libp2p.dial.calledWith(provider2.id)).to.be.true()
   })
 })
