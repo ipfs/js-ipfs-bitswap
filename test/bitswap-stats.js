@@ -6,7 +6,7 @@ const pEvent = require('p-event')
 const Message = require('../src/types/message')
 const Bitswap = require('../src')
 
-const createTempRepo = require('./utils/create-temp-repo-nodejs')
+const createTempRepo = require('./utils/create-temp-repo')
 const createLibp2pNode = require('./utils/create-libp2p-node')
 const makeBlock = require('./utils/make-block')
 const { makePeerIds } = require('./utils/make-peer-id')

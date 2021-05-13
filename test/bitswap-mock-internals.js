@@ -14,7 +14,7 @@ const Block = require('ipld-block')
 const { AbortController } = require('native-abort-controller')
 const delay = require('delay')
 
-const createTempRepo = require('./utils/create-temp-repo-nodejs')
+const createTempRepo = require('./utils/create-temp-repo')
 const mockNetwork = require('./utils/mocks').mockNetwork
 const applyNetwork = require('./utils/mocks').applyNetwork
 const mockLibp2pNode = require('./utils/mocks').mockLibp2pNode

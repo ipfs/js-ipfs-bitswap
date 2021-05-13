@@ -17,7 +17,7 @@ const defer = require('p-defer')
 const Message = require('../../src/types/message')
 const DecisionEngine = require('../../src/decision-engine')
 const Stats = require('../../src/stats')
-const createTempRepo = require('../utils/create-temp-repo-nodejs.js')
+const createTempRepo = require('../utils/create-temp-repo.js')
 const makeBlock = require('../utils/make-block')
 const { makePeerId, makePeerIds } = require('../utils/make-peer-id')
 
@@ -104,7 +104,7 @@ describe('Engine', () => {
   })
 
   it('partner wants then cancels', async function () {
-    this.timeout(120 * 1000)
+    this.timeout(40 * 1000)
 
     const numRounds = 10
     const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('')
