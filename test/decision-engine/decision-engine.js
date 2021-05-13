@@ -104,7 +104,7 @@ describe('Engine', () => {
   })
 
   it('partner wants then cancels', async function () {
-    this.timeout(40 * 1000)
+    this.timeout(120 * 1000)
 
     const numRounds = 10
     const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('')
