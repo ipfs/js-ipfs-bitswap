@@ -1,3 +1,12 @@
+## [5.0.5](https://github.com/ipfs/js-ipfs-bitswap/compare/v5.0.4...v5.0.5) (2021-05-13)
+
+
+### Bug Fixes
+
+* fixes unhandled promise rejection ([#337](https://github.com/ipfs/js-ipfs-bitswap/issues/337)) ([f41fd0b](https://github.com/ipfs/js-ipfs-bitswap/commit/f41fd0b4a60a945f71ac0ba3c2c1df659f4b3339)), closes [#332](https://github.com/ipfs/js-ipfs-bitswap/issues/332)
+
+
+
 ## [5.0.4](https://github.com/ipfs/js-ipfs-bitswap/compare/v5.0.3...v5.0.4) (2021-04-30)
 
 
