@@ -178,7 +178,13 @@ class Network {
     const connectAttempts = []
     for await (const provider of this.findProviders(cid, CONSTANTS.maxProvidersPerRequest, options)) {
       this._log(`connecting to provider ${provider.id}`)
-      connectAttempts.push(this.connectTo(provider.id, options))
+      connectAttempts.push(
+        this.connectTo(provider.id, options)
+          .catch(err => {
+            // Prevent unhandled promise rejection
+            this._log.error(err)
+          })
+      )
     }
     await Promise.all(connectAttempts)
   }
