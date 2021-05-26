@@ -3,8 +3,7 @@
 
 const { expect } = require('aegir/utils/chai')
 const PeerId = require('peer-id')
-const CID = require('cids')
-const multihashing = require('multihashing-async')
+const { CID } = require('multiformats')
 const Message = require('../../src/types/message')
 const MsgQueue = require('../../src/want-manager/msg-queue')
 const defer = require('p-defer')

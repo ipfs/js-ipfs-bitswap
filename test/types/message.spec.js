@@ -2,7 +2,7 @@
 'use strict'
 
 const { expect } = require('aegir/utils/chai')
-const CID = require('cids')
+const { CID } = require('multiformats')
 const uint8ArrayFromString = require('uint8arrays/from-string')
 const uint8ArrayEquals = require('uint8arrays/equals')
 const loadFixture = require('aegir/utils/fixtures')

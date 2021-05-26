@@ -6,9 +6,8 @@ const PeerId = require('peer-id')
 const range = require('lodash.range')
 const difference = require('lodash.difference')
 const flatten = require('lodash.flatten')
-const Block = require('ipld-block')
-const CID = require('cids')
-const multihashing = require('multihashing-async')
+const { CID } = require('multiformats')
+const { sha256 } = require('multiformats/hashes/sha2')
 const uint8ArrayFromString = require('uint8arrays/from-string')
 const uint8ArrayToString = require('uint8arrays/to-string')
 const drain = require('it-drain')
@@ -61,12 +60,12 @@ describe('Engine', () => {
 
     await Promise.all(range(1000).map(async (i) => {
       const data = uint8ArrayFromString(`this is message ${i}`)
-      const hash = await multihashing(data, 'sha2-256')
+      const hash = await sha256.digest(data)
 
       const m = new Message(false)
-      const block = new Block(data, new CID(hash))
-      m.addBlock(block)
-      sender.engine.messageSent(receiver.peer, block)
+      const cid = CID.createV0(hash)
+      m.addBlock(cid, data)
+      sender.engine.messageSent(receiver.peer, cid, data)
       await receiver.engine.messageReceived(sender.peer, m)
     }))
 
@@ -117,9 +116,9 @@ describe('Engine', () => {
     async function partnerWants (dEngine, values, partner) {
       const message = new Message(false)
 
-      const hashes = await Promise.all(values.map((v) => multihashing(uint8ArrayFromString(v), 'sha2-256')))
+      const hashes = await Promise.all(values.map((v) => sha256.digest(uint8ArrayFromString(v))))
       hashes.forEach((hash, i) => {
-        message.addEntry(new CID(hash), Math.pow(2, 32) - 1 - i)
+        message.addEntry(CID.createV0(hash), Math.pow(2, 32) - 1 - i)
       })
       await dEngine.messageReceived(partner, message)
     }
@@ -127,9 +126,9 @@ describe('Engine', () => {
     async function partnerCancels (dEngine, values, partner) {
       const message = new Message(false)
 
-      const hashes = await Promise.all(values.map((v) => multihashing(uint8ArrayFromString(v), 'sha2-256')))
+      const hashes = await Promise.all(values.map((v) => sha256.digest(uint8ArrayFromString(v))))
       hashes.forEach((hash) => {
-        message.cancel(new CID(hash))
+        message.cancel(CID.createV0(hash))
       })
       await dEngine.messageReceived(partner, message)
     }
@@ -141,8 +140,13 @@ describe('Engine', () => {
       await dEngine.receivedBlocks(blocks)
     }
 
-    const hashes = await Promise.all(alphabet.map(v => multihashing(uint8ArrayFromString(v), 'sha2-256')))
-    const blocks = hashes.map((h, i) => new Block(uint8ArrayFromString(alphabet[i]), new CID(h)))
+    const hashes = await Promise.all(alphabet.map(v => sha256.digest(uint8ArrayFromString(v))))
+    const blocks = hashes.map((h, i) => {
+      return {
+        cid: CID.createV0(h),
+        data: uint8ArrayFromString(alphabet[i])
+      }
+    })
     const partner = await PeerId.create({ bits: 512 })
     const somePeer = await PeerId.create({ bits: 512 })
 
@@ -366,8 +370,13 @@ describe('Engine', () => {
     const vowels = 'aeiou'
 
     const alphabetLs = alphabet.split('')
-    const hashes = await Promise.all(alphabetLs.map(v => multihashing(uint8ArrayFromString(v), 'sha2-256')))
-    const blocks = hashes.map((h, i) => new Block(uint8ArrayFromString(alphabetLs[i]), new CID(h)))
+    const hashes = await Promise.all(alphabetLs.map(v => sha256.digest(v)))
+    const blocks = hashes.map((h, i) => {
+      return {
+        cid: CID.createV0(h),
+        data: uint8ArrayFromString(alphabetLs[i])
+      }
+    })
 
     let testCases = [
       // Just send want-blocks
@@ -620,9 +629,9 @@ describe('Engine', () => {
       let i = wantBlks.length + wantHaves.length
       const message = new Message(false)
       for (const [wants, type] of wantTypes) {
-        const hashes = await Promise.all(wants.map((v) => multihashing(uint8ArrayFromString(v), 'sha2-256')))
+        const hashes = await Promise.all(wants.map((v) => sha256.digest(v)))
         for (const hash of hashes) {
-          message.addEntry(new CID(hash), i--, type, false, sendDontHave)
+          message.addEntry(CID.createV0(hash), i--, type, false, sendDontHave)
         }
       }
       await dEngine.messageReceived(partner, message)
@@ -679,22 +688,22 @@ describe('Engine', () => {
 
       // Expect the correct block contents
       for (const expBlk of expBlks) {
-        const hash = await multihashing(uint8ArrayFromString(expBlk), 'sha2-256')
-        expect(msg.blocks.has(new CID(hash).toString()))
+        const hash = await sha256.digest(uint8ArrayFromString(expBlk))
+        expect(msg.blocks.has(CID.createV0(hash).toString()))
       }
 
       // Expect the correct HAVEs
       for (const expHave of expHaves) {
-        const hash = await multihashing(uint8ArrayFromString(expHave), 'sha2-256')
-        const cid = new CID(hash).toString()
+        const hash = await sha256.digest(uint8ArrayFromString(expHave))
+        const cid = CID.createV0(hash).toString()
         expect(msg.blockPresences.has(cid)).to.eql(true)
         expect(msg.blockPresences.get(cid)).to.eql(Message.BlockPresenceType.Have)
       }
 
       // Expect the correct DONT_HAVEs
       for (const expDontHave of expDontHaves) {
-        const hash = await multihashing(uint8ArrayFromString(expDontHave), 'sha2-256')
-        const cid = new CID(hash).toString()
+        const hash = await sha256.digest(uint8ArrayFromString(expDontHave))
+        const cid = CID.createV0(hash).toString()
         expect(msg.blockPresences.has(cid)).to.eql(true)
         expect(msg.blockPresences.get(cid)).to.eql(Message.BlockPresenceType.DontHave)
       }

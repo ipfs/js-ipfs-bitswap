@@ -3,9 +3,8 @@
 'use strict'
 
 const { expect } = require('aegir/utils/chai')
-const Block = require('ipld-block')
 const crypto = require('crypto')
-const CID = require('cids')
+const { CID } = require('multiformats')
 const multihashing = require('multihashing-async')
 const range = require('lodash.range')
 
@@ -24,10 +23,13 @@ describe('gen Bitswap network', function () {
       b.fill(k)
       const hash = await multihashing(b, 'sha2-256')
       const cid = new CID(hash)
-      return new Block(b, cid)
+      return {
+        cid,
+        data: b
+      }
     }))
 
-    await Promise.all(blocks.map(b => node.bitswap.put(b)))
+    await Promise.all(blocks.map(b => node.bitswap.put(b.cid, b.data)))
     const res = await Promise.all(range(100).map((i) => {
       return node.bitswap.get(blocks[i].cid)
     }))
@@ -72,7 +74,7 @@ async function exchangeBlocks (nodes, blocksPerNode = 10) {
       return blocks[index]
     })
 
-    await Promise.all(data.map((d) => node.bitswap.put(d)))
+    await Promise.all(data.map((d) => node.bitswap.put(d.cid, d.data)))
   }))
 
   const d = Date.now()

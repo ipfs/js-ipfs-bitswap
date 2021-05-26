@@ -8,7 +8,7 @@ const logger = require('../utils').logger
 
 /**
  * @typedef {import('peer-id')} PeerId
- * @typedef {import('cids')} CID
+ * @typedef {import('multiformats').CID} CID
  */
 
 module.exports = class WantManager {

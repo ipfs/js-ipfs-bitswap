@@ -2,7 +2,7 @@
 'use strict'
 
 const { expect } = require('aegir/utils/chai')
-const CID = require('cids')
+const { CID } = require('multiformats')
 const multihashing = require('multihashing-async')
 
 const Wantlist = require('../../src/types/wantlist')

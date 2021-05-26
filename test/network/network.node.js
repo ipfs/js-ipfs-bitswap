@@ -11,7 +11,7 @@ const Network = require('../../src/network')
 const Message = require('../../src/types/message')
 const Stats = require('../../src/stats')
 const sinon = require('sinon')
-const CID = require('cids')
+const { CID } = require('multiformats')
 
 /**
  * @returns {import('../../src')}

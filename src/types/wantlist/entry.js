@@ -1,8 +1,10 @@
 'use strict'
 
+const { base58btc } = require('multiformats/bases/base58')
+
 class WantListEntry {
   /**
-   * @param {import('cids')} cid
+   * @param {import('multiformats').CID} cid
    * @param {number} priority
    * @param {import('../message/message').Message.Wantlist.WantType} wantType
    */
@@ -29,7 +31,7 @@ class WantListEntry {
 
   // So that console.log prints a nice description of this object
   get [Symbol.toStringTag] () {
-    const cidStr = this.cid.toString('base58btc')
+    const cidStr = this.cid.toString(base58btc)
     return `WantlistEntry <key: ${cidStr}, priority: ${this.priority}, refs: ${this._refCounter}>`
   }
 

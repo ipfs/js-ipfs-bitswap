@@ -2,8 +2,7 @@
 'use strict'
 
 const { expect } = require('aegir/utils/chai')
-const CID = require('cids')
-const Block = require('ipld-block')
+const { CID } = require('multiformats')
 const multihashing = require('multihashing-async')
 const BitswapMessageEntry = require('../src/types/message/entry')
 const uint8ArrayFromString = require('uint8arrays/from-string')

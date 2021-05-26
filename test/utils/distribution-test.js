@@ -31,7 +31,7 @@ module.exports = async (instanceCount, blockCount, repeats, events) => {
     const blocks = await makeBlock(blockCount)
 
     await Promise.all(
-      blocks.map(block => first.bitswap.put(block))
+      blocks.map(block => first.bitswap.put(block.cid, block.data))
     )
 
     events.emit('first put')

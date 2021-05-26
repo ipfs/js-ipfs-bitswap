@@ -1,14 +1,16 @@
 'use strict'
 
-const IPLDBlock = require('ipld-block')
-const CID = require('cids')
-const { getName } = require('multicodec')
+const { CID } = require('multiformats')
+const { sha256 } = require('multiformats/hashes/sha2')
+const { base58btc } = require('multiformats/bases/base58')
+const mhd = require('multiformats/hashes/digest')
 // @ts-ignore
 const vd = require('varint-decoder')
 const multihashing = require('multihashing-async')
 const { isMapEqual } = require('../../utils')
 const { Message } = require('./message')
 const Entry = require('./entry')
+const uint8ArrayConcat = require('uint8arrays/concat')
 
 class BitswapMessage {
   /**
@@ -19,7 +21,7 @@ class BitswapMessage {
     /** @type {Map<string, Entry>} */
     this.wantlist = new Map()
 
-    /** @type {Map<string, import('ipld-block')>} */
+    /** @type {Map<string, Uint8Array>} */
     this.blocks = new Map()
 
     /** @type {Map<string, import('./message').Message.BlockPresenceType>} */
@@ -47,7 +49,7 @@ class BitswapMessage {
       wantType = BitswapMessage.WantType.Block
     }
 
-    const cidStr = cid.toString('base58btc')
+    const cidStr = cid.toString(base58btc)
     const entry = this.wantlist.get(cidStr)
     if (entry) {
       // Only change priority if want is of the same type
@@ -72,11 +74,12 @@ class BitswapMessage {
   }
 
   /**
-   * @param {import('ipld-block')} block
+   * @param {CID} cid
+   * @param {Uint8Array} block
    * @returns {void}
    */
-  addBlock (block) {
-    const cidStr = block.cid.toString('base58btc')
+  addBlock (cid, block) {
+    const cidStr = cid.toString(base58btc)
     this.blocks.set(cidStr, block)
   }
 
@@ -84,7 +87,7 @@ class BitswapMessage {
    * @param {CID} cid
    */
   addHave (cid) {
-    const cidStr = cid.toString('base58btc')
+    const cidStr = cid.toString(base58btc)
     if (!this.blockPresences.has(cidStr)) {
       this.blockPresences.set(cidStr, BitswapMessage.BlockPresenceType.Have)
     }
@@ -94,7 +97,7 @@ class BitswapMessage {
    * @param {CID} cid
    */
   addDontHave (cid) {
-    const cidStr = cid.toString('base58btc')
+    const cidStr = cid.toString(base58btc)
     if (!this.blockPresences.has(cidStr)) {
       this.blockPresences.set(cidStr, BitswapMessage.BlockPresenceType.DontHave)
     }
@@ -104,7 +107,7 @@ class BitswapMessage {
    * @param {CID} cid
    */
   cancel (cid) {
-    const cidStr = cid.toString('base58btc')
+    const cidStr = cid.toString(base58btc)
     this.wantlist.delete(cidStr)
     this.addEntry(cid, 0, BitswapMessage.WantType.Block, true, false)
   }
@@ -135,7 +138,6 @@ class BitswapMessage {
         full: this.full ? true : undefined
       },
       blocks: Array.from(this.blocks.values())
-        .map((block) => block.data)
     }
 
     return Message.encode(msg).finish()
@@ -169,18 +171,25 @@ class BitswapMessage {
       pendingBytes: this.pendingBytes
     }
 
-    this.blocks.forEach((block) => {
+    for (const [cidStr, data] of this.blocks.entries()) {
+      const cid = CID.parse(cidStr)
+      const codec = Uint8Array.from([cid.code])
+      const multihash = cid.multihash.bytes.subarray(0, 2)
+      const prefix = uint8ArrayConcat([
+        [cid.version], codec, multihash
+      ], 1 + codec.byteLength + multihash.byteLength)
+
       msg.payload.push(
         new Message.Block({
-          prefix: block.cid.prefix,
-          data: block.data
+          prefix,
+          data
         })
       )
-    })
+    }
 
     for (const [cidStr, bpType] of this.blockPresences) {
       msg.blockPresences.push(new Message.BlockPresence({
-        cid: new CID(cidStr).bytes,
+        cid: CID.parse(cidStr).bytes,
         type: bpType
       }))
     }
@@ -233,7 +242,7 @@ BitswapMessage.deserialize = async (raw) => {
         return
       }
       // note: entry.block is the CID here
-      const cid = new CID(entry.block)
+      const cid = CID.decode(entry.block)
       msg.addEntry(cid, entry.priority || 0, entry.wantType, Boolean(entry.cancel), Boolean(entry.sendDontHave))
     })
   }
@@ -244,7 +253,7 @@ BitswapMessage.deserialize = async (raw) => {
         return
       }
 
-      const cid = new CID(blockPresence.cid)
+      const cid = CID.decode(blockPresence.cid)
 
       if (blockPresence.type === BitswapMessage.BlockPresenceType.Have) {
         msg.addHave(cid)
@@ -258,9 +267,9 @@ BitswapMessage.deserialize = async (raw) => {
   // decoded.blocks are just the byte arrays
   if (decoded.blocks.length > 0) {
     await Promise.all(decoded.blocks.map(async (b) => {
-      const hash = await multihashing(b, 'sha2-256')
-      const cid = new CID(hash)
-      msg.addBlock(new IPLDBlock(b, cid))
+      const hash = await sha256.digest(b)
+      const cid = CID.createV0(hash)
+      msg.addBlock(cid, b)
     }))
     return msg
   }
@@ -277,8 +286,9 @@ BitswapMessage.deserialize = async (raw) => {
       const hashAlg = values[2]
       // const hashLen = values[3] // We haven't need to use this so far
       const hash = await multihashing(p.data, hashAlg)
-      const cid = new CID(cidVersion, getName(multicodec), hash)
-      msg.addBlock(new IPLDBlock(p.data, cid))
+      const digest = mhd.decode(hash)
+      const cid = CID.create(cidVersion, multicodec, digest)
+      msg.addBlock(cid, p.data)
     }))
     msg.setPendingBytes(decoded.pendingBytes)
     return msg

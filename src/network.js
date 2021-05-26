@@ -11,7 +11,7 @@ const logger = require('./utils').logger
 
 /**
  * @typedef {import('peer-id')} PeerId
- * @typedef {import('cids')} CID
+ * @typedef {import('multiformats').CID} CID
  * @typedef {import('multiaddr').Multiaddr} Multiaddr
  * @typedef {import('libp2p-interfaces/src/connection').Connection} Connection
  * @typedef {import('libp2p-interfaces/src/stream-muxer/types').MuxedStream} MuxedStream
@@ -158,8 +158,7 @@ class Network {
     return this._libp2p.contentRouting.findProviders(
       cid,
       {
-        // TODO: Should this be a timeout options insetad ?
-        // @ts-expect-error - 'maxTimeout' does not exist in type
+        // TODO: Should this be a timeout options instead ?
         maxTimeout: CONSTANTS.providerRequestTimeout,
         maxNumProviders: maxProviders,
         signal: options.signal
@@ -256,13 +255,16 @@ class Network {
   /**
    * @private
    * @param {PeerId} peer
-   * @param {Map<string, {data:Uint8Array}>} blocks
+   * @param {Map<string, Uint8Array>} blocks
    */
   _updateSentStats (peer, blocks) {
     const peerId = peer.toB58String()
 
     if (this._stats) {
-      blocks.forEach((block) => this._stats.push(peerId, 'dataSent', block.data.length))
+      for (const block of blocks.values()) {
+        this._stats.push(peerId, 'dataSent', block.length)
+      }
+
       this._stats.push(peerId, 'blocksSent', blocks.size)
     }
   }

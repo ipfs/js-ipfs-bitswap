@@ -8,12 +8,15 @@ const logger = require('./utils').logger
 const Stats = require('./stats')
 const { AbortController } = require('native-abort-controller')
 const { anySignal } = require('any-signal')
+const { BlockstoreAdapter } = require('interface-blockstore')
+const { CID } = require('multiformats')
 
 /**
- * @typedef {import('ipld-block')} Block
  * @typedef {import('peer-id')} PeerId
  * @typedef {import('./types/message')} BitswapMessage
- * @typedef {import('cids')} CID
+ * @typedef {import('interface-blockstore').Blockstore} Blockstore
+ * @typedef {import('interface-blockstore').Pair} Pair
+ * @typedef {import('interface-blockstore').Options} Options
  */
 
 const defaultOptions = {
@@ -36,17 +39,19 @@ const statsKeys = [
 /**
  * JavaScript implementation of the Bitswap 'data exchange' protocol
  * used by IPFS.
- */
-class Bitswap {
+  */
+class Bitswap extends BlockstoreAdapter {
   /**
    * @param {import('libp2p')} libp2p
-   * @param {import('ipfs-repo').Blockstore} blockstore
+   * @param {Blockstore} blockstore
    * @param {Object} [options]
    * @param {boolean} [options.statsEnabled=false]
    * @param {number} [options.statsComputeThrottleTimeout=1000]
    * @param {number} [options.statsComputeThrottleMaxQueueSize=1000]
    */
   constructor (libp2p, blockstore, options = {}) {
+    super()
+
     this._libp2p = libp2p
     this._log = logger(this.peerId)
 
@@ -103,54 +108,68 @@ class Bitswap {
       return
     }
 
-    const blocks = Array.from(incoming.blocks.values())
+    /** @type { { cid: CID, wasWanted: boolean, data: Uint8Array }[] } */
+    const received = []
+
+    for (const [ cidStr, data ] of incoming.blocks.entries()) {
+      const cid = CID.parse(cidStr)
+
+      received.push({
+        wasWanted: this.wm.wantlist.contains(cid),
+        cid,
+        data
+      })
+    }
 
     // quickly send out cancels, reduces chances of duplicate block receives
-    const wanted = blocks
-      .filter((b) => this.wm.wantlist.contains(b.cid))
-      .map((b) => b.cid)
+    this.wm.cancelWants(
+      received
+        .filter(({ wasWanted }) => wasWanted)
+        .map(({ cid }) => cid)
+    )
 
-    this.wm.cancelWants(wanted)
-
-    await Promise.all(blocks.map(async (b) => {
-      const wasWanted = wanted.includes(b.cid)
-      await this._handleReceivedBlock(peerId, b, wasWanted)
-    }))
+    await Promise.all(
+      received.map(
+        ({ cid, wasWanted, data}) => this._handleReceivedBlock(peerId, cid, data, wasWanted)
+      )
+    )
   }
 
   /**
    * @private
    * @param {PeerId} peerId
-   * @param {Block} block
+   * @param {CID} cid
+   * @param {Uint8Array} data
    * @param {boolean} wasWanted
    */
-  async _handleReceivedBlock (peerId, block, wasWanted) {
+  async _handleReceivedBlock (peerId, cid, data, wasWanted) {
     this._log('received block')
 
-    const has = await this.blockstore.has(block.cid)
+    const has = await this.blockstore.has(cid)
 
-    this._updateReceiveCounters(peerId.toB58String(), block, has)
+    this._updateReceiveCounters(peerId.toB58String(), cid, data, has)
 
     if (!wasWanted) {
       return
     }
 
-    await this.put(block)
+    await this.put(cid, data)
   }
 
   /**
    * @private
    * @param {string} peerIdStr
-   * @param {Block} block
+   * @param {CID} cid
+   * @param {Uint8Array} data
    * @param {boolean} exists
    */
-  _updateReceiveCounters (peerIdStr, block, exists) {
+  _updateReceiveCounters (peerIdStr, cid, data, exists) {
     this._stats.push(peerIdStr, 'blocksReceived', 1)
-    this._stats.push(peerIdStr, 'dataReceived', block.data.length)
+    this._stats.push(peerIdStr, 'dataReceived', data.length)
 
     if (exists) {
       this._stats.push(peerIdStr, 'dupBlksReceived', 1)
-      this._stats.push(peerIdStr, 'dupDataReceived', block.data.length)
+      this._stats.push(peerIdStr, 'dupDataReceived', data.length)
     }
   }
 
@@ -333,25 +352,27 @@ class Bitswap {
    * Put the given block to the underlying blockstore and
    * send it to nodes that have it in their wantlist.
    *
-   * @param {Block} block
+   * @param {CID} cid
+   * @param {Uint8Array} block
    * @param {any} [_options]
    */
-  async put (block, _options) {
-    await this.blockstore.put(block)
-    this._sendHaveBlockNotifications(block)
+  async put (cid, block, _options) {
+    await this.blockstore.put(cid, block)
+    this._sendHaveBlockNotifications(cid, block)
   }
 
   /**
    * Put the given blocks to the underlying blockstore and
    * send it to nodes that have it them their wantlist.
    *
-   * @param {AsyncIterable<Block>|Iterable<Block>} blocks
+   * @param {Iterable<Pair> | AsyncIterable<Pair>} source
+   * @param {Options} [options]
    */
-  async * putMany (blocks) {
-    for await (const block of this.blockstore.putMany(blocks)) {
-      this._sendHaveBlockNotifications(block)
+  async * putMany (source, options) {
+    for await (const { key, value } of this.blockstore.putMany(source, options)) {
+      this._sendHaveBlockNotifications(key, value)
 
-      yield block
+      yield { key, value }
     }
   }
 
@@ -359,13 +380,14 @@ class Bitswap {
    * Sends notifications about the arrival of a block
    *
    * @private
-   * @param {Block} block
+   * @param {CID} cid
+   * @param {Uint8Array} data
    */
-  _sendHaveBlockNotifications (block) {
-    this.notifications.hasBlock(block)
-    this.engine.receivedBlocks([block])
+  _sendHaveBlockNotifications (cid, data) {
+    this.notifications.hasBlock(cid, data)
+    this.engine.receivedBlocks([{ cid, data }])
     // Note: Don't wait for provide to finish before returning
-    this.network.provide(block.cid).catch((err) => {
+    this.network.provide(cid).catch((err) => {
       this._log.error('Failed to provide: %s', err.message)
     })
   }
