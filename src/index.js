@@ -39,7 +39,7 @@ const statsKeys = [
 /**
  * JavaScript implementation of the Bitswap 'data exchange' protocol
  * used by IPFS.
-  */
+ */
 class Bitswap extends BlockstoreAdapter {
   /**
    * @param {import('libp2p')} libp2p
@@ -111,7 +111,7 @@ class Bitswap extends BlockstoreAdapter {
     /** @type { { cid: CID, wasWanted: boolean, data: Uint8Array }[] } */
     const received = []
 
-    for (const [ cidStr, data ] of incoming.blocks.entries()) {
+    for (const [cidStr, data] of incoming.blocks.entries()) {
       const cid = CID.parse(cidStr)
 
       received.push({
@@ -130,7 +130,7 @@ class Bitswap extends BlockstoreAdapter {
 
     await Promise.all(
       received.map(
-        ({ cid, wasWanted, data}) => this._handleReceivedBlock(peerId, cid, data, wasWanted)
+        ({ cid, wasWanted, data }) => this._handleReceivedBlock(peerId, cid, data, wasWanted)
       )
     )
   }

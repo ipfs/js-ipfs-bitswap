@@ -4,7 +4,7 @@
 const assert = require('assert')
 const range = require('lodash.range')
 
-const makeBlock = require('../test/utils/make-block')
+const makeBlock = require('../test/utils/make-blocks')
 const genBitswapNetwork = require('../test/utils/mocks').genBitswapNetwork
 
 const nodes = [2, 5, 10, 20]

@@ -7,6 +7,7 @@ const PeerId = require('peer-id')
 const RequestQueue = require('../../src/decision-engine/req-queue')
 
 describe('Request Queue', () => {
+  /** @type {PeerId[]} */
   let peerIds
 
   before(async () => {

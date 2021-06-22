@@ -17,11 +17,6 @@ async function createTempRepo () {
     }
   })
 
-  repo.teardown = async () => {
-    await repo.close()
-    // await promisify(rimraf)(path)
-  }
-
   await repo.init({})
   await repo.open()
 

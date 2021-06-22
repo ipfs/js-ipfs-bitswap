@@ -13,7 +13,7 @@ const { v4: uuid } = require('uuid')
 /**
  * @param {number} count
  * @param {number} [size]
- * @returns {Promise<Block[]|Block>}
+ * @returns {Promise<{ cid: CID, data: Uint8Array}[]>}
  */
 module.exports = async (count, size) => {
   const blocks = await Promise.all(
@@ -27,5 +27,5 @@ module.exports = async (count, size) => {
     })
   )
 
-  return count ? blocks : blocks[0]
+  return blocks
 }

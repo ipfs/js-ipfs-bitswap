@@ -6,12 +6,18 @@ const lp = require('it-length-prefixed')
 const { pipe } = require('it-pipe')
 const pDefer = require('p-defer')
 const createLibp2pNode = require('../utils/create-libp2p-node')
-const makeBlock = require('../utils/make-block')
+const makeBlock = require('../utils/make-blocks')
 const Network = require('../../src/network')
 const Message = require('../../src/types/message')
 const Stats = require('../../src/stats')
 const sinon = require('sinon')
 const { CID } = require('multiformats')
+const { Multiaddr } = require('multiaddr')
+
+/**
+ * @typedef {import('libp2p')} Libp2p
+ * @typedef {import('../../src')} Bitswap
+ */
 
 /**
  * @returns {import('../../src')}
@@ -27,18 +33,28 @@ function createBitswapMock () {
 }
 
 describe('network', () => {
+  /** @type {Libp2p} */
   let p2pA
+  /** @type {Network} */
   let networkA
+  /** @type {Bitswap} */
   let bitswapMockA
 
+  /** @type {Libp2p} */
   let p2pB
+  /** @type {Network} */
   let networkB
+  /** @type {Bitswap} */
   let bitswapMockB
 
+  /** @type {Libp2p} */
   let p2pC
+  /** @type {Network} */
   let networkC
+  /** @type {Bitswap} */
   let bitswapMockC
 
+  /** @type {{ cid: CID, data: Uint8Array}[]} */
   let blocks
 
   beforeEach(async () => {
@@ -102,7 +118,7 @@ describe('network', () => {
   })
 
   it('connectTo success', async () => {
-    const ma = `${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`
+    const ma = new Multiaddr(`${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`)
     await networkA.connectTo(ma)
   })
 
@@ -144,11 +160,11 @@ describe('network', () => {
   })
 
   const versions = [{
-    num: '1.0.0', serialize: (msg) => msg.serializeToBitswap100()
+    num: '1.0.0', serialize: (/** @type {Message} */ msg) => msg.serializeToBitswap100()
   }, {
-    num: '1.1.0', serialize: (msg) => msg.serializeToBitswap110()
+    num: '1.1.0', serialize: (/** @type {Message} */ msg) => msg.serializeToBitswap110()
   }, {
-    num: '1.2.0', serialize: (msg) => msg.serializeToBitswap110()
+    num: '1.2.0', serialize: (/** @type {Message} */ msg) => msg.serializeToBitswap110()
   }]
   for (const version of versions) {
     it('._receiveMessage success from Bitswap ' + version.num, async () => { // eslint-disable-line no-loop-func
@@ -158,11 +174,13 @@ describe('network', () => {
       const deferred = pDefer()
 
       msg.addEntry(b1.cid, 0)
-      msg.addBlock(b1)
-      msg.addBlock(b2)
+      msg.addBlock(b1.cid, b1.data)
+      msg.addBlock(b2.cid, b2.data)
 
       bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
-        expect(msg).to.eql(msgReceived)
+        // cannot do deep comparison on objects as one has Buffers and one has Uint8Arrays
+        expect(msg.serializeToBitswap110()).to.equalBytes(msgReceived.serializeToBitswap110())
+
         bitswapMockB._receiveMessage = async () => {}
         bitswapMockB._receiveError = async () => {}
         deferred.resolve()
@@ -191,15 +209,17 @@ describe('network', () => {
     const deferred = pDefer()
 
     msg.addEntry(b1.cid, 0)
-    msg.addBlock(b1)
-    msg.addBlock(b2)
+    msg.addBlock(b1.cid, b1.data)
+    msg.addBlock(b2.cid, b2.data)
 
     // In a real network scenario, peers will be discovered and their addresses
     // will be added to the addressBook before bitswap kicks in
     p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
 
     bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
-      expect(msg).to.eql(msgReceived)
+      // cannot do deep comparison on objects as one has Buffers and one has Uint8Arrays
+      expect(msg.serializeToBitswap110()).to.equalBytes(msgReceived.serializeToBitswap110())
+
       bitswapMockB._receiveMessage = async () => {}
       bitswapMockB._receiveError = async () => {}
       deferred.resolve()
@@ -225,15 +245,17 @@ describe('network', () => {
     const deferred = pDefer()
 
     msg.addEntry(b1.cid, 0)
-    msg.addBlock(b1)
-    msg.addBlock(b2)
+    msg.addBlock(b1.cid, b1.data)
+    msg.addBlock(b2.cid, b2.data)
 
     // In a real network scenario, peers will be discovered and their addresses
     // will be added to the addressBook before bitswap kicks in
     p2pA.peerStore.addressBook.set(p2pC.peerId, p2pC.multiaddrs)
 
     bitswapMockC._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
-      expect(msg).to.eql(msgReceived)
+      // cannot do deep comparison on objects as one has Buffers and one has Uint8Arrays
+      expect(msg.serializeToBitswap110()).to.equalBytes(msgReceived.serializeToBitswap110())
+
       bitswapMockC._receiveMessage = async () => {}
       bitswapMockC._receiveError = async () => {}
       deferred.resolve()
@@ -261,7 +283,7 @@ describe('network', () => {
 
     const deferred = pDefer()
 
-    bitswapMockB._receiveMessage = () => {
+    bitswapMockB._receiveMessage = async () => {
       deferred.resolve()
     }
 
@@ -271,23 +293,30 @@ describe('network', () => {
   })
 
   it('survives connection failures', async () => {
+    const mockFindProviders = sinon.stub()
+    const mockDial = sinon.stub()
+
+    /** @type {Libp2p} */
     const libp2p = {
+      // @ts-ignore incomplete implementation
       contentRouting: {
-        findProviders: sinon.stub()
+        findProviders: mockFindProviders
       },
+      // @ts-ignore incomplete implementation
       registrar: {
         register: sinon.stub()
       },
+      // @ts-ignore incomplete implementation
       peerStore: {
         peers: new Map()
       },
-      dial: sinon.stub(),
+      dial: mockDial,
       handle: sinon.stub()
     }
 
     const network = new Network(libp2p, bitswapMockA, new Stats())
 
-    const cid = new CID('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn')
+    const cid = CID.parse('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn')
     const provider1 = {
       id: 'provider1'
     }
@@ -295,19 +324,19 @@ describe('network', () => {
       id: 'provider2'
     }
 
-    libp2p.contentRouting.findProviders.withArgs(cid).returns([
+    mockFindProviders.withArgs(cid).returns([
       provider1,
       provider2
     ])
 
-    libp2p.dial.withArgs(provider1.id).returns(Promise.reject(new Error('Could not dial')))
-    libp2p.dial.withArgs(provider2.id).returns(Promise.resolve())
+    mockDial.withArgs(provider1.id).returns(Promise.reject(new Error('Could not dial')))
+    mockDial.withArgs(provider2.id).returns(Promise.resolve())
 
     network.start()
 
     await network.findAndConnect(cid)
 
-    expect(libp2p.dial.calledWith(provider1.id)).to.be.true()
-    expect(libp2p.dial.calledWith(provider2.id)).to.be.true()
+    expect(mockDial.calledWith(provider1.id)).to.be.true()
+    expect(mockDial.calledWith(provider2.id)).to.be.true()
   })
 })

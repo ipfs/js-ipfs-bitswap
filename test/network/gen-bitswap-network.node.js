@@ -3,10 +3,7 @@
 'use strict'
 
 const { expect } = require('aegir/utils/chai')
-const crypto = require('crypto')
-const { CID } = require('multiformats')
-const multihashing = require('multihashing-async')
-const range = require('lodash.range')
+const makeBlocks = require('../utils/make-blocks')
 
 const genBitswapNetwork = require('../utils/mocks').genBitswapNetwork
 
@@ -18,19 +15,10 @@ describe('gen Bitswap network', function () {
     const nodes = await genBitswapNetwork(1)
 
     const node = nodes[0]
-    const blocks = await Promise.all(range(100).map(async (k) => {
-      const b = new Uint8Array(1024)
-      b.fill(k)
-      const hash = await multihashing(b, 'sha2-256')
-      const cid = new CID(hash)
-      return {
-        cid,
-        data: b
-      }
-    }))
+    const blocks = await makeBlocks(100)
 
     await Promise.all(blocks.map(b => node.bitswap.put(b.cid, b.data)))
-    const res = await Promise.all(range(100).map((i) => {
+    const res = await Promise.all(new Array(100).fill(0).map((_, i) => {
       return node.bitswap.get(blocks[i].cid)
     }))
     expect(res).to.have.length(blocks.length)
@@ -61,7 +49,7 @@ describe('gen Bitswap network', function () {
  * @param {number} blocksPerNode - Number of blocks to exchange per node
  */
 async function exchangeBlocks (nodes, blocksPerNode = 10) {
-  const blocks = await createBlocks(nodes.length * blocksPerNode)
+  const blocks = await makeBlocks(nodes.length * blocksPerNode)
 
   const cids = blocks.map((b) => b.cid)
 
@@ -69,7 +57,7 @@ async function exchangeBlocks (nodes, blocksPerNode = 10) {
   await Promise.all(nodes.map(async (node, i) => {
     node.bitswap.start()
 
-    const data = range(blocksPerNode).map((j) => {
+    const data = new Array(blocksPerNode).fill(0).map((_, j) => {
       const index = i * blocksPerNode + j
       return blocks[index]
     })
@@ -82,23 +70,8 @@ async function exchangeBlocks (nodes, blocksPerNode = 10) {
   // fetch all blocks on every node
   await Promise.all(nodes.map(async (node) => {
     const bs = await Promise.all(cids.map((cid) => node.bitswap.get(cid)))
-    expect(bs).to.deep.equal(blocks)
+    expect(bs).to.deep.equal(blocks.map(b => b.data))
   }))
 
   console.log('  time -- %s', (Date.now() - d))
-}
-
-/**
- * Resolves `num` blocks
- *
- * @private
- * @param {number} num - The number of blocks to create
- * @returns {Promise<Block[]>}
- */
-function createBlocks (num) {
-  return Promise.all([...new Array(num)].map(async () => {
-    const d = crypto.randomBytes(num)
-    const hash = await multihashing(d, 'sha2-256')
-    return new Block(d, new CID(hash))
-  }))
 }

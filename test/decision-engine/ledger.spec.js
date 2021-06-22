@@ -7,7 +7,9 @@ const PeerId = require('peer-id')
 const Ledger = require('../../src/decision-engine/ledger')
 
 describe('Ledger', () => {
+  /** @type {PeerId} */
   let peerId
+  /** @type {Ledger} */
   let ledger
 
   before(async () => {

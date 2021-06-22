@@ -113,12 +113,10 @@ const sortBy = (fn, list) => {
 }
 
 /**
- * Is equal for Maps of BitswapMessageEntry or Blocks
+ * Is equal for Maps of BitswapMessageEntry or Uint8Arrays
  *
- * @template {Uint8Array | BitswapMessageEntry} T
- * @param {Map<string, T>} a
- * @param {Map<string, T>} b
- * @returns {boolean}
+ * @param {Map<string, Uint8Array | BitswapMessageEntry>} a
+ * @param {Map<string, Uint8Array | BitswapMessageEntry>} b
  */
 const isMapEqual = (a, b) => {
   if (a.size !== b.size) {

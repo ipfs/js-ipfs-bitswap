@@ -4,7 +4,12 @@
 
 const stats = require('stats-lite')
 
+/**
+ * @param {any} suite
+ * @param {import('events').EventEmitter} emitter
+ */
 module.exports = (suite, emitter) => {
+  /** @type {number[]} */
   const elapseds = []
   emitter.once('start', () => {
     console.log('\n------------------------')

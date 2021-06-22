@@ -6,7 +6,7 @@ const Benchmark = require('benchmark')
 const assert = require('assert')
 const all = require('it-all')
 const drain = require('it-drain')
-const makeBlock = require('../test/utils/make-block')
+const makeBlock = require('../test/utils/make-blocks')
 const genBitswapNetwork = require('../test/utils/mocks').genBitswapNetwork
 
 const suite = new Benchmark.Suite('put-get')

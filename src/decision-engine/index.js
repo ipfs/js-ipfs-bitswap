@@ -6,6 +6,7 @@
  */
 
 const { CID } = require('multiformats')
+const { base58btc } = require('multiformats/bases/base58')
 
 const Message = require('../types/message')
 const WantType = Message.WantType
@@ -70,9 +71,6 @@ class DecisionEngine {
     }
   }
 
-  /**
-   * @private
-   */
   _scheduleProcessTasks () {
     setTimeout(() => {
       this._processTasks()
@@ -82,8 +80,6 @@ class DecisionEngine {
   /**
    * Pull tasks off the request queue and send a message to the corresponding
    * peer
-   *
-   * @private
    */
   async _processTasks () {
     if (!this._running) {
@@ -153,7 +149,7 @@ class DecisionEngine {
       peerId && await this.network.sendMessage(peerId, msg)
 
       // Peform sent message accounting
-      for (const [ cidStr, block ] of blocks.entries()) {
+      for (const [cidStr, block] of blocks.entries()) {
         peerId && this.messageSent(peerId, CID.parse(cidStr), block)
       }
     } catch (err) {
@@ -210,7 +206,6 @@ class DecisionEngine {
    * blocks being added by the client on the localhost (eg IPFS add)
    *
    * @param {{ cid: CID, data: Uint8Array }[]} blocks
-   * @returns {void}
    */
   receivedBlocks (blocks) {
     if (!blocks.length) {
@@ -222,8 +217,9 @@ class DecisionEngine {
       for (const block of blocks) {
         // Filter out blocks that we don't want
         const want = ledger.wantlistContains(block.cid)
+
         if (!want) {
-          return
+          continue
         }
 
         // If the block is small enough, just send the block, even if the
@@ -237,7 +233,7 @@ class DecisionEngine {
         }
 
         this._requestQueue.pushTasks(ledger.partner, [{
-          topic: want.cid.toString(),
+          topic: want.cid.toString(base58btc),
           priority: want.priority,
           size: entrySize,
           data: {
@@ -309,7 +305,7 @@ class DecisionEngine {
    */
   _cancelWants (peerId, cids) {
     for (const c of cids) {
-      this._requestQueue.remove(c.toString(), peerId)
+      this._requestQueue.remove(c.toString(base58btc), peerId)
     }
   }
 
@@ -325,7 +321,7 @@ class DecisionEngine {
 
     const tasks = []
     for (const want of wants) {
-      const id = want.cid.toString()
+      const id = want.cid.toString(base58btc)
       const blockSize = blockSizes.get(id)
 
       // If the block was not found
@@ -407,7 +403,7 @@ class DecisionEngine {
     await Promise.all(cids.map(async (cid) => {
       try {
         const block = await this.blockstore.get(cid)
-        res.set(cid.toString(), block)
+        res.set(cid.toString(base58btc), block)
       } catch (e) {
         if (e.code !== 'ERR_NOT_FOUND') {
           this._log.error('failed to query blockstore for %s: %s', cid, e)

@@ -1,8 +1,21 @@
 'use strict'
 
-const { sortBy } = require('../../utils')
 const Entry = require('./entry')
 const { base58btc } = require('multiformats/bases/base58')
+
+/**
+ * @template T
+ * @param {(v:T) => number} fn
+ * @param {T[]} list
+ * @returns {T[]}
+ */
+const sortBy = (fn, list) => {
+  return Array.prototype.slice.call(list, 0).sort((a, b) => {
+    const aa = fn(a)
+    const bb = fn(b)
+    return aa < bb ? -1 : aa > bb ? 1 : 0
+  })
+}
 
 /**
  * @typedef {import('multiformats').CID} CID

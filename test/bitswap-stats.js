@@ -8,8 +8,14 @@ const Bitswap = require('../src')
 
 const createTempRepo = require('./utils/create-temp-repo')
 const createLibp2pNode = require('./utils/create-libp2p-node')
-const makeBlock = require('./utils/make-block')
+const makeBlock = require('./utils/make-blocks')
 const { makePeerIds } = require('./utils/make-peer-id')
+
+/**
+ * @typedef {import('libp2p')} Libp2p
+ * @typedef {import('ipfs-repo')} IPFSRepo
+ * @typedef {import('multiformats/cid').CID} CID
+ */
 
 const expectedStats = [
   'blocksReceived',
@@ -29,11 +35,17 @@ const expectedTimeWindows = [
 ]
 
 describe('bitswap stats', () => {
+  /** @type {Libp2p[]} */
   let libp2pNodes
+  /** @type {IPFSRepo[]} */
   let repos
+  /** @type {Bitswap[]} */
   let bitswaps
+  /** @type {Bitswap} */
   let bs
+  /** @type {{ cid: CID, data: Uint8Array}[]} */
   let blocks
+  /** @type {import('peer-id')[]} */
   let ids
 
   before(async () => {
@@ -76,7 +88,7 @@ describe('bitswap stats', () => {
       libp2pNodes.map((n) => n.stop())
     )
     await Promise.all(
-      repos.map(repo => repo.teardown())
+      repos.map(repo => repo.close())
     )
   })
 
@@ -93,7 +105,7 @@ describe('bitswap stats', () => {
     expectedStats.forEach((key) => {
       expectedTimeWindows.forEach((timeWindow) => {
         expect(movingAverages).to.have.property(key)
-        expect(stats.movingAverages[key]).to.have.property(timeWindow)
+        expect(stats.movingAverages[key]).to.have.property(`${timeWindow}`)
         const ma = stats.movingAverages[key][timeWindow]
         expect(ma.movingAverage()).to.eql(0)
         expect(ma.variance()).to.eql(0)
@@ -117,7 +129,7 @@ describe('bitswap stats', () => {
       const movingAverages = bs.stat().movingAverages
       const blocksReceivedMA = movingAverages.blocksReceived
       expectedTimeWindows.forEach((timeWindow) => {
-        expect(blocksReceivedMA).to.have.property(timeWindow)
+        expect(blocksReceivedMA).to.have.property(`${timeWindow}`)
         const ma = blocksReceivedMA[timeWindow]
         expect(ma.movingAverage()).to.be.above(0)
         expect(ma.variance()).to.be.above(0)
@@ -125,7 +137,7 @@ describe('bitswap stats', () => {
 
       const dataReceivedMA = movingAverages.dataReceived
       expectedTimeWindows.forEach((timeWindow) => {
-        expect(dataReceivedMA).to.have.property(timeWindow)
+        expect(dataReceivedMA).to.have.property(`${timeWindow}`)
         const ma = dataReceivedMA[timeWindow]
         expect(ma.movingAverage()).to.be.above(0)
         expect(ma.variance()).to.be.above(0)
@@ -136,7 +148,7 @@ describe('bitswap stats', () => {
     const other = ids[1]
 
     const msg = new Message(false)
-    blocks.forEach((block) => msg.addBlock(block))
+    blocks.forEach((block) => msg.addBlock(block.cid, block.data))
 
     bs._receiveMessage(other, msg)
   })
@@ -156,13 +168,15 @@ describe('bitswap stats', () => {
     const other = ids[1]
 
     const msg = new Message(false)
-    blocks.forEach((block) => msg.addBlock(block))
+    blocks.forEach((block) => msg.addBlock(block.cid, block.data))
 
     bs._receiveMessage(other, msg)
   })
 
   describe('connected to another bitswap', () => {
+    /** @type {Bitswap} */
     let bs2
+    /** @type {{ cid: CID, data: Uint8Array}} */
     let block
 
     before(async () => {
@@ -172,9 +186,9 @@ describe('bitswap stats', () => {
       const ma = `${libp2pNodes[1].multiaddrs[0]}/p2p/${libp2pNodes[1].peerId.toB58String()}`
       await libp2pNodes[0].dial(ma)
 
-      block = await makeBlock()
+      block = (await makeBlock(1))[0]
 
-      await bs.put(block)
+      await bs.put(block.cid, block.data)
     })
 
     after(() => {
@@ -215,6 +229,11 @@ describe('bitswap stats', () => {
     it('has peer stats', async () => {
       const peerStats = bs2.stat().forPeer(libp2pNodes[0].peerId)
       expect(peerStats).to.exist()
+
+      if (!peerStats) {
+        // needed for ts
+        throw new Error('No stats found for peer')
+      }
 
       // trigger an update
       peerStats.push('dataReceived', 1)

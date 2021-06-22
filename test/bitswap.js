@@ -10,11 +10,20 @@ const Bitswap = require('../src')
 
 const createTempRepo = require('./utils/create-temp-repo')
 const createLibp2pNode = require('./utils/create-libp2p-node')
-const makeBlock = require('./utils/make-block')
+const makeBlock = require('./utils/make-blocks')
 const orderedFinish = require('./utils/helpers').orderedFinish
 const Message = require('../src/types/message')
 
-// Creates a repo + libp2pNode + Bitswap with or without DHT
+/**
+ * @typedef {import('ipfs-repo')} IPFSRepo
+ * @typedef {import('libp2p')} Libp2p
+ */
+
+/**
+ * Creates a repo + libp2pNode + Bitswap with or without DHT
+ *
+ * @param {boolean} dht
+ */
 async function createThing (dht) {
   const repo = await createTempRepo()
   const libp2pNode = await createLibp2pNode({
@@ -28,6 +37,7 @@ async function createThing (dht) {
 describe('bitswap without DHT', function () {
   this.timeout(20 * 1000)
 
+  /** @type {{ repo: IPFSRepo, libp2pNode: Libp2p, bitswap: Bitswap }[]} */
   let nodes
 
   before(async () => {
@@ -51,14 +61,14 @@ describe('bitswap without DHT', function () {
     await Promise.all(nodes.map((node) => Promise.all([
       node.bitswap.stop(),
       node.libp2pNode.stop(),
-      node.repo.teardown()
+      node.repo.close()
     ])))
   })
 
   it('put a block in 2, fail to get it in 0', async () => {
     const finish = orderedFinish(2)
 
-    const block = await makeBlock()
+    const [block] = await makeBlock(1)
     await nodes[2].bitswap.put(block.cid, block.data)
 
     const node0Get = nodes[0].bitswap.get(block.cid)
@@ -76,7 +86,7 @@ describe('bitswap without DHT', function () {
 
   it('wants a block, receives a block, wants it again before the blockstore has it, receives it after the blockstore has it', async () => {
     // the block we want
-    const block = await makeBlock()
+    const [block] = await makeBlock(1)
 
     // id of a peer with the block we want
     const peerId = await PeerId.create({ bits: 512 })
@@ -86,12 +96,15 @@ describe('bitswap without DHT', function () {
     message.addEntry(block.cid, 1, Message.WantType.Block)
     message.addBlock(block.cid, block.data)
 
-    // slow blockstore
-    nodes[0].bitswap.blockstore = {
+    const mockBlockstore = {
       get: sinon.stub().withArgs(block.cid).throws({ code: 'ERR_NOT_FOUND' }),
       has: sinon.stub().withArgs(block.cid).returns(false),
       put: sinon.stub()
     }
+
+    // slow blockstore
+    // @ts-ignore not a complete implementation
+    nodes[0].bitswap.blockstore = mockBlockstore
 
     // add the block to our want list
     const wantBlockPromise1 = nodes[0].bitswap.get(block.cid)
@@ -102,7 +115,7 @@ describe('bitswap without DHT', function () {
     await nodes[0].bitswap._receiveMessage(peerId, message)
 
     // block store did not have it
-    expect(nodes[0].bitswap.blockstore.get.calledWith(block.cid)).to.be.true()
+    expect(mockBlockstore.get.calledWith(block.cid)).to.be.true()
 
     // another context wants the same block
     const wantBlockPromise2 = nodes[0].bitswap.get(block.cid)
@@ -114,7 +127,7 @@ describe('bitswap without DHT', function () {
     await nodes[0].bitswap._receiveMessage(peerId, message)
 
     // block store had it this time
-    expect(nodes[0].bitswap.blockstore.get.calledWith(block.cid)).to.be.true()
+    expect(mockBlockstore.get.calledWith(block.cid)).to.be.true()
 
     // both requests should get the block
     expect(await wantBlockPromise1).to.equalBytes(block.data)
@@ -125,6 +138,7 @@ describe('bitswap without DHT', function () {
 describe('bitswap with DHT', function () {
   this.timeout(20 * 1000)
 
+  /** @type {{ repo: IPFSRepo, libp2pNode: Libp2p, bitswap: Bitswap }[]} */
   let nodes
 
   before(async () => {
@@ -155,12 +169,12 @@ describe('bitswap with DHT', function () {
     await Promise.all(nodes.map((node) => Promise.all([
       node.bitswap.stop(),
       node.libp2pNode.stop(),
-      node.repo.teardown()
+      node.repo.close()
     ])))
   })
 
   it('put a block in 2, get it in 0', async () => {
-    const block = await makeBlock()
+    const [block] = await makeBlock(1)
     const provideSpy = sinon.spy(nodes[2].libp2pNode._dht, 'provide')
     await nodes[2].bitswap.put(block.cid, block.data)
 
@@ -168,7 +182,6 @@ describe('bitswap with DHT', function () {
     await provideSpy.returnValues[0]
 
     const blockRetrieved = await nodes[0].bitswap.get(block.cid)
-    expect(block.data).to.eql(blockRetrieved.data)
-    expect(block.cid).to.eql(blockRetrieved.cid)
+    expect(block.data).to.eql(blockRetrieved)
   })
 })

@@ -66,6 +66,8 @@
   "devDependencies": {
     "@nodeutils/defaults-deep": "^1.1.0",
     "@types/debug": "^4.1.5",
+    "@types/stats-lite": "^2.2.0",
+    "@types/varint": "^6.0.0",
     "aegir": "^33.1.0",
     "assert": "^2.0.0",
     "benchmark": "^2.1.4",
@@ -93,7 +95,8 @@
     "rimraf": "^3.0.2",
     "sinon": "^10.0.0",
     "stats-lite": "^2.2.0",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "varint": "^6.0.0"
   },
   "dependencies": {
     "@vascosantos/moving-average": "^1.1.0",
@@ -107,6 +110,7 @@
     "libp2p-interfaces": "^0.10.0",
     "multiaddr": "multiformats/js-multiaddr#chore/update-to-new-multiformats",
     "multiformats": "^9.0.4",
+    "multihashing-async": "^2.1.2",
     "native-abort-controller": "^1.0.3",
     "process": "^0.11.10",
     "protobufjs": "^6.10.2",

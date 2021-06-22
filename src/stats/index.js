@@ -84,7 +84,7 @@ class Stats extends EventEmitter {
 
   /**
    * @param {PeerId|string} peerId
-   * @returns {Stat|void}
+   * @returns {Stat|undefined}
    */
   forPeer (peerId) {
     const peerIdStr = (typeof peerId !== 'string' && peerId.toB58String)

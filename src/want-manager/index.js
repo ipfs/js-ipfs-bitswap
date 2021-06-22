@@ -5,6 +5,7 @@ const Wantlist = require('../types/wantlist')
 const CONSTANTS = require('../constants')
 const MsgQueue = require('./msg-queue')
 const logger = require('../utils').logger
+const { base58btc } = require('multiformats/bases/base58')
 
 /**
  * @typedef {import('peer-id')} PeerId
@@ -44,7 +45,7 @@ module.exports = class WantManager {
       // add changes to our wantlist
       if (e.cancel) {
         if (force) {
-          this.wantlist.removeForce(e.cid.toString())
+          this.wantlist.removeForce(e.cid.toString(base58btc))
         } else {
           this.wantlist.remove(e.cid)
         }
