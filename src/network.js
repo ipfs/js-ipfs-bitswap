@@ -158,10 +158,8 @@ class Network {
     return this._libp2p.contentRouting.findProviders(
       cid,
       {
-        // TODO: Should this be a timeout options instead ?
-        maxTimeout: CONSTANTS.providerRequestTimeout,
-        maxNumProviders: maxProviders,
-        signal: options.signal
+        timeout: CONSTANTS.providerRequestTimeout,
+        maxNumProviders: maxProviders
       }
     )
   }
