@@ -3,14 +3,17 @@
 const { CID } = require('multiformats')
 const { sha256 } = require('multiformats/hashes/sha2')
 const { base58btc } = require('multiformats/bases/base58')
-const mhd = require('multiformats/hashes/digest')
 // @ts-ignore
 const vd = require('varint-decoder')
-const multihashing = require('multihashing-async')
 const { isMapEqual } = require('../../utils')
 const { Message } = require('./message')
 const Entry = require('./entry')
 const uint8ArrayConcat = require('uint8arrays/concat')
+const errcode = require('err-code')
+
+/**
+ * @typedef {import('multiformats/hashes/interface').MultihashHasher} MultihashHasher
+ */
 
 class BitswapMessage {
   /**
@@ -229,8 +232,9 @@ class BitswapMessage {
 
 /**
  * @param {Uint8Array} raw
+ * @param {Record<number, MultihashHasher>} [hashers]
  */
-BitswapMessage.deserialize = async (raw) => {
+BitswapMessage.deserialize = async (raw, hashers = {}) => {
   const decoded = Message.decode(raw)
 
   const isFull = (decoded.wantlist && decoded.wantlist.full) || false
@@ -284,10 +288,15 @@ BitswapMessage.deserialize = async (raw) => {
       const cidVersion = values[0]
       const multicodec = values[1]
       const hashAlg = values[2]
+      const hasher = hashAlg === sha256.code ? sha256 : hashers[hashAlg]
+
+      if (!hasher) {
+        throw errcode(new Error('Unknown hash algorithm'), 'ERR_UNKNOWN_HASH_ALG')
+      }
+
       // const hashLen = values[3] // We haven't need to use this so far
-      const hash = await multihashing(p.data, hashAlg)
-      const digest = mhd.decode(hash)
-      const cid = CID.create(cidVersion, multicodec, digest)
+      const hash = await hasher.digest(p.data)
+      const cid = CID.create(cidVersion, multicodec, hash)
       msg.addBlock(cid, p.data)
     }))
     msg.setPendingBytes(decoded.pendingBytes)

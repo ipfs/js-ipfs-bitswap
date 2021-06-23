@@ -17,6 +17,7 @@ const { CID } = require('multiformats')
  * @typedef {import('interface-blockstore').Blockstore} Blockstore
  * @typedef {import('interface-blockstore').Pair} Pair
  * @typedef {import('interface-blockstore').Options} Options
+ * @typedef {import('multiformats/hashes/interface').MultihashHasher} MultihashHasher
  */
 
 const defaultOptions = {
@@ -48,6 +49,7 @@ class Bitswap extends BlockstoreAdapter {
    * @param {boolean} [options.statsEnabled=false]
    * @param {number} [options.statsComputeThrottleTimeout=1000]
    * @param {number} [options.statsComputeThrottleMaxQueueSize=1000]
+   * @param {Record<number, MultihashHasher>} [options.hashers]
    */
   constructor (libp2p, blockstore, options = {}) {
     super()
@@ -65,7 +67,9 @@ class Bitswap extends BlockstoreAdapter {
     })
 
     // the network delivers messages
-    this.network = new Network(libp2p, this, this._stats)
+    this.network = new Network(libp2p, this, this._stats, {
+      hashers: options.hashers
+    })
 
     // local database
     this.blockstore = blockstore
