@@ -435,6 +435,10 @@ class Bitswap extends BlockstoreAdapter {
     this.network.stop()
     this.engine.stop()
   }
+
+  unwrap () {
+    return this.blockstore
+  }
 }
 
 module.exports = Bitswap
