@@ -33,7 +33,7 @@ const BITSWAP120 = '/ipfs/bitswap/1.2.0'
 class Network {
   /**
    * @param {import('libp2p')} libp2p
-   * @param {import('./index')} bitswap
+   * @param {import('./bitswap')} bitswap
    * @param {import('./stats')} stats
    * @param {Object} [options]
    * @param {boolean} [options.b100Only]

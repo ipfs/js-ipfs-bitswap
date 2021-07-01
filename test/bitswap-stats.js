@@ -4,7 +4,7 @@
 const { expect } = require('aegir/utils/chai')
 const pEvent = require('p-event')
 const Message = require('../src/types/message')
-const Bitswap = require('../src')
+const Bitswap = require('../src/bitswap')
 
 const createTempRepo = require('./utils/create-temp-repo')
 const createLibp2pNode = require('./utils/create-libp2p-node')

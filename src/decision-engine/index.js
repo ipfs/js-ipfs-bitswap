@@ -186,7 +186,7 @@ class DecisionEngine {
     }
 
     return {
-      peer: ledger.partner.toPrint(),
+      peer: ledger.partner,
       value: ledger.debtRatio(),
       sent: ledger.accounting.bytesSent,
       recv: ledger.accounting.bytesRecv,

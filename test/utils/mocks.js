@@ -9,7 +9,7 @@ const { EventEmitter } = require('events')
 const uint8ArrayToString = require('uint8arrays/to-string')
 const { BlockstoreAdapter } = require('interface-blockstore')
 
-const Bitswap = require('../../src')
+const Bitswap = require('../../src/bitswap')
 const Network = require('../../src/network')
 const Stats = require('../../src/stats')
 

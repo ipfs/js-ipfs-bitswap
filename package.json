@@ -8,6 +8,9 @@
     "./test/utils/create-libp2p-node": false
   },
   "types": "dist/src/index.d.ts",
+  "tsd": {
+    "directory": "test"
+  },
   "typesVersions": {
     "*": {
       "src/*": [
@@ -38,7 +41,8 @@
     "test": "aegir test",
     "test:browser": "aegir test -t browser -t webworker",
     "test:node": "aegir test -t node",
-    "lint": "aegir lint",
+    "test:types": "tsd",
+    "lint": "aegir lint --files '{test,src}/**/*.{js,ts}' --files '!src/types/message/message.*'",
     "check": "aegir ts -p check",
     "release": "aegir release",
     "release-minor": "aegir release --type minor",
@@ -94,6 +98,7 @@
     "rimraf": "^3.0.2",
     "sinon": "^11.1.1",
     "stats-lite": "^2.2.0",
+    "tsd": "^0.17.0",
     "uuid": "^8.3.2",
     "varint": "^6.0.0"
   },

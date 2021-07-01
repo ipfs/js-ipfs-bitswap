@@ -7,7 +7,7 @@ const PeerId = require('peer-id')
 const all = require('it-all')
 const drain = require('it-drain')
 const Message = require('../src/types/message')
-const Bitswap = require('../src')
+const Bitswap = require('../src/bitswap')
 const { CID } = require('multiformats')
 const { AbortController } = require('native-abort-controller')
 const delay = require('delay')
@@ -88,7 +88,7 @@ describe('bitswap with mocks', function () {
         throw new Error('No ledger found for peer')
       }
 
-      expect(ledger.peer).to.equal(other.toPrint())
+      expect(ledger.peer.toString()).to.equal(other.toString())
       expect(ledger.value).to.equal(0)
       expect(ledger.sent).to.equal(0)
       expect(ledger.recv).to.equal(96)
@@ -179,7 +179,7 @@ describe('bitswap with mocks', function () {
         throw new Error('No ledger found for peer')
       }
 
-      expect(ledger.peer).to.equal(other.toPrint())
+      expect(ledger.peer.toString()).to.equal(other.toString())
       expect(ledger.value).to.equal(0)
 
       // Note: Keeping track of received bytes for blocks affects the

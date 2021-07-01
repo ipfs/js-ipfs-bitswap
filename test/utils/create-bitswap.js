@@ -1,6 +1,6 @@
 'use strict'
 
-const Bitswap = require('../../src')
+const Bitswap = require('../../src/bitswap')
 const createTempRepo = require('./create-temp-repo')
 const createLibp2pNode = require('./create-libp2p-node')
 

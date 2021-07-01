@@ -6,7 +6,7 @@ const PeerId = require('peer-id')
 const sinon = require('sinon')
 const pWaitFor = require('p-wait-for')
 
-const Bitswap = require('../src')
+const Bitswap = require('../src/bitswap')
 
 const createTempRepo = require('./utils/create-temp-repo')
 const createLibp2pNode = require('./utils/create-libp2p-node')

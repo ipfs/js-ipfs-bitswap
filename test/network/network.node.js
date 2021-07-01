@@ -16,11 +16,11 @@ const { Multiaddr } = require('multiaddr')
 
 /**
  * @typedef {import('libp2p')} Libp2p
- * @typedef {import('../../src')} Bitswap
+ * @typedef {import('../../src/bitswap')} Bitswap
  */
 
 /**
- * @returns {import('../../src')}
+ * @returns {import('../../src/bitswap')}
  */
 function createBitswapMock () {
   // @ts-ignore
