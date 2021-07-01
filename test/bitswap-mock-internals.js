@@ -42,7 +42,7 @@ function wantsBlock (cid, bitswap) {
 describe('bitswap with mocks', function () {
   this.timeout(10 * 1000)
 
-  /** @type {import('ipfs-repo')} */
+  /** @type {import('ipfs-repo').IPFSRepo} */
   let repo
   /** @type {{ cid: CID, data: Uint8Array}[]} */
   let blocks

@@ -13,7 +13,7 @@ const { makePeerIds } = require('./utils/make-peer-id')
 
 /**
  * @typedef {import('libp2p')} Libp2p
- * @typedef {import('ipfs-repo')} IPFSRepo
+ * @typedef {import('ipfs-repo').IPFSRepo} IPFSRepo
  * @typedef {import('multiformats/cid').CID} CID
  */
 

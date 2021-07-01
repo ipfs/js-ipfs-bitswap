@@ -80,6 +80,12 @@ class Bitswap extends BlockstoreAdapter {
     this.wm = new WantManager(this.peerId, this.network, this._stats)
 
     this.notifications = new Notifications(this.peerId)
+
+    this.started = false
+  }
+
+  isStarted () {
+    return this.started
   }
 
   /**
@@ -424,6 +430,7 @@ class Bitswap extends BlockstoreAdapter {
     this.wm.start()
     this.network.start()
     this.engine.start()
+    this.started = true
   }
 
   /**
@@ -434,6 +441,7 @@ class Bitswap extends BlockstoreAdapter {
     this.wm.stop()
     this.network.stop()
     this.engine.stop()
+    this.started = false
   }
 
   unwrap () {

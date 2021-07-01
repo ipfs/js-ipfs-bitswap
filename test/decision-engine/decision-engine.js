@@ -162,7 +162,7 @@ describe('Engine', () => {
 
     /**
      * @param {DecisionEngine} dEngine
-     * @param {import('ipfs-repo')} repo
+     * @param {import('ipfs-repo').IPFSRepo} repo
      * @param {{ cid: CID, data: Uint8Array }[]} blocks
      */
     async function peerSendsBlocks (dEngine, repo, blocks) {

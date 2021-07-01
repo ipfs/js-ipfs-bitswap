@@ -15,7 +15,7 @@ const orderedFinish = require('./utils/helpers').orderedFinish
 const Message = require('../src/types/message')
 
 /**
- * @typedef {import('ipfs-repo')} IPFSRepo
+ * @typedef {import('ipfs-repo').IPFSRepo} IPFSRepo
  * @typedef {import('libp2p')} Libp2p
  */
 
@@ -33,6 +33,35 @@ async function createThing (dht) {
   bitswap.start()
   return { repo, libp2pNode, bitswap }
 }
+
+describe('start/stop', () => {
+  it('should tell us if the node is started or not', async () => {
+    const repo = await createTempRepo()
+    const libp2p = {
+      handle: () => {},
+      unhandle: () => {},
+      registrar: {
+        register: () => {}
+      },
+      peerStore: {
+        peers: {
+          values: () => []
+        }
+      }
+    }
+    const bitswap = new Bitswap(libp2p, repo.blocks)
+
+    expect(bitswap.isStarted()).to.be.false()
+
+    bitswap.start()
+
+    expect(bitswap.isStarted()).to.be.true()
+
+    bitswap.stop()
+
+    expect(bitswap.isStarted()).to.be.false()
+  })
+})
 
 describe('bitswap without DHT', function () {
   this.timeout(20 * 1000)
