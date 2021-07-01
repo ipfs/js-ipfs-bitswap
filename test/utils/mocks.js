@@ -4,8 +4,7 @@ const PeerId = require('peer-id')
 
 const PeerStore = require('libp2p/src/peer-store')
 const Node = require('./create-libp2p-node').bundle
-const tmpdir = require('ipfs-utils/src/temp-dir')
-const Repo = require('ipfs-repo')
+const createTempRepo = require('./create-temp-repo')
 const { EventEmitter } = require('events')
 const uint8ArrayToString = require('uint8arrays/to-string')
 const { BlockstoreAdapter } = require('interface-blockstore')
@@ -21,6 +20,7 @@ const Stats = require('../../src/stats')
  * @typedef {import('multiformats/cid').CID} CID
  * @typedef {import('multiaddr').Multiaddr} Multiaddr
  * @typedef {import('libp2p')} Libp2p
+ * @typedef {import('ipfs-repo').IPFSRepo} IPFSRepo
  */
 
 /**
@@ -214,7 +214,7 @@ exports.applyNetwork = (bs, n) => {
  * @param {boolean} enableDHT - Whether or not to run the dht
  */
 exports.genBitswapNetwork = async (n, enableDHT = false) => {
-  /** @type {{ peerId: PeerId, libp2p: Libp2p, repo: Repo, peerStore: PeerStore, bitswap: Bitswap }[]} */
+  /** @type {{ peerId: PeerId, libp2p: Libp2p, repo: IPFSRepo, peerStore: PeerStore, bitswap: Bitswap }[]} */
   const netArray = []
 
   // create PeerId and libp2p.Node for each
@@ -239,19 +239,9 @@ exports.genBitswapNetwork = async (n, enableDHT = false) => {
   })
 
   // create the repos
-  const tmpDir = tmpdir()
-  netArray.forEach((net, i) => {
-    const repoPath = tmpDir + '/' + net.peerId.toB58String()
-    net.repo = new Repo(repoPath)
-  })
-
   await Promise.all(
     netArray.map(async (net) => {
-      const repoPath = tmpDir + '/' + net.peerId.toB58String()
-      net.repo = new Repo(repoPath)
-
-      await net.repo.init({})
-      await net.repo.open()
+      net.repo = await createTempRepo()
     })
   )
 
