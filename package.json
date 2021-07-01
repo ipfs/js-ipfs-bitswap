@@ -70,7 +70,7 @@
     "assert": "^2.0.0",
     "benchmark": "^2.1.4",
     "delay": "^5.0.0",
-    "interface-datastore": "^4.0.1",
+    "interface-datastore": "^5.1.1",
     "ipfs-repo": "^9.1.0",
     "ipfs-utils": "^6.0.1",
     "iso-random-stream": "^2.0.0",
