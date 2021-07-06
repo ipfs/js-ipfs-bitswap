@@ -107,7 +107,7 @@
     "it-pipe": "^1.1.0",
     "just-debounce-it": "^1.1.0",
     "libp2p-interfaces": "^0.10.0",
-    "multiaddr": "^9.0.1",
+    "multiaddr": "^10.0.0",
     "multicodec": "^3.0.1",
     "multihashing-async": "^2.1.2",
     "native-abort-controller": "^1.0.3",
