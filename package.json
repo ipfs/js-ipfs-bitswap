@@ -88,7 +88,7 @@
     "p-defer": "^3.0.0",
     "p-event": "^4.2.0",
     "p-wait-for": "^3.2.0",
-    "peer-id": "^0.14.3",
+    "peer-id": "^0.15.0",
     "process": "^0.11.10",
     "promisify-es6": "^1.0.3",
     "rimraf": "^3.0.2",
