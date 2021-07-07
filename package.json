@@ -80,7 +80,7 @@
     "libp2p-kad-dht": "^0.22.0",
     "libp2p-mplex": "^0.10.2",
     "libp2p-noise": "^3.0.0",
-    "libp2p-tcp": "^0.15.3",
+    "libp2p-tcp": "^0.17.0",
     "lodash.difference": "^4.5.0",
     "lodash.flatten": "^4.4.0",
     "lodash.range": "^3.2.0",
