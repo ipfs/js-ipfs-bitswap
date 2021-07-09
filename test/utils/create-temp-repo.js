@@ -1,5 +1,6 @@
 'use strict'
 
+// @ts-ignore locks is not exported?
 const { createRepo, locks: { memory } } = require('ipfs-repo')
 const { MemoryDatastore } = require('interface-datastore')
 const { MemoryBlockstore } = require('interface-blockstore')

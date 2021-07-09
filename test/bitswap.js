@@ -49,6 +49,7 @@ describe('start/stop', () => {
         }
       }
     }
+    // @ts-ignore not a full libp2p
     const bitswap = new Bitswap(libp2p, repo.blocks)
 
     expect(bitswap.isStarted()).to.be.false()

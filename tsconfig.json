@@ -8,6 +8,7 @@
     "test"
   ],
   "exclude": [
-    "src/types/message/message.js" // generated file
+    "src/types/message/message.js", // generated file
+    "test/types.test-d.ts"
   ]
 }
