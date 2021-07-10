@@ -1,3 +1,17 @@
+# [6.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v5.0.6...v6.0.0) (2021-07-10)
+
+
+### chore
+
+* update to new multiformats ([#340](https://github.com/ipfs/js-ipfs-bitswap/issues/340)) ([73bdd19](https://github.com/ipfs/js-ipfs-bitswap/commit/73bdd19dbe7e9c6ef557918f843ccdef92c859de))
+
+
+### BREAKING CHANGES
+
+* uses the CID class from the new multiformats module
+
+
+
 ## [5.0.6](https://github.com/ipfs/js-ipfs-bitswap/compare/v5.0.5...v5.0.6) (2021-06-22)
 
 
