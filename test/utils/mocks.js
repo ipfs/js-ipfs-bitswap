@@ -1,57 +1,34 @@
 'use strict'
 
-const range = require('lodash.range')
-
 const PeerId = require('peer-id')
 
 const PeerStore = require('libp2p/src/peer-store')
 const Node = require('./create-libp2p-node').bundle
-const tmpdir = require('ipfs-utils/src/temp-dir')
-const Repo = require('ipfs-repo')
+const { MemoryBlockstore } = require('interface-blockstore')
 const { EventEmitter } = require('events')
-const toString = require('uint8arrays/to-string')
 
-const Bitswap = require('../../src')
+const Bitswap = require('../../src/bitswap')
 const Network = require('../../src/network')
 const Stats = require('../../src/stats')
 
 /**
- * @typedef {import('../../src/types').BlockStore} BlockStore
+ * @typedef {import('interface-blockstore').Blockstore} BlockStore
+ * @typedef {import('interface-blockstore').Pair} Pair
+ * @typedef {import('../../src/types/message')} Message
+ * @typedef {import('multiformats/cid').CID} CID
+ * @typedef {import('multiaddr').Multiaddr} Multiaddr
+ * @typedef {import('libp2p')} Libp2p
  */
 
 /**
- *
- * @returns {BlockStore}
- */
-function mockBlockStore () {
-  const blocks = {}
-
-  const store = {
-    has: (cid) => Promise.resolve(Boolean(blocks[toString(cid.multihash)])),
-    get: (cid) => Promise.resolve(blocks[toString(cid.multihash)]),
-    put: (block) => {
-      blocks[toString(block.cid.multihash)] = block
-
-      return Promise.resolve(block)
-    },
-    putMany: async function * (blocks) {
-      for await (const block of blocks) {
-        store.put(block)
-
-        yield block
-      }
-    }
-  }
-
-  return store
-}
-
-/*
  * Create a mock libp2p node
+ *
+ * @returns {import('libp2p')}
  */
 exports.mockLibp2pNode = () => {
   const peerId = PeerId.createFromHexString('122019318b6e5e0cf93a2314bf01269a2cc23cd3dcd452d742cdb9379d8646f6e4a9')
 
+  // @ts-ignore - not all libp2p fields are implemented
   return Object.assign(new EventEmitter(), {
     peerId,
     multiaddrs: [],
@@ -62,16 +39,16 @@ exports.mockLibp2pNode = () => {
       unregister () {}
     },
     contentRouting: {
-      provide: async (cid) => {}, // eslint-disable-line require-await
-      findProviders: async (cid, timeout) => { return [] } // eslint-disable-line require-await
+      provide: async (/** @type {CID} */ cid) => {}, // eslint-disable-line require-await
+      findProviders: async (/** @type {CID} */ cid, /** @type {number} **/ timeout) => { return [] } // eslint-disable-line require-await
     },
     connectionManager: {
       on () {},
       removeListener () {}
     },
-    async  dial (peer) { // eslint-disable-line require-await
+    async dial (/** @type {PeerId} */ peer) { // eslint-disable-line require-await
     },
-    async dialProtocol (peer, protocol) { // eslint-disable-line require-await
+    async dialProtocol (/** @type {PeerId} */ peer, /** @type {string} */ protocol) { // eslint-disable-line require-await
       return {}
     },
     swarm: {
@@ -85,17 +62,24 @@ exports.mockLibp2pNode = () => {
  * Create a mock network instance
  *
  * @param {number} [calls]
- * @param {Function} [done]
- * @param {Function} [onMsg]
+ * @param {function({ connects: (PeerId|Multiaddr)[], messages: [PeerId, Message][] }): void} [done]
+ * @param {function(PeerId, Message): void} [onMsg]
  * @returns {import('../../src/network')}
  */
 exports.mockNetwork = (calls = Infinity, done = () => {}, onMsg = () => {}) => {
+  /** @type {(PeerId|Multiaddr)[]} */
   const connects = []
+  /** @type {[PeerId, Message][]}} */
   const messages = []
   let i = 0
 
-  const finish = (msgTo) => {
-    onMsg && onMsg(msgTo)
+  /**
+   * @param {PeerId} peerId
+   * @param {Message} message
+   */
+  const finish = (peerId, message) => {
+    onMsg && onMsg(peerId, message)
+
     if (++i === calls) {
       done && done({ connects: connects, messages: messages })
     }
@@ -103,26 +87,35 @@ exports.mockNetwork = (calls = Infinity, done = () => {}, onMsg = () => {}) => {
 
   class MockNetwork extends Network {
     constructor () {
-      super({}, new Bitswap({}, mockBlockStore()), new Stats())
+      // @ts-ignore - {} is not an instance of libp2p
+      super({}, new Bitswap({}, new MemoryBlockstore()), new Stats())
 
       this.connects = connects
       this.messages = messages
     }
 
-    // @ts-ignore
+    /**
+     * @param {PeerId|Multiaddr} p
+     * @returns {Promise<import('libp2p').Connection>}
+     */
     connectTo (p) {
       setTimeout(() => {
         connects.push(p)
       })
 
+      // @ts-ignore not all connection fields are implemented
       return Promise.resolve({ id: '', remotePeer: '' })
     }
 
+    /**
+     * @param {PeerId} p
+     * @param {Message} msg
+     */
     sendMessage (p, msg) {
       messages.push([p, msg])
 
       setTimeout(() => {
-        finish([p, msg])
+        finish(p, msg)
       })
 
       return Promise.resolve()
@@ -149,52 +142,10 @@ exports.mockNetwork = (calls = Infinity, done = () => {}, onMsg = () => {}) => {
   return new MockNetwork()
 }
 
-/*
- * Create a mock test network
+/**
+ * @param {Bitswap} bs
+ * @param {Network} n
  */
-exports.createMockTestNet = async (repo, count) => {
-  const results = await Promise.all([
-    range(count).map((i) => repo.create(`repo-${i}`)),
-    range(count).map((i) => PeerId.create({ bits: 512 }))
-  ])
-
-  const stores = results[0].map((r) => r.blockstore)
-  const ids = results[1]
-
-  const hexIds = ids.map((id) => id.toHexString())
-  const bitswaps = range(count).map((i) => new Bitswap({}, stores[i]))
-  const networks = range(count).map((i) => {
-    return {
-      connectTo (id) {
-        return new Promise((resolve, reject) => {
-          if (!hexIds.includes(hexIds, id.toHexString())) {
-            return reject(new Error('unknown peer'))
-          }
-          resolve()
-        })
-      },
-      sendMessage (id, msg) {
-        const j = hexIds.findIndex((el) => el === id.toHexString())
-        return bitswaps[j]._receiveMessage(ids[i], msg)
-      },
-      start () {
-      }
-    }
-  })
-
-  range(count).forEach((i) => {
-    exports.applyNetwork(bitswaps[i], networks[i])
-    bitswaps[i].start()
-  })
-
-  return {
-    ids,
-    stores,
-    bitswaps,
-    networks
-  }
-}
-
 exports.applyNetwork = (bs, n) => {
   bs.network = n
   bs.wm.network = n
@@ -207,11 +158,12 @@ exports.applyNetwork = (bs, n) => {
  * @param {boolean} enableDHT - Whether or not to run the dht
  */
 exports.genBitswapNetwork = async (n, enableDHT = false) => {
-  const netArray = [] // bitswap, peerStore, libp2p, peerId, repo
+  /** @type {{ peerId: PeerId, libp2p: Libp2p, peerStore: PeerStore, bitswap: Bitswap }[]} */
+  const netArray = []
 
   // create PeerId and libp2p.Node for each
   const peers = await Promise.all(
-    range(n).map(i => PeerId.create())
+    new Array(n).fill(0).map(() => PeerId.create())
   )
 
   peers.forEach((p, i) => {
@@ -226,25 +178,9 @@ exports.genBitswapNetwork = async (n, enableDHT = false) => {
         }
       }
     })
+    // @ts-ignore object is incomplete
     netArray.push({ peerId: p, libp2p: l })
   })
-
-  // create the repos
-  const tmpDir = tmpdir()
-  netArray.forEach((net, i) => {
-    const repoPath = tmpDir + '/' + net.peerId.toB58String()
-    net.repo = new Repo(repoPath)
-  })
-
-  await Promise.all(
-    netArray.map(async (net) => {
-      const repoPath = tmpDir + '/' + net.peerId.toB58String()
-      net.repo = new Repo(repoPath)
-
-      await net.repo.init({})
-      await net.repo.open()
-    })
-  )
 
   // start every libp2pNode
   await Promise.all(
@@ -253,19 +189,18 @@ exports.genBitswapNetwork = async (n, enableDHT = false) => {
 
   // create PeerStore and populate peerStore
   netArray.forEach((net, i) => {
-    const pb = netArray[i].libp2p.peerStore
+    const pb = net.libp2p.peerStore
     netArray.forEach((net, j) => {
       if (i === j) {
         return
       }
       pb.addressBook.set(net.peerId, net.libp2p.multiaddrs)
     })
-    netArray[i].peerStore = pb
   })
 
-  // create every BitSwap
+  // create every Bitswap
   netArray.forEach((net) => {
-    net.bitswap = new Bitswap(net.libp2p, net.repo.blocks, net.peerStore)
+    net.bitswap = new Bitswap(net.libp2p, new MemoryBlockstore())
   })
 
   return netArray

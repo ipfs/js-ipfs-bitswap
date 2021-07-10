@@ -1,26 +1,25 @@
 'use strict'
 
 const { EventEmitter } = require('events')
-const IPLDBlock = require('ipld-block')
-const uint8ArrayEquals = require('uint8arrays/equals')
 const uint8ArrayToString = require('uint8arrays/to-string')
 
 const CONSTANTS = require('./constants')
 const logger = require('./utils').logger
 
 /**
- * @typedef {import('ipld-block')} Block
+ * @typedef {import('multiformats').CID} CID
+ * @typedef {import('peer-id')} PeerId
  */
 
 /**
  * @param {CID} cid
  */
-const unwantEvent = (cid) => `unwant:${uint8ArrayToString(cid.multihash, 'base64')}`
+const unwantEvent = (cid) => `unwant:${uint8ArrayToString(cid.multihash.bytes, 'base64')}`
 
 /**
  * @param {CID} cid
  */
-const blockEvent = (cid) => `block:${uint8ArrayToString(cid.multihash, 'base64')}`
+const blockEvent = (cid) => `block:${uint8ArrayToString(cid.multihash.bytes, 'base64')}`
 
 class Notifications extends EventEmitter {
   /**
@@ -40,11 +39,12 @@ class Notifications extends EventEmitter {
   /**
    * Signal the system that we received `block`.
    *
-   * @param {Block} block
+   * @param {CID} cid
+   * @param {Uint8Array} block
    * @returns {void}
    */
-  hasBlock (block) {
-    const event = blockEvent(block.cid)
+  hasBlock (cid, block) {
+    const event = blockEvent(cid)
     this._log(event)
     this.emit(event, block)
   }
@@ -58,7 +58,7 @@ class Notifications extends EventEmitter {
    * @param {CID} cid
    * @param {Object} [options]
    * @param {AbortSignal} [options.signal]
-   * @returns {Promise<Block>}
+   * @returns {Promise<Uint8Array>}
    */
   wantBlock (cid, options = {}) {
     if (!cid) {
@@ -73,24 +73,17 @@ class Notifications extends EventEmitter {
     return new Promise((resolve, reject) => {
       const onUnwant = () => {
         this.removeListener(blockEvt, onBlock)
+
         reject(new Error(`Block for ${cid} unwanted`))
       }
 
       /**
-       * @param {Block} block
+       * @param {Uint8Array} data
        */
-      const onBlock = (block) => {
+      const onBlock = (data) => {
         this.removeListener(unwantEvt, onUnwant)
 
-        if (!uint8ArrayEquals(cid.multihash, block.cid.multihash)) {
-          // wrong block
-          return reject(new Error(`Incorrect block received for ${cid}`))
-        } else if (cid.version !== block.cid.version || cid.codec !== block.cid.codec) {
-          // right block but wrong version or codec
-          block = new IPLDBlock(block.data, cid)
-        }
-
-        resolve(block)
+        resolve(data)
       }
 
       this.once(unwantEvt, onUnwant)
@@ -121,8 +114,3 @@ class Notifications extends EventEmitter {
 }
 
 module.exports = Notifications
-
-/**
- * @typedef {import('cids')} CID
- * @typedef {import('peer-id')} PeerId
- */

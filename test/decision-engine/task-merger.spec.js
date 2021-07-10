@@ -7,7 +7,20 @@ const PeerId = require('peer-id')
 const RequestQueue = require('../../src/decision-engine/req-queue')
 const TaskMerger = require('../../src/decision-engine/task-merger')
 
+/**
+ * @typedef {object} Task
+ * @property {string} topic
+ * @property {number} priority
+ * @property {number} size
+ * @property {object} data
+ * @property {boolean} data.isWantBlock
+ * @property {number} data.blockSize
+ * @property {boolean} data.haveBlock
+ * @property {boolean} data.sendDontHave
+ */
+
 describe('Task Merger', () => {
+  /** @type {PeerId} */
   let peerId
 
   before(async () => {
@@ -38,6 +51,10 @@ describe('Task Merger', () => {
       }
     }
 
+    /**
+     * @param {Task[]} tasks
+     * @param {boolean} expIsWantBlock
+     */
     const runTestCase = (tasks, expIsWantBlock) => {
       tasks = cloneTasks(tasks)
 
@@ -113,6 +130,12 @@ describe('Task Merger', () => {
       }
     }
 
+    /**
+     * @param {Task[]} tasks
+     * @param {number} expSize
+     * @param {number} expBlockSize
+     * @param {boolean} expIsWantBlock
+     */
     const runTestCase = (tasks, expSize, expBlockSize, expIsWantBlock) => {
       tasks = cloneTasks(tasks)
 
@@ -191,6 +214,10 @@ describe('Task Merger', () => {
       }
     }
 
+    /**
+     * @param {Task[]} tasks
+     * @param {number} expCount
+     */
     const runTestCase = (tasks, expCount) => {
       tasks = cloneTasks(tasks)
 
@@ -263,6 +290,10 @@ describe('Task Merger', () => {
       }
     }
 
+    /**
+     * @param {Task[]} tasks
+     * @param {Task[]} expTasks
+     */
     const runTestCase = (tasks, expTasks) => {
       tasks = cloneTasks(tasks)
 
@@ -324,6 +355,9 @@ describe('Task Merger', () => {
   })
 })
 
+/**
+ * @param {Task[]} tasks
+ */
 function cloneTasks (tasks) {
   const clone = []
   for (const t of tasks) {

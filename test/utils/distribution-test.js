@@ -6,8 +6,9 @@ const range = require('lodash.range')
 const { expect } = require('aegir/utils/chai')
 
 const createBitswap = require('./create-bitswap')
-const makeBlock = require('./make-block')
+const makeBlock = require('./make-blocks')
 const connectAll = require('./connect-all')
+const all = require('it-all')
 
 /**
  *
@@ -31,7 +32,7 @@ module.exports = async (instanceCount, blockCount, repeats, events) => {
     const blocks = await makeBlock(blockCount)
 
     await Promise.all(
-      blocks.map(block => first.bitswap.put(block))
+      blocks.map(block => first.bitswap.put(block.cid, block.data))
     )
 
     events.emit('first put')
@@ -52,12 +53,14 @@ module.exports = async (instanceCount, blockCount, repeats, events) => {
 
     try {
       expect(results).have.lengthOf(instanceCount)
-      results.forEach((nodeBlocks) => {
+
+      for (const result of results) {
+        const nodeBlocks = await all(result)
         expect(nodeBlocks).to.have.lengthOf(blocks.length)
         nodeBlocks.forEach((block, i) => {
-          expect(block.data).to.deep.equal(blocks[i].data)
+          expect(block).to.deep.equal(blocks[i].data)
         })
-      })
+      }
     } finally {
       pendingRepeats--
     }
@@ -69,7 +72,6 @@ module.exports = async (instanceCount, blockCount, repeats, events) => {
     nodes.map(async node => {
       await node.bitswap.stop()
       await node.libp2pNode.stop()
-      await node.repo.teardown()
     })
   )
 

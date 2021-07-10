@@ -27,6 +27,10 @@ exports.orderedFinish = (n) => {
   return output
 }
 
+/**
+ * @param {number} n
+ * @returns
+ */
 exports.countToFinish = (n) => {
   let pending = n
 

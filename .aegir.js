@@ -27,7 +27,7 @@ module.exports = {
     }
   },
   build: {
-    bundlesizeMax: '63KB',
+    bundlesizeMax: '44KB',
     config: esbuild
   }
 }

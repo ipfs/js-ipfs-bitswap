@@ -1,10 +1,24 @@
 'use strict'
 
-const { sortBy } = require('../../utils')
 const Entry = require('./entry')
+const { base58btc } = require('multiformats/bases/base58')
 
 /**
- * @typedef {import('cids')} CID
+ * @template T
+ * @param {(v:T) => number} fn
+ * @param {T[]} list
+ * @returns {T[]}
+ */
+const sortBy = (fn, list) => {
+  return Array.prototype.slice.call(list, 0).sort((a, b) => {
+    const aa = fn(a)
+    const bb = fn(b)
+    return aa < bb ? -1 : aa > bb ? 1 : 0
+  })
+}
+
+/**
+ * @typedef {import('multiformats').CID} CID
  */
 
 class Wantlist {
@@ -31,7 +45,7 @@ class Wantlist {
     // Have to import here to avoid circular reference
     const Message = require('../message')
 
-    const cidStr = cid.toString('base58btc')
+    const cidStr = cid.toString(base58btc)
     const entry = this.set.get(cidStr)
 
     if (entry) {
@@ -54,7 +68,7 @@ class Wantlist {
    * @param {CID} cid
    */
   remove (cid) {
-    const cidStr = cid.toString('base58btc')
+    const cidStr = cid.toString(base58btc)
     const entry = this.set.get(cidStr)
 
     if (!entry) {
@@ -104,7 +118,15 @@ class Wantlist {
    * @param {CID} cid
    */
   contains (cid) {
-    const cidStr = cid.toString('base58btc')
+    const cidStr = cid.toString(base58btc)
+    return this.set.has(cidStr)
+  }
+
+  /**
+   * @param {CID} cid
+   */
+  get (cid) {
+    const cidStr = cid.toString(base58btc)
     return this.set.get(cidStr)
   }
 }

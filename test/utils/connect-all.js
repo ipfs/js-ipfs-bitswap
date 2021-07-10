@@ -4,7 +4,6 @@
 const without = require('lodash.without')
 
 /**
- *
  * @param {any[]} nodes
  */
 module.exports = async (nodes) => {

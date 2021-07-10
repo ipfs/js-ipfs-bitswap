@@ -1,10 +1,11 @@
 'use strict'
 
 const WantlistEntry = require('../wantlist').Entry
+const { base58btc } = require('multiformats/bases/base58')
 
 module.exports = class BitswapMessageEntry {
   /**
-   * @param {import('cids')} cid
+   * @param {import('multiformats').CID} cid
    * @param {number} priority
    * @param {import('./message').Message.Wantlist.WantType} wantType
    * @param {boolean} [cancel]
@@ -41,7 +42,7 @@ module.exports = class BitswapMessageEntry {
   }
 
   get [Symbol.toStringTag] () {
-    const cidStr = this.cid.toString('base58btc')
+    const cidStr = this.cid.toString(base58btc)
     return `BitswapMessageEntry ${cidStr} <cancel: ${this.cancel}, priority: ${this.priority}>`
   }
 

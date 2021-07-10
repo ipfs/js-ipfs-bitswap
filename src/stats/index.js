@@ -4,7 +4,7 @@ const { EventEmitter } = require('events')
 const Stat = require('./stat')
 
 /**
- * @typedef {import('cids')} CID
+ * @typedef {import('multiformats').CID} CID
  * @typedef {import('peer-id')} PeerId
  */
 
@@ -84,7 +84,7 @@ class Stats extends EventEmitter {
 
   /**
    * @param {PeerId|string} peerId
-   * @returns {Stat|void}
+   * @returns {Stat|undefined}
    */
   forPeer (peerId) {
     const peerIdStr = (typeof peerId !== 'string' && peerId.toB58String)

@@ -3,14 +3,17 @@
 
 const { expect } = require('aegir/utils/chai')
 const PeerId = require('peer-id')
-const CID = require('cids')
-const multihashing = require('multihashing-async')
 const Message = require('../../src/types/message')
 const MsgQueue = require('../../src/want-manager/msg-queue')
 const defer = require('p-defer')
 const {
   mockNetwork
 } = require('../utils/mocks')
+const makeBlocks = require('../utils/make-blocks')
+
+/**
+ * @typedef {import('multiformats/cid').CID} CID
+ */
 
 describe('MessageQueue', () => {
   /** @type {PeerId[]} */
@@ -20,10 +23,7 @@ describe('MessageQueue', () => {
 
   before(async () => {
     peerIds = await Promise.all([0, 1].map(() => PeerId.create({ bits: 512 })))
-
-    const data = ['1', '2', '3', '4', '5', '6'].map((d) => Buffer.from(d))
-    const hashes = await Promise.all(data.map((d) => multihashing(d, 'sha2-256')))
-    cids = hashes.map((h) => new CID(h))
+    cids = (await makeBlocks(6)).map(({ cid }) => cid)
   })
 
   it('connects and sends messages', async () => {

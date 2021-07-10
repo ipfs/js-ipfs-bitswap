@@ -11,10 +11,11 @@ const logger = require('./utils').logger
 
 /**
  * @typedef {import('peer-id')} PeerId
- * @typedef {import('cids')} CID
+ * @typedef {import('multiformats').CID} CID
  * @typedef {import('multiaddr').Multiaddr} Multiaddr
  * @typedef {import('libp2p-interfaces/src/connection').Connection} Connection
  * @typedef {import('libp2p-interfaces/src/stream-muxer/types').MuxedStream} MuxedStream
+ * @typedef {import('multiformats/hashes/interface').MultihashHasher} MultihashHasher
  *
  * @typedef {Object} Provider
  * @property {PeerId} id
@@ -32,10 +33,11 @@ const BITSWAP120 = '/ipfs/bitswap/1.2.0'
 class Network {
   /**
    * @param {import('libp2p')} libp2p
-   * @param {import('./index')} bitswap
+   * @param {import('./bitswap')} bitswap
    * @param {import('./stats')} stats
    * @param {Object} [options]
    * @param {boolean} [options.b100Only]
+   * @param {Record<number, MultihashHasher>} [options.hashers]
    */
   constructor (libp2p, bitswap, stats, options = {}) {
     this._log = logger(libp2p.peerId, 'network')
@@ -56,6 +58,7 @@ class Network {
     this._onPeerConnect = this._onPeerConnect.bind(this)
     this._onPeerDisconnect = this._onPeerDisconnect.bind(this)
     this._onConnection = this._onConnection.bind(this)
+    this._hashers = options.hashers || {}
   }
 
   start () {
@@ -115,7 +118,7 @@ class Network {
         async (source) => {
           for await (const data of source) {
             try {
-              const message = await Message.deserialize(data.slice())
+              const message = await Message.deserialize(data.slice(), this._hashers)
               await this._bitswap._receiveMessage(connection.remotePeer, message)
             } catch (err) {
               this._bitswap._receiveError(err)
@@ -158,11 +161,8 @@ class Network {
     return this._libp2p.contentRouting.findProviders(
       cid,
       {
-        // TODO: Should this be a timeout options insetad ?
-        // @ts-expect-error - 'maxTimeout' does not exist in type
-        maxTimeout: CONSTANTS.providerRequestTimeout,
-        maxNumProviders: maxProviders,
-        signal: options.signal
+        timeout: CONSTANTS.providerRequestTimeout,
+        maxNumProviders: maxProviders
       }
     )
   }
@@ -256,13 +256,16 @@ class Network {
   /**
    * @private
    * @param {PeerId} peer
-   * @param {Map<string, {data:Uint8Array}>} blocks
+   * @param {Map<string, Uint8Array>} blocks
    */
   _updateSentStats (peer, blocks) {
     const peerId = peer.toB58String()
 
     if (this._stats) {
-      blocks.forEach((block) => this._stats.push(peerId, 'dataSent', block.data.length))
+      for (const block of blocks.values()) {
+        this._stats.push(peerId, 'dataSent', block.length)
+      }
+
       this._stats.push(peerId, 'blocksSent', blocks.size)
     }
   }

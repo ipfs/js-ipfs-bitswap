@@ -19,15 +19,24 @@
 
 ## Table of Contents
 
-- [Install](#install)
-  - [npm](#npm)
-  - [Use in Node.js](#use-in-nodejs)
-  - [Use in a browser with browserify, webpack or any other bundler](#use-in-a-browser-with-browserify-webpack-or-any-other-bundler)
-  - [Use in a browser using a script tag](#use-in-a-browser-using-a-script-tag)
-- [Usage](#usage)
-- [API](#api)
-- [Contribute](#contribute)
-- [License](#license)
+- [ipfs-bitswap](#ipfs-bitswap)
+  - [Lead Maintainer](#lead-maintainer)
+  - [Table of Contents](#table-of-contents)
+  - [Install](#install)
+    - [npm](#npm)
+    - [Use in Node.js or in the browser with browserify, webpack or any other bundler](#use-in-nodejs-or-in-the-browser-with-browserify-webpack-or-any-other-bundler)
+    - [Use in a browser using a script tag](#use-in-a-browser-using-a-script-tag)
+  - [API](#api)
+    - [Stats](#stats)
+      - [Peer accessor:](#peer-accessor)
+      - [Global snapshot accessor:](#global-snapshot-accessor)
+      - [Moving average accessor:](#moving-average-accessor)
+  - [Development](#development)
+    - [Structure](#structure)
+  - [Performance tests](#performance-tests)
+    - [Profiling](#profiling)
+  - [Contribute](#contribute)
+  - [License](#license)
 
 ## Install
 

@@ -3,7 +3,7 @@
 const Wantlist = require('../types/wantlist')
 
 /**
- * @typedef {import('cids')} CID
+ * @typedef {import('multiformats').CID} CID
  */
 
 class Ledger {
@@ -63,10 +63,9 @@ class Ledger {
 
   /**
    * @param {CID} cid
-   * @returns {import('../types/wantlist/entry')|void}
    */
   wantlistContains (cid) {
-    return this.wantlist.contains(cid)
+    return this.wantlist.get(cid)
   }
 
   /**

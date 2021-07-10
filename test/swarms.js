@@ -10,6 +10,9 @@ const test = it
 
 describe.skip('swarms', () => {
   const print = Boolean(process.env.PRINT)
+  /**
+   * @type {EventEmitter}
+   */
   let emitter
 
   before(() => {
@@ -74,10 +77,15 @@ describe.skip('swarms', () => {
     await distributionTest(10, 100, 1, emitter)
   })
 
+  /**
+   * @param {*} suite
+   * @param {EventEmitter} emitter
+   */
   function maybePrint (suite, emitter) {
     if (!print) {
       return
     }
+    /** @type {number[]} */
     const elapseds = []
     emitter.once('start', () => {
       console.log('\n------------------------')

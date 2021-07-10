@@ -9,7 +9,7 @@ const WantManager = require('../../src/want-manager')
 const Stats = require('../../src/stats')
 
 const mockNetwork = require('../utils/mocks').mockNetwork
-const makeBlock = require('../utils/make-block')
+const makeBlock = require('../utils/make-blocks')
 const { makePeerIds } = require('../utils/make-peer-id')
 
 describe('WantManager', () => {

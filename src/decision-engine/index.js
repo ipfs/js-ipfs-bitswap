@@ -1,12 +1,12 @@
 'use strict'
 
 /**
- * @typedef {import('ipld-block')} Block
  * @typedef {import('../types/message/entry')} BitswapMessageEntry
  * @typedef {import('peer-id')} PeerId
  */
 
-const CID = require('cids')
+const { CID } = require('multiformats')
+const { base58btc } = require('multiformats/bases/base58')
 
 const Message = require('../types/message')
 const WantType = Message.WantType
@@ -34,7 +34,7 @@ const MAX_SIZE_REPLACE_HAS_WITH_BLOCK = 1024
 class DecisionEngine {
   /**
    * @param {PeerId} peerId
-   * @param {import('ipfs-repo').Blockstore} blockstore
+   * @param {import('interface-blockstore').Blockstore} blockstore
    * @param {import('../network')} network
    * @param {import('../stats')} stats
    * @param {Object} [opts]
@@ -71,9 +71,6 @@ class DecisionEngine {
     }
   }
 
-  /**
-   * @private
-   */
   _scheduleProcessTasks () {
     setTimeout(() => {
       this._processTasks()
@@ -83,8 +80,6 @@ class DecisionEngine {
   /**
    * Pull tasks off the request queue and send a message to the corresponding
    * peer
-   *
-   * @private
    */
   async _processTasks () {
     if (!this._running) {
@@ -107,7 +102,7 @@ class DecisionEngine {
     const blockCids = []
     const blockTasks = new Map()
     for (const task of tasks) {
-      const cid = new CID(task.topic)
+      const cid = CID.parse(task.topic)
       if (task.data.haveBlock) {
         if (task.data.isWantBlock) {
           blockCids.push(cid)
@@ -124,16 +119,16 @@ class DecisionEngine {
 
     const blocks = await this._getBlocks(blockCids)
     for (const [topic, taskData] of blockTasks) {
+      const cid = CID.parse(topic)
       const blk = blocks.get(topic)
       // If the block was found (it has not been removed)
       if (blk) {
         // Add the block to the message
-        msg.addBlock(blk)
+        msg.addBlock(cid, blk)
       } else {
         // The block was not found. If the client requested DONT_HAVE,
         // add DONT_HAVE to the message.
         if (taskData.sendDontHave) {
-          const cid = new CID(topic)
           msg.addDontHave(cid)
         }
       }
@@ -154,8 +149,8 @@ class DecisionEngine {
       peerId && await this.network.sendMessage(peerId, msg)
 
       // Peform sent message accounting
-      for (const block of blocks.values()) {
-        peerId && this.messageSent(peerId, block)
+      for (const [cidStr, block] of blocks.entries()) {
+        peerId && this.messageSent(peerId, CID.parse(cidStr), block)
       }
     } catch (err) {
       this._log.error(err)
@@ -191,7 +186,7 @@ class DecisionEngine {
     }
 
     return {
-      peer: ledger.partner.toPrint(),
+      peer: ledger.partner,
       value: ledger.debtRatio(),
       sent: ledger.accounting.bytesSent,
       recv: ledger.accounting.bytesRecv,
@@ -210,8 +205,7 @@ class DecisionEngine {
    * Receive blocks either from an incoming message from the network, or from
    * blocks being added by the client on the localhost (eg IPFS add)
    *
-   * @param {Block[]} blocks
-   * @returns {void}
+   * @param {{ cid: CID, data: Uint8Array }[]} blocks
    */
   receivedBlocks (blocks) {
     if (!blocks.length) {
@@ -219,12 +213,13 @@ class DecisionEngine {
     }
 
     // For each connected peer, check if it wants the block we received
-    this.ledgerMap.forEach((ledger) => {
-      blocks.forEach((block) => {
+    for (const ledger of this.ledgerMap.values()) {
+      for (const block of blocks) {
         // Filter out blocks that we don't want
         const want = ledger.wantlistContains(block.cid)
+
         if (!want) {
-          return
+          continue
         }
 
         // If the block is small enough, just send the block, even if the
@@ -238,7 +233,7 @@ class DecisionEngine {
         }
 
         this._requestQueue.pushTasks(ledger.partner, [{
-          topic: want.cid.toString(),
+          topic: want.cid.toString(base58btc),
           priority: want.priority,
           size: entrySize,
           data: {
@@ -248,8 +243,8 @@ class DecisionEngine {
             sendDontHave: false
           }
         }])
-      })
-    })
+      }
+    }
 
     this._scheduleProcessTasks()
   }
@@ -310,7 +305,7 @@ class DecisionEngine {
    */
   _cancelWants (peerId, cids) {
     for (const c of cids) {
-      this._requestQueue.remove(c.toString(), peerId)
+      this._requestQueue.remove(c.toString(base58btc), peerId)
     }
   }
 
@@ -326,7 +321,7 @@ class DecisionEngine {
 
     const tasks = []
     for (const want of wants) {
-      const id = want.cid.toString()
+      const id = want.cid.toString(base58btc)
       const blockSize = blockSizes.get(id)
 
       // If the block was not found
@@ -395,20 +390,20 @@ class DecisionEngine {
    */
   async _getBlockSizes (cids) {
     const blocks = await this._getBlocks(cids)
-    return new Map([...blocks].map(([k, v]) => [k, v.data.length]))
+    return new Map([...blocks].map(([k, v]) => [k, v.length]))
   }
 
   /**
    * @private
    * @param {CID[]} cids
-   * @returns {Promise<Map<string, Block>>}
+   * @returns {Promise<Map<string, Uint8Array>>}
    */
   async _getBlocks (cids) {
     const res = new Map()
     await Promise.all(cids.map(async (cid) => {
       try {
         const block = await this.blockstore.get(cid)
-        res.set(cid.toString(), block)
+        res.set(cid.toString(base58btc), block)
       } catch (e) {
         if (e.code !== 'ERR_NOT_FOUND') {
           this._log.error('failed to query blockstore for %s: %s', cid, e)
@@ -420,30 +415,27 @@ class DecisionEngine {
 
   /**
    * @private
-   * @param {Map<string, Block>} blocksMap
+   * @param {Map<string, Uint8Array>} blocksMap
    * @param {Ledger} ledger
    */
   _updateBlockAccounting (blocksMap, ledger) {
-    blocksMap.forEach(b => {
-      this._log('got block (%s bytes)', b.data.length)
-      ledger.receivedBytes(b.data.length)
-    })
+    for (const block of blocksMap.values()) {
+      this._log('got block (%s bytes)', block.length)
+      ledger.receivedBytes(block.length)
+    }
   }
 
   /**
    * Clear up all accounting things after message was sent
    *
    * @param {PeerId} peerId
-   * @param {Object} [block]
-   * @param {Uint8Array} block.data
-   * @param {CID} [block.cid]
+   * @param {CID} cid
+   * @param {Uint8Array} block
    */
-  messageSent (peerId, block) {
+  messageSent (peerId, cid, block) {
     const ledger = this._findOrCreate(peerId)
-    ledger.sentBytes(block ? block.data.length : 0)
-    if (block && block.cid) {
-      ledger.wantlist.remove(block.cid)
-    }
+    ledger.sentBytes(block.length)
+    ledger.wantlist.remove(cid)
   }
 
   /**

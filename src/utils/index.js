@@ -2,6 +2,7 @@
 
 const debug = require('debug')
 const uint8ArrayEquals = require('uint8arrays/equals')
+const BitswapMessageEntry = require('../types/message/entry')
 
 /**
  * Creates a logger for the given subsystem
@@ -112,12 +113,10 @@ const sortBy = (fn, list) => {
 }
 
 /**
- * Is equal for Maps of BitswapMessageEntry or Blocks
+ * Is equal for Maps of BitswapMessageEntry or Uint8Arrays
  *
- * @template {{data?:Uint8Array, equals?: (value:any) => boolean}} T
- * @param {Map<string, T>} a
- * @param {Map<string, T>} b
- * @returns {boolean}
+ * @param {Map<string, Uint8Array | BitswapMessageEntry>} a
+ * @param {Map<string, Uint8Array | BitswapMessageEntry>} b
  */
 const isMapEqual = (a, b) => {
   if (a.size !== b.size) {
@@ -131,12 +130,15 @@ const isMapEqual = (a, b) => {
       return false
     }
 
-    // Support BitswapMessageEntry
-    if (typeof valueA.equals === 'function' && !valueA.equals(valueB)) {
+    // TODO: revisit this
+
+    // Support Blocks
+    if (valueA instanceof Uint8Array && valueB instanceof Uint8Array && !uint8ArrayEquals(valueA, valueB)) {
       return false
     }
-    // Support Blocks
-    if (valueA.data && !(valueB.data && uint8ArrayEquals(valueA.data, valueB.data))) {
+
+    // Support BitswapMessageEntry
+    if (valueA instanceof BitswapMessageEntry && valueB instanceof BitswapMessageEntry && !valueA.equals(valueB)) {
       return false
     }
   }

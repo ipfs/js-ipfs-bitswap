@@ -4,12 +4,17 @@
 const { expect } = require('aegir/utils/chai')
 const pEvent = require('p-event')
 const Message = require('../src/types/message')
-const Bitswap = require('../src')
+const Bitswap = require('../src/bitswap')
 
-const createTempRepo = require('./utils/create-temp-repo')
+const { MemoryBlockstore } = require('interface-blockstore')
 const createLibp2pNode = require('./utils/create-libp2p-node')
-const makeBlock = require('./utils/make-block')
+const makeBlock = require('./utils/make-blocks')
 const { makePeerIds } = require('./utils/make-peer-id')
+
+/**
+ * @typedef {import('libp2p')} Libp2p
+ * @typedef {import('multiformats/cid').CID} CID
+ */
 
 const expectedStats = [
   'blocksReceived',
@@ -29,11 +34,15 @@ const expectedTimeWindows = [
 ]
 
 describe('bitswap stats', () => {
+  /** @type {Libp2p[]} */
   let libp2pNodes
-  let repos
+  /** @type {Bitswap[]} */
   let bitswaps
+  /** @type {Bitswap} */
   let bs
+  /** @type {{ cid: CID, data: Uint8Array}[]} */
   let blocks
+  /** @type {import('peer-id')[]} */
   let ids
 
   before(async () => {
@@ -41,12 +50,8 @@ describe('bitswap stats', () => {
     blocks = await makeBlock(2)
     ids = await makePeerIds(2)
 
-    // create 2 temp repos
-    repos = await Promise.all(nodes.map(() => createTempRepo()))
-
     // create 2 libp2p nodes
     libp2pNodes = await Promise.all(nodes.map((i) => createLibp2pNode({
-      datastore: repos[i].datastore,
       config: {
         dht: {
           enabled: true
@@ -56,7 +61,7 @@ describe('bitswap stats', () => {
 
     // create bitswaps
     bitswaps = libp2pNodes.map((node, i) =>
-      new Bitswap(node, repos[i].blocks, {
+      new Bitswap(node, new MemoryBlockstore(), {
         statsEnabled: true,
         statsComputeThrottleTimeout: 500 // fast update interval for tests
       })
@@ -75,9 +80,6 @@ describe('bitswap stats', () => {
     await Promise.all(
       libp2pNodes.map((n) => n.stop())
     )
-    await Promise.all(
-      repos.map(repo => repo.teardown())
-    )
   })
 
   it('has initial stats', () => {
@@ -93,7 +95,7 @@ describe('bitswap stats', () => {
     expectedStats.forEach((key) => {
       expectedTimeWindows.forEach((timeWindow) => {
         expect(movingAverages).to.have.property(key)
-        expect(stats.movingAverages[key]).to.have.property(timeWindow)
+        expect(stats.movingAverages[key]).to.have.property(`${timeWindow}`)
         const ma = stats.movingAverages[key][timeWindow]
         expect(ma.movingAverage()).to.eql(0)
         expect(ma.variance()).to.eql(0)
@@ -117,7 +119,7 @@ describe('bitswap stats', () => {
       const movingAverages = bs.stat().movingAverages
       const blocksReceivedMA = movingAverages.blocksReceived
       expectedTimeWindows.forEach((timeWindow) => {
-        expect(blocksReceivedMA).to.have.property(timeWindow)
+        expect(blocksReceivedMA).to.have.property(`${timeWindow}`)
         const ma = blocksReceivedMA[timeWindow]
         expect(ma.movingAverage()).to.be.above(0)
         expect(ma.variance()).to.be.above(0)
@@ -125,7 +127,7 @@ describe('bitswap stats', () => {
 
       const dataReceivedMA = movingAverages.dataReceived
       expectedTimeWindows.forEach((timeWindow) => {
-        expect(dataReceivedMA).to.have.property(timeWindow)
+        expect(dataReceivedMA).to.have.property(`${timeWindow}`)
         const ma = dataReceivedMA[timeWindow]
         expect(ma.movingAverage()).to.be.above(0)
         expect(ma.variance()).to.be.above(0)
@@ -136,7 +138,7 @@ describe('bitswap stats', () => {
     const other = ids[1]
 
     const msg = new Message(false)
-    blocks.forEach((block) => msg.addBlock(block))
+    blocks.forEach((block) => msg.addBlock(block.cid, block.data))
 
     bs._receiveMessage(other, msg)
   })
@@ -156,13 +158,15 @@ describe('bitswap stats', () => {
     const other = ids[1]
 
     const msg = new Message(false)
-    blocks.forEach((block) => msg.addBlock(block))
+    blocks.forEach((block) => msg.addBlock(block.cid, block.data))
 
     bs._receiveMessage(other, msg)
   })
 
   describe('connected to another bitswap', () => {
+    /** @type {Bitswap} */
     let bs2
+    /** @type {{ cid: CID, data: Uint8Array}} */
     let block
 
     before(async () => {
@@ -172,9 +176,9 @@ describe('bitswap stats', () => {
       const ma = `${libp2pNodes[1].multiaddrs[0]}/p2p/${libp2pNodes[1].peerId.toB58String()}`
       await libp2pNodes[0].dial(ma)
 
-      block = await makeBlock()
+      block = (await makeBlock(1))[0]
 
-      await bs.put(block)
+      await bs.put(block.cid, block.data)
     })
 
     after(() => {
@@ -215,6 +219,11 @@ describe('bitswap stats', () => {
     it('has peer stats', async () => {
       const peerStats = bs2.stat().forPeer(libp2pNodes[0].peerId)
       expect(peerStats).to.exist()
+
+      if (!peerStats) {
+        // needed for ts
+        throw new Error('No stats found for peer')
+      }
 
       // trigger an update
       peerStats.push('dataReceived', 1)

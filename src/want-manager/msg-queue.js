@@ -9,7 +9,7 @@ const { wantlistSendDebounceMs } = require('../constants')
 
 /**
  * @typedef {import('peer-id')} PeerId
- * @typedef {import('cids')} CID
+ * @typedef {import('multiformats').CID} CID
  * @typedef {import('../network')} Network
  */
 

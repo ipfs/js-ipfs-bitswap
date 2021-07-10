@@ -2,15 +2,16 @@
 'use strict'
 
 const { expect } = require('aegir/utils/chai')
-const CID = require('cids')
-const Block = require('ipld-block')
-const multihashing = require('multihashing-async')
+const { CID } = require('multiformats')
+const { sha256 } = require('multiformats/hashes/sha2')
 const BitswapMessageEntry = require('../src/types/message/entry')
 const uint8ArrayFromString = require('uint8arrays/from-string')
 const BitswapMessage = require('../src/types/message')
 
 const { groupBy, uniqWith, pullAllWith, includesWith, sortBy, isMapEqual } = require('../src/utils')
 const SortedMap = require('../src/utils/sorted-map')
+
+const DAG_PB_CODEC = 0x70
 
 describe('utils spec', function () {
   it('groupBy', () => {
@@ -44,10 +45,16 @@ describe('utils spec', function () {
 
   it('uniqWith', () => {
     class T {
+      /**
+       * @param {number} id
+       */
       constructor (id) {
         this.id = id
       }
 
+      /**
+       * @param {T} instance
+       */
       equals (instance) {
         return instance.id === this.id
       }
@@ -65,10 +72,16 @@ describe('utils spec', function () {
 
   it('includesWith', () => {
     class T {
+      /**
+       * @param {number} id
+       */
       constructor (id) {
         this.id = id
       }
 
+      /**
+       * @param {T} instance
+       */
       equals (instance) {
         return instance.id === this.id
       }
@@ -111,21 +124,21 @@ describe('utils spec', function () {
   describe('isMapEqual', () => {
     it('should on be false when !== size', () => {
       expect(isMapEqual(
-        new Map([['key1', { data: uint8ArrayFromString('value1') }], ['key2', { data: uint8ArrayFromString('value2') }]]),
-        new Map([['key1', { data: uint8ArrayFromString('value1') }]])
+        new Map([['key1', uint8ArrayFromString('value1')], ['key2', uint8ArrayFromString('value2')]]),
+        new Map([['key1', uint8ArrayFromString('value1')]])
       )).to.be.false()
     })
 
     it('should on be false if one key is missing', () => {
       expect(isMapEqual(
-        new Map([['key1', { data: uint8ArrayFromString('value1') }], ['key2', { data: uint8ArrayFromString('value2') }]]),
-        new Map([['key1', { data: uint8ArrayFromString('value1') }], ['key3', { data: uint8ArrayFromString('value2') }]])
+        new Map([['key1', uint8ArrayFromString('value1')], ['key2', uint8ArrayFromString('value2')]]),
+        new Map([['key1', uint8ArrayFromString('value1')], ['key3', uint8ArrayFromString('value2')]])
       )).to.be.false()
     })
 
     it('should on be false if BitswapMessageEntry don\'t match', async () => {
-      const hash1 = await multihashing(uint8ArrayFromString('OMG!1'), 'sha2-256')
-      const cid1 = new CID(1, 'dag-pb', hash1)
+      const hash1 = await sha256.digest(uint8ArrayFromString('OMG!1'))
+      const cid1 = CID.createV1(DAG_PB_CODEC, hash1)
 
       expect(isMapEqual(
         new Map([['key1', new BitswapMessageEntry(cid1, 1, BitswapMessage.WantType.Block)], ['key2', new BitswapMessageEntry(cid1, 2, BitswapMessage.WantType.Block)]]),
@@ -134,8 +147,8 @@ describe('utils spec', function () {
     })
 
     it('should on be true if BitswapMessageEntry match', async () => {
-      const hash1 = await multihashing(uint8ArrayFromString('OMG!1'), 'sha2-256')
-      const cid1 = new CID(1, 'dag-pb', hash1)
+      const hash1 = await sha256.digest(uint8ArrayFromString('OMG!1'))
+      const cid1 = CID.createV1(DAG_PB_CODEC, hash1)
 
       expect(isMapEqual(
         new Map([['key1', new BitswapMessageEntry(cid1, 1, BitswapMessage.WantType.Block)], ['key2', new BitswapMessageEntry(cid1, 1, BitswapMessage.WantType.Block)]]),
@@ -143,11 +156,9 @@ describe('utils spec', function () {
       )).to.be.true()
     })
 
-    it('should on be false if Blocks dont match', async () => {
-      const hash1 = await multihashing(uint8ArrayFromString('OMG!1'), 'sha2-256')
-      const cid1 = new CID(1, 'dag-pb', hash1)
-      const block1 = new Block(uint8ArrayFromString('hello world'), cid1)
-      const block2 = new Block(uint8ArrayFromString('hello world 2'), cid1)
+    it('should on be false if data does not match', async () => {
+      const block1 = uint8ArrayFromString('hello world')
+      const block2 = uint8ArrayFromString('hello world 2')
 
       expect(isMapEqual(
         new Map([['key1', block1], ['key2', block1]]),
@@ -155,14 +166,12 @@ describe('utils spec', function () {
       )).to.be.false()
     })
 
-    it('should on be true if Blocks match', async () => {
-      const hash1 = await multihashing(uint8ArrayFromString('OMG!1'), 'sha2-256')
-      const cid1 = new CID(1, 'dag-pb', hash1)
-      const block1 = new Block(uint8ArrayFromString('hello world'), cid1)
+    it('should on be true if data matches', async () => {
+      const data = uint8ArrayFromString('hello world')
 
       expect(isMapEqual(
-        new Map([['key1', block1], ['key2', block1]]),
-        new Map([['key1', block1], ['key2', block1]])
+        new Map([['key1', data], ['key2', data]]),
+        new Map([['key1', data], ['key2', data]])
       )).to.be.true()
     })
   })
@@ -220,7 +229,7 @@ describe('utils spec', function () {
       expect([...sm.keys()]).to.eql([])
     })
 
-    it('default order', () => {
+    it('default order', async () => {
       const sm = new SortedMap()
 
       sm.set(1, 'a')
@@ -233,13 +242,14 @@ describe('utils spec', function () {
       expect([...sm.entries()]).to.eql([[1, 'a'], [2, 'b'], [3, 'c']])
       expect([...sm]).to.eql([...sm.entries()])
 
+      /** @type {([number, string])[]} */
       const collected = []
       sm.forEach(i => { collected.push(i) })
       expect(collected).to.eql([...sm])
     })
 
     describe('custom order', () => {
-      const prioritySort = (a, b) => b[1].priority - a[1].priority
+      const prioritySort = (/** @type {[string, { k?: string, priority: number }]} */ a, /** @type {[string, { k?: string, priority: number }]} */b) => b[1].priority - a[1].priority
 
       it('forward', () => {
         const sm = new SortedMap([
