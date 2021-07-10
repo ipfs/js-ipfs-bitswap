@@ -8,14 +8,13 @@ const pWaitFor = require('p-wait-for')
 
 const Bitswap = require('../src/bitswap')
 
-const createTempRepo = require('./utils/create-temp-repo')
+const { MemoryBlockstore } = require('interface-blockstore')
 const createLibp2pNode = require('./utils/create-libp2p-node')
 const makeBlock = require('./utils/make-blocks')
 const orderedFinish = require('./utils/helpers').orderedFinish
 const Message = require('../src/types/message')
 
 /**
- * @typedef {import('ipfs-repo').IPFSRepo} IPFSRepo
  * @typedef {import('libp2p')} Libp2p
  */
 
@@ -25,18 +24,16 @@ const Message = require('../src/types/message')
  * @param {boolean} dht
  */
 async function createThing (dht) {
-  const repo = await createTempRepo()
   const libp2pNode = await createLibp2pNode({
     DHT: dht
   })
-  const bitswap = new Bitswap(libp2pNode, repo.blocks)
+  const bitswap = new Bitswap(libp2pNode, new MemoryBlockstore())
   bitswap.start()
-  return { repo, libp2pNode, bitswap }
+  return { libp2pNode, bitswap }
 }
 
 describe('start/stop', () => {
   it('should tell us if the node is started or not', async () => {
-    const repo = await createTempRepo()
     const libp2p = {
       handle: () => {},
       unhandle: () => {},
@@ -50,7 +47,7 @@ describe('start/stop', () => {
       }
     }
     // @ts-ignore not a full libp2p
-    const bitswap = new Bitswap(libp2p, repo.blocks)
+    const bitswap = new Bitswap(libp2p, new MemoryBlockstore())
 
     expect(bitswap.isStarted()).to.be.false()
 
@@ -67,7 +64,7 @@ describe('start/stop', () => {
 describe('bitswap without DHT', function () {
   this.timeout(20 * 1000)
 
-  /** @type {{ repo: IPFSRepo, libp2pNode: Libp2p, bitswap: Bitswap }[]} */
+  /** @type {{ libp2pNode: Libp2p, bitswap: Bitswap }[]} */
   let nodes
 
   before(async () => {
@@ -90,8 +87,7 @@ describe('bitswap without DHT', function () {
   after(async () => {
     await Promise.all(nodes.map((node) => Promise.all([
       node.bitswap.stop(),
-      node.libp2pNode.stop(),
-      node.repo.close()
+      node.libp2pNode.stop()
     ])))
   })
 
@@ -168,7 +164,7 @@ describe('bitswap without DHT', function () {
 describe('bitswap with DHT', function () {
   this.timeout(20 * 1000)
 
-  /** @type {{ repo: IPFSRepo, libp2pNode: Libp2p, bitswap: Bitswap }[]} */
+  /** @type {{ libp2pNode: Libp2p, bitswap: Bitswap }[]} */
   let nodes
 
   before(async () => {
@@ -198,8 +194,7 @@ describe('bitswap with DHT', function () {
   after(async () => {
     await Promise.all(nodes.map((node) => Promise.all([
       node.bitswap.stop(),
-      node.libp2pNode.stop(),
-      node.repo.close()
+      node.libp2pNode.stop()
     ])))
   })
 

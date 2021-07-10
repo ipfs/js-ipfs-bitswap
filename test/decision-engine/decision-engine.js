@@ -20,11 +20,15 @@ const defer = require('p-defer')
 const Message = require('../../src/types/message')
 const DecisionEngine = require('../../src/decision-engine')
 const Stats = require('../../src/stats')
-const createTempRepo = require('../utils/create-temp-repo.js')
+const { MemoryBlockstore } = require('interface-blockstore')
 const makeBlock = require('../utils/make-blocks')
 const { makePeerId, makePeerIds } = require('../utils/make-peer-id')
-
 const mockNetwork = require('../utils/mocks').mockNetwork
+
+/**
+ * @typedef {import('interface-blockstore').Blockstore} Blockstore
+ */
+
 /**
  * @param {number[]} nums
  */
@@ -51,13 +55,8 @@ function stringifyMessages (messages) {
  * @param {import('../../src/network')} network
  */
 async function newEngine (network) {
-  const results = await Promise.all([
-    createTempRepo(),
-    PeerId.create({ bits: 512 })
-  ])
-  const blockstore = results[0].blocks
-  const peerId = results[1]
-  const engine = new DecisionEngine(peerId, blockstore, network, new Stats())
+  const peerId = await PeerId.create({ bits: 512 })
+  const engine = new DecisionEngine(peerId, new MemoryBlockstore(), network, new Stats())
   engine.start()
   return { peer: peerId, engine: engine }
 }
@@ -162,13 +161,13 @@ describe('Engine', () => {
 
     /**
      * @param {DecisionEngine} dEngine
-     * @param {import('ipfs-repo').IPFSRepo} repo
+     * @param {Blockstore} blockstore
      * @param {{ cid: CID, data: Uint8Array }[]} blocks
      */
-    async function peerSendsBlocks (dEngine, repo, blocks) {
+    async function peerSendsBlocks (dEngine, blockstore, blocks) {
       // Bitswap puts blocks into the blockstore then passes the blocks to the
       // Decision Engine
-      await drain(repo.blocks.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
+      await drain(blockstore.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
       await dEngine.receivedBlocks(blocks)
     }
 
@@ -195,8 +194,8 @@ describe('Engine', () => {
           deferred.resolve()
         })
         const id = await PeerId.create({ bits: 512 })
-        const repo = await createTempRepo()
-        const dEngine = new DecisionEngine(id, repo.blocks, network, new Stats())
+        const blockstore = new MemoryBlockstore()
+        const dEngine = new DecisionEngine(id, blockstore, network, new Stats())
         dEngine.start()
 
         // Send wants then cancels for some of the wants
@@ -204,7 +203,7 @@ describe('Engine', () => {
         await partnerCancels(dEngine, cancels, partner)
 
         // Simulate receiving blocks from the network
-        await peerSendsBlocks(dEngine, repo, blocks)
+        await peerSendsBlocks(dEngine, blockstore, blocks)
 
         await deferred.promise
       }
@@ -229,8 +228,8 @@ describe('Engine', () => {
       return -1
     }
 
-    const repo = await createTempRepo()
-    await drain(repo.blocks.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
+    const blockstore = new MemoryBlockstore()
+    await drain(blockstore.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
 
     let rcvdBlockCount = 0
     const received = new Map(peers.map(p => [p.toB58String(), { count: 0, bytes: 0 }]))
@@ -291,7 +290,7 @@ describe('Engine', () => {
       }
     })
 
-    const dEngine = new DecisionEngine(id, repo.blocks, network, new Stats())
+    const dEngine = new DecisionEngine(id, blockstore, network, new Stats())
     dEngine.start()
 
     // Each peer requests all blocks
@@ -314,8 +313,8 @@ describe('Engine', () => {
 
     const deferred = defer()
     const network = mockNetwork(blocks.length, undefined, (peer, msg) => deferred.resolve([peer, msg]))
-    const repo = await createTempRepo()
-    const dEngine = new DecisionEngine(id, repo.blocks, network, new Stats(), { maxSizeReplaceHasWithBlock: 0 })
+    const blockstore = new MemoryBlockstore()
+    const dEngine = new DecisionEngine(id, blockstore, network, new Stats(), { maxSizeReplaceHasWithBlock: 0 })
     dEngine.start()
 
     const message = new Message(false)
@@ -328,7 +327,7 @@ describe('Engine', () => {
     // Simulate receiving message - put blocks into the blockstore then pass
     // them to the Decision Engine
     const rcvdBlocks = [blocks[0], blocks[2]]
-    await drain(repo.blocks.putMany(rcvdBlocks.map(({ cid, data }) => ({ key: cid, value: data }))))
+    await drain(blockstore.putMany(rcvdBlocks.map(({ cid, data }) => ({ key: cid, value: data }))))
     await dEngine.receivedBlocks(rcvdBlocks)
 
     // Wait till the engine sends a message
@@ -357,8 +356,8 @@ describe('Engine', () => {
     const network = mockNetwork(blocks.length, undefined, (peerId, message) => {
       onMsg([peerId, message])
     })
-    const repo = await createTempRepo()
-    const dEngine = new DecisionEngine(id, repo.blocks, network, new Stats(), { maxSizeReplaceHasWithBlock: 0 })
+    const blockstore = new MemoryBlockstore()
+    const dEngine = new DecisionEngine(id, blockstore, network, new Stats(), { maxSizeReplaceHasWithBlock: 0 })
     dEngine.start()
 
     const message = new Message(false)
@@ -382,7 +381,7 @@ describe('Engine', () => {
 
     // Simulate receiving message with blocks - put blocks into the blockstore
     // then pass them to the Decision Engine
-    await drain(repo.blocks.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
+    await drain(blockstore.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
     await dEngine.receivedBlocks(blocks)
 
     const [toPeer2, msg2] = await receiveMessage()
@@ -702,9 +701,9 @@ describe('Engine', () => {
       onMsg = undefined
     })
 
-    const repo = await createTempRepo()
-    await drain(repo.blocks.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
-    const dEngine = new DecisionEngine(id, repo.blocks, network, new Stats(), { maxSizeReplaceHasWithBlock: 0 })
+    const blockstore = new MemoryBlockstore()
+    await drain(blockstore.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
+    const dEngine = new DecisionEngine(id, blockstore, network, new Stats(), { maxSizeReplaceHasWithBlock: 0 })
     dEngine._scheduleProcessTasks = () => {}
     dEngine.start()
 

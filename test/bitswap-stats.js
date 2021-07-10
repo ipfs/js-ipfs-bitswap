@@ -6,14 +6,13 @@ const pEvent = require('p-event')
 const Message = require('../src/types/message')
 const Bitswap = require('../src/bitswap')
 
-const createTempRepo = require('./utils/create-temp-repo')
+const { MemoryBlockstore } = require('interface-blockstore')
 const createLibp2pNode = require('./utils/create-libp2p-node')
 const makeBlock = require('./utils/make-blocks')
 const { makePeerIds } = require('./utils/make-peer-id')
 
 /**
  * @typedef {import('libp2p')} Libp2p
- * @typedef {import('ipfs-repo').IPFSRepo} IPFSRepo
  * @typedef {import('multiformats/cid').CID} CID
  */
 
@@ -37,8 +36,6 @@ const expectedTimeWindows = [
 describe('bitswap stats', () => {
   /** @type {Libp2p[]} */
   let libp2pNodes
-  /** @type {IPFSRepo[]} */
-  let repos
   /** @type {Bitswap[]} */
   let bitswaps
   /** @type {Bitswap} */
@@ -53,12 +50,8 @@ describe('bitswap stats', () => {
     blocks = await makeBlock(2)
     ids = await makePeerIds(2)
 
-    // create 2 temp repos
-    repos = await Promise.all(nodes.map(() => createTempRepo()))
-
     // create 2 libp2p nodes
     libp2pNodes = await Promise.all(nodes.map((i) => createLibp2pNode({
-      datastore: repos[i].datastore,
       config: {
         dht: {
           enabled: true
@@ -68,7 +61,7 @@ describe('bitswap stats', () => {
 
     // create bitswaps
     bitswaps = libp2pNodes.map((node, i) =>
-      new Bitswap(node, repos[i].blocks, {
+      new Bitswap(node, new MemoryBlockstore(), {
         statsEnabled: true,
         statsComputeThrottleTimeout: 500 // fast update interval for tests
       })
@@ -86,9 +79,6 @@ describe('bitswap stats', () => {
     )
     await Promise.all(
       libp2pNodes.map((n) => n.stop())
-    )
-    await Promise.all(
-      repos.map(repo => repo.close())
     )
   })
 

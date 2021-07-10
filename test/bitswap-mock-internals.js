@@ -13,7 +13,7 @@ const { AbortController } = require('native-abort-controller')
 const delay = require('delay')
 const { base58btc } = require('multiformats/bases/base58')
 
-const createTempRepo = require('./utils/create-temp-repo')
+const { MemoryBlockstore } = require('interface-blockstore')
 const mockNetwork = require('./utils/mocks').mockNetwork
 const applyNetwork = require('./utils/mocks').applyNetwork
 const mockLibp2pNode = require('./utils/mocks').mockLibp2pNode
@@ -42,24 +42,22 @@ function wantsBlock (cid, bitswap) {
 describe('bitswap with mocks', function () {
   this.timeout(10 * 1000)
 
-  /** @type {import('ipfs-repo').IPFSRepo} */
-  let repo
+  /** @type {import('interface-blockstore').Blockstore} */
+  let blockstore
   /** @type {{ cid: CID, data: Uint8Array}[]} */
   let blocks
   /** @type {PeerId[]} */
   let ids
 
   before(async () => {
-    repo = await createTempRepo()
+    blockstore = new MemoryBlockstore()
     blocks = await makeBlock(15)
     ids = await makePeerIds(2)
   })
 
-  after(() => repo.close())
-
   describe('receive message', () => {
     it('simple block message', async () => {
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const bs = new Bitswap(mockLibp2pNode(), blockstore)
       bs.start()
 
       const other = ids[1]
@@ -77,7 +75,7 @@ describe('bitswap with mocks', function () {
 
       const blks = await Promise.all([
         b1.cid, b2.cid
-      ].map((cid) => repo.blocks.get(cid)))
+      ].map((cid) => blockstore.get(cid)))
 
       expect(blks[0]).to.eql(b1.data)
       expect(blks[1]).to.eql(b2.data)
@@ -98,7 +96,7 @@ describe('bitswap with mocks', function () {
     })
 
     it('simple want message', async () => {
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const bs = new Bitswap(mockLibp2pNode(), blockstore)
       bs.start()
 
       const other = ids[1]
@@ -122,7 +120,7 @@ describe('bitswap with mocks', function () {
 
     it('multi peer', async function () {
       this.timeout(80 * 1000)
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const bs = new Bitswap(mockLibp2pNode(), blockstore)
 
       bs.start()
 
@@ -145,14 +143,14 @@ describe('bitswap with mocks', function () {
         bs.wm.wantBlocks(cids)
 
         await bs._receiveMessage(other, msg)
-        await storeHasBlocks(msg, repo.blocks)
+        await storeHasBlocks(msg, blockstore)
       }
 
       bs.stop()
     })
 
     it('ignore unwanted blocks', async () => {
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const bs = new Bitswap(mockLibp2pNode(), blockstore)
       bs.start()
 
       const other = ids[1]
@@ -170,7 +168,7 @@ describe('bitswap with mocks', function () {
 
       await bs._receiveMessage(other, msg)
 
-      const res = await Promise.all([b1.cid, b2.cid, b3.cid].map((cid) => repo.blocks.get(cid).then(() => true, () => false)))
+      const res = await Promise.all([b1.cid, b2.cid, b3.cid].map((cid) => blockstore.get(cid).then(() => true, () => false)))
       expect(res).to.eql([false, true, false])
 
       const ledger = bs.ledgerForPeer(other)
@@ -199,7 +197,7 @@ describe('bitswap with mocks', function () {
 
   describe('get', () => {
     it('fails on requesting empty block', async () => {
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const bs = new Bitswap(mockLibp2pNode(), blockstore)
       try {
         // @ts-expect-error we want this to fail
         await bs.get(null)
@@ -211,8 +209,8 @@ describe('bitswap with mocks', function () {
 
     it('block exists locally', async () => {
       const block = blocks[4]
-      await repo.blocks.put(block.cid, block.data)
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      await blockstore.put(block.cid, block.data)
+      const bs = new Bitswap(mockLibp2pNode(), blockstore)
 
       expect(await bs.get(block.cid)).to.equalBytes(block.data)
     })
@@ -222,8 +220,8 @@ describe('bitswap with mocks', function () {
       const b2 = blocks[14]
       const b3 = blocks[13]
 
-      await drain(repo.blocks.putMany([{ key: b1.cid, value: b1.data }, { key: b2.cid, value: b2.data }, { key: b3.cid, value: b3.data }]))
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      await drain(blockstore.putMany([{ key: b1.cid, value: b1.data }, { key: b2.cid, value: b2.data }, { key: b3.cid, value: b3.data }]))
+      const bs = new Bitswap(mockLibp2pNode(), blockstore)
 
       const retrievedBlocks = await all(bs.getMany([b1.cid, b2.cid, b3.cid]))
 
@@ -235,8 +233,8 @@ describe('bitswap with mocks', function () {
       const b2 = blocks[6]
       const b3 = blocks[7]
 
-      await drain(repo.blocks.putMany([{ key: b1.cid, value: b1.data }, { key: b2.cid, value: b2.data }, { key: b3.cid, value: b3.data }]))
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      await drain(blockstore.putMany([{ key: b1.cid, value: b1.data }, { key: b2.cid, value: b2.data }, { key: b3.cid, value: b3.data }]))
+      const bs = new Bitswap(mockLibp2pNode(), blockstore)
 
       const block1 = await bs.get(b1.cid)
       expect(block1).to.equalBytes(b1.data)
@@ -251,7 +249,7 @@ describe('bitswap with mocks', function () {
     it('block is added locally afterwards', async () => {
       const finish = orderedFinish(2)
       const block = blocks[9]
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const bs = new Bitswap(mockLibp2pNode(), blockstore)
       const net = mockNetwork()
 
       bs.network = net
@@ -347,13 +345,12 @@ describe('bitswap with mocks', function () {
       }
 
       // Create and start bs1
-      const bs1 = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const bs1 = new Bitswap(mockLibp2pNode(), blockstore)
       applyNetwork(bs1, n1)
       bs1.start()
 
       // Create and start bs2
-      const repo2 = await createTempRepo()
-      const bs2 = new Bitswap(mockLibp2pNode(), repo2.blocks)
+      const bs2 = new Bitswap(mockLibp2pNode(), new MemoryBlockstore())
       applyNetwork(bs2, n2)
       bs2.start()
 
@@ -374,7 +371,7 @@ describe('bitswap with mocks', function () {
     it('double get', async () => {
       const block = blocks[11]
 
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const bs = new Bitswap(mockLibp2pNode(), blockstore)
 
       const resP = Promise.all([
         bs.get(block.cid),
@@ -391,7 +388,7 @@ describe('bitswap with mocks', function () {
     it('gets the same block data with different CIDs', async () => {
       const block = blocks[11]
 
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const bs = new Bitswap(mockLibp2pNode(), blockstore)
 
       expect(block).to.have.nested.property('cid.code', DAG_PB_CODEC)
       expect(block).to.have.nested.property('cid.version', 0)
@@ -418,7 +415,7 @@ describe('bitswap with mocks', function () {
 
     it('removes a block from the wantlist when the request is aborted', async () => {
       const [block] = await makeBlock(1)
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const bs = new Bitswap(mockLibp2pNode(), blockstore)
       const controller = new AbortController()
 
       const p = bs.get(block.cid, {
@@ -438,7 +435,7 @@ describe('bitswap with mocks', function () {
 
     it('block should still be in the wantlist if only one request is aborted', async () => {
       const [block] = await makeBlock(1)
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const bs = new Bitswap(mockLibp2pNode(), blockstore)
       const controller = new AbortController()
 
       // request twice
@@ -473,7 +470,7 @@ describe('bitswap with mocks', function () {
 
   describe('unwant', () => {
     it('removes blocks that are wanted multiple times', async () => {
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const bs = new Bitswap(mockLibp2pNode(), blockstore)
       bs.start()
 
       const b = blocks[12]
@@ -492,7 +489,7 @@ describe('bitswap with mocks', function () {
 
   describe('ledgerForPeer', () => {
     it('returns null for unknown peer', async () => {
-      const bs = new Bitswap(mockLibp2pNode(), repo.blocks)
+      const bs = new Bitswap(mockLibp2pNode(), blockstore)
       const id = await PeerId.create({ bits: 512 })
       const ledger = bs.ledgerForPeer(id)
       expect(ledger).to.equal(null)

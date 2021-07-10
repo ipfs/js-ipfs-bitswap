@@ -1,20 +1,18 @@
 'use strict'
 
 const Bitswap = require('../../src/bitswap')
-const createTempRepo = require('./create-temp-repo')
+const { MemoryBlockstore } = require('interface-blockstore')
 const createLibp2pNode = require('./create-libp2p-node')
 
 module.exports = async () => {
-  const repo = await createTempRepo()
   const libp2pNode = await createLibp2pNode({
-    datastore: repo.datastore,
     config: {
       dht: {
         enabled: true
       }
     }
   })
-  const bitswap = new Bitswap(libp2pNode, repo.blocks)
+  const bitswap = new Bitswap(libp2pNode, new MemoryBlockstore())
   bitswap.start()
-  return { bitswap, repo, libp2pNode }
+  return { bitswap, libp2pNode }
 }

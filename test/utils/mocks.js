@@ -4,10 +4,8 @@ const PeerId = require('peer-id')
 
 const PeerStore = require('libp2p/src/peer-store')
 const Node = require('./create-libp2p-node').bundle
-const createTempRepo = require('./create-temp-repo')
+const { MemoryBlockstore } = require('interface-blockstore')
 const { EventEmitter } = require('events')
-const uint8ArrayToString = require('uint8arrays/to-string')
-const { BlockstoreAdapter } = require('interface-blockstore')
 
 const Bitswap = require('../../src/bitswap')
 const Network = require('../../src/network')
@@ -20,61 +18,7 @@ const Stats = require('../../src/stats')
  * @typedef {import('multiformats/cid').CID} CID
  * @typedef {import('multiaddr').Multiaddr} Multiaddr
  * @typedef {import('libp2p')} Libp2p
- * @typedef {import('ipfs-repo').IPFSRepo} IPFSRepo
  */
-
-/**
- *
- * @returns {BlockStore}
- */
-function mockBlockStore () {
-  class MockBlockstore extends BlockstoreAdapter {
-    constructor () {
-      super()
-
-      /** @type {Record<string, Uint8Array>} */
-      this._blocks = {}
-    }
-
-    /**
-     * @param {CID} cid
-     */
-    has (cid) {
-      return Promise.resolve(Boolean(this._blocks[uint8ArrayToString(cid.multihash.bytes, 'base64')]))
-    }
-
-    /**
-     * @param {CID} cid
-     */
-    get (cid) {
-      return Promise.resolve(this._blocks[uint8ArrayToString(cid.multihash.bytes, 'base64')])
-    }
-
-    /**
-     *
-     * @param {CID} cid
-     * @param {Uint8Array} data
-     */
-    put (cid, data) {
-      this._blocks[uint8ArrayToString(cid.multihash.bytes, 'base64')] = data
-
-      return Promise.resolve()
-    }
-
-    /**
-     * @param {AsyncIterable<Pair> | Iterable<Pair>} source
-     */
-    async * putMany (source) {
-      for await (const { key, value } of source) {
-        this.put(key, value)
-
-        yield { key, value }
-      }
-    }
-  }
-
-  return new MockBlockstore()
-}
 
 /**
  * Create a mock libp2p node
@@ -144,7 +88,7 @@ exports.mockNetwork = (calls = Infinity, done = () => {}, onMsg = () => {}) => {
   class MockNetwork extends Network {
     constructor () {
       // @ts-ignore - {} is not an instance of libp2p
-      super({}, new Bitswap({}, mockBlockStore()), new Stats())
+      super({}, new Bitswap({}, new MemoryBlockstore()), new Stats())
 
       this.connects = connects
       this.messages = messages
@@ -214,7 +158,7 @@ exports.applyNetwork = (bs, n) => {
  * @param {boolean} enableDHT - Whether or not to run the dht
  */
 exports.genBitswapNetwork = async (n, enableDHT = false) => {
-  /** @type {{ peerId: PeerId, libp2p: Libp2p, repo: IPFSRepo, peerStore: PeerStore, bitswap: Bitswap }[]} */
+  /** @type {{ peerId: PeerId, libp2p: Libp2p, peerStore: PeerStore, bitswap: Bitswap }[]} */
   const netArray = []
 
   // create PeerId and libp2p.Node for each
@@ -238,13 +182,6 @@ exports.genBitswapNetwork = async (n, enableDHT = false) => {
     netArray.push({ peerId: p, libp2p: l })
   })
 
-  // create the repos
-  await Promise.all(
-    netArray.map(async (net) => {
-      net.repo = await createTempRepo()
-    })
-  )
-
   // start every libp2pNode
   await Promise.all(
     netArray.map((net) => net.libp2p.start())
@@ -263,7 +200,7 @@ exports.genBitswapNetwork = async (n, enableDHT = false) => {
 
   // create every Bitswap
   netArray.forEach((net) => {
-    net.bitswap = new Bitswap(net.libp2p, net.repo.blocks)
+    net.bitswap = new Bitswap(net.libp2p, new MemoryBlockstore())
   })
 
   return netArray

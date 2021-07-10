@@ -72,7 +72,6 @@ module.exports = async (instanceCount, blockCount, repeats, events) => {
     nodes.map(async node => {
       await node.bitswap.stop()
       await node.libp2pNode.stop()
-      await node.repo.close()
     })
   )
 
