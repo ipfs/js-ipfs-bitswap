@@ -91,7 +91,7 @@
     "lodash.flatten": "^4.4.0",
     "lodash.range": "^3.2.0",
     "lodash.without": "^4.4.0",
-    "p-defer": "^3.0.0",
+    "p-defer": "^4.0.0",
     "p-event": "^4.2.0",
     "p-wait-for": "^3.2.0",
     "peer-id": "^0.15.0",
