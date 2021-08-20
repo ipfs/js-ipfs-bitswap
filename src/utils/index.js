@@ -1,7 +1,7 @@
 'use strict'
 
 const debug = require('debug')
-const uint8ArrayEquals = require('uint8arrays/equals')
+const { equals: uint8ArrayEquals } = require('uint8arrays/equals')
 const BitswapMessageEntry = require('../types/message/entry')
 
 /**

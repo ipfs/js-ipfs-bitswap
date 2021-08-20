@@ -1,7 +1,7 @@
 'use strict'
 
 const { EventEmitter } = require('events')
-const uint8ArrayToString = require('uint8arrays/to-string')
+const { toString: uint8ArrayToString } = require('uint8arrays/to-string')
 
 const CONSTANTS = require('./constants')
 const logger = require('./utils').logger
