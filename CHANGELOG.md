@@ -1,3 +1,7 @@
+## [6.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v6.0.0...v6.0.1) (2021-08-23)
+
+
+
 # [6.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v5.0.6...v6.0.0) (2021-07-10)
 
 
