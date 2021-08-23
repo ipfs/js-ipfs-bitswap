@@ -5,7 +5,7 @@ const { expect } = require('aegir/utils/chai')
 const { CID } = require('multiformats')
 const { sha256 } = require('multiformats/hashes/sha2')
 const BitswapMessageEntry = require('../src/types/message/entry')
-const uint8ArrayFromString = require('uint8arrays/from-string')
+const { fromString: uint8ArrayFromString } = require('uint8arrays/from-string')
 const BitswapMessage = require('../src/types/message')
 
 const { groupBy, uniqWith, pullAllWith, includesWith, sortBy, isMapEqual } = require('../src/utils')

@@ -6,7 +6,7 @@ const { sha256 } = require('multiformats/hashes/sha2')
 const randomBytes = require('iso-random-stream/src/random')
 // @ts-ignore
 const range = require('lodash.range')
-const uint8ArrayFromString = require('uint8arrays/from-string')
+const { fromString: uint8ArrayFromString } = require('uint8arrays/from-string')
 // @ts-ignore
 const { v4: uuid } = require('uuid')
 

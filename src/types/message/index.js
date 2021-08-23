@@ -8,7 +8,7 @@ const vd = require('varint-decoder')
 const { isMapEqual } = require('../../utils')
 const { Message } = require('./message')
 const Entry = require('./entry')
-const uint8ArrayConcat = require('uint8arrays/concat')
+const { concat: uint8ArrayConcat } = require('uint8arrays/concat')
 const errcode = require('err-code')
 
 /**

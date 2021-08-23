@@ -5,7 +5,7 @@ const { expect } = require('aegir/utils/chai')
 const { CID } = require('multiformats')
 const { base32 } = require('multiformats/bases/base32')
 const { AbortController } = require('native-abort-controller')
-const uint8ArrayToString = require('uint8arrays/to-string')
+const { toString: uint8ArrayToString } = require('uint8arrays/to-string')
 
 const Notifications = require('../src/notifications')
 
