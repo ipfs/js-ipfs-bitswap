@@ -1,10 +1,8 @@
 /* eslint-env mocha */
-'use strict'
 
-const { expect } = require('aegir/utils/chai')
-const PeerId = require('peer-id')
-
-const RequestQueue = require('../../src/decision-engine/req-queue')
+import { expect } from 'aegir/utils/chai.js'
+import PeerId from 'peer-id'
+import { RequestQueue } from '../../src/decision-engine/req-queue.js'
 
 describe('Request Queue', () => {
   /** @type {PeerId[]} */

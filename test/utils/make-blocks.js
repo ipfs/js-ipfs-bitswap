@@ -1,21 +1,18 @@
-'use strict'
-
-const { CID } = require('multiformats')
-const { sha256 } = require('multiformats/hashes/sha2')
+import { CID } from 'multiformats/cid'
+import { sha256 } from 'multiformats/hashes/sha2'
+import { randomBytes} from 'iso-random-stream'
 // @ts-ignore
-const randomBytes = require('iso-random-stream/src/random')
+import range from 'lodash.range'
+import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 // @ts-ignore
-const range = require('lodash.range')
-const { fromString: uint8ArrayFromString } = require('uint8arrays/from-string')
-// @ts-ignore
-const { v4: uuid } = require('uuid')
+import { v4 as uuid } from 'uuid'
 
 /**
  * @param {number} count
  * @param {number} [size]
  * @returns {Promise<{ cid: CID, data: Uint8Array}[]>}
  */
-module.exports = async (count, size) => {
+export const makeBlocks = async (count, size) => {
   const blocks = await Promise.all(
     range(count || 1).map(async () => {
       const data = size ? randomBytes(size) : uint8ArrayFromString(`hello world ${uuid()}`)

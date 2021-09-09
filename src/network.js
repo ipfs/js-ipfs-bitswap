@@ -1,13 +1,9 @@
-'use strict'
-
-const lp = require('it-length-prefixed')
-const { pipe } = require('it-pipe')
-
-const MulticodecTopology = require('libp2p-interfaces/src/topology/multicodec-topology')
-
-const Message = require('./types/message')
-const CONSTANTS = require('./constants')
-const logger = require('./utils').logger
+import lp from 'it-length-prefixed'
+import { pipe } from 'it-pipe'
+import MulticodecTopology from 'libp2p-interfaces/src/topology/multicodec-topology.js'
+import { BitswapMessage as Message } from './types/message/index.js'
+import * as CONSTANTS from './constants.js'
+import { logger } from './utils/index.js'
 
 /**
  * @typedef {import('peer-id')} PeerId
@@ -30,11 +26,11 @@ const BITSWAP100 = '/ipfs/bitswap/1.0.0'
 const BITSWAP110 = '/ipfs/bitswap/1.1.0'
 const BITSWAP120 = '/ipfs/bitswap/1.2.0'
 
-class Network {
+export class Network {
   /**
    * @param {import('libp2p')} libp2p
-   * @param {import('./bitswap')} bitswap
-   * @param {import('./stats')} stats
+   * @param {import('./bitswap').Bitswap} bitswap
+   * @param {import('./stats').Stats} stats
    * @param {Object} [options]
    * @param {boolean} [options.b100Only]
    * @param {Record<number, MultihashHasher>} [options.hashers]
@@ -120,7 +116,7 @@ class Network {
             try {
               const message = await Message.deserialize(data.slice(), this._hashers)
               await this._bitswap._receiveMessage(connection.remotePeer, message)
-            } catch (err) {
+            } catch (/** @type {any} */ err) {
               this._bitswap._receiveError(err)
               break
             }
@@ -288,5 +284,3 @@ async function writeMessage (stream, msg, log) {
     log(err)
   }
 }
-
-module.exports = Network

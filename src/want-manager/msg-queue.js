@@ -1,19 +1,17 @@
-'use strict'
 
 // @ts-ignore
-const debounce = require('just-debounce-it')
-
-const Message = require('../types/message')
-const logger = require('../utils').logger
-const { wantlistSendDebounceMs } = require('../constants')
+import debounce from 'just-debounce-it'
+import { BitswapMessage as Message } from '../types/message/index.js'
+import { logger } from '../utils/index.js'
+import { wantlistSendDebounceMs } from '../constants.js'
 
 /**
  * @typedef {import('peer-id')} PeerId
  * @typedef {import('multiformats').CID} CID
- * @typedef {import('../network')} Network
+ * @typedef {import('../network').Network} Network
  */
 
-module.exports = class MsgQueue {
+export class MsgQueue {
   /**
    * @param {PeerId} selfPeerId
    * @param {PeerId} otherPeerId
@@ -79,7 +77,7 @@ module.exports = class MsgQueue {
   async send (msg) {
     try {
       await this.network.connectTo(this.peerId)
-    } catch (err) {
+    } catch (/** @type {any} */ err) {
       this._log.error('cant connect to peer %s: %s', this.peerId.toB58String(), err.message)
       return
     }

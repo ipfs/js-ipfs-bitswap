@@ -1,11 +1,9 @@
 /* eslint-env mocha */
 /* eslint-disable no-console */
-'use strict'
 
-const { expect } = require('aegir/utils/chai')
-const makeBlocks = require('../utils/make-blocks')
-
-const genBitswapNetwork = require('../utils/mocks').genBitswapNetwork
+import { expect } from 'aegir/utils/chai.js'
+import { makeBlocks } from '../utils/make-blocks.js'
+import { genBitswapNetwork } from '../utils/mocks.js'
 
 describe('gen Bitswap network', function () {
   // CI is very slow

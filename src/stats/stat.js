@@ -1,14 +1,12 @@
-'use strict'
-
-const { EventEmitter } = require('events')
-const MovingAverage = require('@vascosantos/moving-average')
+import { EventEmitter } from 'events'
+import MovingAverage from '@vascosantos/moving-average'
 
 /**
  * @typedef {import('@vascosantos/moving-average').IMovingAverage} IMovingAverage
  * @typedef {[string, number, number]} Op
  */
 
-class Stats extends EventEmitter {
+export class Stat extends EventEmitter {
   /**
    *
    * @param {string[]} initialCounters
@@ -185,5 +183,3 @@ class Stats extends EventEmitter {
     this._frequencyAccumulators[key] += inc
   }
 }
-
-module.exports = Stats

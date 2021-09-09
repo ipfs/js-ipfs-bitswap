@@ -1,11 +1,9 @@
 /* eslint-disable no-console */
-'use strict'
 
-const assert = require('assert')
-const range = require('lodash.range')
-
-const makeBlock = require('../test/utils/make-blocks')
-const genBitswapNetwork = require('../test/utils/mocks').genBitswapNetwork
+import assert from 'assert'
+import range from 'lodash.range'
+import { makeBlocks } from '../test/utils/make-blocks.js'
+import { genBitswapNetwork } from '../test/utils/mocks.js'
 
 const nodes = [2, 5, 10, 20]
 const blockFactors = [1, 10, 100]
@@ -37,7 +35,7 @@ async function shutdown (nodeArr) {
 }
 
 async function round (nodeArr, blockFactor, n) {
-  const blocks = await makeBlock(n * blockFactor)
+  const blocks = await makeBlocks(n * blockFactor)
   const cids = blocks.map((b) => b.cid)
 
   console.info('put blockFactor amount of blocks per node')

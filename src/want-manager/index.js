@@ -1,22 +1,21 @@
-'use strict'
 
-const Message = require('../types/message')
-const Wantlist = require('../types/wantlist')
-const CONSTANTS = require('../constants')
-const MsgQueue = require('./msg-queue')
-const logger = require('../utils').logger
-const { base58btc } = require('multiformats/bases/base58')
+import { BitswapMessage as Message } from '../types/message/index.js'
+import { Wantlist } from '../types/wantlist/index.js'
+import * as CONSTANTS from '../constants.js'
+import { MsgQueue } from './msg-queue.js'
+import { logger } from '../utils/index.js'
+import { base58btc } from 'multiformats/bases/base58'
 
 /**
  * @typedef {import('peer-id')} PeerId
  * @typedef {import('multiformats').CID} CID
  */
 
-module.exports = class WantManager {
+export class WantManager {
   /**
    * @param {PeerId} peerId
-   * @param {import('../network')} network
-   * @param {import('../stats')} stats
+   * @param {import('../network').Network} network
+   * @param {import('../stats').Stats} stats
    */
   constructor (peerId, network, stats) {
     /** @type {Map<string, MsgQueue>} */

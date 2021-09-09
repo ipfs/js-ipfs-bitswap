@@ -1,18 +1,15 @@
 /* eslint-env mocha */
-'use strict'
 
-const { expect } = require('aegir/utils/chai')
-const PeerId = require('peer-id')
-const sinon = require('sinon')
-const pWaitFor = require('p-wait-for')
-
-const Bitswap = require('../src/bitswap')
-
-const { MemoryBlockstore } = require('interface-blockstore')
-const createLibp2pNode = require('./utils/create-libp2p-node')
-const makeBlock = require('./utils/make-blocks')
-const orderedFinish = require('./utils/helpers').orderedFinish
-const Message = require('../src/types/message')
+import { expect } from 'aegir/utils/chai.js'
+import PeerId from 'peer-id'
+import sinon from 'sinon'
+import pWaitFor from 'p-wait-for'
+import { Bitswap } from '../src/bitswap.js'
+import { MemoryBlockstore } from 'blockstore-core/memory'
+import { createLibp2pNode } from './utils/create-libp2p-node.js'
+import { makeBlocks } from './utils/make-blocks.js'
+import { orderedFinish } from './utils/helpers.js'
+import { BitswapMessage as Message } from '../src/types/message/index.js'
 
 /**
  * @typedef {import('libp2p')} Libp2p
@@ -94,7 +91,7 @@ describe('bitswap without DHT', function () {
   it('put a block in 2, fail to get it in 0', async () => {
     const finish = orderedFinish(2)
 
-    const [block] = await makeBlock(1)
+    const [block] = await makeBlocks(1)
     await nodes[2].bitswap.put(block.cid, block.data)
 
     const node0Get = nodes[0].bitswap.get(block.cid)
@@ -112,7 +109,7 @@ describe('bitswap without DHT', function () {
 
   it('wants a block, receives a block, wants it again before the blockstore has it, receives it after the blockstore has it', async () => {
     // the block we want
-    const [block] = await makeBlock(1)
+    const [block] = await makeBlocks(1)
 
     // id of a peer with the block we want
     const peerId = await PeerId.create({ bits: 512 })
@@ -199,7 +196,7 @@ describe('bitswap with DHT', function () {
   })
 
   it('put a block in 2, get it in 0', async () => {
-    const [block] = await makeBlock(1)
+    const [block] = await makeBlocks(1)
     const provideSpy = sinon.spy(nodes[2].libp2pNode._dht, 'provide')
     await nodes[2].bitswap.put(block.cid, block.data)
 

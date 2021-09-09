@@ -49,7 +49,7 @@
 ### Use in Node.js or in the browser with browserify, webpack or any other bundler
 
 ```js
-const Bitswap = require('ipfs-bitswap')
+const { createBitswap } from 'ipfs-bitswap'
 ```
 
 ### Use in a browser using a script tag

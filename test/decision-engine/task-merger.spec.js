@@ -1,11 +1,10 @@
 /* eslint-env mocha */
-'use strict'
 
-const { expect } = require('aegir/utils/chai')
-const PeerId = require('peer-id')
+import { expect } from 'aegir/utils/chai.js'
+import PeerId from 'peer-id'
 
-const RequestQueue = require('../../src/decision-engine/req-queue')
-const TaskMerger = require('../../src/decision-engine/task-merger')
+import { RequestQueue } from '../../src/decision-engine/req-queue.js'
+import { TaskMerger } from '../../src/decision-engine/task-merger.js'
 
 /**
  * @typedef {object} Task

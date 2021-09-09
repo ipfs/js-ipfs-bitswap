@@ -1,12 +1,10 @@
-'use strict'
-
-const Wantlist = require('../types/wantlist')
+import { Wantlist } from '../types/wantlist/index.js'
 
 /**
  * @typedef {import('multiformats').CID} CID
  */
 
-class Ledger {
+export class Ledger {
   /**
    * @param {import('peer-id')} peerId
    */
@@ -75,5 +73,3 @@ class Ledger {
     return (this.accounting.bytesSent / (this.accounting.bytesRecv + 1)) // +1 is to prevent division by zero
   }
 }
-
-module.exports = Ledger

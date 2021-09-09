@@ -1,15 +1,14 @@
 /* eslint-env mocha */
-'use strict'
 
-const { expect } = require('aegir/utils/chai')
-const { CID } = require('multiformats')
-const { sha256 } = require('multiformats/hashes/sha2')
-const { base58btc } = require('multiformats/bases/base58')
-const { base64 } = require('multiformats/bases/base64')
+import { expect } from 'aegir/utils/chai.js'
+import { CID } from 'multiformats/cid'
+import { sha256 } from 'multiformats/hashes/sha2'
+import { base58btc } from 'multiformats/bases/base58'
+import { base64 } from 'multiformats/bases/base64'
 
-const Wantlist = require('../../src/types/wantlist')
-const Message = require('../../src/types/message')
-const makeBlock = require('../utils/make-blocks')
+import { Wantlist } from '../../src/types/wantlist/index.js'
+import { BitswapMessage as Message } from '../../src/types/message/index.js'
+import { makeBlocks } from '../utils/make-blocks.js'
 
 const DAG_PB_CODEC = 0x70
 
@@ -20,7 +19,7 @@ describe('Wantlist', () => {
   let blocks
 
   before(async () => {
-    blocks = await makeBlock(2)
+    blocks = await makeBlocks(2)
   })
 
   beforeEach(() => {

@@ -1,26 +1,25 @@
 /* eslint-env mocha */
-'use strict'
 
-const { expect, assert } = require('aegir/utils/chai')
-const lp = require('it-length-prefixed')
-const { pipe } = require('it-pipe')
-const pDefer = require('p-defer')
-const createLibp2pNode = require('../utils/create-libp2p-node')
-const makeBlock = require('../utils/make-blocks')
-const Network = require('../../src/network')
-const Message = require('../../src/types/message')
-const Stats = require('../../src/stats')
-const sinon = require('sinon')
-const { CID } = require('multiformats')
-const { Multiaddr } = require('multiaddr')
+import { expect, assert } from 'aegir/utils/chai.js'
+import lp from 'it-length-prefixed'
+import { pipe } from 'it-pipe'
+import pDefer from 'p-defer'
+import { createLibp2pNode } from '../utils/create-libp2p-node.js'
+import { makeBlocks } from '../utils/make-blocks.js'
+import { Network } from '../../src/network.js'
+import { BitswapMessage as Message } from '../../src/types/message/index.js'
+import { Stats } from '../../src/stats/index.js'
+import sinon from 'sinon'
+import { CID } from 'multiformats/cid'
+import { Multiaddr } from 'multiaddr'
 
 /**
  * @typedef {import('libp2p')} Libp2p
- * @typedef {import('../../src/bitswap')} Bitswap
+ * @typedef {import('../../src/bitswap').Bitswap} Bitswap
  */
 
 /**
- * @returns {import('../../src/bitswap')}
+ * @returns {import('../../src/bitswap').Bitswap}
  */
 function createBitswapMock () {
   // @ts-ignore
@@ -63,7 +62,7 @@ describe('network', () => {
       createLibp2pNode(),
       createLibp2pNode()
     ])
-    blocks = await makeBlock(2)
+    blocks = await makeBlocks(2)
 
     bitswapMockA = createBitswapMock()
     bitswapMockB = createBitswapMock()

@@ -1,26 +1,27 @@
 /* eslint-env mocha */
 /* eslint max-nested-callbacks: ["error", 5] */
-'use strict'
 
-const { expect } = require('aegir/utils/chai')
-const PeerId = require('peer-id')
-const all = require('it-all')
-const drain = require('it-drain')
-const Message = require('../src/types/message')
-const Bitswap = require('../src/bitswap')
-const { CID } = require('multiformats')
-const { AbortController } = require('native-abort-controller')
-const delay = require('delay')
-const { base58btc } = require('multiformats/bases/base58')
+import { expect } from 'aegir/utils/chai.js'
+import PeerId from 'peer-id'
+import all from 'it-all'
+import drain from 'it-drain'
+import { BitswapMessage as Message } from '../src/types/message/index.js'
+import { Bitswap } from '../src/bitswap.js'
+import { CID } from 'multiformats/cid'
+import { AbortController } from 'native-abort-controller'
+import delay from 'delay'
+import { base58btc } from 'multiformats/bases/base58'
 
-const { MemoryBlockstore } = require('interface-blockstore')
-const mockNetwork = require('./utils/mocks').mockNetwork
-const applyNetwork = require('./utils/mocks').applyNetwork
-const mockLibp2pNode = require('./utils/mocks').mockLibp2pNode
-const storeHasBlocks = require('./utils/store-has-blocks')
-const makeBlock = require('./utils/make-blocks')
-const { makePeerIds } = require('./utils/make-peer-id')
-const orderedFinish = require('./utils/helpers').orderedFinish
+import { MemoryBlockstore } from 'blockstore-core/memory'
+import {
+  mockNetwork,
+  applyNetwork,
+  mockLibp2pNode
+} from './utils/mocks.js'
+import { storeHasBlocks } from './utils/store-has-blocks.js'
+import { makeBlocks } from './utils/make-blocks.js'
+import { makePeerIds } from './utils/make-peer-id.js'
+import { orderedFinish } from './utils/helpers.js'
 
 const DAG_PB_CODEC = 0x70
 const RAW_CODEC = 0x50
@@ -51,7 +52,7 @@ describe('bitswap with mocks', function () {
 
   before(async () => {
     blockstore = new MemoryBlockstore()
-    blocks = await makeBlock(15)
+    blocks = await makeBlocks(15)
     ids = await makePeerIds(2)
   })
 
@@ -125,7 +126,7 @@ describe('bitswap with mocks', function () {
       bs.start()
 
       const others = await makePeerIds(5)
-      const blocks = await makeBlock(10)
+      const blocks = await makeBlocks(10)
 
       const messages = await Promise.all(new Array(5).fill(0).map((_, i) => {
         const msg = new Message(false)
@@ -201,7 +202,7 @@ describe('bitswap with mocks', function () {
       try {
         // @ts-expect-error we want this to fail
         await bs.get(null)
-      } catch (err) {
+      } catch (/** @type {any} */ err) {
         expect(err).to.exist()
         expect(err.message).to.equal('Not a valid cid')
       }
@@ -276,7 +277,7 @@ describe('bitswap with mocks', function () {
       const other = ids[1]
       const block = blocks[10]
 
-      /** @type {import('../src/network')} */
+      /** @type {import('../src/network').Network} */
       const n1 = {
         // @ts-ignore incorrect return type
         connectTo (id) {
@@ -309,7 +310,7 @@ describe('bitswap with mocks', function () {
           return Promise.resolve()
         }
       }
-      /** @type {import('../src/network')} */
+      /** @type {import('../src/network').Network} */
       const n2 = {
         // @ts-ignore incorrect return type
         connectTo (id) {
@@ -414,7 +415,7 @@ describe('bitswap with mocks', function () {
     })
 
     it('removes a block from the wantlist when the request is aborted', async () => {
-      const [block] = await makeBlock(1)
+      const [block] = await makeBlocks(1)
       const bs = new Bitswap(mockLibp2pNode(), blockstore)
       const controller = new AbortController()
 
@@ -434,7 +435,7 @@ describe('bitswap with mocks', function () {
     })
 
     it('block should still be in the wantlist if only one request is aborted', async () => {
-      const [block] = await makeBlock(1)
+      const [block] = await makeBlocks(1)
       const bs = new Bitswap(mockLibp2pNode(), blockstore)
       const controller = new AbortController()
 

@@ -1,16 +1,13 @@
 /* eslint-env mocha */
-'use strict'
 
-const { expect } = require('aegir/utils/chai')
-const { CID } = require('multiformats')
-const { base32 } = require('multiformats/bases/base32')
-const { AbortController } = require('native-abort-controller')
-const { toString: uint8ArrayToString } = require('uint8arrays/to-string')
-
-const Notifications = require('../src/notifications')
-
-const makeBlocks = require('./utils/make-blocks')
-const { makePeerId } = require('./utils/make-peer-id')
+import { expect } from 'aegir/utils/chai.js'
+import { CID } from 'multiformats/cid'
+import { base32 } from 'multiformats/bases/base32'
+import { AbortController } from 'native-abort-controller'
+import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
+import { Notifications } from '../src/notifications.js'
+import { makeBlocks } from './utils/make-blocks.js'
+import { makePeerId } from './utils/make-peer-id.js'
 
 describe('Notifications', () => {
   /** @type {{ cid: CID, data: Uint8Array }[]} */

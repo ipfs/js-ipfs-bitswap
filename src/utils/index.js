@@ -1,8 +1,6 @@
-'use strict'
-
-const debug = require('debug')
-const { equals: uint8ArrayEquals } = require('uint8arrays/equals')
-const BitswapMessageEntry = require('../types/message/entry')
+import debug from 'debug'
+import { equals as uint8ArrayEquals } from 'uint8arrays/equals'
+import { BitswapMessageEntry } from '../types/message/entry.js'
 
 /**
  * Creates a logger for the given subsystem
@@ -10,7 +8,7 @@ const BitswapMessageEntry = require('../types/message/entry')
  * @param {import('peer-id')} [id]
  * @param {string} [subsystem]
  */
-const logger = (id, subsystem) => {
+export const logger = (id, subsystem) => {
   const name = ['bitswap']
   if (subsystem) {
     name.push(subsystem)
@@ -31,7 +29,7 @@ const logger = (id, subsystem) => {
  * @param {T[]} list
  * @returns {boolean}
  */
-const includesWith = (pred, x, list) => {
+export const includesWith = (pred, x, list) => {
   let idx = 0
   const len = list.length
   while (idx < len) {
@@ -49,7 +47,7 @@ const includesWith = (pred, x, list) => {
  * @param {T[]} list
  * @returns {T[]}
  */
-const uniqWith = (pred, list) => {
+export const uniqWith = (pred, list) => {
   let idx = 0
   const len = list.length
   const result = []
@@ -72,7 +70,7 @@ const uniqWith = (pred, list) => {
  * @param {V[]} list
  * @returns {Record<K, V[]>}
  */
-const groupBy = (pred, list) => {
+export const groupBy = (pred, list) => {
   return list.reduce((acc, v) => {
     const k = pred(v)
 
@@ -92,7 +90,7 @@ const groupBy = (pred, list) => {
  * @param {E[]} values
  * @returns {T[]}
  */
-const pullAllWith = (pred, list, values) => {
+export const pullAllWith = (pred, list, values) => {
   return list.filter(i => {
     return !includesWith(pred, i, values)
   })
@@ -104,7 +102,7 @@ const pullAllWith = (pred, list, values) => {
  * @param {T[]} list
  * @returns {T[]}
  */
-const sortBy = (fn, list) => {
+export const sortBy = (fn, list) => {
   return Array.prototype.slice.call(list, 0).sort((a, b) => {
     const aa = fn(a)
     const bb = fn(b)
@@ -118,7 +116,7 @@ const sortBy = (fn, list) => {
  * @param {Map<string, Uint8Array | BitswapMessageEntry>} a
  * @param {Map<string, Uint8Array | BitswapMessageEntry>} b
  */
-const isMapEqual = (a, b) => {
+export const isMapEqual = (a, b) => {
   if (a.size !== b.size) {
     return false
   }
@@ -144,14 +142,4 @@ const isMapEqual = (a, b) => {
   }
 
   return true
-}
-
-module.exports = {
-  logger,
-  includesWith,
-  uniqWith,
-  groupBy,
-  pullAllWith,
-  sortBy,
-  isMapEqual
 }

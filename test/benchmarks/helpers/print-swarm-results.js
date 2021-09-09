@@ -1,14 +1,12 @@
-'use strict'
-
 /* eslint-disable no-console */
 
-const stats = require('stats-lite')
+import stats from 'stats-lite'
 
 /**
  * @param {any} suite
  * @param {import('events').EventEmitter} emitter
  */
-module.exports = (suite, emitter) => {
+export const print = (suite, emitter) => {
   /** @type {number[]} */
   const elapseds = []
   emitter.once('start', () => {

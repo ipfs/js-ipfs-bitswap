@@ -1,10 +1,9 @@
-'use strict'
 
 /* eslint-disable no-console */
 
-const distributionTest = require('../utils/distribution-test')
-const print = require('./helpers/print-swarm-results')
-const { EventEmitter } = require('events')
+import { distributionTest } from '../utils/distribution-test'
+import { print } from './helpers/print-swarm-results'
+import { EventEmitter } from 'events'
 
 ;(async function () {
   const emitter = new EventEmitter()

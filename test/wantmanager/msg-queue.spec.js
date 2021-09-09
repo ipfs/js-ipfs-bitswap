@@ -1,15 +1,12 @@
 /* eslint-env mocha */
-'use strict'
 
-const { expect } = require('aegir/utils/chai')
-const PeerId = require('peer-id')
-const Message = require('../../src/types/message')
-const MsgQueue = require('../../src/want-manager/msg-queue')
-const defer = require('p-defer')
-const {
-  mockNetwork
-} = require('../utils/mocks')
-const makeBlocks = require('../utils/make-blocks')
+import { expect } from 'aegir/utils/chai.js'
+import PeerId from 'peer-id'
+import { BitswapMessage as Message } from '../../src/types/message/index.js'
+import { MsgQueue } from '../../src/want-manager/msg-queue.js'
+import defer from 'p-defer'
+import { mockNetwork } from '../utils/mocks.js'
+import { makeBlocks } from '../utils/make-blocks.js'
 
 /**
  * @typedef {import('multiformats/cid').CID} CID

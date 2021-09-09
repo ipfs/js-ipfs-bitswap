@@ -1,20 +1,16 @@
-'use strict'
-
-const PeerId = require('peer-id')
-
-const PeerStore = require('libp2p/src/peer-store')
-const Node = require('./create-libp2p-node').bundle
-const { MemoryBlockstore } = require('interface-blockstore')
-const { EventEmitter } = require('events')
-
-const Bitswap = require('../../src/bitswap')
-const Network = require('../../src/network')
-const Stats = require('../../src/stats')
+import PeerId from 'peer-id'
+import PeerStore from 'libp2p/src/peer-store/index.js'
+import { Node } from './create-libp2p-node.js'
+import { MemoryBlockstore } from 'blockstore-core/memory'
+import { EventEmitter } from 'events'
+import { Bitswap } from '../../src/bitswap.js'
+import { Network } from '../../src/network.js'
+import { Stats } from '../../src/stats/index.js'
 
 /**
  * @typedef {import('interface-blockstore').Blockstore} BlockStore
  * @typedef {import('interface-blockstore').Pair} Pair
- * @typedef {import('../../src/types/message')} Message
+ * @typedef {import('../../src/types/message').BitswapMessage} Message
  * @typedef {import('multiformats/cid').CID} CID
  * @typedef {import('multiaddr').Multiaddr} Multiaddr
  * @typedef {import('libp2p')} Libp2p
@@ -25,7 +21,7 @@ const Stats = require('../../src/stats')
  *
  * @returns {import('libp2p')}
  */
-exports.mockLibp2pNode = () => {
+export const mockLibp2pNode = () => {
   const peerId = PeerId.createFromHexString('122019318b6e5e0cf93a2314bf01269a2cc23cd3dcd452d742cdb9379d8646f6e4a9')
 
   // @ts-ignore - not all libp2p fields are implemented
@@ -64,9 +60,9 @@ exports.mockLibp2pNode = () => {
  * @param {number} [calls]
  * @param {function({ connects: (PeerId|Multiaddr)[], messages: [PeerId, Message][] }): void} [done]
  * @param {function(PeerId, Message): void} [onMsg]
- * @returns {import('../../src/network')}
+ * @returns {import('../../src/network').Network}
  */
-exports.mockNetwork = (calls = Infinity, done = () => {}, onMsg = () => {}) => {
+export const mockNetwork = (calls = Infinity, done = () => {}, onMsg = () => {}) => {
   /** @type {(PeerId|Multiaddr)[]} */
   const connects = []
   /** @type {[PeerId, Message][]}} */
@@ -146,7 +142,7 @@ exports.mockNetwork = (calls = Infinity, done = () => {}, onMsg = () => {}) => {
  * @param {Bitswap} bs
  * @param {Network} n
  */
-exports.applyNetwork = (bs, n) => {
+export const applyNetwork = (bs, n) => {
   bs.network = n
   bs.wm.network = n
   bs.engine.network = n
@@ -157,7 +153,7 @@ exports.applyNetwork = (bs, n) => {
  * @param {number} n - The number of nodes in the network
  * @param {boolean} enableDHT - Whether or not to run the dht
  */
-exports.genBitswapNetwork = async (n, enableDHT = false) => {
+export const genBitswapNetwork = async (n, enableDHT = false) => {
   /** @type {{ peerId: PeerId, libp2p: Libp2p, peerStore: PeerStore, bitswap: Bitswap }[]} */
   const netArray = []
 

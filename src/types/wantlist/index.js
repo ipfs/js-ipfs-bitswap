@@ -1,7 +1,7 @@
-'use strict'
 
-const Entry = require('./entry')
-const { base58btc } = require('multiformats/bases/base58')
+import { WantListEntry as Entry } from './entry.js'
+import { base58btc } from 'multiformats/bases/base58'
+import { BitswapMessage as Message } from '../message/index.js'
 
 /**
  * @template T
@@ -21,10 +21,10 @@ const sortBy = (fn, list) => {
  * @typedef {import('multiformats').CID} CID
  */
 
-class Wantlist {
+export class Wantlist {
   /**
    *
-   * @param {import('../../stats')} [stats]
+   * @param {import('../../stats').Stats} [stats]
    */
   constructor (stats) {
     /** @type {Map<string, Entry>} */
@@ -42,9 +42,6 @@ class Wantlist {
    * @param {import('../message/message').Message.Wantlist.WantType} wantType
    */
   add (cid, priority, wantType) {
-    // Have to import here to avoid circular reference
-    const Message = require('../message')
-
     const cidStr = cid.toString(base58btc)
     const entry = this.set.get(cidStr)
 
@@ -132,4 +129,3 @@ class Wantlist {
 }
 
 Wantlist.Entry = Entry
-module.exports = Wantlist

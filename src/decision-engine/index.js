@@ -1,20 +1,18 @@
-'use strict'
+import { CID } from 'multiformats/cid'
+import { base58btc } from 'multiformats/bases/base58'
+import { BitswapMessage as Message } from '../types/message/index.js'
+import { Wantlist } from '../types/wantlist/index.js'
+import { Ledger } from './ledger.js'
+import { RequestQueue } from './req-queue.js'
+import { TaskMerger } from './task-merger.js'
+import { logger } from '../utils/index.js'
 
 /**
- * @typedef {import('../types/message/entry')} BitswapMessageEntry
+ * @typedef {import('../types/message/entry').BitswapMessageEntry} BitswapMessageEntry
  * @typedef {import('peer-id')} PeerId
  */
 
-const { CID } = require('multiformats')
-const { base58btc } = require('multiformats/bases/base58')
-
-const Message = require('../types/message')
 const WantType = Message.WantType
-const Wantlist = require('../types/wantlist')
-const Ledger = require('./ledger')
-const RequestQueue = require('./req-queue')
-const TaskMerger = require('./task-merger')
-const { logger } = require('../utils')
 
 // The ideal size of the batched payload. We try to pop this much data off the
 // request queue, but
@@ -31,12 +29,12 @@ const TARGET_MESSAGE_SIZE = 16 * 1024
 // a block.
 const MAX_SIZE_REPLACE_HAS_WITH_BLOCK = 1024
 
-class DecisionEngine {
+export class DecisionEngine {
   /**
    * @param {PeerId} peerId
    * @param {import('interface-blockstore').Blockstore} blockstore
-   * @param {import('../network')} network
-   * @param {import('../stats')} stats
+   * @param {import('../network').Network} network
+   * @param {import('../stats').Stats} stats
    * @param {Object} [opts]
    * @param {number} [opts.targetMessageSize]
    * @param {number} [opts.maxSizeReplaceHasWithBlock]
@@ -165,7 +163,7 @@ class DecisionEngine {
 
   /**
    * @param {PeerId} peerId
-   * @returns {Map<string, import('../types/wantlist/entry')>}
+   * @returns {Map<string, import('../types/wantlist/entry').WantListEntry>}
    */
   wantlistForPeer (peerId) {
     const peerIdStr = peerId.toB58String()
@@ -404,7 +402,7 @@ class DecisionEngine {
       try {
         const block = await this.blockstore.get(cid)
         res.set(cid.toString(base58btc), block)
-      } catch (e) {
+      } catch (/** @type {any} */ e) {
         if (e.code !== 'ERR_NOT_FOUND') {
           this._log.error('failed to query blockstore for %s: %s', cid, e)
         }
@@ -499,5 +497,3 @@ class DecisionEngine {
     this._running = false
   }
 }
-
-module.exports = DecisionEngine

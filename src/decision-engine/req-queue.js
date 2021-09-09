@@ -1,6 +1,4 @@
-'use strict'
-
-const SortedMap = require('../utils/sorted-map')
+import { SortedMap } from '../utils/sorted-map.js'
 
 /**
  * @typedef {Object} PopTaskResult
@@ -39,7 +37,7 @@ const DefaultTaskMerger = {
  * Tasks are popped in priority order from the best peer - see popTasks()
  * for more details.
  */
-class RequestQueue {
+export class RequestQueue {
   /**
    * @param {TaskMerger} [taskMerger]
    */
@@ -424,5 +422,3 @@ class PendingTasks {
     return b[1].task.priority - a[1].task.priority
   }
 }
-
-module.exports = RequestQueue
