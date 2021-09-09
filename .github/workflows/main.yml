@@ -51,7 +51,7 @@ jobs:
         with:
           node-version: 16
       - run: npm install
-      - run: npm run test -- -t ${{ matrix.type }} -- --browser ${{ matrix.browser }} --exit
+      - run: npm run test -- -t ${{ matrix.type }} -- --browser ${{ matrix.browser }}
    test-electron:
      needs: check
      runs-on: ubuntu-latest
