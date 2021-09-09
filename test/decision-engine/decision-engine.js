@@ -1,29 +1,28 @@
 /* eslint-env mocha */
-'use strict'
 
-const { expect } = require('aegir/utils/chai')
-const PeerId = require('peer-id')
+import { expect } from 'aegir/utils/chai.js'
+import PeerId from 'peer-id'
 // @ts-ignore no types
-const range = require('lodash.range')
+import range from 'lodash.range'
 // @ts-ignore no types
-const difference = require('lodash.difference')
+import difference from 'lodash.difference'
 // @ts-ignore no types
-const flatten = require('lodash.flatten')
-const { CID } = require('multiformats')
-const { sha256 } = require('multiformats/hashes/sha2')
-const { base58btc } = require('multiformats/bases/base58')
-const { fromString: uint8ArrayFromString } = require('uint8arrays/from-string')
-const { toString: uint8ArrayToString } = require('uint8arrays/to-string')
-const drain = require('it-drain')
-const defer = require('p-defer')
+import flatten from 'lodash.flatten'
+import { CID } from 'multiformats/cid'
+import { sha256 } from 'multiformats/hashes/sha2'
+import { base58btc } from 'multiformats/bases/base58'
+import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
+import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
+import drain from 'it-drain'
+import defer from 'p-defer'
 
-const Message = require('../../src/types/message')
-const DecisionEngine = require('../../src/decision-engine')
-const Stats = require('../../src/stats')
-const { MemoryBlockstore } = require('interface-blockstore')
-const makeBlock = require('../utils/make-blocks')
-const { makePeerId, makePeerIds } = require('../utils/make-peer-id')
-const mockNetwork = require('../utils/mocks').mockNetwork
+import { BitswapMessage as Message } from '../../src/types/message/index.js'
+import { DecisionEngine } from '../../src/decision-engine/index.js'
+import { Stats } from '../../src/stats/index.js'
+import { MemoryBlockstore } from 'blockstore-core/memory'
+import { makeBlocks } from '../utils/make-blocks.js'
+import { makePeerId, makePeerIds } from '../utils/make-peer-id.js'
+import { mockNetwork } from '../utils/mocks.js'
 
 /**
  * @typedef {import('interface-blockstore').Blockstore} Blockstore
@@ -52,7 +51,7 @@ function stringifyMessages (messages) {
 
 /**
  *
- * @param {import('../../src/network')} network
+ * @param {import('../../src/network').Network} network
  */
 async function newEngine (network) {
   const peerId = await PeerId.create({ bits: 512 })
@@ -214,7 +213,7 @@ describe('Engine', () => {
     const id = await makePeerId()
     const peers = await makePeerIds(3)
     const blockSize = 256 * 1024
-    const blocks = await makeBlock(20, blockSize)
+    const blocks = await makeBlocks(20, blockSize)
 
     /**
      * @param {CID} cid
@@ -309,7 +308,7 @@ describe('Engine', () => {
 
   it('sends received blocks to peers that want them', async () => {
     const [id, peer] = await makePeerIds(2)
-    const blocks = await makeBlock(4, 8 * 1024)
+    const blocks = await makeBlocks(4, 8 * 1024)
 
     const deferred = defer()
     const network = mockNetwork(blocks.length, undefined, (peer, msg) => deferred.resolve([peer, msg]))
@@ -346,7 +345,7 @@ describe('Engine', () => {
 
   it('sends DONT_HAVE', async () => {
     const [id, peer] = await makePeerIds(2)
-    const blocks = await makeBlock(4, 8 * 1024)
+    const blocks = await makeBlocks(4, 8 * 1024)
 
     /** @type {Function} */
     let onMsg

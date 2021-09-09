@@ -1,15 +1,13 @@
 /*eslint-disable*/
-"use strict";
-
-var $protobuf = require("protobufjs/minimal");
+import $protobuf from "protobufjs/minimal.js";
 
 // Common aliases
-var $Reader = $protobuf.Reader, $Writer = $protobuf.Writer, $util = $protobuf.util;
+const $Reader = $protobuf.Reader, $Writer = $protobuf.Writer, $util = $protobuf.util;
 
 // Exported root namespace
-var $root = $protobuf.roots["ipfs-bitswap"] || ($protobuf.roots["ipfs-bitswap"] = {});
+const $root = $protobuf.roots["ipfs-bitswap"] || ($protobuf.roots["ipfs-bitswap"] = {});
 
-$root.Message = (function() {
+export const Message = $root.Message = (() => {
 
     /**
      * Properties of a Message.
@@ -447,7 +445,7 @@ $root.Message = (function() {
          * @property {number} Have=1 Have value
          */
         Wantlist.WantType = (function() {
-            var valuesById = {}, values = Object.create(valuesById);
+            const valuesById = {}, values = Object.create(valuesById);
             values[valuesById[0] = "Block"] = 0;
             values[valuesById[1] = "Have"] = 1;
             return values;
@@ -867,7 +865,7 @@ $root.Message = (function() {
      * @property {number} DontHave=1 DontHave value
      */
     Message.BlockPresenceType = (function() {
-        var valuesById = {}, values = Object.create(valuesById);
+        const valuesById = {}, values = Object.create(valuesById);
         values[valuesById[0] = "Have"] = 0;
         values[valuesById[1] = "DontHave"] = 1;
         return values;
@@ -1045,4 +1043,4 @@ $root.Message = (function() {
     return Message;
 })();
 
-module.exports = $root;
+export { $root as default };

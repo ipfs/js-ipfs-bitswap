@@ -39,3 +39,4 @@ docs
 test/test-repo/datastore
 
 *.flamegraph
+types

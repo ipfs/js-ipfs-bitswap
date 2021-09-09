@@ -1,8 +1,7 @@
-'use strict'
 
-const { base58btc } = require('multiformats/bases/base58')
+import { base58btc } from 'multiformats/bases/base58'
 
-class WantListEntry {
+export class WantListEntry {
   /**
    * @param {import('multiformats').CID} cid
    * @param {number} priority
@@ -45,5 +44,3 @@ class WantListEntry {
       this.wantType === other.wantType
   }
 }
-
-module.exports = WantListEntry

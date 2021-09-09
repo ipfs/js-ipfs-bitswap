@@ -1,9 +1,10 @@
-'use strict'
 
-const WantlistEntry = require('../wantlist').Entry
-const { base58btc } = require('multiformats/bases/base58')
+import { Wantlist } from '../wantlist/index.js'
+import { base58btc } from 'multiformats/bases/base58'
 
-module.exports = class BitswapMessageEntry {
+const WantlistEntry = Wantlist.Entry
+
+export class BitswapMessageEntry {
   /**
    * @param {import('multiformats').CID} cid
    * @param {number} priority

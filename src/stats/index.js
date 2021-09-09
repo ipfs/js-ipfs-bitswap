@@ -1,7 +1,5 @@
-'use strict'
-
-const { EventEmitter } = require('events')
-const Stat = require('./stat')
+import { EventEmitter } from 'events'
+import { Stat } from './stat.js'
 
 /**
  * @typedef {import('multiformats').CID} CID
@@ -22,7 +20,7 @@ const defaultOptions = {
   ])
 }
 
-class Stats extends EventEmitter {
+export class Stats extends EventEmitter {
   /**
    * @param {string[]} [initialCounters]
    * @param {Object} _options
@@ -128,5 +126,3 @@ class Stats extends EventEmitter {
     }
   }
 }
-
-module.exports = Stats

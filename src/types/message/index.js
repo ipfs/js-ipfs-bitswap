@@ -1,21 +1,19 @@
-'use strict'
-
-const { CID } = require('multiformats')
-const { sha256 } = require('multiformats/hashes/sha2')
-const { base58btc } = require('multiformats/bases/base58')
+import { CID } from 'multiformats/cid'
+import { sha256 } from 'multiformats/hashes/sha2'
+import { base58btc } from 'multiformats/bases/base58'
 // @ts-ignore
-const vd = require('varint-decoder')
-const { isMapEqual } = require('../../utils')
-const { Message } = require('./message')
-const Entry = require('./entry')
-const { concat: uint8ArrayConcat } = require('uint8arrays/concat')
-const errcode = require('err-code')
+import vd from 'varint-decoder'
+import { isMapEqual } from '../../utils/index.js'
+import { Message } from './message.js'
+import { BitswapMessageEntry as Entry } from './entry.js'
+import { concat as uint8ArrayConcat } from 'uint8arrays/concat'
+import errcode from 'err-code'
 
 /**
  * @typedef {import('multiformats/hashes/interface').MultihashHasher} MultihashHasher
  */
 
-class BitswapMessage {
+export class BitswapMessage {
   /**
    * @param {boolean} full
    */
@@ -326,4 +324,3 @@ BitswapMessage.BlockPresenceType = {
   Have: Message.BlockPresenceType.Have,
   DontHave: Message.BlockPresenceType.DontHave
 }
-module.exports = BitswapMessage

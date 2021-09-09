@@ -1,14 +1,13 @@
-'use strict'
 
 /** @type {(n:number) => any[]} */
 // @ts-ignore
-const range = require('lodash.range')
-const { expect } = require('aegir/utils/chai')
+import range from 'lodash.range'
+import { expect } from 'aegir/utils/chai.js'
 
-const createBitswap = require('./create-bitswap')
-const makeBlock = require('./make-blocks')
-const connectAll = require('./connect-all')
-const all = require('it-all')
+import { createBitswap } from './create-bitswap.js'
+import { makeBlocks } from './make-blocks.js'
+import { connectAll } from './connect-all.js'
+import all from 'it-all'
 
 /**
  *
@@ -17,7 +16,7 @@ const all = require('it-all')
  * @param {number} repeats
  * @param {*} events
  */
-module.exports = async (instanceCount, blockCount, repeats, events) => {
+export const distributionTest = async (instanceCount, blockCount, repeats, events) => {
   let pendingRepeats = repeats
 
   const nodes = await Promise.all(range(instanceCount).map(() => createBitswap()))
@@ -29,7 +28,7 @@ module.exports = async (instanceCount, blockCount, repeats, events) => {
 
   while (pendingRepeats > 0) {
     const first = nodes[0]
-    const blocks = await makeBlock(blockCount)
+    const blocks = await makeBlocks(blockCount)
 
     await Promise.all(
       blocks.map(block => first.bitswap.put(block.cid, block.data))

@@ -1,21 +1,20 @@
-'use strict'
 
 // @ts-ignore
-const TCP = require('libp2p-tcp')
+import TCP from 'libp2p-tcp'
 // @ts-ignore
-const MPLEX = require('libp2p-mplex')
-const { NOISE } = require('@chainsafe/libp2p-noise')
-const Libp2p = require('libp2p')
-const KadDHT = require('libp2p-kad-dht')
-const PeerId = require('peer-id')
+import MPLEX from 'libp2p-mplex'
+import { NOISE } from '@chainsafe/libp2p-noise'
+import Libp2p from 'libp2p'
+import KadDHT from 'libp2p-kad-dht'
+import PeerId from 'peer-id'
 // @ts-ignore
-const defaultsDeep = require('@nodeutils/defaults-deep')
+import defaultsDeep from '@nodeutils/defaults-deep'
 
 /**
  * @typedef {Partial<import('libp2p').Libp2pOptions> & Partial<import('libp2p').constructorOptions> & { DHT?: boolean}} NodeOptions
  */
 
-class Node extends Libp2p {
+export class Node extends Libp2p {
   /**
    * @param {NodeOptions} _options
    */
@@ -50,7 +49,7 @@ class Node extends Libp2p {
  *
  * @returns {Promise<Libp2p>}
  */
-async function createLibp2pNode (options) {
+export async function createLibp2pNode (options) {
   const id = await PeerId.create({ bits: 512 })
   const node = new Node({
     peerId: id,
@@ -63,6 +62,3 @@ async function createLibp2pNode (options) {
 
   return node
 }
-
-exports = module.exports = createLibp2pNode
-exports.bundle = Node

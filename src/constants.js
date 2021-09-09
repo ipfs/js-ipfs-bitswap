@@ -1,13 +1,9 @@
-'use strict'
-
 const SECOND = 1000
 
-module.exports = {
-  maxProvidersPerRequest: 3,
-  providerRequestTimeout: 10 * SECOND,
-  hasBlockTimeout: 15 * SECOND,
-  provideTimeout: 15 * SECOND,
-  kMaxPriority: Math.pow(2, 31) - 1,
-  maxListeners: 1000,
-  wantlistSendDebounceMs: 1
-}
+export const maxProvidersPerRequest = 3
+export const providerRequestTimeout = 10 * SECOND
+export const hasBlockTimeout = 15 * SECOND
+export const provideTimeout = 15 * SECOND
+export const kMaxPriority = Math.pow(2, 31) - 1
+export const maxListeners = 1000
+export const wantlistSendDebounceMs = 1

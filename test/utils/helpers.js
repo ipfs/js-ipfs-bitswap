@@ -1,13 +1,12 @@
-'use strict'
 
 // @ts-ignore
-const range = require('lodash.range')
-const { expect } = require('aegir/utils/chai')
+import range from 'lodash.range'
+import { expect } from 'aegir/utils/chai.js'
 
 /**
  * @param {number} n
  */
-exports.orderedFinish = (n) => {
+export const orderedFinish = (n) => {
   const r = range(1, n + 1)
   /** @type {number[]} */
   const finishes = []
@@ -31,7 +30,7 @@ exports.orderedFinish = (n) => {
  * @param {number} n
  * @returns
  */
-exports.countToFinish = (n) => {
+export const countToFinish = (n) => {
   let pending = n
 
   const output = () => {

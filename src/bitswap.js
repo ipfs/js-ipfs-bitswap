@@ -1,20 +1,18 @@
-'use strict'
-
-const WantManager = require('./want-manager')
-const Network = require('./network')
-const DecisionEngine = require('./decision-engine')
-const Notifications = require('./notifications')
-const logger = require('./utils').logger
-const Stats = require('./stats')
-const { AbortController } = require('native-abort-controller')
-const { anySignal } = require('any-signal')
-const { BlockstoreAdapter } = require('interface-blockstore')
-const { CID } = require('multiformats')
+import { WantManager } from './want-manager/index.js'
+import { Network } from './network.js'
+import { DecisionEngine } from './decision-engine/index.js'
+import { Notifications } from './notifications.js'
+import { logger } from './utils/index.js'
+import { Stats } from './stats/index.js'
+import { AbortController } from 'native-abort-controller'
+import { anySignal } from 'any-signal'
+import { BaseBlockstore } from 'blockstore-core/base'
+import { CID } from 'multiformats/cid'
 
 /**
  * @typedef {import('./types').IPFSBitswap} IPFSBitswap
  * @typedef {import('peer-id')} PeerId
- * @typedef {import('./types/message')} BitswapMessage
+ * @typedef {import('./types/message').BitswapMessage} BitswapMessage
  * @typedef {import('interface-blockstore').Blockstore} Blockstore
  * @typedef {import('interface-blockstore').Pair} Pair
  * @typedef {import('interface-blockstore').Options} Options
@@ -44,7 +42,7 @@ const statsKeys = [
  *
  * @implements {IPFSBitswap}
  */
-class Bitswap extends BlockstoreAdapter {
+export class Bitswap extends BaseBlockstore {
   /**
    * @param {import('libp2p')} libp2p
    * @param {Blockstore} blockstore
@@ -278,7 +276,7 @@ class Bitswap extends BlockstoreAdapter {
         const block = await this.blockstore.get(cid, options)
 
         return block
-      } catch (err) {
+      } catch (/** @type {any} */ err) {
         if (err.code !== 'ERR_NOT_FOUND') {
           throw err
         }
@@ -451,5 +449,3 @@ class Bitswap extends BlockstoreAdapter {
     return this.blockstore
   }
 }
-
-module.exports = Bitswap

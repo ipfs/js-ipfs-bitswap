@@ -1,10 +1,7 @@
-'use strict'
-
-const { EventEmitter } = require('events')
-const { toString: uint8ArrayToString } = require('uint8arrays/to-string')
-
-const CONSTANTS = require('./constants')
-const logger = require('./utils').logger
+import { EventEmitter } from 'events'
+import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
+import * as CONSTANTS from './constants.js'
+import { logger } from './utils/index.js'
 
 /**
  * @typedef {import('multiformats').CID} CID
@@ -21,7 +18,7 @@ const unwantEvent = (cid) => `unwant:${uint8ArrayToString(cid.multihash.bytes, '
  */
 const blockEvent = (cid) => `block:${uint8ArrayToString(cid.multihash.bytes, 'base64')}`
 
-class Notifications extends EventEmitter {
+export class Notifications extends EventEmitter {
   /**
    * Internal module used to track events about incoming blocks,
    * wants and unwants.
@@ -112,5 +109,3 @@ class Notifications extends EventEmitter {
     this.emit(event)
   }
 }
-
-module.exports = Notifications

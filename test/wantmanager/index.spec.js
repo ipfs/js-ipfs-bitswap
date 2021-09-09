@@ -1,23 +1,20 @@
 /* eslint-env mocha */
-'use strict'
 
-const { expect } = require('aegir/utils/chai')
-
-const cs = require('../../src/constants')
-const Message = require('../../src/types/message')
-const WantManager = require('../../src/want-manager')
-const Stats = require('../../src/stats')
-
-const mockNetwork = require('../utils/mocks').mockNetwork
-const makeBlock = require('../utils/make-blocks')
-const { makePeerIds } = require('../utils/make-peer-id')
+import { expect } from 'aegir/utils/chai.js'
+import * as CONSTANTS from '../../src/constants.js'
+import { BitswapMessage as Message } from '../../src/types/message/index.js'
+import { WantManager } from '../../src/want-manager/index.js'
+import { Stats } from '../../src/stats/index.js'
+import { mockNetwork } from '../utils/mocks.js'
+import { makeBlocks } from '../utils/make-blocks.js'
+import { makePeerIds } from '../utils/make-peer-id.js'
 
 describe('WantManager', () => {
   it('sends wantlist to all connected peers', async function () {
     this.timeout(80 * 1000)
 
     const peerIds = await makePeerIds(3)
-    const blocks = await makeBlock(3)
+    const blocks = await makeBlocks(3)
     const cids = blocks.map((b) => b.cid)
 
     const peer1 = peerIds[0]
@@ -27,14 +24,14 @@ describe('WantManager', () => {
     const cid3 = cids[2]
 
     const m1 = new Message(true)
-    m1.addEntry(cid1, cs.kMaxPriority)
-    m1.addEntry(cid2, cs.kMaxPriority - 1)
+    m1.addEntry(cid1, CONSTANTS.kMaxPriority)
+    m1.addEntry(cid2, CONSTANTS.kMaxPriority - 1)
 
     const m2 = new Message(false)
     m2.cancel(cid2)
 
     const m3 = new Message(false)
-    m3.addEntry(cid3, cs.kMaxPriority)
+    m3.addEntry(cid3, CONSTANTS.kMaxPriority)
 
     const msgs = [m1, m1, m2, m2, m3, m3]
 

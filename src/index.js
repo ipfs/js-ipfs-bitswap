@@ -1,6 +1,4 @@
-'use strict'
-
-const Bitswap = require('./bitswap')
+import { Bitswap } from './bitswap.js'
 
 /**
  * @typedef {import('./types').IPFSBitswap} IPFSBitswap
@@ -22,10 +20,6 @@ const Bitswap = require('./bitswap')
  * @param {Record<number, MultihashHasher>} [options.hashers]
  * @returns {IPFSBitswap}
  */
-const createBitswap = (libp2p, blockstore, options = {}) => {
+export const createBitswap = (libp2p, blockstore, options = {}) => {
   return new Bitswap(libp2p, blockstore, options)
-}
-
-module.exports = {
-  createBitswap
 }

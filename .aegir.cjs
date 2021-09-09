@@ -1,5 +1,4 @@
 'use strict'
-const path = require('path')
 
 /** @type {import('aegir').Options["build"]["config"]} */
 const esbuild = {

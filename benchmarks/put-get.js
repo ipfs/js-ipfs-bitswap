@@ -1,13 +1,12 @@
 /* eslint max-nested-callbacks: ["error", 5] */
 /* eslint-disable no-console */
-'use strict'
 
-const Benchmark = require('benchmark')
-const assert = require('assert')
-const all = require('it-all')
-const drain = require('it-drain')
-const makeBlock = require('../test/utils/make-blocks')
-const genBitswapNetwork = require('../test/utils/mocks').genBitswapNetwork
+import Benchmark from 'benchmark'
+import assert from 'assert'
+import all from 'it-all'
+import drain from 'it-drain'
+import { makeBlocks } from '../test/utils/make-blocks.js'
+import { genBitswapNetwork } from '../test/utils/mocks.js'
 
 const suite = new Benchmark.Suite('put-get')
 
@@ -23,7 +22,7 @@ const blockSizes = [10, 1024, 10 * 1024]
 
   blockCounts.forEach((n) => blockSizes.forEach((k) => {
     suite.add(`put-get ${n} blocks of size ${k}`, async (defer) => {
-      const blocks = await makeBlock(n, k)
+      const blocks = await makeBlocks(n, k)
 
       await drain(bitswap.putMany(blocks))
 

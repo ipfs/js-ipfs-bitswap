@@ -1,8 +1,8 @@
-import { Blockstore } from 'interface-blockstore'
-import PeerId from 'peer-id'
-import { CID } from 'multiformats/cid'
-import { Message } from './types/message/message'
-import { IMovingAverage } from '@vascosantos/moving-average'
+import type { Blockstore } from 'interface-blockstore'
+import type PeerId from 'peer-id'
+import type { CID } from 'multiformats/cid'
+import type { Message } from './types/message/message'
+import type { IMovingAverage } from '@vascosantos/moving-average'
 
 export interface WantListEntry {
   cid: CID

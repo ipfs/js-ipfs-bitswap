@@ -3,11 +3,9 @@ on:
   push:
     branches:
       - master
-      - 'release/**'
   pull_request:
     branches:
       - master
-      - 'release/**'
 
 jobs:
   check:
@@ -15,19 +13,17 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - run: npm install
-    - run: npx aegir lint
-    - run: npx aegir build
-    - run: npx aegir dep-check
-    - uses: ipfs/aegir/actions/bundle-size@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+    - run: npm run build
+    - run: npm run lint
+    - run: npm run dep-check
   test-node:
     needs: check
     runs-on: ${{ matrix.os }}
+    name: Test ${{ matrix.project }} node
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
-        node: [14, 16]
+        node: [16]
       fail-fast: true
     steps:
       - uses: actions/checkout@v2
@@ -35,44 +31,43 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: npm install
-      - run: npx aegir test -t node --bail --cov
-      - uses: codecov/codecov-action@v1
-  test-chrome:
+      - run: npm run test --cov -t node -- --exit
+  test-browser:
     needs: check
     runs-on: ubuntu-latest
+    name: test ${{ matrix.browser }} ${{ matrix.type }}
+    strategy:
+      matrix:
+        browser:
+          - chromium
+          - firefox
+        type:
+          - browser
+          - webworker
+      fail-fast: true
     steps:
       - uses: actions/checkout@v2
-      - uses: microsoft/playwright-github-action@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 16
       - run: npm install
-      - run: npx aegir test -t browser -t webworker --bail
-      - uses: codecov/codecov-action@v1
-  test-firefox:
-    needs: check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: microsoft/playwright-github-action@v1
-      - run: npm install
-      - run: npx aegir test -t browser -t webworker --bail -- --browser firefox
-  test-webkit:
-    needs: check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: microsoft/playwright-github-action@v1
-      - run: npm install
-      - run: npx aegir test -t browser -t webworker --bail --timeout 10000 -- --browser webkit
-  test-electron-main:
-    needs: check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: npm install
-      - run: npx xvfb-maybe aegir test -t electron-main --bail
-  test-electron-renderer:
-    needs: check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - run: npm install
-      - run: npx xvfb-maybe aegir test -t electron-renderer --bail
+      - run: npm run test -- -t ${{ matrix.type }} -- --browser ${{ matrix.browser }} --exit
+   test-electron:
+     needs: check
+     runs-on: ubuntu-latest
+     name: test ${{ matrix.type }}
+     strategy:
+       matrix:
+         type:
+           - electron-main
+           - electron-renderer
+       fail-fast: true
+     steps:
+       - uses: actions/checkout@v2
+       - uses: actions/setup-node@v1
+         with:
+           node-version: 16
+       - run: npm install
+       - uses: GabrielBB/xvfb-action@v1
+         with:
+           run: npm run test -- -t ${{ matrix.type }} --bail --exit

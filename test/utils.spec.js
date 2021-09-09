@@ -1,15 +1,14 @@
 /* eslint-env mocha */
-'use strict'
 
-const { expect } = require('aegir/utils/chai')
-const { CID } = require('multiformats')
-const { sha256 } = require('multiformats/hashes/sha2')
-const BitswapMessageEntry = require('../src/types/message/entry')
-const { fromString: uint8ArrayFromString } = require('uint8arrays/from-string')
-const BitswapMessage = require('../src/types/message')
+import { expect } from 'aegir/utils/chai.js'
+import { CID } from 'multiformats/cid'
+import { sha256 } from 'multiformats/hashes/sha2'
+import { BitswapMessageEntry } from '../src/types/message/entry.js'
+import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
+import { BitswapMessage } from '../src/types/message/index.js'
 
-const { groupBy, uniqWith, pullAllWith, includesWith, sortBy, isMapEqual } = require('../src/utils')
-const SortedMap = require('../src/utils/sorted-map')
+import { groupBy, uniqWith, pullAllWith, includesWith, sortBy, isMapEqual } from '../src/utils/index.js'
+import { SortedMap } from '../src/utils/sorted-map.js'
 
 const DAG_PB_CODEC = 0x70
 

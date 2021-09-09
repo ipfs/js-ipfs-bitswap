@@ -1,11 +1,9 @@
-'use strict'
-
 /**
  * @template Key, Value
  * SortedMap is a Map whose iterator order can be defined by the user
  * @extends {Map<Key, Value>}
  */
-class SortedMap extends Map {
+export class SortedMap extends Map {
   /**
    * @param {Array<[Key, Value]>} [entries]
    * @param {(a:[Key, Value], b:[Key, Value]) => number} [cmp] - compares [k1, v1] to [k2, v2]
@@ -209,5 +207,3 @@ class SortedMap extends Map {
     )
   }
 }
-
-module.exports = SortedMap

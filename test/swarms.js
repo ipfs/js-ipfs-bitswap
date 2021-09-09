@@ -1,11 +1,11 @@
-'use strict'
 
 /* eslint-env mocha */
 /* eslint-disable no-console */
 
-const stats = require('stats-lite')
-const distributionTest = require('./utils/distribution-test')
-const { EventEmitter } = require('events')
+import stats from 'stats-lite'
+import { distributionTest } from './utils/distribution-test.js'
+import { EventEmitter } from 'events'
+
 const test = it
 
 describe.skip('swarms', () => {

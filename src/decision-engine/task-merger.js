@@ -1,12 +1,10 @@
-'use strict'
-
 /**
  * @typedef {import('./types').Task} Task
  * @typedef {import('./types').TaskMerger} TaskMergerAPI
  */
 
 /** @type {TaskMergerAPI} */
-const TaskMerger = {
+export const TaskMerger = {
   /**
    * Indicates whether the given task has newer information than the active
    * tasks with the same topic.
@@ -99,5 +97,3 @@ const TaskMerger = {
     }
   }
 }
-
-module.exports = TaskMerger

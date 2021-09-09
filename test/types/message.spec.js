@@ -1,23 +1,21 @@
 /* eslint-env mocha */
-'use strict'
 
-const { expect } = require('aegir/utils/chai')
-const { CID } = require('multiformats')
-const { base32 } = require('multiformats/bases/base32')
-const { base64 } = require('multiformats/bases/base64')
-const { base58btc } = require('multiformats/bases/base58')
-const { fromString: uint8ArrayFromString } = require('uint8arrays/from-string')
-const { concat: uint8ArrayConcat } = require('uint8arrays/concat')
-const loadFixture = require('aegir/utils/fixtures')
+import { expect } from 'aegir/utils/chai.js'
+import { CID } from 'multiformats/cid'
+import { base32 } from 'multiformats/bases/base32'
+import { base64 } from 'multiformats/bases/base64'
+import { base58btc } from 'multiformats/bases/base58'
+import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
+import { concat as uint8ArrayConcat } from 'uint8arrays/concat'
+import loadFixture from 'aegir/utils/fixtures.js'
+import varint from 'varint'
+import { Message } from '../../src/types/message/message.js'
+import { BitswapMessage } from '../../src/types/message/index.js'
+import { makeBlocks } from '../utils/make-blocks.js'
+
 const testDataPath = 'test/fixtures/serialized-from-go'
 const rawMessageFullWantlist = loadFixture(testDataPath + '/bitswap110-message-full-wantlist')
 const rawMessageOneBlock = loadFixture(testDataPath + '/bitswap110-message-one-block')
-const varint = require('varint')
-
-const { Message } = require('../../src/types/message/message')
-
-const BitswapMessage = require('../../src/types/message')
-const makeBlock = require('../utils/make-blocks')
 
 describe('BitswapMessage', () => {
   /** @type {{ cid: CID, data: Uint8Array }[]} */
@@ -26,7 +24,7 @@ describe('BitswapMessage', () => {
   let cids
 
   before(async () => {
-    blocks = await makeBlock(4)
+    blocks = await makeBlocks(4)
     cids = blocks.map((b) => b.cid)
   })
 

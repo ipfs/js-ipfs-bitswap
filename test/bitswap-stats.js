@@ -1,15 +1,14 @@
 /* eslint-env mocha */
-'use strict'
 
-const { expect } = require('aegir/utils/chai')
-const pEvent = require('p-event')
-const Message = require('../src/types/message')
-const Bitswap = require('../src/bitswap')
+import { expect } from 'aegir/utils/chai.js'
+import pEvent from 'p-event'
+import { BitswapMessage as Message } from '../src/types/message/index.js'
+import { Bitswap } from '../src/bitswap.js'
 
-const { MemoryBlockstore } = require('interface-blockstore')
-const createLibp2pNode = require('./utils/create-libp2p-node')
-const makeBlock = require('./utils/make-blocks')
-const { makePeerIds } = require('./utils/make-peer-id')
+import { MemoryBlockstore } from 'blockstore-core/memory'
+import { createLibp2pNode } from './utils/create-libp2p-node.js'
+import { makeBlocks } from './utils/make-blocks.js'
+import { makePeerIds } from './utils/make-peer-id.js'
 
 /**
  * @typedef {import('libp2p')} Libp2p
@@ -47,7 +46,7 @@ describe('bitswap stats', () => {
 
   before(async () => {
     const nodes = [0, 1]
-    blocks = await makeBlock(2)
+    blocks = await makeBlocks(2)
     ids = await makePeerIds(2)
 
     // create 2 libp2p nodes
@@ -176,7 +175,7 @@ describe('bitswap stats', () => {
       const ma = `${libp2pNodes[1].multiaddrs[0]}/p2p/${libp2pNodes[1].peerId.toB58String()}`
       await libp2pNodes[0].dial(ma)
 
-      block = (await makeBlock(1))[0]
+      block = (await makeBlocks(1))[0]
 
       await bs.put(block.cid, block.data)
     })

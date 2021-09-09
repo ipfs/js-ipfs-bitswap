@@ -1,4 +1,3 @@
-'use strict'
 
-require('./bitswap-mock-internals.js')
-require('./decision-engine/decision-engine')
+import './bitswap-mock-internals.js'
+import './decision-engine/decision-engine.js'

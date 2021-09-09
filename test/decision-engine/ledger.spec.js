@@ -1,10 +1,8 @@
 /* eslint-env mocha */
-'use strict'
 
-const { expect } = require('aegir/utils/chai')
-const PeerId = require('peer-id')
-
-const Ledger = require('../../src/decision-engine/ledger')
+import { expect } from 'aegir/utils/chai.js'
+import PeerId from 'peer-id'
+import { Ledger } from '../../src/decision-engine/ledger.js'
 
 describe('Ledger', () => {
   /** @type {PeerId} */
