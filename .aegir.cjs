@@ -28,5 +28,8 @@ module.exports = {
   build: {
     bundlesizeMax: '44KB',
     config: esbuild
+  },
+  ts: {
+    copyTo: './dist/types'
   }
 }

@@ -10,6 +10,11 @@
     "*",
     "!**/*.tsbuildinfo"
   ],
+  "exports": {
+    ".": {
+      "import": "./src/index.js"
+    }
+  },
   "eslintConfig": {
     "extends": "ipfs",
     "parserOptions": {
@@ -23,17 +28,6 @@
   },
   "browser": {
     "./test/utils/create-libp2p-node": false
-  },
-  "typesVersions": {
-    "*": {
-      "src/*": [
-        "dist/src/*",
-        "dist/src/*/index"
-      ],
-      "src/": [
-        "dist/src/index"
-      ]
-    }
   },
   "scripts": {
     "generate": "run-s generate:*",
