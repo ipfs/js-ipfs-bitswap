@@ -11,6 +11,11 @@ const esbuild = {
         build.onResolve({ filter: /^stream$/ }, () => {
           return { path: require.resolve('readable-stream') }
         })
+
+        build.onResolve({ filter: /^.*create-libp2p-node\.js$/ }, (args) => {
+          console.info('wat', args)
+          return { path: require.resolve('./scripts/false.js') }
+        })
       }
     }
   ]
