@@ -1,7 +1,12 @@
 
 import { WantListEntry as Entry } from './entry.js'
 import { base58btc } from 'multiformats/bases/base58'
-import { BitswapMessage as Message } from '../message/index.js'
+import { Message } from '../message/message.js'
+
+const WantType = {
+  Block: Message.Wantlist.WantType.Block,
+  Have: Message.Wantlist.WantType.Have
+}
 
 /**
  * @template T
@@ -50,7 +55,7 @@ export class Wantlist {
       entry.priority = priority
 
       // We can only overwrite want-have with want-block
-      if (entry.wantType === Message.WantType.Have && wantType === Message.WantType.Block) {
+      if (entry.wantType === WantType.Have && wantType === WantType.Block) {
         entry.wantType = wantType
       }
     } else {

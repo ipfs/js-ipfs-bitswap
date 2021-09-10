@@ -1,4 +1,4 @@
-import * as $protobuf from "protobufjs";
+import $protobuf from "protobufjs/minimal.js";
 /** Properties of a Message. */
 export interface IMessage {
 

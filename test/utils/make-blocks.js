@@ -1,6 +1,6 @@
 import { CID } from 'multiformats/cid'
 import { sha256 } from 'multiformats/hashes/sha2'
-import { randomBytes} from 'iso-random-stream'
+import { randomBytes } from 'iso-random-stream'
 // @ts-ignore
 import range from 'lodash.range'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'

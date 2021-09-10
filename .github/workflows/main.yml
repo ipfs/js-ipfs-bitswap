@@ -19,7 +19,7 @@ jobs:
   test-node:
     needs: check
     runs-on: ${{ matrix.os }}
-    name: Test ${{ matrix.project }} node
+    name: test node ${{ matrix.node }}
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - run: npm install
-      - run: npm run test --cov -t node -- --exit
+      - run: npm run test -- -t node
   test-browser:
     needs: check
     runs-on: ubuntu-latest
@@ -52,22 +52,22 @@ jobs:
           node-version: 16
       - run: npm install
       - run: npm run test -- -t ${{ matrix.type }} -- --browser ${{ matrix.browser }}
-   test-electron:
-     needs: check
-     runs-on: ubuntu-latest
-     name: test ${{ matrix.type }}
-     strategy:
-       matrix:
-         type:
-           - electron-main
-           - electron-renderer
-       fail-fast: true
-     steps:
-       - uses: actions/checkout@v2
-       - uses: actions/setup-node@v1
-         with:
-           node-version: 16
-       - run: npm install
-       - uses: GabrielBB/xvfb-action@v1
-         with:
-           run: npm run test -- -t ${{ matrix.type }} --bail --exit
+  test-electron:
+    needs: check
+    runs-on: ubuntu-latest
+    name: test ${{ matrix.type }}
+    strategy:
+      matrix:
+        type:
+          - electron-main
+          - electron-renderer
+      fail-fast: true
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 16
+      - run: npm install
+      - uses: GabrielBB/xvfb-action@v1
+        with:
+          run: npm run test -- -t ${{ matrix.type }} --bail -f dist/cjs/node-test/node.js

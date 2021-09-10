@@ -11,6 +11,9 @@ const esbuild = {
         build.onResolve({ filter: /^stream$/ }, () => {
           return { path: require.resolve('readable-stream') }
         })
+        build.onResolve({ filter: /^.*create-libp2p-node\.js$/ }, (args) => {
+          return { path: require.resolve('./scripts/false.js') }
+        })
       }
     }
   ]
@@ -28,5 +31,8 @@ module.exports = {
   build: {
     bundlesizeMax: '44KB',
     config: esbuild
+  },
+  ts: {
+    copyTo: './dist/types'
   }
 }
