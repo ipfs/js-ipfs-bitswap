@@ -22,7 +22,12 @@ import { BitswapMessage as Message } from '../src/types/message/index.js'
  */
 async function createThing (dht) {
   const libp2pNode = await createLibp2pNode({
-    DHT: dht
+    DHT: dht,
+    config: {
+      dht: {
+        clientMode: false
+      }
+    }
   })
   const bitswap = new Bitswap(libp2pNode, new MemoryBlockstore())
   bitswap.start()
@@ -182,9 +187,9 @@ describe('bitswap with DHT', function () {
 
     // await dht routing table are updated
     await Promise.all([
-      pWaitFor(() => nodes[0].libp2pNode._dht.routingTable.size >= 1),
-      pWaitFor(() => nodes[1].libp2pNode._dht.routingTable.size >= 2),
-      pWaitFor(() => nodes[2].libp2pNode._dht.routingTable.size >= 1)
+      pWaitFor(() => nodes[0].libp2pNode._dht._routingTable.size >= 1),
+      pWaitFor(() => nodes[1].libp2pNode._dht._routingTable.size >= 2),
+      pWaitFor(() => nodes[2].libp2pNode._dht._routingTable.size >= 1)
     ])
   })
 
