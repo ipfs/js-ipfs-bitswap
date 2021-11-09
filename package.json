@@ -22,14 +22,14 @@
     },
     "ignorePatterns": [
       "scripts/*",
-      "src/types/message/message.*",
+      "src/message/message.*",
       "*.test-d.ts"
     ]
   },
   "scripts": {
     "generate": "run-s generate:*",
-    "generate:proto": "pbjs -t static-module -w es6 -r ipfs-bitswap --force-number --no-verify --no-delimited --no-create --no-beautify --no-defaults --lint eslint-disable -o src/types/message/message.js src/types/message/message.proto",
-    "generate:proto-types": "pbts -o src/types/message/message.d.ts src/types/message/message.js",
+    "generate:proto": "pbjs -t static-module -w es6 -r ipfs-bitswap --force-number --no-verify --no-delimited --no-create --no-beautify --no-defaults --lint eslint-disable -o src/message/message.js src/message/message.proto",
+    "generate:proto-types": "pbts -o src/message/message.d.ts src/message/message.js",
     "build": "aegir build",
     "clean": "rimraf dist types",
     "lint": "aegir ts -p check && aegir lint",

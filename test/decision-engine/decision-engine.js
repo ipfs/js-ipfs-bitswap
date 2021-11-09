@@ -16,7 +16,7 @@ import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
 import drain from 'it-drain'
 import defer from 'p-defer'
 
-import { BitswapMessage as Message } from '../../src/types/message/index.js'
+import { BitswapMessage as Message } from '../../src/message/index.js'
 import { DecisionEngine } from '../../src/decision-engine/index.js'
 import { Stats } from '../../src/stats/index.js'
 import { MemoryBlockstore } from 'blockstore-core/memory'

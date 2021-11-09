@@ -2,7 +2,7 @@
 
 import { expect } from 'aegir/utils/chai.js'
 import PeerId from 'peer-id'
-import { BitswapMessage as Message } from '../../src/types/message/index.js'
+import { BitswapMessage as Message } from '../../src/message/index.js'
 import { MsgQueue } from '../../src/want-manager/msg-queue.js'
 import defer from 'p-defer'
 import { mockNetwork } from '../utils/mocks.js'

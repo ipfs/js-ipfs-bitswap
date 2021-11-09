@@ -2,7 +2,7 @@
 
 import { expect } from 'aegir/utils/chai.js'
 import pEvent from 'p-event'
-import { BitswapMessage as Message } from '../src/types/message/index.js'
+import { BitswapMessage as Message } from '../src/message/index.js'
 import { Bitswap } from '../src/bitswap.js'
 
 import { MemoryBlockstore } from 'blockstore-core/memory'

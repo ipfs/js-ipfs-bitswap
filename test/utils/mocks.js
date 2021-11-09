@@ -10,7 +10,7 @@ import { Stats } from '../../src/stats/index.js'
 /**
  * @typedef {import('interface-blockstore').Blockstore} BlockStore
  * @typedef {import('interface-blockstore').Pair} Pair
- * @typedef {import('../../src/types/message').BitswapMessage} Message
+ * @typedef {import('../../src/message').BitswapMessage} Message
  * @typedef {import('multiformats/cid').CID} CID
  * @typedef {import('multiaddr').Multiaddr} Multiaddr
  * @typedef {import('libp2p')} Libp2p

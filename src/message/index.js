@@ -3,7 +3,7 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import { base58btc } from 'multiformats/bases/base58'
 // @ts-ignore
 import vd from 'varint-decoder'
-import { isMapEqual } from '../../utils/index.js'
+import { isMapEqual } from '../utils/index.js'
 import { Message } from './message.js'
 import { BitswapMessageEntry as Entry } from './entry.js'
 import { concat as uint8ArrayConcat } from 'uint8arrays/concat'

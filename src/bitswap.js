@@ -12,7 +12,7 @@ import { CID } from 'multiformats/cid'
 /**
  * @typedef {import('./types').IPFSBitswap} IPFSBitswap
  * @typedef {import('peer-id')} PeerId
- * @typedef {import('./types/message').BitswapMessage} BitswapMessage
+ * @typedef {import('./message').BitswapMessage} BitswapMessage
  * @typedef {import('interface-blockstore').Blockstore} Blockstore
  * @typedef {import('interface-blockstore').Pair} Pair
  * @typedef {import('interface-blockstore').Options} Options

@@ -1,7 +1,7 @@
 import lp from 'it-length-prefixed'
 import { pipe } from 'it-pipe'
 import MulticodecTopology from 'libp2p-interfaces/src/topology/multicodec-topology.js'
-import { BitswapMessage as Message } from './types/message/index.js'
+import { BitswapMessage as Message } from './message/index.js'
 import * as CONSTANTS from './constants.js'
 import { logger } from './utils/index.js'
 
