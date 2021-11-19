@@ -174,10 +174,12 @@ export class BitswapMessage {
 
     for (const [cidStr, data] of this.blocks.entries()) {
       const cid = CID.parse(cidStr)
+      const version = cid.version
       const codec = cid.code
       const multihash = cid.multihash.code
+      const digestLength = cid.multihash.digest.length
       const prefix = ve([
-        cid.version, codec, multihash
+        version, codec, multihash, digestLength
       ])
 
       msg.payload.push(

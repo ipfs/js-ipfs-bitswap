@@ -6,12 +6,11 @@ import { base32 } from 'multiformats/bases/base32'
 import { base64 } from 'multiformats/bases/base64'
 import { base58btc } from 'multiformats/bases/base58'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
-import { concat as uint8ArrayConcat } from 'uint8arrays/concat'
 import loadFixture from 'aegir/utils/fixtures.js'
-import varint from 'varint'
 import { Message } from '../../src/message/message.js'
 import { BitswapMessage } from '../../src/message/index.js'
 import { makeBlocks } from '../utils/make-blocks.js'
+import varintEncoder from '../../src/utils/varint-encoder.js'
 
 const testDataPath = 'test/fixtures/serialized-from-go'
 const rawMessageFullWantlist = loadFixture(testDataPath + '/bitswap110-message-full-wantlist')
@@ -184,17 +183,19 @@ describe('BitswapMessage', () => {
       },
       payload: [{
         data: b1.data,
-        prefix: uint8ArrayConcat([
-          [cid1.version],
-          varint.encode(cid1.code),
-          cid1.multihash.bytes.subarray(0, 2)
+        prefix: varintEncoder([
+          cid1.version,
+          cid1.code,
+          cid1.multihash.code,
+          cid1.multihash.digest.length
         ])
       }, {
         data: b2.data,
-        prefix: uint8ArrayConcat([
-          [cid2.version],
-          varint.encode(cid2.code),
-          cid2.multihash.bytes.subarray(0, 2)
+        prefix: varintEncoder([
+          cid2.version,
+          cid2.code,
+          cid2.multihash.code,
+          cid2.multihash.digest.length
         ])
       }],
       blockPresences: [{
