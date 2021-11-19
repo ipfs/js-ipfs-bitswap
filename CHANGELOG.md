@@ -1,3 +1,12 @@
+## [7.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v7.0.0...v7.0.1) (2021-11-19)
+
+
+### Bug Fixes
+
+* encode cidv1 prefixes ([#383](https://github.com/ipfs/js-ipfs-bitswap/issues/383)) ([35be758](https://github.com/ipfs/js-ipfs-bitswap/commit/35be758dd1f3e5851ce23754bd12933783c16416))
+
+
+
 # [7.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v6.0.2...v7.0.0) (2021-09-14)
 
 

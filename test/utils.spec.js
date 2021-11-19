@@ -9,6 +9,9 @@ import { BitswapMessage } from '../src/message/index.js'
 
 import { groupBy, uniqWith, pullAllWith, includesWith, sortBy, isMapEqual } from '../src/utils/index.js'
 import { SortedMap } from '../src/utils/sorted-map.js'
+import varintEncoder from '../src/utils/varint-encoder.js'
+// @ts-expect-error no types
+import varintDecoder from 'varint-decoder'
 
 const DAG_PB_CODEC = 0x70
 
@@ -354,5 +357,15 @@ describe('utils spec', function () {
         expect([...sm.keys()].sort()).to.eql(['b', 'c'])
       })
     })
+  })
+})
+
+describe('varint encoder', () => {
+  it('should encode and decode', () => {
+    const input = [1, 112, 18]
+    const encoded = varintEncoder(input)
+    const decoded = varintDecoder(encoded)
+
+    expect(decoded).to.deep.equal(input)
   })
 })

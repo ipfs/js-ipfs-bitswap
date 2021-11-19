@@ -11,7 +11,7 @@ import { logger } from './utils/index.js'
  * @typedef {import('multiaddr').Multiaddr} Multiaddr
  * @typedef {import('libp2p-interfaces/src/connection').Connection} Connection
  * @typedef {import('libp2p-interfaces/src/stream-muxer/types').MuxedStream} MuxedStream
- * @typedef {import('multiformats/hashes/interface').MultihashHasher} MultihashHasher
+ * @typedef {import('./types').MultihashHasherLoader} MultihashHasherLoader
  *
  * @typedef {Object} Provider
  * @property {PeerId} id
@@ -33,7 +33,7 @@ export class Network {
    * @param {import('./stats').Stats} stats
    * @param {Object} [options]
    * @param {boolean} [options.b100Only]
-   * @param {Record<number, MultihashHasher>} [options.hashers]
+   * @param {MultihashHasherLoader} [options.hashLoader]
    */
   constructor (libp2p, bitswap, stats, options = {}) {
     this._log = logger(libp2p.peerId, 'network')
@@ -54,7 +54,7 @@ export class Network {
     this._onPeerConnect = this._onPeerConnect.bind(this)
     this._onPeerDisconnect = this._onPeerDisconnect.bind(this)
     this._onConnection = this._onConnection.bind(this)
-    this._hashers = options.hashers || {}
+    this._hashLoader = options.hashLoader
   }
 
   start () {
@@ -114,7 +114,7 @@ export class Network {
         async (source) => {
           for await (const data of source) {
             try {
-              const message = await Message.deserialize(data.slice(), this._hashers)
+              const message = await Message.deserialize(data.slice(), this._hashLoader)
               await this._bitswap._receiveMessage(connection.remotePeer, message)
             } catch (/** @type {any} */ err) {
               this._bitswap._receiveError(err)
