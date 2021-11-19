@@ -2,7 +2,7 @@
 
 import { expect } from 'aegir/utils/chai.js'
 import * as CONSTANTS from '../../src/constants.js'
-import { BitswapMessage as Message } from '../../src/types/message/index.js'
+import { BitswapMessage as Message } from '../../src/message/index.js'
 import { WantManager } from '../../src/want-manager/index.js'
 import { Stats } from '../../src/stats/index.js'
 import { mockNetwork } from '../utils/mocks.js'

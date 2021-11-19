@@ -9,7 +9,7 @@ import { MemoryBlockstore } from 'blockstore-core/memory'
 import { createLibp2pNode } from './utils/create-libp2p-node.js'
 import { makeBlocks } from './utils/make-blocks.js'
 import { orderedFinish } from './utils/helpers.js'
-import { BitswapMessage as Message } from '../src/types/message/index.js'
+import { BitswapMessage as Message } from '../src/message/index.js'
 
 /**
  * @typedef {import('libp2p')} Libp2p

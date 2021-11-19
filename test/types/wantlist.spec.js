@@ -6,8 +6,8 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import { base58btc } from 'multiformats/bases/base58'
 import { base64 } from 'multiformats/bases/base64'
 
-import { Wantlist } from '../../src/types/wantlist/index.js'
-import { BitswapMessage as Message } from '../../src/types/message/index.js'
+import { Wantlist } from '../../src/wantlist/index.js'
+import { BitswapMessage as Message } from '../../src/message/index.js'
 import { makeBlocks } from '../utils/make-blocks.js'
 
 const DAG_PB_CODEC = 0x70

@@ -2,7 +2,7 @@ import { expect } from 'aegir/utils/chai.js'
 import { CID } from 'multiformats/cid'
 
 /**
- * @param {import('../../src/types/message').BitswapMessage} message
+ * @param {import('../../src/message').BitswapMessage} message
  * @param {import('interface-blockstore').Blockstore} store
  */
 export async function storeHasBlocks (message, store) {

@@ -1,4 +1,4 @@
-import { Wantlist } from '../types/wantlist/index.js'
+import { Wantlist } from '../wantlist/index.js'
 
 /**
  * @typedef {import('multiformats').CID} CID
@@ -43,7 +43,7 @@ export class Ledger {
    *
    * @param {CID} cid
    * @param {number} priority
-   * @param {import('../types/message/message').Message.Wantlist.WantType} wantType
+   * @param {import('../message/message').Message.Wantlist.WantType} wantType
    * @returns {void}
    */
   wants (cid, priority, wantType) {

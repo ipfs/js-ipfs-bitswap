@@ -1,7 +1,7 @@
 
 // @ts-ignore
 import debounce from 'just-debounce-it'
-import { BitswapMessage as Message } from '../types/message/index.js'
+import { BitswapMessage as Message } from '../message/index.js'
 import { logger } from '../utils/index.js'
 import { wantlistSendDebounceMs } from '../constants.js'
 

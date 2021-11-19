@@ -1,6 +1,6 @@
 
-import { BitswapMessage as Message } from '../types/message/index.js'
-import { Wantlist } from '../types/wantlist/index.js'
+import { BitswapMessage as Message } from '../message/index.js'
+import { Wantlist } from '../wantlist/index.js'
 import * as CONSTANTS from '../constants.js'
 import { MsgQueue } from './msg-queue.js'
 import { logger } from '../utils/index.js'

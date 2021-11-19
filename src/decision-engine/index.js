@@ -1,14 +1,14 @@
 import { CID } from 'multiformats/cid'
 import { base58btc } from 'multiformats/bases/base58'
-import { BitswapMessage as Message } from '../types/message/index.js'
-import { Wantlist } from '../types/wantlist/index.js'
+import { BitswapMessage as Message } from '../message/index.js'
+import { Wantlist } from '../wantlist/index.js'
 import { Ledger } from './ledger.js'
 import { RequestQueue } from './req-queue.js'
 import { TaskMerger } from './task-merger.js'
 import { logger } from '../utils/index.js'
 
 /**
- * @typedef {import('../types/message/entry').BitswapMessageEntry} BitswapMessageEntry
+ * @typedef {import('../message/entry').BitswapMessageEntry} BitswapMessageEntry
  * @typedef {import('peer-id')} PeerId
  */
 
@@ -163,7 +163,7 @@ export class DecisionEngine {
 
   /**
    * @param {PeerId} peerId
-   * @returns {Map<string, import('../types/wantlist/entry').WantListEntry>}
+   * @returns {Map<string, import('../wantlist/entry').WantListEntry>}
    */
   wantlistForPeer (peerId) {
     const peerIdStr = peerId.toB58String()
@@ -373,7 +373,7 @@ export class DecisionEngine {
 
   /**
    * @private
-   * @param {import('../types/message/message').Message.Wantlist.WantType} wantType
+   * @param {import('../message/message').Message.Wantlist.WantType} wantType
    * @param {number} blockSize
    */
   _sendAsBlock (wantType, blockSize) {
