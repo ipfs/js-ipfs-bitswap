@@ -2,12 +2,12 @@ import { Bitswap } from './bitswap.js'
 
 /**
  * @typedef {import('./types').IPFSBitswap} IPFSBitswap
+ * @typedef {import('./types').MultihashHasherLoader} MultihashHasherLoader
  * @typedef {import('peer-id')} PeerId
  * @typedef {import('./types/message')} BitswapMessage
  * @typedef {import('interface-blockstore').Blockstore} Blockstore
  * @typedef {import('interface-blockstore').Pair} Pair
  * @typedef {import('interface-blockstore').Options} Options
- * @typedef {import('multiformats/hashes/interface').MultihashHasher} MultihashHasher
  */
 
 /**
@@ -17,8 +17,7 @@ import { Bitswap } from './bitswap.js'
  * @param {boolean} [options.statsEnabled=false]
  * @param {number} [options.statsComputeThrottleTimeout=1000]
  * @param {number} [options.statsComputeThrottleMaxQueueSize=1000]
- * @param {Record<number, MultihashHasher>} [options.hashers]
- * @param {(codeOrName: number | string) => Promise<MultihashHasher>} [options.loadHasher]
+ * @param {MultihashHasherLoader} [options.hashLoader]
  * @returns {IPFSBitswap}
  */
 export const createBitswap = (libp2p, blockstore, options = {}) => {
