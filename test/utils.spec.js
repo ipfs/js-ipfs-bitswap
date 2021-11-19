@@ -3,9 +3,9 @@
 import { expect } from 'aegir/utils/chai.js'
 import { CID } from 'multiformats/cid'
 import { sha256 } from 'multiformats/hashes/sha2'
-import { BitswapMessageEntry } from '../src/types/message/entry.js'
+import { BitswapMessageEntry } from '../src/message/entry.js'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
-import { BitswapMessage } from '../src/types/message/index.js'
+import { BitswapMessage } from '../src/message/index.js'
 
 import { groupBy, uniqWith, pullAllWith, includesWith, sortBy, isMapEqual } from '../src/utils/index.js'
 import { SortedMap } from '../src/utils/sorted-map.js'

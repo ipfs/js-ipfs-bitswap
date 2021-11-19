@@ -1,6 +1,6 @@
 import debug from 'debug'
 import { equals as uint8ArrayEquals } from 'uint8arrays/equals'
-import { BitswapMessageEntry } from '../types/message/entry.js'
+import { BitswapMessageEntry } from '../message/entry.js'
 
 /**
  * Creates a logger for the given subsystem

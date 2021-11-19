@@ -3,14 +3,14 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import { base58btc } from 'multiformats/bases/base58'
 // @ts-ignore
 import vd from 'varint-decoder'
-import ve from '../../utils/varint-encoder.js'
-import { isMapEqual } from '../../utils/index.js'
+import ve from '../utils/varint-encoder.js'
+import { isMapEqual } from '../utils/index.js'
 import { Message } from './message.js'
 import { BitswapMessageEntry as Entry } from './entry.js'
 import errcode from 'err-code'
 
 /**
- * @typedef {import('../../types').MultihashHasherLoader} MultihashHasherLoader
+ * @typedef {import('../types').MultihashHasherLoader} MultihashHasherLoader
  */
 
 export class BitswapMessage {

@@ -29,7 +29,7 @@ const sortBy = (fn, list) => {
 export class Wantlist {
   /**
    *
-   * @param {import('../../stats').Stats} [stats]
+   * @param {import('../stats').Stats} [stats]
    */
   constructor (stats) {
     /** @type {Map<string, Entry>} */

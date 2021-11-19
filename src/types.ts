@@ -1,7 +1,7 @@
 import type { Blockstore } from 'interface-blockstore'
 import type PeerId from 'peer-id'
 import type { CID } from 'multiformats/cid'
-import type { Message } from './types/message/message'
+import type { Message } from './message/message'
 import type { IMovingAverage } from '@vascosantos/moving-average'
 import type { MultihashHasher } from 'multiformats/hashes/interface'
 
