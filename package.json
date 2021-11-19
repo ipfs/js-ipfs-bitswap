@@ -91,8 +91,7 @@
     "stats-lite": "^2.2.0",
     "url": "^0.11.0",
     "util": "^0.12.3",
-    "uuid": "^8.3.2",
-    "varint": "^6.0.0"
+    "uuid": "^8.3.2"
   },
   "dependencies": {
     "@vascosantos/moving-average": "^1.1.0",
@@ -112,6 +111,7 @@
     "protobufjs": "^6.10.2",
     "readable-stream": "^3.6.0",
     "uint8arrays": "^3.0.0",
+    "varint": "^6.0.0",
     "varint-decoder": "^1.0.0"
   },
   "contributors": [

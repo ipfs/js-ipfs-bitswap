@@ -51,6 +51,7 @@ export class Bitswap extends BaseBlockstore {
    * @param {number} [options.statsComputeThrottleTimeout=1000]
    * @param {number} [options.statsComputeThrottleMaxQueueSize=1000]
    * @param {Record<number, MultihashHasher>} [options.hashers]
+   * @param {(codeOrName: number | string) => Promise<MultihashHasher>} [options.loadHasher]
    */
   constructor (libp2p, blockstore, options = {}) {
     super()
@@ -69,7 +70,8 @@ export class Bitswap extends BaseBlockstore {
 
     // the network delivers messages
     this.network = new Network(libp2p, this, this._stats, {
-      hashers: options.hashers
+      hashers: options.hashers,
+      loadHasher: options.loadHasher
     })
 
     // local database

@@ -18,6 +18,7 @@ import { Bitswap } from './bitswap.js'
  * @param {number} [options.statsComputeThrottleTimeout=1000]
  * @param {number} [options.statsComputeThrottleMaxQueueSize=1000]
  * @param {Record<number, MultihashHasher>} [options.hashers]
+ * @param {(codeOrName: number | string) => Promise<MultihashHasher>} [options.loadHasher]
  * @returns {IPFSBitswap}
  */
 export const createBitswap = (libp2p, blockstore, options = {}) => {

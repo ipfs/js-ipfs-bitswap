@@ -25,6 +25,7 @@ import { logger } from './utils/index.js'
 const BITSWAP100 = '/ipfs/bitswap/1.0.0'
 const BITSWAP110 = '/ipfs/bitswap/1.1.0'
 const BITSWAP120 = '/ipfs/bitswap/1.2.0'
+const noop = () => {}
 
 export class Network {
   /**
@@ -34,6 +35,7 @@ export class Network {
    * @param {Object} [options]
    * @param {boolean} [options.b100Only]
    * @param {Record<number, MultihashHasher>} [options.hashers]
+   * @param {(codeOrName: number | string) => Promise<MultihashHasher>} [options.loadHasher]
    */
   constructor (libp2p, bitswap, stats, options = {}) {
     this._log = logger(libp2p.peerId, 'network')
@@ -55,6 +57,7 @@ export class Network {
     this._onPeerDisconnect = this._onPeerDisconnect.bind(this)
     this._onConnection = this._onConnection.bind(this)
     this._hashers = options.hashers || {}
+    this._loadHasher = options.loadHasher || noop
   }
 
   start () {

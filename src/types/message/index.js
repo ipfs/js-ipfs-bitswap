@@ -3,10 +3,10 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import { base58btc } from 'multiformats/bases/base58'
 // @ts-ignore
 import vd from 'varint-decoder'
+import ve from '../../utils/varint-encoder.js'
 import { isMapEqual } from '../../utils/index.js'
 import { Message } from './message.js'
 import { BitswapMessageEntry as Entry } from './entry.js'
-import { concat as uint8ArrayConcat } from 'uint8arrays/concat'
 import errcode from 'err-code'
 
 /**
@@ -174,11 +174,11 @@ export class BitswapMessage {
 
     for (const [cidStr, data] of this.blocks.entries()) {
       const cid = CID.parse(cidStr)
-      const codec = Uint8Array.from([cid.code])
-      const multihash = cid.multihash.bytes.subarray(0, 2)
-      const prefix = uint8ArrayConcat([
-        [cid.version], codec, multihash
-      ], 1 + codec.byteLength + multihash.byteLength)
+      const codec = cid.code
+      const multihash = cid.multihash.code
+      const prefix = ve([
+        cid.version, codec, multihash
+      ])
 
       msg.payload.push(
         new Message.Block({
@@ -231,8 +231,9 @@ export class BitswapMessage {
 /**
  * @param {Uint8Array} raw
  * @param {Record<number, MultihashHasher>} [hashers]
+ * @param {(codeOrName: number | string) => Promise<MultihashHasher>} [loadHasher]
  */
-BitswapMessage.deserialize = async (raw, hashers = {}) => {
+BitswapMessage.deserialize = async (raw, hashers = {}, loadHasher) => {
   const decoded = Message.decode(raw)
 
   const isFull = (decoded.wantlist && decoded.wantlist.full) || false
@@ -286,7 +287,7 @@ BitswapMessage.deserialize = async (raw, hashers = {}) => {
       const cidVersion = values[0]
       const multicodec = values[1]
       const hashAlg = values[2]
-      const hasher = hashAlg === sha256.code ? sha256 : hashers[hashAlg]
+      const hasher = hashAlg === sha256.code ? sha256 : hashers[hashAlg] ? hashers[hashAlg] : loadHasher && await loadHasher(hashAlg)
 
       if (!hasher) {
         throw errcode(new Error('Unknown hash algorithm'), 'ERR_UNKNOWN_HASH_ALG')
