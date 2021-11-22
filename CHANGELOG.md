@@ -1,3 +1,17 @@
+# [8.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v7.0.1...v8.0.0) (2021-11-22)
+
+
+### Features
+
+* update dht ([#384](https://github.com/ipfs/js-ipfs-bitswap/issues/384)) ([8d96a18](https://github.com/ipfs/js-ipfs-bitswap/commit/8d96a180a632a38b6470f696d2c0648dc5146dc5))
+
+
+### BREAKING CHANGES
+
+* uses 0.26.x of libp2p-kad-dht
+
+
+
 ## [7.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v7.0.0...v7.0.1) (2021-11-19)
 
 
