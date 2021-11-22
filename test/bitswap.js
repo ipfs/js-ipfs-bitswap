@@ -187,9 +187,9 @@ describe('bitswap with DHT', function () {
 
     // await dht routing table are updated
     await Promise.all([
-      pWaitFor(() => nodes[0].libp2pNode._dht._routingTable.size >= 1),
-      pWaitFor(() => nodes[1].libp2pNode._dht._routingTable.size >= 2),
-      pWaitFor(() => nodes[2].libp2pNode._dht._routingTable.size >= 1)
+      pWaitFor(() => nodes[0].libp2pNode._dht._lan._routingTable.size >= 1),
+      pWaitFor(() => nodes[1].libp2pNode._dht._lan._routingTable.size >= 2),
+      pWaitFor(() => nodes[2].libp2pNode._dht._lan._routingTable.size >= 1)
     ])
   })
 
