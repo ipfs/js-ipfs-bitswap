@@ -1,3 +1,17 @@
+# [9.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v8.0.0...v9.0.0) (2021-12-02)
+
+
+### chore
+
+* update libp2p-interfaces ([#388](https://github.com/ipfs/js-ipfs-bitswap/issues/388)) ([c1bcae7](https://github.com/ipfs/js-ipfs-bitswap/commit/c1bcae752b48d3714f4ad696b9e6573b5ab4efa7))
+
+
+### BREAKING CHANGES
+
+* requires node 15+
+
+
+
 # [8.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v7.0.1...v8.0.0) (2021-11-22)
 
 
