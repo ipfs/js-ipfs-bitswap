@@ -3,7 +3,6 @@
 import { expect } from 'aegir/utils/chai.js'
 import { CID } from 'multiformats/cid'
 import { base32 } from 'multiformats/bases/base32'
-import { AbortController } from 'native-abort-controller'
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
 import { Notifications } from '../src/notifications.js'
 import { makeBlocks } from './utils/make-blocks.js'

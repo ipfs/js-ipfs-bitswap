@@ -95,7 +95,6 @@
   },
   "dependencies": {
     "@vascosantos/moving-average": "^1.1.0",
-    "abort-controller": "^3.0.0",
     "any-signal": "^2.1.2",
     "blockstore-core": "^1.0.2",
     "debug": "^4.2.0",
@@ -107,7 +106,6 @@
     "libp2p-interfaces": "^2.0.1",
     "multiaddr": "^10.0.0",
     "multiformats": "^9.0.4",
-    "native-abort-controller": "^1.0.3",
     "protobufjs": "^6.10.2",
     "readable-stream": "^3.6.0",
     "uint8arrays": "^3.0.0",
