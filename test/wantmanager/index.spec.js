@@ -54,7 +54,7 @@ describe('WantManager', () => {
         resolve()
       })
 
-      const wantManager = new WantManager(peerIds[2], network, new Stats())
+      const wantManager = new WantManager(peerIds[2], network, new Stats({}), {})
 
       wantManager.start()
       wantManager.wantBlocks([cid1, cid2])

@@ -68,10 +68,10 @@ describe('network', () => {
     bitswapMockB = createBitswapMock()
     bitswapMockC = createBitswapMock()
 
-    networkA = new Network(p2pA, bitswapMockA, new Stats())
-    networkB = new Network(p2pB, bitswapMockB, new Stats())
+    networkA = new Network(p2pA, bitswapMockA, new Stats({}))
+    networkB = new Network(p2pB, bitswapMockB, new Stats({}))
     // only bitswap100
-    networkC = new Network(p2pC, bitswapMockC, new Stats(), { b100Only: true })
+    networkC = new Network(p2pC, bitswapMockC, new Stats({}), { b100Only: true })
 
     networkA.start()
     networkB.start()
@@ -213,7 +213,7 @@ describe('network', () => {
 
     // In a real network scenario, peers will be discovered and their addresses
     // will be added to the addressBook before bitswap kicks in
-    p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
+    await p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
 
     bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       // cannot do deep comparison on objects as one has Buffers and one has Uint8Arrays
@@ -249,7 +249,7 @@ describe('network', () => {
 
     // In a real network scenario, peers will be discovered and their addresses
     // will be added to the addressBook before bitswap kicks in
-    p2pA.peerStore.addressBook.set(p2pC.peerId, p2pC.multiaddrs)
+    await p2pA.peerStore.addressBook.set(p2pC.peerId, p2pC.multiaddrs)
 
     bitswapMockC._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       // cannot do deep comparison on objects as one has Buffers and one has Uint8Arrays
@@ -267,10 +267,10 @@ describe('network', () => {
   })
 
   it('dials to peer using Bitswap 1.2.0', async () => {
-    networkA = new Network(p2pA, bitswapMockA, new Stats())
+    networkA = new Network(p2pA, bitswapMockA, new Stats({}))
 
     // only supports 1.2.0
-    networkB = new Network(p2pB, bitswapMockB, new Stats())
+    networkB = new Network(p2pB, bitswapMockB, new Stats({}))
     networkB._protocols = ['/ipfs/bitswap/1.2.0']
 
     networkA.start()
@@ -278,7 +278,7 @@ describe('network', () => {
 
     // In a real network scenario, peers will be discovered and their addresses
     // will be added to the addressBook before bitswap kicks in
-    p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
+    await p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
 
     const deferred = pDefer()
 
@@ -313,7 +313,7 @@ describe('network', () => {
       handle: sinon.stub()
     }
 
-    const network = new Network(libp2p, bitswapMockA, new Stats())
+    const network = new Network(libp2p, bitswapMockA, new Stats({}))
 
     const cid = CID.parse('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn')
     const provider1 = {
