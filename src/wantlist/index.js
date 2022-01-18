@@ -29,17 +29,19 @@ const sortBy = (fn, list) => {
 
 export class Wantlist {
   /**
-   * @param {import('libp2p')} [libp2p]
    * @param {import('../stats').Stats} [stats]
+   * @param {import('libp2p')} [libp2p]
    */
   constructor (stats, libp2p) {
     /** @type {Map<string, Entry>} */
-    this.set = libp2p ? trackedMap({
-      system: 'ipfs',
-      component: 'bitswap',
-      metric: 'wantlist',
-      metrics: libp2p.metrics
-    }) : new Map()
+    this.set = libp2p
+      ? trackedMap({
+        system: 'ipfs',
+        component: 'bitswap',
+        metric: 'wantlist',
+        metrics: libp2p.metrics
+      })
+      : new Map()
     this._stats = stats
   }
 

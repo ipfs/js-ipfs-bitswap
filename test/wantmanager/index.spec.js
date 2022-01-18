@@ -54,6 +54,7 @@ describe('WantManager', () => {
         resolve()
       })
 
+      // @ts-expect-error {} is not a real libp2p
       const wantManager = new WantManager(peerIds[2], network, new Stats({}), {})
 
       wantManager.start()

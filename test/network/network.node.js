@@ -68,9 +68,12 @@ describe('network', () => {
     bitswapMockB = createBitswapMock()
     bitswapMockC = createBitswapMock()
 
+    // @ts-expect-error {} is not a real libp2p
     networkA = new Network(p2pA, bitswapMockA, new Stats({}))
+    // @ts-expect-error {} is not a real libp2p
     networkB = new Network(p2pB, bitswapMockB, new Stats({}))
     // only bitswap100
+    // @ts-expect-error {} is not a real libp2p
     networkC = new Network(p2pC, bitswapMockC, new Stats({}), { b100Only: true })
 
     networkA.start()
@@ -267,9 +270,11 @@ describe('network', () => {
   })
 
   it('dials to peer using Bitswap 1.2.0', async () => {
+    // @ts-expect-error {} is not a real libp2p
     networkA = new Network(p2pA, bitswapMockA, new Stats({}))
 
     // only supports 1.2.0
+    // @ts-expect-error {} is not a real libp2p
     networkB = new Network(p2pB, bitswapMockB, new Stats({}))
     networkB._protocols = ['/ipfs/bitswap/1.2.0']
 
@@ -297,23 +302,23 @@ describe('network', () => {
 
     /** @type {Libp2p} */
     const libp2p = {
-      // @ts-ignore incomplete implementation
+      // @ts-expect-error incomplete implementation
       contentRouting: {
         findProviders: mockFindProviders
       },
-      // @ts-ignore incomplete implementation
+      // @ts-expect-error incomplete implementation
       registrar: {
         register: sinon.stub()
       },
-      // @ts-ignore incomplete implementation
       peerStore: {
+        // @ts-expect-error {} incomplete implementation
         peers: new Map()
       },
       dial: mockDial,
       handle: sinon.stub()
     }
 
-    const network = new Network(libp2p, bitswapMockA, new Stats({}))
+    const network = new Network(libp2p, bitswapMockA, new Stats(libp2p))
 
     const cid = CID.parse('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn')
     const provider1 = {
