@@ -1,6 +1,6 @@
 {
   "name": "ipfs-bitswap",
-  "version": "9.0.0",
+  "version": "10.0.0",
   "description": "Node.js implementation of the Bitswap data exchange protocol used by IPFS",
   "leadMaintainer": "Dirk McCormick <dirk@protocol.ai>",
   "main": "src/index.js",
