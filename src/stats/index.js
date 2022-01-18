@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events'
 import { Stat } from './stat.js'
+import trackedMap from 'libp2p/src/metrics/tracked-map.js'
 
 /**
  * @typedef {import('multiformats').CID} CID
@@ -22,13 +23,14 @@ const defaultOptions = {
 
 export class Stats extends EventEmitter {
   /**
+   * @param {import('libp2p')} libp2p
    * @param {string[]} [initialCounters]
    * @param {Object} _options
    * @param {boolean} _options.enabled
    * @param {number} _options.computeThrottleTimeout
    * @param {number} _options.computeThrottleMaxQueueSize
    */
-  constructor (initialCounters = [], _options = defaultOptions) {
+  constructor (libp2p, initialCounters = [], _options = defaultOptions) {
     super()
 
     const options = Object.assign({}, defaultOptions, _options)
@@ -49,7 +51,12 @@ export class Stats extends EventEmitter {
     this._global.on('update', (stats) => this.emit('update', stats))
 
     /** @type {Map<string, Stat>} */
-    this._peers = new Map()
+    this._peers = trackedMap({
+      system: 'ipfs',
+      component: 'bitswap',
+      metric: 'stats-peers',
+      metrics: libp2p.metrics
+    })
   }
 
   enable () {

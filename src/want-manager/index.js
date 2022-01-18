@@ -5,6 +5,7 @@ import * as CONSTANTS from '../constants.js'
 import { MsgQueue } from './msg-queue.js'
 import { logger } from '../utils/index.js'
 import { base58btc } from 'multiformats/bases/base58'
+import trackedMap from 'libp2p/src/metrics/tracked-map.js'
 
 /**
  * @typedef {import('peer-id')} PeerId
@@ -16,11 +17,17 @@ export class WantManager {
    * @param {PeerId} peerId
    * @param {import('../network').Network} network
    * @param {import('../stats').Stats} stats
+   * @param {import('libp2p')} libp2p
    */
-  constructor (peerId, network, stats) {
+  constructor (peerId, network, stats, libp2p) {
     /** @type {Map<string, MsgQueue>} */
-    this.peers = new Map()
-    this.wantlist = new Wantlist(stats)
+    this.peers = trackedMap({
+      system: 'ipfs',
+      component: 'bitswap',
+      metric: 'want-manager-peers',
+      metrics: libp2p.metrics
+    })
+    this.wantlist = new Wantlist(stats, libp2p)
 
     this.network = network
     this._stats = stats

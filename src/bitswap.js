@@ -61,7 +61,7 @@ export class Bitswap extends BaseBlockstore {
     this._options = Object.assign({}, defaultOptions, options)
 
     // stats
-    this._stats = new Stats(statsKeys, {
+    this._stats = new Stats(libp2p, statsKeys, {
       enabled: this._options.statsEnabled,
       computeThrottleTimeout: this._options.statsComputeThrottleTimeout,
       computeThrottleMaxQueueSize: this._options.statsComputeThrottleMaxQueueSize
@@ -75,10 +75,10 @@ export class Bitswap extends BaseBlockstore {
     // local database
     this.blockstore = blockstore
 
-    this.engine = new DecisionEngine(this.peerId, blockstore, this.network, this._stats)
+    this.engine = new DecisionEngine(this.peerId, blockstore, this.network, this._stats, libp2p)
 
     // handle message sending
-    this.wm = new WantManager(this.peerId, this.network, this._stats)
+    this.wm = new WantManager(this.peerId, this.network, this._stats, libp2p)
 
     this.notifications = new Notifications(this.peerId)
 

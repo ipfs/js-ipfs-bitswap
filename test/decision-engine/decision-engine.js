@@ -55,7 +55,8 @@ function stringifyMessages (messages) {
  */
 async function newEngine (network) {
   const peerId = await PeerId.create({ bits: 512 })
-  const engine = new DecisionEngine(peerId, new MemoryBlockstore(), network, new Stats())
+  // @ts-expect-error {} is not a real libp2p
+  const engine = new DecisionEngine(peerId, new MemoryBlockstore(), network, new Stats({}), {})
   engine.start()
   return { peer: peerId, engine: engine }
 }
@@ -194,7 +195,8 @@ describe('Engine', () => {
         })
         const id = await PeerId.create({ bits: 512 })
         const blockstore = new MemoryBlockstore()
-        const dEngine = new DecisionEngine(id, blockstore, network, new Stats())
+        // @ts-expect-error {} is not a real libp2p
+        const dEngine = new DecisionEngine(id, blockstore, network, new Stats({}), {})
         dEngine.start()
 
         // Send wants then cancels for some of the wants
@@ -289,7 +291,8 @@ describe('Engine', () => {
       }
     })
 
-    const dEngine = new DecisionEngine(id, blockstore, network, new Stats())
+    // @ts-expect-error {} is not a real libp2p
+    const dEngine = new DecisionEngine(id, blockstore, network, new Stats({}), {})
     dEngine.start()
 
     // Each peer requests all blocks
@@ -313,7 +316,8 @@ describe('Engine', () => {
     const deferred = defer()
     const network = mockNetwork(blocks.length, undefined, (peer, msg) => deferred.resolve([peer, msg]))
     const blockstore = new MemoryBlockstore()
-    const dEngine = new DecisionEngine(id, blockstore, network, new Stats(), { maxSizeReplaceHasWithBlock: 0 })
+    // @ts-expect-error {} is not a real libp2p
+    const dEngine = new DecisionEngine(id, blockstore, network, new Stats({}), {}, { maxSizeReplaceHasWithBlock: 0 })
     dEngine.start()
 
     const message = new Message(false)
@@ -356,7 +360,8 @@ describe('Engine', () => {
       onMsg([peerId, message])
     })
     const blockstore = new MemoryBlockstore()
-    const dEngine = new DecisionEngine(id, blockstore, network, new Stats(), { maxSizeReplaceHasWithBlock: 0 })
+    // @ts-expect-error {} is not a real libp2p
+    const dEngine = new DecisionEngine(id, blockstore, network, new Stats({}), {}, { maxSizeReplaceHasWithBlock: 0 })
     dEngine.start()
 
     const message = new Message(false)
@@ -702,7 +707,8 @@ describe('Engine', () => {
 
     const blockstore = new MemoryBlockstore()
     await drain(blockstore.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
-    const dEngine = new DecisionEngine(id, blockstore, network, new Stats(), { maxSizeReplaceHasWithBlock: 0 })
+    // @ts-expect-error {} is not a real libp2p
+    const dEngine = new DecisionEngine(id, blockstore, network, new Stats({}), {}, { maxSizeReplaceHasWithBlock: 0 })
     dEngine._scheduleProcessTasks = () => {}
     dEngine.start()
 
