@@ -1,9 +1,9 @@
-# ipfs-bitswap
+# ipfs-bitswap <!-- omit in toc -->
 
 [![](https://img.shields.io/badge/made%20by-Protocol%20Labs-blue.svg?style=flat-square)](http://ipn.io)
 [![](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](http://ipfs.io/)
 [![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23ipfs)
-[![Travis CI](https://flat.badgen.net/travis/ipfs/js-ipfs-bitswap)](https://travis-ci.com/ipfs/js-ipfs-bitswap)
+[![Build Status](https://github.com/ipfs/js-ipfs-bitswap/actions/workflows/js-test-and-release.yml/badge.svg?branch=master)](https://github.com/ipfs/js-ipfs-bitswap/actions/workflows/js-test-and-release.yml)
 [![](https://coveralls.io/repos/github/ipfs/js-ipfs-bitswap/badge.svg?branch=master)](https://coveralls.io/github/ipfs/js-ipfs-bitswap?branch=master)
 [![](https://david-dm.org/ipfs/js-ipfs-bitswap.svg?style=flat-square)](https://david-dm.org/ipfs/js-ipfs-bitswap)
 [![](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/feross/standard)
@@ -13,30 +13,23 @@
 
 > JavaScript implementation of the Bitswap 'data exchange' protocol used by IPFS
 
-## Lead Maintainer
+## Table of Contents <!-- omit in toc -->
 
-[Dirk McCormick](https://github.com/dirkmc)
-
-## Table of Contents
-
-- [ipfs-bitswap](#ipfs-bitswap)
-  - [Lead Maintainer](#lead-maintainer)
-  - [Table of Contents](#table-of-contents)
-  - [Install](#install)
-    - [npm](#npm)
-    - [Use in Node.js or in the browser with browserify, webpack or any other bundler](#use-in-nodejs-or-in-the-browser-with-browserify-webpack-or-any-other-bundler)
-    - [Use in a browser using a script tag](#use-in-a-browser-using-a-script-tag)
-  - [API](#api)
-    - [Stats](#stats)
-      - [Peer accessor:](#peer-accessor)
-      - [Global snapshot accessor:](#global-snapshot-accessor)
-      - [Moving average accessor:](#moving-average-accessor)
-  - [Development](#development)
-    - [Structure](#structure)
-  - [Performance tests](#performance-tests)
-    - [Profiling](#profiling)
-  - [Contribute](#contribute)
-  - [License](#license)
+- [Install](#install)
+  - [npm](#npm)
+  - [Use in Node.js or in the browser with browserify, webpack or any other bundler](#use-in-nodejs-or-in-the-browser-with-browserify-webpack-or-any-other-bundler)
+  - [Use in a browser using a script tag](#use-in-a-browser-using-a-script-tag)
+- [API](#api)
+  - [Stats](#stats)
+    - [Peer accessor:](#peer-accessor)
+    - [Global snapshot accessor:](#global-snapshot-accessor)
+    - [Moving average accessor:](#moving-average-accessor)
+- [Development](#development)
+  - [Structure](#structure)
+- [Performance tests](#performance-tests)
+  - [Profiling](#profiling)
+- [Contribute](#contribute)
+- [License](#license)
 
 ## Install
 

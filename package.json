@@ -2,13 +2,45 @@
   "name": "ipfs-bitswap",
   "version": "10.0.0",
   "description": "Node.js implementation of the Bitswap data exchange protocol used by IPFS",
-  "leadMaintainer": "Dirk McCormick <dirk@protocol.ai>",
+  "license": "Apache-2.0 OR MIT",
+  "homepage": "https://github.com/ipfs/js-ipfs-bitswap#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ipfs/js-ipfs-bitswap.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ipfs/js-ipfs-bitswap/issues"
+  },
+  "keywords": [
+    "exchange",
+    "ipfs",
+    "libp2p",
+    "p2p"
+  ],
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=7.0.0"
+  },
   "main": "src/index.js",
-  "types": "types/src/index.d.ts",
   "type": "module",
+  "types": "types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "*": [
+        "types/*",
+        "types/src/*"
+      ],
+      "types/*": [
+        "types/*",
+        "types/src/*"
+      ]
+    }
+  },
   "files": [
     "*",
-    "!**/*.tsbuildinfo"
+    "!**/*.tsbuildinfo",
+    "!**/browser-test",
+    "!**/node-test"
   ],
   "exports": {
     ".": {
@@ -26,37 +58,132 @@
       "*.test-d.ts"
     ]
   },
+  "release": {
+    "branches": [
+      "master"
+    ],
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits",
+          "releaseRules": [
+            {
+              "breaking": true,
+              "release": "major"
+            },
+            {
+              "revert": true,
+              "release": "patch"
+            },
+            {
+              "type": "feat",
+              "release": "minor"
+            },
+            {
+              "type": "fix",
+              "release": "patch"
+            },
+            {
+              "type": "chore",
+              "release": "patch"
+            },
+            {
+              "type": "docs",
+              "release": "patch"
+            },
+            {
+              "type": "test",
+              "release": "patch"
+            },
+            {
+              "scope": "no-release",
+              "release": false
+            }
+          ]
+        }
+      ],
+      [
+        "@semantic-release/release-notes-generator",
+        {
+          "preset": "conventionalcommits",
+          "presetConfig": {
+            "types": [
+              {
+                "type": "feat",
+                "section": "Features"
+              },
+              {
+                "type": "fix",
+                "section": "Bug Fixes"
+              },
+              {
+                "type": "chore",
+                "section": "Trivial Changes"
+              },
+              {
+                "type": "docs",
+                "section": "Trivial Changes"
+              },
+              {
+                "type": "test",
+                "section": "Tests"
+              }
+            ]
+          }
+        }
+      ],
+      "@semantic-release/changelog",
+      [
+        "@semantic-release/npm",
+        {
+          "pkgRoot": "dist"
+        }
+      ],
+      "@semantic-release/github",
+      "@semantic-release/git"
+    ]
+  },
   "scripts": {
+    "clean": "rimraf dist types",
+    "prepare": "aegir build --no-bundle && cp -R types dist",
+    "lint": "aegir ts -p check && aegir lint",
+    "build": "aegir build --esm-tests",
+    "release": "semantic-release",
+    "test": "aegir test",
+    "test:node": "aegir test -t node",
+    "test:chrome": "aegir test -t browser",
+    "test:chrome-webworker": "aegir test -t webworker",
+    "test:firefox": "aegir test -t browser -- --browser firefox",
+    "test:firefox-webworker": "aegir test -t webworker -- --browser firefox",
+    "test:electron-main": "aegir test -t electron-main -f dist/cjs/node-test/*js",
+    "test:electron-renderer": "aegir test -t electron-renderer -f dist/cjs/node-test/*js",
+    "dep-check": "aegir dep-check -i rimraf",
     "generate": "run-s generate:*",
     "generate:proto": "pbjs -t static-module -w es6 -r ipfs-bitswap --force-number --no-verify --no-delimited --no-create --no-beautify --no-defaults --lint eslint-disable -o src/message/message.js src/message/message.proto",
-    "generate:proto-types": "pbts -o src/message/message.d.ts src/message/message.js",
-    "build": "aegir build",
-    "clean": "rimraf dist types",
-    "lint": "aegir ts -p check && aegir lint",
-    "release": "aegir release",
-    "release-minor": "aegir release --type minor",
-    "release-major": "aegir release --type major",
-    "pretest": "aegir build --esm-tests",
-    "test": "aegir test",
-    "dep-check": "aegir dep-check -i rimraf",
-    "bench": "node benchmarks/index",
-    "benchmarks": "node test/benchmarks/get-many"
+    "generate:proto-types": "pbts -o src/message/message.d.ts src/message/message.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ipfs/js-ipfs-bitswap.git"
+  "dependencies": {
+    "@vascosantos/moving-average": "^1.1.0",
+    "abort-controller": "^3.0.0",
+    "any-signal": "^2.1.2",
+    "blockstore-core": "^1.0.2",
+    "debug": "^4.2.0",
+    "err-code": "^3.0.1",
+    "interface-blockstore": "^2.0.2",
+    "it-length-prefixed": "^5.0.2",
+    "it-pipe": "^1.1.0",
+    "just-debounce-it": "^1.1.0",
+    "libp2p-interfaces": "^4.0.0",
+    "multiaddr": "^10.0.0",
+    "multiformats": "^9.0.4",
+    "native-abort-controller": "^1.0.3",
+    "protobufjs": "^6.10.2",
+    "readable-stream": "^3.6.0",
+    "uint8arrays": "^3.0.0",
+    "varint": "^6.0.0",
+    "varint-decoder": "^1.0.0"
   },
-  "keywords": [
-    "ipfs",
-    "libp2p",
-    "p2p",
-    "exchange"
-  ],
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/ipfs/js-ipfs-bitswap/issues"
-  },
-  "homepage": "https://github.com/ipfs/js-ipfs-bitswap#readme",
   "devDependencies": {
     "@chainsafe/libp2p-noise": "^4.1.0",
     "@nodeutils/defaults-deep": "^1.1.0",
@@ -93,51 +220,5 @@
     "url": "^0.11.0",
     "util": "^0.12.3",
     "uuid": "^8.3.2"
-  },
-  "dependencies": {
-    "@vascosantos/moving-average": "^1.1.0",
-    "abort-controller": "^3.0.0",
-    "any-signal": "^2.1.2",
-    "blockstore-core": "^1.0.2",
-    "debug": "^4.2.0",
-    "err-code": "^3.0.1",
-    "interface-blockstore": "^2.0.2",
-    "it-length-prefixed": "^5.0.2",
-    "it-pipe": "^1.1.0",
-    "just-debounce-it": "^1.1.0",
-    "libp2p-interfaces": "^4.0.0",
-    "multiaddr": "^10.0.0",
-    "multiformats": "^9.0.4",
-    "native-abort-controller": "^1.0.3",
-    "protobufjs": "^6.10.2",
-    "readable-stream": "^3.6.0",
-    "uint8arrays": "^3.0.0",
-    "varint": "^6.0.0",
-    "varint-decoder": "^1.0.0"
-  },
-  "contributors": [
-    "David Dias <daviddias.p@gmail.com>",
-    "Friedel Ziegelmayer <dignifiedquire@gmail.com>",
-    "achingbrain <alex@achingbrain.net>",
-    "Dirk McCormick <dirkmdev@gmail.com>",
-    "Volker Mische <volker.mische@gmail.com>",
-    "Jacob Heun <jacobheun@gmail.com>",
-    "Pedro Teixeira <i@pgte.me>",
-    "Hugo Dias <hugomrdias@gmail.com>",
-    "Michael Garvin <gar+gh@danger.computer>",
-    "Hector Sanjuan <code@hector.link>",
-    "Alan Shaw <alan.shaw@protocol.ai>",
-    "Irakli Gozalishvili <contact@gozala.io>",
-    "Vasco Santos <vasco.santos@moxy.studio>",
-    "Richard Littauer <richard.littauer@gmail.com>",
-    "Stephen Whitmore <stephen.whitmore@gmail.com>",
-    "ᴠɪᴄᴛᴏʀ ʙᴊᴇʟᴋʜᴏʟᴍ <victorbjelkholm@gmail.com>",
-    "Maciej Krüger <mkg20001@gmail.com>",
-    "Henrique Dias <hacdias@gmail.com>",
-    "Dmitriy Ryajov <dryajov@gmail.com>",
-    "dmitriy ryajov <dryajov@dmitriys-MBP.HomeNET>",
-    "Bryan Stenson <bryan.stenson@gmail.com>",
-    "Brian Ginsburg <7957636+bgins@users.noreply.github.com>",
-    "Richard Schneider <makaretu@gmail.com>"
-  ]
+  }
 }
