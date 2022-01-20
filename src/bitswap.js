@@ -427,9 +427,9 @@ export class Bitswap extends BaseBlockstore {
   /**
    * Start the bitswap node
    */
-  start () {
+  async start () {
     this.wm.start()
-    this.network.start()
+    await this.network.start()
     this.engine.start()
     this.started = true
   }
@@ -437,10 +437,10 @@ export class Bitswap extends BaseBlockstore {
   /**
    * Stop the bitswap node
    */
-  stop () {
+  async stop () {
     this._stats.stop()
     this.wm.stop()
-    this.network.stop()
+    await this.network.stop()
     this.engine.stop()
     this.started = false
   }
