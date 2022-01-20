@@ -6,6 +6,7 @@ import { Ledger } from './ledger.js'
 import { RequestQueue } from './req-queue.js'
 import { TaskMerger } from './task-merger.js'
 import { logger } from '../utils/index.js'
+import trackedMap from 'libp2p/src/metrics/tracked-map.js'
 
 /**
  * @typedef {import('../message/entry').BitswapMessageEntry} BitswapMessageEntry
@@ -35,11 +36,12 @@ export class DecisionEngine {
    * @param {import('interface-blockstore').Blockstore} blockstore
    * @param {import('../network').Network} network
    * @param {import('../stats').Stats} stats
+   * @param {import('libp2p')} libp2p
    * @param {Object} [opts]
    * @param {number} [opts.targetMessageSize]
    * @param {number} [opts.maxSizeReplaceHasWithBlock]
    */
-  constructor (peerId, blockstore, network, stats, opts = {}) {
+  constructor (peerId, blockstore, network, stats, libp2p, opts = {}) {
     this._log = logger(peerId, 'engine')
     this.blockstore = blockstore
     this.network = network
@@ -48,7 +50,12 @@ export class DecisionEngine {
 
     // A list of of ledgers by their partner id
     /** @type {Map<string, Ledger>} */
-    this.ledgerMap = new Map()
+    this.ledgerMap = trackedMap({
+      system: 'ipfs',
+      component: 'bitswap',
+      metric: 'ledger-map',
+      metrics: libp2p.metrics
+    })
     this._running = false
 
     // Queue of want-have / want-block per peer
@@ -455,16 +462,10 @@ export class DecisionEngine {
 
   /**
    *
-   * @param {PeerId} _peerId
-   * @returns {void}
+   * @param {PeerId} peerId
    */
-  peerDisconnected (_peerId) {
-    // if (this.ledgerMap.has(peerId.toB58String())) {
-    //   this.ledgerMap.delete(peerId.toB58String())
-    // }
-    //
-    // TODO: figure out how to remove all other references
-    // in the peer request queue
+  peerDisconnected (peerId) {
+    this.ledgerMap.delete(peerId.toB58String())
   }
 
   /**

@@ -54,7 +54,8 @@ describe('WantManager', () => {
         resolve()
       })
 
-      const wantManager = new WantManager(peerIds[2], network, new Stats())
+      // @ts-expect-error {} is not a real libp2p
+      const wantManager = new WantManager(peerIds[2], network, new Stats({}), {})
 
       wantManager.start()
       wantManager.wantBlocks([cid1, cid2])

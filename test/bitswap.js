@@ -30,7 +30,7 @@ async function createThing (dht) {
     }
   })
   const bitswap = new Bitswap(libp2pNode, new MemoryBlockstore())
-  bitswap.start()
+  await bitswap.start()
   return { libp2pNode, bitswap }
 }
 
@@ -43,8 +43,8 @@ describe('start/stop', () => {
         register: () => {}
       },
       peerStore: {
-        peers: {
-          values: () => []
+        getPeers: async function * () {
+          yield * []
         }
       }
     }
@@ -53,11 +53,11 @@ describe('start/stop', () => {
 
     expect(bitswap.isStarted()).to.be.false()
 
-    bitswap.start()
+    await bitswap.start()
 
     expect(bitswap.isStarted()).to.be.true()
 
-    bitswap.stop()
+    await bitswap.stop()
 
     expect(bitswap.isStarted()).to.be.false()
   })

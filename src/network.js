@@ -57,9 +57,9 @@ export class Network {
     this._hashLoader = options.hashLoader
   }
 
-  start () {
+  async start () {
     this._running = true
-    this._libp2p.handle(this._protocols, this._onConnection)
+    await this._libp2p.handle(this._protocols, this._onConnection)
 
     // register protocol with topology
     const topology = new MulticodecTopology({
@@ -69,21 +69,21 @@ export class Network {
         onDisconnect: this._onPeerDisconnect
       }
     })
-    this._registrarId = this._libp2p.registrar.register(topology)
+    this._registrarId = await this._libp2p.registrar.register(topology)
 
     // All existing connections are like new ones for us
-    for (const peer of this._libp2p.peerStore.peers.values()) {
+    for await (const peer of this._libp2p.peerStore.getPeers()) {
       const conn = this._libp2p.connectionManager.get(peer.id)
 
       conn && this._onPeerConnect(conn.remotePeer)
     }
   }
 
-  stop () {
+  async stop () {
     this._running = false
 
     // Unhandle both, libp2p doesn't care if it's not already handled
-    this._libp2p.unhandle(this._protocols)
+    await this._libp2p.unhandle(this._protocols)
 
     // unregister protocol and handlers
     if (this._registrarId != null) {

@@ -3,6 +3,7 @@ import PeerStore from 'libp2p/src/peer-store/index.js'
 import { Node } from './create-libp2p-node.js'
 import { MemoryBlockstore } from 'blockstore-core/memory'
 import { EventEmitter } from 'events'
+import { MemoryDatastore } from 'datastore-core/memory'
 import { Bitswap } from '../../src/bitswap.js'
 import { Network } from '../../src/network.js'
 import { Stats } from '../../src/stats/index.js'
@@ -50,7 +51,7 @@ export const mockLibp2pNode = () => {
     swarm: {
       setMaxListeners () {}
     },
-    peerStore: new PeerStore({ peerId })
+    peerStore: new PeerStore({ peerId, datastore: new MemoryDatastore() })
   })
 }
 
@@ -84,7 +85,7 @@ export const mockNetwork = (calls = Infinity, done = () => {}, onMsg = () => {})
   class MockNetwork extends Network {
     constructor () {
       // @ts-ignore - {} is not an instance of libp2p
-      super({}, new Bitswap({}, new MemoryBlockstore()), new Stats())
+      super({}, new Bitswap({}, new MemoryBlockstore()), new Stats({}))
 
       this.connects = connects
       this.messages = messages
@@ -184,15 +185,19 @@ export const genBitswapNetwork = async (n, enableDHT = false) => {
   )
 
   // create PeerStore and populate peerStore
-  netArray.forEach((net, i) => {
-    const pb = net.libp2p.peerStore
-    netArray.forEach((net, j) => {
+  for (let i = 0; i < netArray.length; i++) {
+    const pb = netArray[i].libp2p.peerStore
+
+    for (let j = 0; j < netArray.length; j++) {
       if (i === j) {
-        return
+        continue
       }
-      pb.addressBook.set(net.peerId, net.libp2p.multiaddrs)
-    })
-  })
+
+      const net = netArray[j]
+
+      await pb.addressBook.set(net.peerId, net.libp2p.multiaddrs)
+    }
+  }
 
   // create every Bitswap
   netArray.forEach((net) => {

@@ -1,3 +1,17 @@
+# [10.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v9.0.0...v10.0.0) (2022-01-18)
+
+
+### Features
+
+* libp2p async peerstore ([#413](https://github.com/ipfs/js-ipfs-bitswap/issues/413)) ([9f5fda9](https://github.com/ipfs/js-ipfs-bitswap/commit/9f5fda97903c4ffcd39d7affa887648df1169be3))
+
+
+### BREAKING CHANGES
+
+* peerstore methods are now all async
+
+
+
 # [9.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v8.0.0...v9.0.0) (2021-12-02)
 
 

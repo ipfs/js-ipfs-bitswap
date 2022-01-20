@@ -69,7 +69,7 @@ describe('bitswap stats', () => {
     bs.wm.wantBlocks(blocks.map(b => b.cid))
 
     // start the first bitswap
-    bs.start()
+    await bs.start()
   })
 
   after(async () => {
@@ -170,7 +170,7 @@ describe('bitswap stats', () => {
 
     before(async () => {
       bs2 = bitswaps[1]
-      bs2.start()
+      await bs2.start()
 
       const ma = `${libp2pNodes[1].multiaddrs[0]}/p2p/${libp2pNodes[1].peerId.toB58String()}`
       await libp2pNodes[0].dial(ma)
@@ -180,8 +180,8 @@ describe('bitswap stats', () => {
       await bs.put(block.cid, block.data)
     })
 
-    after(() => {
-      bs2.stop()
+    after(async () => {
+      await bs2.stop()
     })
 
     it('updates stats on transfer', async () => {

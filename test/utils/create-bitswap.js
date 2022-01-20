@@ -12,6 +12,6 @@ export const createBitswap = async () => {
     }
   })
   const bitswap = new Bitswap(libp2pNode, new MemoryBlockstore())
-  bitswap.start()
+  await bitswap.start()
   return { bitswap, libp2pNode }
 }

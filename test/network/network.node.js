@@ -68,20 +68,23 @@ describe('network', () => {
     bitswapMockB = createBitswapMock()
     bitswapMockC = createBitswapMock()
 
-    networkA = new Network(p2pA, bitswapMockA, new Stats())
-    networkB = new Network(p2pB, bitswapMockB, new Stats())
+    // @ts-expect-error {} is not a real libp2p
+    networkA = new Network(p2pA, bitswapMockA, new Stats({}))
+    // @ts-expect-error {} is not a real libp2p
+    networkB = new Network(p2pB, bitswapMockB, new Stats({}))
     // only bitswap100
-    networkC = new Network(p2pC, bitswapMockC, new Stats(), { b100Only: true })
+    // @ts-expect-error {} is not a real libp2p
+    networkC = new Network(p2pC, bitswapMockC, new Stats({}), { b100Only: true })
 
-    networkA.start()
-    networkB.start()
-    networkC.start()
+    await networkA.start()
+    await networkB.start()
+    await networkC.start()
   })
 
-  afterEach(() => {
-    p2pA.stop()
-    p2pB.stop()
-    p2pC.stop()
+  afterEach(async () => {
+    await p2pA.stop()
+    await p2pB.stop()
+    await p2pC.stop()
   })
 
   it('connectTo fail', async () => {
@@ -143,14 +146,14 @@ describe('network', () => {
       p2pBConnected
     ])
 
-    networkA.stop()
-    networkB.stop()
+    await networkA.stop()
+    await networkB.stop()
 
     p2pAConnected = pDefer()
     p2pBConnected = pDefer()
 
-    networkA.start()
-    networkB.start()
+    await networkA.start()
+    await networkB.start()
 
     await Promise.all([
       p2pAConnected,
@@ -213,7 +216,7 @@ describe('network', () => {
 
     // In a real network scenario, peers will be discovered and their addresses
     // will be added to the addressBook before bitswap kicks in
-    p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
+    await p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
 
     bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       // cannot do deep comparison on objects as one has Buffers and one has Uint8Arrays
@@ -249,7 +252,7 @@ describe('network', () => {
 
     // In a real network scenario, peers will be discovered and their addresses
     // will be added to the addressBook before bitswap kicks in
-    p2pA.peerStore.addressBook.set(p2pC.peerId, p2pC.multiaddrs)
+    await p2pA.peerStore.addressBook.set(p2pC.peerId, p2pC.multiaddrs)
 
     bitswapMockC._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       // cannot do deep comparison on objects as one has Buffers and one has Uint8Arrays
@@ -267,18 +270,20 @@ describe('network', () => {
   })
 
   it('dials to peer using Bitswap 1.2.0', async () => {
-    networkA = new Network(p2pA, bitswapMockA, new Stats())
+    // @ts-expect-error {} is not a real libp2p
+    networkA = new Network(p2pA, bitswapMockA, new Stats({}))
 
     // only supports 1.2.0
-    networkB = new Network(p2pB, bitswapMockB, new Stats())
+    // @ts-expect-error {} is not a real libp2p
+    networkB = new Network(p2pB, bitswapMockB, new Stats({}))
     networkB._protocols = ['/ipfs/bitswap/1.2.0']
 
-    networkA.start()
-    networkB.start()
+    await networkA.start()
+    await networkB.start()
 
     // In a real network scenario, peers will be discovered and their addresses
     // will be added to the addressBook before bitswap kicks in
-    p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
+    await p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
 
     const deferred = pDefer()
 
@@ -297,23 +302,25 @@ describe('network', () => {
 
     /** @type {Libp2p} */
     const libp2p = {
-      // @ts-ignore incomplete implementation
+      // @ts-expect-error incomplete implementation
       contentRouting: {
         findProviders: mockFindProviders
       },
-      // @ts-ignore incomplete implementation
+      // @ts-expect-error incomplete implementation
       registrar: {
         register: sinon.stub()
       },
-      // @ts-ignore incomplete implementation
+      // @ts-expect-error incomplete implementation
       peerStore: {
-        peers: new Map()
+        getPeers: async function * () {
+          yield * []
+        }
       },
       dial: mockDial,
       handle: sinon.stub()
     }
 
-    const network = new Network(libp2p, bitswapMockA, new Stats())
+    const network = new Network(libp2p, bitswapMockA, new Stats(libp2p))
 
     const cid = CID.parse('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn')
     const provider1 = {
@@ -331,7 +338,7 @@ describe('network', () => {
     mockDial.withArgs(provider1.id).returns(Promise.reject(new Error('Could not dial')))
     mockDial.withArgs(provider2.id).returns(Promise.resolve())
 
-    network.start()
+    await network.start()
 
     await network.findAndConnect(cid)
 

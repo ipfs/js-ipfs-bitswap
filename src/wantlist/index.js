@@ -2,6 +2,7 @@
 import { WantListEntry as Entry } from './entry.js'
 import { base58btc } from 'multiformats/bases/base58'
 import { Message } from '../message/message.js'
+import trackedMap from 'libp2p/src/metrics/tracked-map.js'
 
 const WantType = {
   Block: Message.Wantlist.WantType.Block,
@@ -28,12 +29,19 @@ const sortBy = (fn, list) => {
 
 export class Wantlist {
   /**
-   *
    * @param {import('../stats').Stats} [stats]
+   * @param {import('libp2p')} [libp2p]
    */
-  constructor (stats) {
+  constructor (stats, libp2p) {
     /** @type {Map<string, Entry>} */
-    this.set = new Map()
+    this.set = libp2p
+      ? trackedMap({
+        system: 'ipfs',
+        component: 'bitswap',
+        metric: 'wantlist',
+        metrics: libp2p.metrics
+      })
+      : new Map()
     this._stats = stats
   }
 
