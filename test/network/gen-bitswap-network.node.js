@@ -21,7 +21,7 @@ describe('gen Bitswap network', function () {
     }))
     expect(res).to.have.length(blocks.length)
 
-    node.bitswap.stop()
+    await node.bitswap.stop()
     await node.libp2p.stop()
   })
 
@@ -33,9 +33,9 @@ describe('gen Bitswap network', function () {
 
       // -- actual test
       await exchangeBlocks(nodeArr, blocksPerNode)
-      await Promise.all(nodeArr.map(node => {
-        node.bitswap.stop()
-        return node.libp2p.stop()
+      await Promise.all(nodeArr.map(async node => {
+        await node.bitswap.stop()
+        await node.libp2p.stop()
       }))
     })
   })
@@ -53,7 +53,7 @@ async function exchangeBlocks (nodes, blocksPerNode = 10) {
 
   // put blocksPerNode amount of blocks per node
   await Promise.all(nodes.map(async (node, i) => {
-    node.bitswap.start()
+    await node.bitswap.start()
 
     const data = new Array(blocksPerNode).fill(0).map((_, j) => {
       const index = i * blocksPerNode + j
