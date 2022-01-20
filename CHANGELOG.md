@@ -1,3 +1,10 @@
+### [10.0.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v10.0.1...v10.0.2) (2022-01-20)
+
+
+### Bug Fixes
+
+* remove abort controller deps ([#402](https://github.com/ipfs/js-ipfs-bitswap/issues/402)) ([ef6c8ce](https://github.com/ipfs/js-ipfs-bitswap/commit/ef6c8ce03f53b27a4b64a4e7a3ab78f11a4dbccb))
+
 ### [10.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v10.0.0...v10.0.1) (2022-01-20)
 
 
