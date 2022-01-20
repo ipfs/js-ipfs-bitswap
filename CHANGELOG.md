@@ -1,3 +1,15 @@
+### [10.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v10.0.0...v10.0.1) (2022-01-20)
+
+
+### Bug Fixes
+
+* await network start and stop ([#415](https://github.com/ipfs/js-ipfs-bitswap/issues/415)) ([44dfcb5](https://github.com/ipfs/js-ipfs-bitswap/commit/44dfcb5dc40ed6ba8d3e4a5587d38634a37730c0))
+
+
+### Trivial Changes
+
+* switch to unified ci ([#408](https://github.com/ipfs/js-ipfs-bitswap/issues/408)) ([2d8e20f](https://github.com/ipfs/js-ipfs-bitswap/commit/2d8e20f6053c800f801060d042e3367dbbb97102))
+
 # [10.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v9.0.0...v10.0.0) (2022-01-18)
 
 
@@ -583,6 +595,3 @@ the stats, as those values are represented as Big Numbers.
 
 <a name="0.17.0"></a>
 # [0.17.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v0.16.1...v0.17.0) (2017-09-03)
-
-
-
