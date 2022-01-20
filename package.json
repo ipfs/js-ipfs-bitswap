@@ -193,7 +193,7 @@
     "aegir": "^36.0.2",
     "assert": "^2.0.0",
     "benchmark": "^2.1.4",
-    "datastore-core": "^6.0.7",
+    "datastore-core": "^7.0.0",
     "delay": "^5.0.0",
     "interface-datastore": "^6.0.2",
     "iso-random-stream": "^2.0.0",
