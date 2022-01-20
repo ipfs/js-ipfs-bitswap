@@ -8,7 +8,6 @@ import drain from 'it-drain'
 import { BitswapMessage as Message } from '../src/message/index.js'
 import { Bitswap } from '../src/bitswap.js'
 import { CID } from 'multiformats/cid'
-import { AbortController } from 'native-abort-controller'
 import delay from 'delay'
 import { base58btc } from 'multiformats/bases/base58'
 
