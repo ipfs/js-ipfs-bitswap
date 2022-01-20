@@ -310,6 +310,7 @@ describe('network', () => {
       registrar: {
         register: sinon.stub()
       },
+      // @ts-expect-error incomplete implementation
       peerStore: {
         getPeers: async function * () {
           yield * []
