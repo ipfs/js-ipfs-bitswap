@@ -6,11 +6,11 @@ import { Ledger } from './ledger.js'
 import { RequestQueue } from './req-queue.js'
 import { TaskMerger } from './task-merger.js'
 import { logger } from '../utils/index.js'
-import trackedMap from 'libp2p/src/metrics/tracked-map.js'
+import { trackedMap } from '@libp2p/tracked-map'
 
 /**
  * @typedef {import('../message/entry').BitswapMessageEntry} BitswapMessageEntry
- * @typedef {import('peer-id')} PeerId
+ * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
  */
 
 const WantType = Message.WantType
@@ -36,8 +36,8 @@ export class DecisionEngine {
    * @param {import('interface-blockstore').Blockstore} blockstore
    * @param {import('../network').Network} network
    * @param {import('../stats').Stats} stats
-   * @param {import('libp2p')} libp2p
-   * @param {Object} [opts]
+   * @param {import('libp2p').Libp2p} libp2p
+   * @param {object} [opts]
    * @param {number} [opts.targetMessageSize]
    * @param {number} [opts.maxSizeReplaceHasWithBlock]
    */
@@ -63,7 +63,7 @@ export class DecisionEngine {
   }
 
   /**
-   * @template {Object} Opts
+   * @template {object} Opts
    * @param {Opts} opts
    * @returns {Opts & {maxSizeReplaceHasWithBlock:number, targetMessageSize:number}}
    * @private
@@ -173,7 +173,7 @@ export class DecisionEngine {
    * @returns {Map<string, import('../wantlist/entry').WantListEntry>}
    */
   wantlistForPeer (peerId) {
-    const peerIdStr = peerId.toB58String()
+    const peerIdStr = peerId.toString()
     const ledger = this.ledgerMap.get(peerIdStr)
     return ledger ? ledger.wantlist.sortedEntries() : new Map()
   }
@@ -182,7 +182,7 @@ export class DecisionEngine {
    * @param {PeerId} peerId
    */
   ledgerForPeer (peerId) {
-    const peerIdStr = peerId.toB58String()
+    const peerIdStr = peerId.toString()
 
     const ledger = this.ledgerMap.get(peerIdStr)
 
@@ -465,7 +465,7 @@ export class DecisionEngine {
    * @param {PeerId} peerId
    */
   peerDisconnected (peerId) {
-    this.ledgerMap.delete(peerId.toB58String())
+    this.ledgerMap.delete(peerId.toString())
   }
 
   /**
@@ -474,7 +474,7 @@ export class DecisionEngine {
    * @returns {Ledger}
    */
   _findOrCreate (peerId) {
-    const peerIdStr = peerId.toB58String()
+    const peerIdStr = peerId.toString()
     const ledger = this.ledgerMap.get(peerIdStr)
     if (ledger) {
       return ledger

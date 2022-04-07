@@ -1,8 +1,12 @@
 /* eslint-env mocha */
 
-import { expect } from 'aegir/utils/chai.js'
-import PeerId from 'peer-id'
+import { expect } from 'aegir/chai'
+import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import { RequestQueue } from '../../src/decision-engine/req-queue.js'
+
+/**
+ * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ */
 
 describe('Request Queue', () => {
   /** @type {PeerId[]} */
@@ -10,9 +14,9 @@ describe('Request Queue', () => {
 
   before(async () => {
     peerIds = await Promise.all([
-      PeerId.create({ bits: 512 }),
-      PeerId.create({ bits: 512 }),
-      PeerId.create({ bits: 512 })
+      createEd25519PeerId(),
+      createEd25519PeerId(),
+      createEd25519PeerId()
     ])
   })
 

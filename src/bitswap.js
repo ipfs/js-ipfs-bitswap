@@ -12,7 +12,7 @@ import { CID } from 'multiformats/cid'
  * @typedef {import('./types').IPFSBitswap} IPFSBitswap
  * @typedef {import('./types').MultihashHasherLoader} MultihashHasherLoader
  * @typedef {import('./message').BitswapMessage} BitswapMessage
- * @typedef {import('peer-id')} PeerId
+ * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
  * @typedef {import('interface-blockstore').Blockstore} Blockstore
  * @typedef {import('interface-blockstore').Pair} Pair
  * @typedef {import('interface-blockstore').Options} Options
@@ -43,9 +43,9 @@ const statsKeys = [
  */
 export class Bitswap extends BaseBlockstore {
   /**
-   * @param {import('libp2p')} libp2p
+   * @param {import('libp2p').Libp2p} libp2p
    * @param {Blockstore} blockstore
-   * @param {Object} [options]
+   * @param {object} [options]
    * @param {boolean} [options.statsEnabled=false]
    * @param {number} [options.statsComputeThrottleTimeout=1000]
    * @param {number} [options.statsComputeThrottleMaxQueueSize=1000]
@@ -157,7 +157,7 @@ export class Bitswap extends BaseBlockstore {
 
     const has = await this.blockstore.has(cid)
 
-    this._updateReceiveCounters(peerId.toB58String(), cid, data, has)
+    this._updateReceiveCounters(peerId.toString(), cid, data, has)
 
     if (!wasWanted) {
       return
@@ -244,13 +244,13 @@ export class Bitswap extends BaseBlockstore {
    * blockstore it is returned, otherwise the block is added to the wantlist and returned once another node sends it to us.
    *
    * @param {CID} cid
-   * @param {Object} [options]
+   * @param {object} [options]
    * @param {AbortSignal} [options.signal]
    */
   async get (cid, options = {}) {
     /**
      * @param {CID} cid
-     * @param {Object} options
+     * @param {object} options
      * @param {AbortSignal} options.signal
      */
     const fetchFromNetwork = (cid, options) => {
@@ -266,7 +266,7 @@ export class Bitswap extends BaseBlockstore {
     /**
      *
      * @param {CID} cid
-     * @param {Object} options
+     * @param {object} options
      * @param {AbortSignal} options.signal
      */
     const loadOrFetchFromNetwork = async (cid, options) => {
@@ -283,7 +283,7 @@ export class Bitswap extends BaseBlockstore {
         if (!promptedNetwork) {
           promptedNetwork = true
 
-          this.network.findAndConnect(cid)
+          this.network.findAndConnect(cid, options)
             .catch((err) => this._log.error(err))
         }
 
@@ -301,19 +301,21 @@ export class Bitswap extends BaseBlockstore {
       ? anySignal([options.signal, controller.signal])
       : controller.signal
 
-    const block = await Promise.race([
-      this.notifications.wantBlock(cid, {
-        signal
-      }),
-      loadOrFetchFromNetwork(cid, {
-        signal
-      })
-    ])
+    try {
+      const block = await Promise.race([
+        this.notifications.wantBlock(cid, {
+          signal
+        }),
+        loadOrFetchFromNetwork(cid, {
+          signal
+        })
+      ])
 
-    // since we have the block we can now remove our listener
-    controller.abort()
-
-    return block
+      return block
+    } finally {
+      // since we have the block we can now remove our listener
+      controller.abort()
+    }
   }
 
   /**
@@ -321,7 +323,7 @@ export class Bitswap extends BaseBlockstore {
    * blockstore they are returned, otherwise the blocks are added to the wantlist and returned once another node sends them to us.
    *
    * @param {AsyncIterable<CID>|Iterable<CID>} cids
-   * @param {Object} [options]
+   * @param {object} [options]
    * @param {AbortSignal} [options.signal]
    */
   async * getMany (cids, options = {}) {

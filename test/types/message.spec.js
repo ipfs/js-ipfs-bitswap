@@ -1,12 +1,12 @@
 /* eslint-env mocha */
 
-import { expect } from 'aegir/utils/chai.js'
+import { expect } from 'aegir/chai'
 import { CID } from 'multiformats/cid'
 import { base32 } from 'multiformats/bases/base32'
 import { base64 } from 'multiformats/bases/base64'
 import { base58btc } from 'multiformats/bases/base58'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
-import loadFixture from 'aegir/utils/fixtures.js'
+import loadFixture from 'aegir/fixtures'
 import { Message } from '../../src/message/message.js'
 import { BitswapMessage } from '../../src/message/index.js'
 import { makeBlocks } from '../utils/make-blocks.js'

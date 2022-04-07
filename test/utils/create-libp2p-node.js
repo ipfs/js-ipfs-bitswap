@@ -1,48 +1,18 @@
 
-// @ts-ignore
-import TCP from 'libp2p-tcp'
-// @ts-ignore
-import MPLEX from 'libp2p-mplex'
+import { TCP } from '@libp2p/tcp'
+import { Mplex } from '@libp2p/mplex'
 import { NOISE } from '@chainsafe/libp2p-noise'
-import Libp2p from 'libp2p'
-import KadDHT from 'libp2p-kad-dht'
-import PeerId from 'peer-id'
+import { createLibp2p } from 'libp2p'
+import { KadDHT } from '@libp2p/kad-dht'
+import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+
 // @ts-ignore
 import defaultsDeep from '@nodeutils/defaults-deep'
 
 /**
- * @typedef {Partial<import('libp2p').Libp2pOptions> & Partial<import('libp2p').constructorOptions> & { DHT?: boolean}} NodeOptions
+ * @typedef {import('libp2p').Libp2p} Libp2p
+ * @typedef {import('libp2p').Libp2pOptions & { DHT?: boolean}} NodeOptions
  */
-
-export class Node extends Libp2p {
-  /**
-   * @param {NodeOptions} _options
-   */
-  constructor (_options) {
-    const defaults = {
-      modules: {
-        transport: [
-          TCP
-        ],
-        streamMuxer: [
-          MPLEX
-        ],
-        connEncryption: [
-          NOISE
-        ],
-        dht: KadDHT
-      },
-      config: {
-        dht: {
-          enabled: Boolean(_options.DHT)
-        }
-      }
-    }
-
-    delete _options.DHT
-    super(defaultsDeep(_options, defaults))
-  }
-}
 
 /**
  * @param {NodeOptions} [options]
@@ -50,14 +20,29 @@ export class Node extends Libp2p {
  * @returns {Promise<Libp2p>}
  */
 export async function createLibp2pNode (options) {
-  const id = await PeerId.create({ bits: 512 })
-  const node = new Node({
-    peerId: id,
+  options = options ?? {}
+
+  const node = await createLibp2p(defaultsDeep({
+    peerId: await createEd25519PeerId(),
     addresses: {
       listen: ['/ip4/0.0.0.0/tcp/0']
     },
-    ...(options || {})
-  })
+    transports: [
+      new TCP()
+    ],
+    streamMuxers: [
+      new Mplex()
+    ],
+    connectionEncryption: [
+      NOISE
+    ],
+    dht: options.DHT
+      ? new KadDHT({
+        clientMode: false
+      })
+      : undefined
+  }, options))
+
   await node.start()
 
   return node

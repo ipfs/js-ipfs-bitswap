@@ -1,16 +1,16 @@
 import { SortedMap } from '../utils/sorted-map.js'
 
 /**
- * @typedef {Object} PopTaskResult
+ * @typedef {object} PopTaskResult
  * @property {PeerId} [peerId]
  * @property {Task[]} tasks
  * @property {number} pendingSize
  *
- * @typedef {Object} PendingTask
+ * @typedef {object} PendingTask
  * @property {number} created
  * @property {Task} task
  *
- * @typedef {import('peer-id')} PeerId
+ * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
  * @typedef {import('./types').Task} Task
  * @typedef {import('./types').TaskMerger} TaskMerger
  */
@@ -55,14 +55,14 @@ export class RequestQueue {
    * @returns {void}
    */
   pushTasks (peerId, tasks) {
-    let peerTasks = this._byPeer.get(peerId.toB58String())
+    let peerTasks = this._byPeer.get(peerId.toString())
 
     if (!peerTasks) {
       peerTasks = new PeerTasks(peerId, this._taskMerger)
     }
 
     peerTasks.pushTasks(tasks)
-    this._byPeer.set(peerId.toB58String(), peerTasks)
+    this._byPeer.set(peerId.toString(), peerTasks)
   }
 
   /**
@@ -91,7 +91,7 @@ export class RequestQueue {
     const peerId = peerTasks.peerId
     if (peerTasks.isIdle()) {
       // If there are no more tasks for the peer, free up its memory
-      this._byPeer.delete(peerId.toB58String())
+      this._byPeer.delete(peerId.toString())
     } else {
       // If there are still tasks remaining, update the sort order of peerTasks
       // (because it depends on the number of pending tasks)
@@ -129,7 +129,7 @@ export class RequestQueue {
    * @returns {void}
    */
   remove (topic, peerId) {
-    const peerTasks = this._byPeer.get(peerId.toB58String())
+    const peerTasks = this._byPeer.get(peerId.toString())
     peerTasks && peerTasks.remove(topic)
   }
 
@@ -141,12 +141,12 @@ export class RequestQueue {
    * @returns {void}
    */
   tasksDone (peerId, tasks) {
-    const peerTasks = this._byPeer.get(peerId.toB58String())
+    const peerTasks = this._byPeer.get(peerId.toString())
     if (!peerTasks) {
       return
     }
 
-    const i = this._byPeer.indexOf(peerId.toB58String())
+    const i = this._byPeer.indexOf(peerId.toString())
     for (const task of tasks) {
       peerTasks.taskDone(task)
     }

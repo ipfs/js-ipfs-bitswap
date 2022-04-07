@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 /* eslint-disable no-console */
 
-import { expect } from 'aegir/utils/chai.js'
+import { expect } from 'aegir/chai'
 import { makeBlocks } from '../utils/make-blocks.js'
 import { genBitswapNetwork } from '../utils/mocks.js'
 

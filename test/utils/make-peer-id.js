@@ -1,4 +1,8 @@
-import PeerId from 'peer-id'
+import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+
+/**
+ * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ */
 
 export async function makePeerId () {
   return (await makePeerIds(1))[0]
@@ -10,7 +14,7 @@ export async function makePeerId () {
  */
 export async function makePeerIds (count) {
   const peerIds = await Promise.all([...new Array(count || 1)].map(() => {
-    return PeerId.create({ bits: 512 })
+    return createEd25519PeerId()
   }))
   return peerIds
 }

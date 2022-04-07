@@ -6,7 +6,7 @@ import { Wantlist } from '../wantlist/index.js'
 
 export class Ledger {
   /**
-   * @param {import('peer-id')} peerId
+   * @param {import('@libp2p/interfaces/peer-id').PeerId} peerId
    */
   constructor (peerId) {
     this.partner = peerId

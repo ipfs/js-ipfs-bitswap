@@ -1,7 +1,6 @@
 /* eslint-env mocha */
 
-import { expect } from 'aegir/utils/chai.js'
-import PeerId from 'peer-id'
+import { expect } from 'aegir/chai'
 import sinon from 'sinon'
 import pWaitFor from 'p-wait-for'
 import { Bitswap } from '../src/bitswap.js'
@@ -10,9 +9,10 @@ import { createLibp2pNode } from './utils/create-libp2p-node.js'
 import { makeBlocks } from './utils/make-blocks.js'
 import { orderedFinish } from './utils/helpers.js'
 import { BitswapMessage as Message } from '../src/message/index.js'
+import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 
 /**
- * @typedef {import('libp2p')} Libp2p
+ * @typedef {import('libp2p').Libp2p} Libp2p
  */
 
 /**
@@ -22,12 +22,7 @@ import { BitswapMessage as Message } from '../src/message/index.js'
  */
 async function createThing (dht) {
   const libp2pNode = await createLibp2pNode({
-    DHT: dht,
-    config: {
-      dht: {
-        clientMode: false
-      }
-    }
+    DHT: dht
   })
   const bitswap = new Bitswap(libp2pNode, new MemoryBlockstore())
   await bitswap.start()
@@ -43,9 +38,7 @@ describe('start/stop', () => {
         register: () => {}
       },
       peerStore: {
-        getPeers: async function * () {
-          yield * []
-        }
+        forEach: async () => {}
       }
     }
     // @ts-ignore not a full libp2p
@@ -77,8 +70,8 @@ describe('bitswap without DHT', function () {
     ])
 
     // connect 0 -> 1 && 1 -> 2
-    const ma1 = `${nodes[1].libp2pNode.multiaddrs[0]}/p2p/${nodes[1].libp2pNode.peerId.toB58String()}`
-    const ma2 = `${nodes[2].libp2pNode.multiaddrs[0]}/p2p/${nodes[2].libp2pNode.peerId.toB58String()}`
+    const ma1 = nodes[1].libp2pNode.getMultiaddrs()[0]
+    const ma2 = nodes[2].libp2pNode.getMultiaddrs()[0]
 
     await Promise.all([
       nodes[0].libp2pNode.dial(ma1),
@@ -117,7 +110,7 @@ describe('bitswap without DHT', function () {
     const [block] = await makeBlocks(1)
 
     // id of a peer with the block we want
-    const peerId = await PeerId.create({ bits: 512 })
+    const peerId = await createEd25519PeerId()
 
     // incoming message with requested block from the other peer
     const message = new Message(false)
@@ -164,7 +157,7 @@ describe('bitswap without DHT', function () {
 })
 
 describe('bitswap with DHT', function () {
-  this.timeout(20 * 1000)
+  this.timeout(60 * 1000)
 
   /** @type {{ libp2pNode: Libp2p, bitswap: Bitswap }[]} */
   let nodes
@@ -177,19 +170,19 @@ describe('bitswap with DHT', function () {
     ])
 
     // connect 0 -> 1 && 1 -> 2
-    const ma1 = `${nodes[1].libp2pNode.multiaddrs[0]}/p2p/${nodes[1].libp2pNode.peerId.toB58String()}`
-    const ma2 = `${nodes[2].libp2pNode.multiaddrs[0]}/p2p/${nodes[2].libp2pNode.peerId.toB58String()}`
+    const ma1 = nodes[1].libp2pNode.getMultiaddrs()[0]
+    const ma2 = nodes[2].libp2pNode.getMultiaddrs()[0]
 
     await Promise.all([
       nodes[0].libp2pNode.dial(ma1),
       nodes[1].libp2pNode.dial(ma2)
     ])
 
-    // await dht routing table are updated
+    // wait until dht routing tables are updated
     await Promise.all([
-      pWaitFor(() => nodes[0].libp2pNode._dht._lan._routingTable.size >= 1),
-      pWaitFor(() => nodes[1].libp2pNode._dht._lan._routingTable.size >= 2),
-      pWaitFor(() => nodes[2].libp2pNode._dht._lan._routingTable.size >= 1)
+      pWaitFor(() => nodes[0].libp2pNode.dht?.lan?.routingTable?.size != null && nodes[0].libp2pNode.dht?.lan?.routingTable?.size >= 1),
+      pWaitFor(() => nodes[1].libp2pNode.dht?.lan?.routingTable?.size != null && nodes[1].libp2pNode.dht?.lan?.routingTable?.size >= 2),
+      pWaitFor(() => nodes[2].libp2pNode.dht?.lan?.routingTable?.size != null && nodes[2].libp2pNode.dht?.lan?.routingTable?.size >= 1)
     ])
   })
 
@@ -202,7 +195,12 @@ describe('bitswap with DHT', function () {
 
   it('put a block in 2, get it in 0', async () => {
     const [block] = await makeBlocks(1)
-    const provideSpy = sinon.spy(nodes[2].libp2pNode._dht, 'provide')
+
+    if (nodes[2].libp2pNode.dht == null) {
+      throw new Error('DHT was not configured')
+    }
+
+    const provideSpy = sinon.spy(nodes[2].libp2pNode.dht, 'provide')
     await nodes[2].bitswap.put(block.cid, block.data)
 
     // wait for the DHT to finish providing

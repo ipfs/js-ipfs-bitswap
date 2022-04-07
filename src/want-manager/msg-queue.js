@@ -6,7 +6,7 @@ import { logger } from '../utils/index.js'
 import { wantlistSendDebounceMs } from '../constants.js'
 
 /**
- * @typedef {import('peer-id')} PeerId
+ * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
  * @typedef {import('multiformats').CID} CID
  * @typedef {import('../network').Network} Network
  */
@@ -78,11 +78,11 @@ export class MsgQueue {
     try {
       await this.network.connectTo(this.peerId)
     } catch (/** @type {any} */ err) {
-      this._log.error('cant connect to peer %s: %s', this.peerId.toB58String(), err.message)
+      this._log.error('cant connect to peer %s: %s', this.peerId.toString(), err.message)
       return
     }
 
-    this._log('sending message to peer %s', this.peerId.toB58String())
+    this._log('sending message to peer %s', this.peerId.toString())
 
     // Note: Don't wait for sendMessage() to complete
     this.network.sendMessage(this.peerId, msg).catch((err) => {

@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 
-import { expect } from 'aegir/utils/chai.js'
-import pEvent from 'p-event'
+import { expect } from 'aegir/chai'
+import { pEvent } from 'p-event'
 import { BitswapMessage as Message } from '../src/message/index.js'
 import { Bitswap } from '../src/bitswap.js'
 
@@ -11,7 +11,7 @@ import { makeBlocks } from './utils/make-blocks.js'
 import { makePeerIds } from './utils/make-peer-id.js'
 
 /**
- * @typedef {import('libp2p')} Libp2p
+ * @typedef {import('libp2p').Libp2p} Libp2p
  * @typedef {import('multiformats/cid').CID} CID
  */
 
@@ -41,7 +41,7 @@ describe('bitswap stats', () => {
   let bs
   /** @type {{ cid: CID, data: Uint8Array}[]} */
   let blocks
-  /** @type {import('peer-id')[]} */
+  /** @type {import('@libp2p/interfaces/peer-id').PeerId[]} */
   let ids
 
   before(async () => {
@@ -51,11 +51,7 @@ describe('bitswap stats', () => {
 
     // create 2 libp2p nodes
     libp2pNodes = await Promise.all(nodes.map((i) => createLibp2pNode({
-      config: {
-        dht: {
-          enabled: true
-        }
-      }
+      DHT: true
     })))
 
     // create bitswaps
@@ -172,7 +168,7 @@ describe('bitswap stats', () => {
       bs2 = bitswaps[1]
       await bs2.start()
 
-      const ma = `${libp2pNodes[1].multiaddrs[0]}/p2p/${libp2pNodes[1].peerId.toB58String()}`
+      const ma = libp2pNodes[1].getMultiaddrs()[0]
       await libp2pNodes[0].dial(ma)
 
       block = (await makeBlocks(1))[0]

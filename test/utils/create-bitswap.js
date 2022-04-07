@@ -5,11 +5,7 @@ import { createLibp2pNode } from './create-libp2p-node.js'
 
 export const createBitswap = async () => {
   const libp2pNode = await createLibp2pNode({
-    config: {
-      dht: {
-        enabled: true
-      }
-    }
+    DHT: true
   })
   const bitswap = new Bitswap(libp2pNode, new MemoryBlockstore())
   await bitswap.start()

@@ -1,7 +1,7 @@
 
 // @ts-ignore
 import range from 'lodash.range'
-import { expect } from 'aegir/utils/chai.js'
+import { expect } from 'aegir/chai'
 
 /**
  * @param {number} n

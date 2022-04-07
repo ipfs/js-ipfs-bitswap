@@ -5,7 +5,7 @@ import { logger } from './utils/index.js'
 
 /**
  * @typedef {import('multiformats').CID} CID
- * @typedef {import('peer-id')} PeerId
+ * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
  */
 
 /**
@@ -53,7 +53,7 @@ export class Notifications extends EventEmitter {
    * or undefined when the block is unwanted.
    *
    * @param {CID} cid
-   * @param {Object} [options]
+   * @param {object} [options]
    * @param {AbortSignal} [options.signal]
    * @returns {Promise<Uint8Array>}
    */

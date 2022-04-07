@@ -5,7 +5,7 @@ import { BitswapMessageEntry } from '../message/entry.js'
 /**
  * Creates a logger for the given subsystem
  *
- * @param {import('peer-id')} [id]
+ * @param {import('@libp2p/interfaces/peer-id').PeerId} [id]
  * @param {string} [subsystem]
  */
 export const logger = (id, subsystem) => {
@@ -14,7 +14,7 @@ export const logger = (id, subsystem) => {
     name.push(subsystem)
   }
   if (id) {
-    name.push(`${id.toB58String().slice(0, 8)}`)
+    name.push(`${id.toString().slice(0, 8)}`)
   }
 
   return Object.assign(debug(name.join(':')), {

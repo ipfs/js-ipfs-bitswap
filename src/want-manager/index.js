@@ -5,10 +5,10 @@ import * as CONSTANTS from '../constants.js'
 import { MsgQueue } from './msg-queue.js'
 import { logger } from '../utils/index.js'
 import { base58btc } from 'multiformats/bases/base58'
-import trackedMap from 'libp2p/src/metrics/tracked-map.js'
+import { trackedMap } from '@libp2p/tracked-map'
 
 /**
- * @typedef {import('peer-id')} PeerId
+ * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
  * @typedef {import('multiformats').CID} CID
  */
 
@@ -17,7 +17,7 @@ export class WantManager {
    * @param {PeerId} peerId
    * @param {import('../network').Network} network
    * @param {import('../stats').Stats} stats
-   * @param {import('libp2p')} libp2p
+   * @param {import('libp2p').Libp2p} libp2p
    */
   constructor (peerId, network, stats, libp2p) {
     /** @type {Map<string, MsgQueue>} */
@@ -74,7 +74,7 @@ export class WantManager {
    * @param {PeerId} peerId
    */
   _startPeerHandler (peerId) {
-    let mq = this.peers.get(peerId.toB58String())
+    let mq = this.peers.get(peerId.toString())
 
     if (mq) {
       mq.refcnt++
@@ -92,7 +92,7 @@ export class WantManager {
 
     mq.addMessage(fullwantlist)
 
-    this.peers.set(peerId.toB58String(), mq)
+    this.peers.set(peerId.toString(), mq)
     return mq
   }
 
@@ -101,7 +101,7 @@ export class WantManager {
    * @param {PeerId} peerId
    */
   _stopPeerHandler (peerId) {
-    const mq = this.peers.get(peerId.toB58String())
+    const mq = this.peers.get(peerId.toString())
 
     if (!mq) {
       return
@@ -112,14 +112,14 @@ export class WantManager {
       return
     }
 
-    this.peers.delete(peerId.toB58String())
+    this.peers.delete(peerId.toString())
   }
 
   /**
    * add all the cids to the wantlist
    *
    * @param {CID[]} cids
-   * @param {Object} [options]
+   * @param {object} [options]
    * @param {AbortSignal} [options.signal]
    */
   wantBlocks (cids, options = {}) {
