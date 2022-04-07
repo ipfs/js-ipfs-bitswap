@@ -1,8 +1,12 @@
 /* eslint-env mocha */
 
-import { expect } from 'aegir/utils/chai.js'
-import PeerId from 'peer-id'
+import { expect } from 'aegir/chai'
+import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import { Ledger } from '../../src/decision-engine/ledger.js'
+
+/**
+ * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ */
 
 describe('Ledger', () => {
   /** @type {PeerId} */
@@ -11,7 +15,7 @@ describe('Ledger', () => {
   let ledger
 
   before(async () => {
-    peerId = await PeerId.create({ bits: 512 })
+    peerId = await createEd25519PeerId()
   })
 
   beforeEach(() => {

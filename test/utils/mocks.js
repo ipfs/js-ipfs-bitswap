@@ -1,29 +1,35 @@
-import PeerId from 'peer-id'
-import PeerStore from 'libp2p/src/peer-store/index.js'
-import { Node } from './create-libp2p-node.js'
+import { PersistentPeerStore } from '@libp2p/peer-store'
 import { MemoryBlockstore } from 'blockstore-core/memory'
 import { EventEmitter } from 'events'
 import { MemoryDatastore } from 'datastore-core/memory'
 import { Bitswap } from '../../src/bitswap.js'
 import { Network } from '../../src/network.js'
 import { Stats } from '../../src/stats/index.js'
+import { peerIdFromBytes } from '@libp2p/peer-id'
+import { Components } from '@libp2p/interfaces/components'
+import { createLibp2pNode } from './create-libp2p-node.js'
+import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 
 /**
  * @typedef {import('interface-blockstore').Blockstore} BlockStore
  * @typedef {import('interface-blockstore').Pair} Pair
  * @typedef {import('../../src/message').BitswapMessage} Message
  * @typedef {import('multiformats/cid').CID} CID
- * @typedef {import('multiaddr').Multiaddr} Multiaddr
- * @typedef {import('libp2p')} Libp2p
+ * @typedef {import('@multiformats/multiaddr').Multiaddr} Multiaddr
+ * @typedef {import('libp2p').Libp2p} Libp2p
+ * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ * @typedef {import('@libp2p/interfaces/peer-store').PeerStore} PeerStore
  */
 
 /**
  * Create a mock libp2p node
  *
- * @returns {import('libp2p')}
+ * @returns {import('libp2p').Libp2p}
  */
 export const mockLibp2pNode = () => {
-  const peerId = PeerId.createFromHexString('122019318b6e5e0cf93a2314bf01269a2cc23cd3dcd452d742cdb9379d8646f6e4a9')
+  const buf = uint8ArrayFromString('122019318b6e5e0cf93a2314bf01269a2cc23cd3dcd452d742cdb9379d8646f6e4a9', 'base16')
+  const peerId = peerIdFromBytes(buf)
 
   // @ts-ignore - not all libp2p fields are implemented
   return Object.assign(new EventEmitter(), {
@@ -51,7 +57,9 @@ export const mockLibp2pNode = () => {
     swarm: {
       setMaxListeners () {}
     },
-    peerStore: new PeerStore({ peerId, datastore: new MemoryDatastore() })
+    peerStore: new PersistentPeerStore(new Components({ peerId, datastore: new MemoryDatastore() }), {
+      addressFilter: async () => true
+    })
   })
 }
 
@@ -93,7 +101,7 @@ export const mockNetwork = (calls = Infinity, done = () => {}, onMsg = () => {})
 
     /**
      * @param {PeerId|Multiaddr} p
-     * @returns {Promise<import('libp2p').Connection>}
+     * @returns {Promise<import('@libp2p/interfaces/connection').Connection>}
      */
     connectTo (p) {
       setTimeout(() => {
@@ -155,54 +163,42 @@ export const applyNetwork = (bs, n) => {
  * @param {boolean} enableDHT - Whether or not to run the dht
  */
 export const genBitswapNetwork = async (n, enableDHT = false) => {
-  /** @type {{ peerId: PeerId, libp2p: Libp2p, peerStore: PeerStore, bitswap: Bitswap }[]} */
-  const netArray = []
-
   // create PeerId and libp2p.Node for each
   const peers = await Promise.all(
-    new Array(n).fill(0).map(() => PeerId.create())
+    new Array(n).fill(0).map(() => createEd25519PeerId())
   )
 
-  peers.forEach((p, i) => {
-    const l = new Node({
-      peerId: p,
-      addresses: {
-        listen: ['/ip4/127.0.0.1/tcp/0']
-      },
-      config: {
-        dht: {
-          enabled: enableDHT
-        }
+  /** @type {{ libp2p: Libp2p, bitswap: Bitswap }[]} */
+  const netArray = await Promise.all(
+    peers.map(async (peerId, i) => {
+      const libp2p = await createLibp2pNode({
+        peerId,
+        DHT: enableDHT
+      })
+
+      await libp2p.start()
+
+      return {
+        libp2p,
+        bitswap: new Bitswap(libp2p, new MemoryBlockstore())
       }
     })
-    // @ts-ignore object is incomplete
-    netArray.push({ peerId: p, libp2p: l })
-  })
-
-  // start every libp2pNode
-  await Promise.all(
-    netArray.map((net) => net.libp2p.start())
   )
 
-  // create PeerStore and populate peerStore
+  // populate peerStores
   for (let i = 0; i < netArray.length; i++) {
-    const pb = netArray[i].libp2p.peerStore
+    const netA = netArray[i]
 
     for (let j = 0; j < netArray.length; j++) {
       if (i === j) {
         continue
       }
 
-      const net = netArray[j]
+      const netB = netArray[j]
 
-      await pb.addressBook.set(net.peerId, net.libp2p.multiaddrs)
+      await netA.libp2p.peerStore.addressBook.set(netB.libp2p.peerId, netB.libp2p.getMultiaddrs())
     }
   }
-
-  // create every Bitswap
-  netArray.forEach((net) => {
-    net.bitswap = new Bitswap(net.libp2p, new MemoryBlockstore())
-  })
 
   return netArray
 }

@@ -2,7 +2,7 @@
 /** @type {(n:number) => any[]} */
 // @ts-ignore
 import range from 'lodash.range'
-import { expect } from 'aegir/utils/chai.js'
+import { expect } from 'aegir/chai'
 
 import { createBitswap } from './create-bitswap.js'
 import { makeBlocks } from './make-blocks.js'
@@ -10,7 +10,11 @@ import { connectAll } from './connect-all.js'
 import all from 'it-all'
 
 /**
- *
+ * @typedef {import('libp2p').Libp2p} Libp2p
+ * @typedef {import('../../src/types').IPFSBitswap} Bitswap
+ */
+
+/**
  * @param {number} instanceCount
  * @param {number} blockCount
  * @param {number} repeats
@@ -19,6 +23,7 @@ import all from 'it-all'
 export const distributionTest = async (instanceCount, blockCount, repeats, events) => {
   let pendingRepeats = repeats
 
+  /** @type {{ libp2pNode: Libp2p, bitswap: Bitswap }[]} */
   const nodes = await Promise.all(range(instanceCount).map(() => createBitswap()))
   events.emit('start')
 

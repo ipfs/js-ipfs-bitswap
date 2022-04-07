@@ -10,7 +10,7 @@ export class Stat extends EventEmitter {
   /**
    *
    * @param {string[]} initialCounters
-   * @param {Object} options
+   * @param {object} options
    * @param {boolean} options.enabled
    * @param {number} options.computeThrottleTimeout
    * @param {number} options.computeThrottleMaxQueueSize

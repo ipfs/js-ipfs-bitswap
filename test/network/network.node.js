@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 
-import { expect, assert } from 'aegir/utils/chai.js'
-import lp from 'it-length-prefixed'
+import { expect, assert } from 'aegir/chai'
+import * as lp from 'it-length-prefixed'
 import { pipe } from 'it-pipe'
 import pDefer from 'p-defer'
 import { createLibp2pNode } from '../utils/create-libp2p-node.js'
@@ -11,10 +11,9 @@ import { BitswapMessage as Message } from '../../src/message/index.js'
 import { Stats } from '../../src/stats/index.js'
 import sinon from 'sinon'
 import { CID } from 'multiformats/cid'
-import { Multiaddr } from 'multiaddr'
 
 /**
- * @typedef {import('libp2p')} Libp2p
+ * @typedef {import('libp2p').Libp2p} Libp2p
  * @typedef {import('../../src/bitswap').Bitswap} Bitswap
  */
 
@@ -101,16 +100,16 @@ describe('network', () => {
     const p2pBConnected = pDefer()
 
     bitswapMockA._onPeerConnected = (peerId) => {
-      expect(peerId.toB58String()).to.equal(p2pB.peerId.toB58String())
+      expect(peerId.toString()).to.equal(p2pB.peerId.toString())
       p2pBConnected.resolve()
     }
 
     bitswapMockB._onPeerConnected = (peerId) => {
-      expect(peerId.toB58String()).to.equal(p2pA.peerId.toB58String())
+      expect(peerId.toString()).to.equal(p2pA.peerId.toString())
       p2pAConnected.resolve()
     }
 
-    const ma = `${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`
+    const ma = p2pB.getMultiaddrs()[0]
     await p2pA.dial(ma)
 
     await Promise.all([
@@ -120,7 +119,7 @@ describe('network', () => {
   })
 
   it('connectTo success', async () => {
-    const ma = new Multiaddr(`${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`)
+    const ma = p2pB.getMultiaddrs()[0]
     await networkA.connectTo(ma)
   })
 
@@ -129,16 +128,16 @@ describe('network', () => {
     let p2pBConnected = pDefer()
 
     bitswapMockA._onPeerConnected = (peerId) => {
-      expect(peerId.toB58String()).to.equal(p2pB.peerId.toB58String())
+      expect(peerId.toString()).to.equal(p2pB.peerId.toString())
       p2pBConnected.resolve()
     }
 
     bitswapMockB._onPeerConnected = (peerId) => {
-      expect(peerId.toB58String()).to.equal(p2pA.peerId.toB58String())
+      expect(peerId.toString()).to.equal(p2pA.peerId.toString())
       p2pAConnected.resolve()
     }
 
-    const ma = `${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`
+    const ma = p2pB.getMultiaddrs()[0]
     await p2pA.dial(ma)
 
     await Promise.all([
@@ -190,7 +189,7 @@ describe('network', () => {
 
       bitswapMockB._receiveError = (err) => deferred.reject(err)
 
-      const ma = `${p2pB.multiaddrs[0]}/p2p/${p2pB.peerId.toB58String()}`
+      const ma = p2pB.getMultiaddrs()[0]
       const { stream } = await p2pA.dialProtocol(ma, '/ipfs/bitswap/' + version.num)
 
       await pipe(
@@ -216,7 +215,7 @@ describe('network', () => {
 
     // In a real network scenario, peers will be discovered and their addresses
     // will be added to the addressBook before bitswap kicks in
-    await p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
+    await p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.getMultiaddrs())
 
     bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       // cannot do deep comparison on objects as one has Buffers and one has Uint8Arrays
@@ -233,7 +232,7 @@ describe('network', () => {
   })
 
   it('dial to peer on Bitswap 1.0.0', async () => {
-    const ma = `${p2pC.multiaddrs[0]}/p2p/${p2pC.peerId.toB58String()}`
+    const ma = p2pC.getMultiaddrs()[0]
     const { protocol } = await p2pA.dialProtocol(ma, ['/ipfs/bitswap/1.1.0', '/ipfs/bitswap/1.0.0'])
 
     expect(protocol).to.equal('/ipfs/bitswap/1.0.0')
@@ -252,7 +251,7 @@ describe('network', () => {
 
     // In a real network scenario, peers will be discovered and their addresses
     // will be added to the addressBook before bitswap kicks in
-    await p2pA.peerStore.addressBook.set(p2pC.peerId, p2pC.multiaddrs)
+    await p2pA.peerStore.addressBook.set(p2pC.peerId, p2pC.getMultiaddrs())
 
     bitswapMockC._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       // cannot do deep comparison on objects as one has Buffers and one has Uint8Arrays
@@ -270,12 +269,10 @@ describe('network', () => {
   })
 
   it('dials to peer using Bitswap 1.2.0', async () => {
-    // @ts-expect-error {} is not a real libp2p
-    networkA = new Network(p2pA, bitswapMockA, new Stats({}))
+    await networkA.stop()
+    await networkB.stop()
 
     // only supports 1.2.0
-    // @ts-expect-error {} is not a real libp2p
-    networkB = new Network(p2pB, bitswapMockB, new Stats({}))
     networkB._protocols = ['/ipfs/bitswap/1.2.0']
 
     await networkA.start()
@@ -283,7 +280,7 @@ describe('network', () => {
 
     // In a real network scenario, peers will be discovered and their addresses
     // will be added to the addressBook before bitswap kicks in
-    await p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.multiaddrs)
+    await p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.getMultiaddrs())
 
     const deferred = pDefer()
 
@@ -312,9 +309,7 @@ describe('network', () => {
       },
       // @ts-expect-error incomplete implementation
       peerStore: {
-        getPeers: async function * () {
-          yield * []
-        }
+        forEach: async () => {}
       },
       dial: mockDial,
       handle: sinon.stub()

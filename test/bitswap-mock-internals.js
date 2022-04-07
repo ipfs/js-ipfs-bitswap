@@ -1,8 +1,7 @@
 /* eslint-env mocha */
 /* eslint max-nested-callbacks: ["error", 5] */
 
-import { expect } from 'aegir/utils/chai.js'
-import PeerId from 'peer-id'
+import { expect } from 'aegir/chai'
 import all from 'it-all'
 import drain from 'it-drain'
 import { BitswapMessage as Message } from '../src/message/index.js'
@@ -10,7 +9,8 @@ import { Bitswap } from '../src/bitswap.js'
 import { CID } from 'multiformats/cid'
 import delay from 'delay'
 import { base58btc } from 'multiformats/bases/base58'
-
+import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+import { isPeerId } from '@libp2p/interfaces/peer-id'
 import { MemoryBlockstore } from 'blockstore-core/memory'
 import {
   mockNetwork,
@@ -21,6 +21,10 @@ import { storeHasBlocks } from './utils/store-has-blocks.js'
 import { makeBlocks } from './utils/make-blocks.js'
 import { makePeerIds } from './utils/make-peer-id.js'
 import { orderedFinish } from './utils/helpers.js'
+
+/**
+ * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ */
 
 const DAG_PB_CODEC = 0x70
 const RAW_CODEC = 0x50
@@ -280,18 +284,18 @@ describe('bitswap with mocks', function () {
       const n1 = {
         // @ts-ignore incorrect return type
         connectTo (id) {
-          if (!(id instanceof PeerId)) {
+          if (!(isPeerId(id))) {
             throw new Error('Not a peer id')
           }
 
-          if (id.toHexString() !== other.toHexString()) {
+          if (id.toString() !== other.toString()) {
             throw new Error('unknown peer')
           }
 
           return Promise.resolve()
         },
         sendMessage (id, msg) {
-          if (id.toHexString() === other.toHexString()) {
+          if (id.toString() === other.toString()) {
             return bs2._receiveMessage(me, msg)
           }
           throw new Error('unknown peer')
@@ -313,18 +317,18 @@ describe('bitswap with mocks', function () {
       const n2 = {
         // @ts-ignore incorrect return type
         connectTo (id) {
-          if (!(id instanceof PeerId)) {
+          if (!(isPeerId(id))) {
             throw new Error('Not a peer id')
           }
 
-          if (id.toHexString() !== me.toHexString()) {
+          if (id.toString() !== me.toString()) {
             throw new Error('unknown peer')
           }
 
           return Promise.resolve()
         },
         sendMessage (id, msg) {
-          if (id.toHexString() === me.toHexString()) {
+          if (id.toString() === me.toString()) {
             return bs1._receiveMessage(other, msg)
           }
 
@@ -490,7 +494,7 @@ describe('bitswap with mocks', function () {
   describe('ledgerForPeer', () => {
     it('returns null for unknown peer', async () => {
       const bs = new Bitswap(mockLibp2pNode(), blockstore)
-      const id = await PeerId.create({ bits: 512 })
+      const id = await createEd25519PeerId()
       const ledger = bs.ledgerForPeer(id)
       expect(ledger).to.equal(null)
     })

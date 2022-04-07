@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 
-import { expect } from 'aegir/utils/chai.js'
+import { expect } from 'aegir/chai'
 import { CID } from 'multiformats/cid'
 import { base32 } from 'multiformats/bases/base32'
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
@@ -11,7 +11,7 @@ import { makePeerId } from './utils/make-peer-id.js'
 describe('Notifications', () => {
   /** @type {{ cid: CID, data: Uint8Array }[]} */
   let blocks
-  /** @type {import('peer-id')} */
+  /** @type {import('@libp2p/interfaces/peer-id').PeerId} */
   let peerId
 
   before(async () => {

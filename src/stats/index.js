@@ -1,10 +1,10 @@
 import { EventEmitter } from 'events'
 import { Stat } from './stat.js'
-import trackedMap from 'libp2p/src/metrics/tracked-map.js'
+import { trackedMap } from '@libp2p/tracked-map'
 
 /**
  * @typedef {import('multiformats').CID} CID
- * @typedef {import('peer-id')} PeerId
+ * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
  */
 
 /**
@@ -23,9 +23,9 @@ const defaultOptions = {
 
 export class Stats extends EventEmitter {
   /**
-   * @param {import('libp2p')} libp2p
+   * @param {import('libp2p').Libp2p} libp2p
    * @param {string[]} [initialCounters]
-   * @param {Object} _options
+   * @param {object} _options
    * @param {boolean} _options.enabled
    * @param {number} _options.computeThrottleTimeout
    * @param {number} _options.computeThrottleMaxQueueSize
@@ -92,8 +92,8 @@ export class Stats extends EventEmitter {
    * @returns {Stat|undefined}
    */
   forPeer (peerId) {
-    const peerIdStr = (typeof peerId !== 'string' && peerId.toB58String)
-      ? peerId.toB58String()
+    const peerIdStr = (typeof peerId !== 'string' && peerId.toString)
+      ? peerId.toString()
       : `${peerId}`
 
     return this._peers.get(peerIdStr)
@@ -125,7 +125,7 @@ export class Stats extends EventEmitter {
    * @param {PeerId} peer
    */
   disconnected (peer) {
-    const peerId = peer.toB58String()
+    const peerId = peer.toString()
     const peerStats = this._peers.get(peerId)
     if (peerStats) {
       peerStats.stop()

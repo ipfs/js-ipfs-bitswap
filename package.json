@@ -23,16 +23,20 @@
   },
   "main": "src/index.js",
   "type": "module",
-  "types": "types/src/index.d.ts",
+  "types": "./dist/src/index.d.ts",
   "typesVersions": {
     "*": {
       "*": [
-        "types/*",
-        "types/src/*"
+        "*",
+        "dist/*",
+        "dist/src/*",
+        "dist/src/*/index"
       ],
-      "types/*": [
-        "types/*",
-        "types/src/*"
+      "src/*": [
+        "*",
+        "dist/*",
+        "dist/src/*",
+        "dist/src/*/index"
       ]
     }
   },
@@ -134,47 +138,42 @@
         }
       ],
       "@semantic-release/changelog",
-      [
-        "@semantic-release/npm",
-        {
-          "pkgRoot": "dist"
-        }
-      ],
+      "@semantic-release/npm",
       "@semantic-release/github",
       "@semantic-release/git"
     ]
   },
   "scripts": {
-    "clean": "rimraf dist types",
-    "prepare": "aegir build --no-bundle && cp -R types dist",
-    "lint": "aegir ts -p check && aegir lint",
-    "build": "aegir build --esm-tests",
-    "release": "semantic-release",
+    "clean": "aegir clean",
+    "lint": "aegir lint",
+    "build": "aegir build",
+    "release": "aegir release",
     "test": "aegir test",
     "test:node": "aegir test -t node",
     "test:chrome": "aegir test -t browser",
     "test:chrome-webworker": "aegir test -t webworker",
     "test:firefox": "aegir test -t browser -- --browser firefox",
     "test:firefox-webworker": "aegir test -t webworker -- --browser firefox",
-    "test:electron-main": "aegir test -t electron-main -f dist/cjs/node-test/*js",
-    "test:electron-renderer": "aegir test -t electron-renderer -f dist/cjs/node-test/*js",
+    "test:electron-main": "aegir test -t electron-main",
     "dep-check": "aegir dep-check -i rimraf",
     "generate": "run-s generate:*",
     "generate:proto": "pbjs -t static-module -w es6 -r ipfs-bitswap --force-number --no-verify --no-delimited --no-create --no-beautify --no-defaults --lint eslint-disable -o src/message/message.js src/message/message.proto",
     "generate:proto-types": "pbts -o src/message/message.d.ts src/message/message.js"
   },
   "dependencies": {
+    "@libp2p/interfaces": "^1.3.18",
+    "@libp2p/topology": "^1.1.6",
+    "@libp2p/tracked-map": "^1.0.4",
+    "@multiformats/multiaddr": "^10.1.8",
     "@vascosantos/moving-average": "^1.1.0",
     "any-signal": "^3.0.0",
     "blockstore-core": "^1.0.2",
     "debug": "^4.2.0",
     "err-code": "^3.0.1",
     "interface-blockstore": "^2.0.2",
-    "it-length-prefixed": "^5.0.2",
-    "it-pipe": "^1.1.0",
-    "just-debounce-it": "^1.1.0",
-    "libp2p-interfaces": "^4.0.0",
-    "multiaddr": "^10.0.0",
+    "it-length-prefixed": "^7.0.1",
+    "it-pipe": "^2.0.3",
+    "just-debounce-it": "^3.0.1",
     "multiformats": "^9.0.4",
     "protobufjs": "^6.10.2",
     "readable-stream": "^3.6.0",
@@ -183,40 +182,45 @@
     "varint-decoder": "^1.0.0"
   },
   "devDependencies": {
-    "@chainsafe/libp2p-noise": "^4.1.0",
+    "@chainsafe/libp2p-noise": "^6.0.1",
+    "@libp2p/kad-dht": "^1.0.3",
+    "@libp2p/mplex": "^1.0.2",
+    "@libp2p/peer-id": "^1.1.8",
+    "@libp2p/peer-id-factory": "^1.0.8",
+    "@libp2p/peer-store": "^1.0.7",
+    "@libp2p/tcp": "^1.0.6",
     "@nodeutils/defaults-deep": "^1.1.0",
     "@types/debug": "^4.1.5",
     "@types/stats-lite": "^2.2.0",
     "@types/varint": "^6.0.0",
-    "aegir": "^36.0.2",
+    "aegir": "^37.0.4",
     "assert": "^2.0.0",
     "benchmark": "^2.1.4",
-    "datastore-core": "^6.0.7",
+    "datastore-core": "^7.0.1",
     "delay": "^5.0.0",
     "interface-datastore": "^6.0.2",
     "iso-random-stream": "^2.0.0",
     "it-all": "^1.0.5",
     "it-drain": "^1.0.4",
     "libp2p": "next",
-    "libp2p-kad-dht": "^0.28.4",
-    "libp2p-mplex": "^0.10.2",
-    "libp2p-tcp": "^0.17.1",
     "lodash.difference": "^4.5.0",
     "lodash.flatten": "^4.4.0",
     "lodash.range": "^3.2.0",
     "lodash.without": "^4.4.0",
     "npm-run-all": "^4.1.5",
-    "p-defer": "^3.0.0",
-    "p-event": "^4.2.0",
-    "p-wait-for": "^3.2.0",
-    "peer-id": "^0.16.0",
+    "p-defer": "^4.0.0",
+    "p-event": "^5.0.1",
+    "p-wait-for": "^4.1.0",
     "process": "^0.11.10",
     "promisify-es6": "^1.0.3",
     "rimraf": "^3.0.2",
-    "sinon": "^12.0.1",
+    "sinon": "^13.0.1",
     "stats-lite": "^2.2.0",
     "url": "^0.11.0",
     "util": "^0.12.3",
     "uuid": "^8.3.2"
+  },
+  "browser": {
+    "test/utils/create-libp2p-node.js": false
   }
 }

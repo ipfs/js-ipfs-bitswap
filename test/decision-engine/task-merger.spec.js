@@ -1,10 +1,13 @@
 /* eslint-env mocha */
 
-import { expect } from 'aegir/utils/chai.js'
-import PeerId from 'peer-id'
-
+import { expect } from 'aegir/chai'
+import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import { RequestQueue } from '../../src/decision-engine/req-queue.js'
 import { TaskMerger } from '../../src/decision-engine/task-merger.js'
+
+/**
+ * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ */
 
 /**
  * @typedef {object} Task
@@ -23,7 +26,7 @@ describe('Task Merger', () => {
   let peerId
 
   before(async () => {
-    peerId = await PeerId.create({ bits: 512 })
+    peerId = await createEd25519PeerId()
   })
 
   it('push have vs block', () => {

@@ -1,7 +1,6 @@
 /* eslint-env mocha */
 
-import { expect } from 'aegir/utils/chai.js'
-import PeerId from 'peer-id'
+import { expect } from 'aegir/chai'
 // @ts-ignore no types
 import range from 'lodash.range'
 // @ts-ignore no types
@@ -15,7 +14,6 @@ import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
 import drain from 'it-drain'
 import defer from 'p-defer'
-
 import { BitswapMessage as Message } from '../../src/message/index.js'
 import { DecisionEngine } from '../../src/decision-engine/index.js'
 import { Stats } from '../../src/stats/index.js'
@@ -23,9 +21,11 @@ import { MemoryBlockstore } from 'blockstore-core/memory'
 import { makeBlocks } from '../utils/make-blocks.js'
 import { makePeerId, makePeerIds } from '../utils/make-peer-id.js'
 import { mockNetwork } from '../utils/mocks.js'
+import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 
 /**
  * @typedef {import('interface-blockstore').Blockstore} Blockstore
+ * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
  */
 
 /**
@@ -54,7 +54,7 @@ function stringifyMessages (messages) {
  * @param {import('../../src/network').Network} network
  */
 async function newEngine (network) {
-  const peerId = await PeerId.create({ bits: 512 })
+  const peerId = await createEd25519PeerId()
   // @ts-expect-error {} is not a real libp2p
   const engine = new DecisionEngine(peerId, new MemoryBlockstore(), network, new Stats({}), {})
   engine.start()
@@ -109,8 +109,8 @@ describe('Engine', () => {
 
     await seattle.engine.messageReceived(sanfrancisco.peer, m)
 
-    expect(seattle.peer.toHexString())
-      .to.not.eql(sanfrancisco.peer.toHexString())
+    expect(seattle.peer.toString())
+      .to.not.eql(sanfrancisco.peer.toString())
     expect(sanfrancisco.engine.peers()).to.include(seattle.peer)
     expect(seattle.engine.peers()).to.include(sanfrancisco.peer)
   })
@@ -178,7 +178,7 @@ describe('Engine', () => {
         data: uint8ArrayFromString(alphabet[i])
       }
     })
-    const partner = await PeerId.create({ bits: 512 })
+    const partner = await createEd25519PeerId()
 
     for (let i = 0; i < numRounds; i++) {
       // 2 test cases
@@ -193,7 +193,7 @@ describe('Engine', () => {
           expect(msgs.sort()).to.eql(keeps.sort())
           deferred.resolve()
         })
-        const id = await PeerId.create({ bits: 512 })
+        const id = await createEd25519PeerId()
         const blockstore = new MemoryBlockstore()
         // @ts-expect-error {} is not a real libp2p
         const dEngine = new DecisionEngine(id, blockstore, network, new Stats({}), {})
@@ -233,10 +233,10 @@ describe('Engine', () => {
     await drain(blockstore.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
 
     let rcvdBlockCount = 0
-    const received = new Map(peers.map(p => [p.toB58String(), { count: 0, bytes: 0 }]))
+    const received = new Map(peers.map(p => [p.toString(), { count: 0, bytes: 0 }]))
     const deferred = defer()
     const network = mockNetwork(blocks.length, undefined, (peer, msg) => {
-      const pid = peer.toB58String()
+      const pid = peer.toString()
       const rcvd = received.get(pid)
 
       if (!rcvd) {
@@ -261,10 +261,10 @@ describe('Engine', () => {
       // the others at any given time.
       for (const p of peers) {
         if (p !== peer) {
-          const peerCount = received.get(p.toB58String())
+          const peerCount = received.get(p.toString())
 
           if (!peerCount) {
-            return deferred.reject(new Error(`Could not get peer count for ${p.toB58String()}`))
+            return deferred.reject(new Error(`Could not get peer count for ${p.toString()}`))
           }
 
           const pCount = peerCount.count
@@ -277,7 +277,7 @@ describe('Engine', () => {
       if (rcvdBlockCount === blocks.length * peers.length) {
         // Make sure each peer received all blocks it was expecting
         for (const peer of peers) {
-          const pid = peer.toB58String()
+          const pid = peer.toString()
           const rcvd = received.get(pid)
 
           if (!rcvd) {
@@ -337,7 +337,7 @@ describe('Engine', () => {
     const [toPeer, msg] = await deferred.promise
 
     // Expect the message to be sent to the peer that wanted the blocks
-    expect(toPeer.toB58String()).to.eql(peer.toB58String())
+    expect(toPeer.toString()).to.eql(peer.toString())
     // Expect the correct wanted block
     expect(msg.blocks.size).to.eql(1)
     expect(msg.blocks.has(blocks[2].cid.toString(base58btc))).to.eql(true)
@@ -375,7 +375,7 @@ describe('Engine', () => {
     const [toPeer, msg] = await receiveMessage()
 
     // Expect DONT_HAVEs for blocks 1 and 3
-    expect(toPeer.toB58String()).to.eql(peer.toB58String())
+    expect(toPeer.toString()).to.eql(peer.toString())
     expect(msg.blockPresences.size).to.eql(2)
     for (const block of [blocks[1], blocks[3]]) {
       const cid = block.cid.toString(base58btc)
@@ -389,7 +389,7 @@ describe('Engine', () => {
     await dEngine.receivedBlocks(blocks)
 
     const [toPeer2, msg2] = await receiveMessage()
-    expect(toPeer2.toB58String()).to.eql(peer.toB58String())
+    expect(toPeer2.toString()).to.eql(peer.toString())
     expect(msg2.blocks.size).to.eql(2)
     expect(msg2.blockPresences.size).to.eql(2)
     for (const block of [blocks[0], blocks[1]]) {
@@ -797,7 +797,7 @@ describe('Engine', () => {
     await us.engine.messageReceived(them.peer, message)
 
     // should have added a task for the remote peer
-    const tasks = us.engine._requestQueue._byPeer.get(them.peer.toB58String())
+    const tasks = us.engine._requestQueue._byPeer.get(them.peer.toString())
 
     expect(tasks).to.have.property('_pending').that.has.property('length', 1)
 

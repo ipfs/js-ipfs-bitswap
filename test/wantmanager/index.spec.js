@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 
-import { expect } from 'aegir/utils/chai.js'
+import { expect } from 'aegir/chai'
 import * as CONSTANTS from '../../src/constants.js'
 import { BitswapMessage as Message } from '../../src/message/index.js'
 import { WantManager } from '../../src/want-manager/index.js'
