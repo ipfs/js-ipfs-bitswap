@@ -162,6 +162,7 @@
   },
   "dependencies": {
     "@libp2p/interfaces": "^1.3.18",
+    "@libp2p/topology": "^1.1.6",
     "@libp2p/tracked-map": "^1.0.4",
     "@multiformats/multiaddr": "^10.1.8",
     "@vascosantos/moving-average": "^1.1.0",
@@ -186,6 +187,7 @@
     "@libp2p/mplex": "^1.0.2",
     "@libp2p/peer-id": "^1.1.8",
     "@libp2p/peer-id-factory": "^1.0.8",
+    "@libp2p/peer-store": "^1.0.7",
     "@libp2p/tcp": "^1.0.6",
     "@nodeutils/defaults-deep": "^1.1.0",
     "@types/debug": "^4.1.5",
