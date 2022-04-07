@@ -1,3 +1,14 @@
+## [11.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v10.0.2...v11.0.0) (2022-04-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* this module is now ESM only
+
+### Features
+
+* update to typescript version of libp2p ([#428](https://github.com/ipfs/js-ipfs-bitswap/issues/428)) ([23d24ce](https://github.com/ipfs/js-ipfs-bitswap/commit/23d24ce295b90cd3fcb5b229b23258e6ff45d5c9))
+
 ### [10.0.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v10.0.1...v10.0.2) (2022-01-20)
 
 
