@@ -1,3 +1,10 @@
+### [11.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v11.0.0...v11.0.1) (2022-04-11)
+
+
+### Bug Fixes
+
+* include dist folder in published package ([#430](https://github.com/ipfs/js-ipfs-bitswap/issues/430)) ([52d5fcc](https://github.com/ipfs/js-ipfs-bitswap/commit/52d5fcc3caeec6a1592e1bb422ae5afcbcab673d))
+
 ## [11.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v10.0.2...v11.0.0) (2022-04-07)
 
 
