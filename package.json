@@ -41,10 +41,10 @@
     }
   },
   "files": [
-    "*",
+    "dist",
+    "src",
     "!**/*.tsbuildinfo",
-    "!**/browser-test",
-    "!**/node-test"
+    "!dist/test"
   ],
   "exports": {
     ".": {
