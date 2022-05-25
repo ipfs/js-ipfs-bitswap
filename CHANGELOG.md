@@ -1,3 +1,10 @@
+### [11.0.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v11.0.1...v11.0.2) (2022-05-25)
+
+
+### Trivial Changes
+
+* update libp2p interfaces ([#435](https://github.com/ipfs/js-ipfs-bitswap/issues/435)) ([c37ba88](https://github.com/ipfs/js-ipfs-bitswap/commit/c37ba88626bfb540844029f526c6f001f6667526))
+
 ### [11.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v11.0.0...v11.0.1) (2022-04-11)
 
 
