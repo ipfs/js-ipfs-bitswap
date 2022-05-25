@@ -31,8 +31,7 @@ export const mockLibp2pNode = () => {
   const buf = uint8ArrayFromString('122019318b6e5e0cf93a2314bf01269a2cc23cd3dcd452d742cdb9379d8646f6e4a9', 'base16')
   const peerId = peerIdFromBytes(buf)
 
-  // @ts-ignore - not all libp2p fields are implemented
-  return Object.assign(new EventEmitter(), {
+  const libp2p = Object.assign(new EventEmitter(), {
     peerId,
     multiaddrs: [],
     handle () {},
@@ -57,10 +56,15 @@ export const mockLibp2pNode = () => {
     swarm: {
       setMaxListeners () {}
     },
-    peerStore: new PersistentPeerStore(new Components({ peerId, datastore: new MemoryDatastore() }), {
+    peerStore: new PersistentPeerStore({
       addressFilter: async () => true
     })
   })
+
+  libp2p.peerStore.init(new Components({ peerId, datastore: new MemoryDatastore() }))
+
+  // @ts-expect-error not all libp2p fields are implemented
+  return libp2p
 }
 
 /**
@@ -173,7 +177,10 @@ export const genBitswapNetwork = async (n, enableDHT = false) => {
     peers.map(async (peerId, i) => {
       const libp2p = await createLibp2pNode({
         peerId,
-        DHT: enableDHT
+        DHT: enableDHT,
+        nat: {
+          enabled: false
+        }
       })
 
       await libp2p.start()
