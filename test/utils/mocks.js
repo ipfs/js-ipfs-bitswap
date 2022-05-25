@@ -177,7 +177,10 @@ export const genBitswapNetwork = async (n, enableDHT = false) => {
     peers.map(async (peerId, i) => {
       const libp2p = await createLibp2pNode({
         peerId,
-        DHT: enableDHT
+        DHT: enableDHT,
+        nat: {
+          enabled: false
+        }
       })
 
       await libp2p.start()
