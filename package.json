@@ -176,7 +176,7 @@
     "just-debounce-it": "^3.0.1",
     "multiformats": "^9.0.4",
     "protobufjs": "^6.10.2",
-    "readable-stream": "^3.6.0",
+    "readable-stream": "^4.0.0",
     "uint8arrays": "^3.0.0",
     "varint": "^6.0.0",
     "varint-decoder": "^1.0.0"
