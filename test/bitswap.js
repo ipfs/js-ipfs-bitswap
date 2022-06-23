@@ -37,9 +37,7 @@ describe('start/stop', () => {
       registrar: {
         register: () => {}
       },
-      peerStore: {
-        forEach: async () => {}
-      }
+      getConnections: () => []
     }
     // @ts-ignore not a full libp2p
     const bitswap = new Bitswap(libp2p, new MemoryBlockstore())
