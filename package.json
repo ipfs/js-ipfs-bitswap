@@ -195,7 +195,6 @@
     "aegir": "^37.0.4",
     "assert": "^2.0.0",
     "benchmark": "^2.1.4",
-    "datastore-core": "^7.0.1",
     "delay": "^5.0.0",
     "interface-datastore": "^6.0.2",
     "iso-random-stream": "^2.0.0",
