@@ -93,11 +93,14 @@ export class Network {
    * @param {Stream} connection.stream - A duplex iterable stream
    * @param {Connection} connection.connection - A libp2p Connection
    */
-  async _onConnection ({ protocol, stream, connection }) {
-    if (!this._running) { return }
-    this._log('incoming new bitswap %s connection from %p', protocol, connection.remotePeer)
+  _onConnection ({ protocol, stream, connection }) {
+    if (!this._running) {
+      return
+    }
 
-    try {
+    void Promise.resolve().then(async () => {
+      this._log('incoming new bitswap %s connection from %p', protocol, connection.remotePeer)
+
       await pipe(
         stream,
         lp.decode(),
@@ -113,9 +116,10 @@ export class Network {
           }
         }
       )
-    } catch (err) {
+    })
+    .catch(err => {
       this._log(err)
-    }
+    })
   }
 
   /**
