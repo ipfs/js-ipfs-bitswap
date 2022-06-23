@@ -67,8 +67,8 @@ export class Network {
     this._registrarId = await this._libp2p.registrar.register(this._protocols, topology)
 
     // All existing connections are like new ones for us
-    await this._libp2p.peerStore.forEach(peer => {
-      this._libp2p.getConnections(peer.id).forEach(conn => this._onPeerConnect(conn.remotePeer))
+    this._libp2p.getConnections().forEach(conn => {
+      this._onPeerConnect(conn.remotePeer)
     })
   }
 
@@ -93,11 +93,14 @@ export class Network {
    * @param {Stream} connection.stream - A duplex iterable stream
    * @param {Connection} connection.connection - A libp2p Connection
    */
-  async _onConnection ({ protocol, stream, connection }) {
-    if (!this._running) { return }
-    this._log('incoming new bitswap %s connection from %p', protocol, connection.remotePeer)
+  _onConnection ({ protocol, stream, connection }) {
+    if (!this._running) {
+      return
+    }
 
-    try {
+    Promise.resolve().then(async () => {
+      this._log('incoming new bitswap %s connection from %p', protocol, connection.remotePeer)
+
       await pipe(
         stream,
         lp.decode(),
@@ -113,9 +116,10 @@ export class Network {
           }
         }
       )
-    } catch (err) {
-      this._log(err)
-    }
+    })
+      .catch(err => {
+        this._log(err)
+      })
   }
 
   /**

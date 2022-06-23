@@ -307,10 +307,7 @@ describe('network', () => {
       registrar: {
         register: sinon.stub()
       },
-      // @ts-expect-error incomplete implementation
-      peerStore: {
-        forEach: async () => {}
-      },
+      getConnections: () => [],
       dial: mockDial,
       handle: sinon.stub()
     }

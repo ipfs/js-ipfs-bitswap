@@ -1,12 +1,9 @@
-import { PersistentPeerStore } from '@libp2p/peer-store'
 import { MemoryBlockstore } from 'blockstore-core/memory'
 import { EventEmitter } from 'events'
-import { MemoryDatastore } from 'datastore-core/memory'
 import { Bitswap } from '../../src/bitswap.js'
 import { Network } from '../../src/network.js'
 import { Stats } from '../../src/stats/index.js'
 import { peerIdFromBytes } from '@libp2p/peer-id'
-import { Components } from '@libp2p/interfaces/components'
 import { createLibp2pNode } from './create-libp2p-node.js'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
@@ -56,12 +53,8 @@ export const mockLibp2pNode = () => {
     swarm: {
       setMaxListeners () {}
     },
-    peerStore: new PersistentPeerStore({
-      addressFilter: async () => true
-    })
+    getConnections: () => []
   })
-
-  libp2p.peerStore.init(new Components({ peerId, datastore: new MemoryDatastore() }))
 
   // @ts-expect-error not all libp2p fields are implemented
   return libp2p
