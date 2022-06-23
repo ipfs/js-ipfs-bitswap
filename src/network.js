@@ -67,8 +67,8 @@ export class Network {
     this._registrarId = await this._libp2p.registrar.register(this._protocols, topology)
 
     // All existing connections are like new ones for us
-    await this._libp2p.peerStore.forEach(peer => {
-      this._libp2p.getConnections(peer.id).forEach(conn => this._onPeerConnect(conn.remotePeer))
+    this._libp2p.getConnections().forEach(conn => {
+      this._onPeerConnect(conn.remotePeer)
     })
   }
 
