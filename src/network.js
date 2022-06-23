@@ -98,7 +98,7 @@ export class Network {
       return
     }
 
-    void Promise.resolve().then(async () => {
+    Promise.resolve().then(async () => {
       this._log('incoming new bitswap %s connection from %p', protocol, connection.remotePeer)
 
       await pipe(
@@ -117,9 +117,9 @@ export class Network {
         }
       )
     })
-    .catch(err => {
-      this._log(err)
-    })
+      .catch(err => {
+        this._log(err)
+      })
   }
 
   /**
