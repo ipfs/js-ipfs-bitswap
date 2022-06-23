@@ -1,3 +1,10 @@
+## [11.0.3](https://github.com/ipfs/js-ipfs-bitswap/compare/v11.0.2...v11.0.3) (2022-06-23)
+
+
+### Bug Fixes
+
+* iterate over connections instead of every peer in the peerstore ([#450](https://github.com/ipfs/js-ipfs-bitswap/issues/450)) ([dc9b126](https://github.com/ipfs/js-ipfs-bitswap/commit/dc9b12616a7c909063a23a8dcd71a08a379967bd))
+
 ### [11.0.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v11.0.1...v11.0.2) (2022-05-25)
 
 
