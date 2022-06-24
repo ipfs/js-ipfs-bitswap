@@ -1,3 +1,10 @@
+## [11.0.4](https://github.com/ipfs/js-ipfs-bitswap/compare/v11.0.3...v11.0.4) (2022-06-24)
+
+
+### Trivial Changes
+
+* remove unused dev dep ([#451](https://github.com/ipfs/js-ipfs-bitswap/issues/451)) ([34b19e0](https://github.com/ipfs/js-ipfs-bitswap/commit/34b19e0128d781a89742ca637388367638aefc63))
+
 ## [11.0.3](https://github.com/ipfs/js-ipfs-bitswap/compare/v11.0.2...v11.0.3) (2022-06-23)
 
 
