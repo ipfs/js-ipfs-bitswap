@@ -41,7 +41,7 @@ describe('bitswap stats', () => {
   let bs
   /** @type {{ cid: CID, data: Uint8Array}[]} */
   let blocks
-  /** @type {import('@libp2p/interfaces/peer-id').PeerId[]} */
+  /** @type {import('@libp2p/interface-peer-id').PeerId[]} */
   let ids
 
   before(async () => {

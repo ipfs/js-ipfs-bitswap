@@ -11,7 +11,7 @@ import { makePeerId } from './utils/make-peer-id.js'
 describe('Notifications', () => {
   /** @type {{ cid: CID, data: Uint8Array }[]} */
   let blocks
-  /** @type {import('@libp2p/interfaces/peer-id').PeerId} */
+  /** @type {import('@libp2p/interface-peer-id').PeerId} */
   let peerId
 
   before(async () => {

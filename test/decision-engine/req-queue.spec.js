@@ -5,7 +5,7 @@ import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import { RequestQueue } from '../../src/decision-engine/req-queue.js'
 
 /**
- * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
  */
 
 describe('Request Queue', () => {

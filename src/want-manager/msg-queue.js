@@ -6,7 +6,7 @@ import { logger } from '../utils/index.js'
 import { wantlistSendDebounceMs } from '../constants.js'
 
 /**
- * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
  * @typedef {import('multiformats').CID} CID
  * @typedef {import('../network').Network} Network
  */

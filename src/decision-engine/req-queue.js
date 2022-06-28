@@ -10,7 +10,7 @@ import { SortedMap } from '../utils/sorted-map.js'
  * @property {number} created
  * @property {Task} task
  *
- * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
  * @typedef {import('./types').Task} Task
  * @typedef {import('./types').TaskMerger} TaskMerger
  */

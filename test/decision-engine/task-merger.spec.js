@@ -6,7 +6,7 @@ import { RequestQueue } from '../../src/decision-engine/req-queue.js'
 import { TaskMerger } from '../../src/decision-engine/task-merger.js'
 
 /**
- * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
  */
 
 /**

@@ -190,7 +190,7 @@ describe('network', () => {
       bitswapMockB._receiveError = (err) => deferred.reject(err)
 
       const ma = p2pB.getMultiaddrs()[0]
-      const { stream } = await p2pA.dialProtocol(ma, '/ipfs/bitswap/' + version.num)
+      const stream = await p2pA.dialProtocol(ma, '/ipfs/bitswap/' + version.num)
 
       await pipe(
         [version.serialize(msg)],
@@ -233,9 +233,9 @@ describe('network', () => {
 
   it('dial to peer on Bitswap 1.0.0', async () => {
     const ma = p2pC.getMultiaddrs()[0]
-    const { protocol } = await p2pA.dialProtocol(ma, ['/ipfs/bitswap/1.1.0', '/ipfs/bitswap/1.0.0'])
+    const stream = await p2pA.dialProtocol(ma, ['/ipfs/bitswap/1.1.0', '/ipfs/bitswap/1.0.0'])
 
-    expect(protocol).to.equal('/ipfs/bitswap/1.0.0')
+    expect(stream).to.have.nested.property('stat.protocol', '/ipfs/bitswap/1.0.0')
   })
 
   // From p2pA to p2pC
@@ -305,7 +305,8 @@ describe('network', () => {
       },
       // @ts-expect-error incomplete implementation
       registrar: {
-        register: sinon.stub()
+        register: sinon.stub(),
+        unregister: sinon.stub()
       },
       getConnections: () => [],
       dial: mockDial,

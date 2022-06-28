@@ -15,8 +15,8 @@ import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
  * @typedef {import('multiformats/cid').CID} CID
  * @typedef {import('@multiformats/multiaddr').Multiaddr} Multiaddr
  * @typedef {import('libp2p').Libp2p} Libp2p
- * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
- * @typedef {import('@libp2p/interfaces/peer-store').PeerStore} PeerStore
+ * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
+ * @typedef {import('@libp2p/interface-peer-store').PeerStore} PeerStore
  */
 
 /**
@@ -98,7 +98,7 @@ export const mockNetwork = (calls = Infinity, done = () => {}, onMsg = () => {})
 
     /**
      * @param {PeerId|Multiaddr} p
-     * @returns {Promise<import('@libp2p/interfaces/connection').Connection>}
+     * @returns {Promise<import('@libp2p/interface-connection').Connection>}
      */
     connectTo (p) {
       setTimeout(() => {

@@ -8,7 +8,7 @@ import { base58btc } from 'multiformats/bases/base58'
 import { trackedMap } from '@libp2p/tracked-map'
 
 /**
- * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
  * @typedef {import('multiformats').CID} CID
  */
 

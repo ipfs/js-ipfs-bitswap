@@ -1,22 +1,16 @@
 # ipfs-bitswap <!-- omit in toc -->
 
-[![](https://img.shields.io/badge/made%20by-Protocol%20Labs-blue.svg?style=flat-square)](http://ipn.io)
-[![](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](http://ipfs.io/)
-[![](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23ipfs)
-[![Build Status](https://github.com/ipfs/js-ipfs-bitswap/actions/workflows/js-test-and-release.yml/badge.svg?branch=master)](https://github.com/ipfs/js-ipfs-bitswap/actions/workflows/js-test-and-release.yml)
-[![](https://coveralls.io/repos/github/ipfs/js-ipfs-bitswap/badge.svg?branch=master)](https://coveralls.io/github/ipfs/js-ipfs-bitswap?branch=master)
-[![](https://david-dm.org/ipfs/js-ipfs-bitswap.svg?style=flat-square)](https://david-dm.org/ipfs/js-ipfs-bitswap)
-[![](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/feross/standard)
-[![](https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
-![](https://img.shields.io/badge/npm-%3E%3D3.0.0-orange.svg?style=flat-square)
-![](https://img.shields.io/badge/Node.js-%3E%3D4.0.0-orange.svg?style=flat-square)
+[![ipfs.io](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](http://ipfs.io)
+[![IRC](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23ipfs)
+[![Discord](https://img.shields.io/discord/806902334369824788?style=flat-square)](https://discord.gg/ipfs)
+[![codecov](https://img.shields.io/codecov/c/github/ipfs/js-ipfs-bitswap.svg?style=flat-square)](https://codecov.io/gh/ipfs/js-ipfs-bitswap)
+[![CI](https://img.shields.io/github/workflow/status/libp2p/js-libp2p-interfaces/test%20&%20maybe%20release/master?style=flat-square)](https://github.com/ipfs/js-ipfs-bitswap/actions/workflows/js-test-and-release.yml)
 
-> JavaScript implementation of the Bitswap 'data exchange' protocol used by IPFS
+> JavaScript implementation of the Bitswap data exchange protocol used by IPFS
 
-## Table of Contents <!-- omit in toc -->
+## Table of contents <!-- omit in toc -->
 
 - [Install](#install)
-  - [npm](#npm)
   - [Use in Node.js or in the browser with browserify, webpack or any other bundler](#use-in-nodejs-or-in-the-browser-with-browserify-webpack-or-any-other-bundler)
   - [Use in a browser using a script tag](#use-in-a-browser-using-a-script-tag)
 - [API](#api)
@@ -28,12 +22,14 @@
   - [Structure](#structure)
 - [Performance tests](#performance-tests)
   - [Profiling](#profiling)
-- [Contribute](#contribute)
 - [License](#license)
+- [Contribute](#contribute)
 
 ## Install
 
-### npm
+```console
+$ npm i ipfs-bitswap
+```
 
 ```bash
 > npm install ipfs-bitswap
@@ -57,7 +53,7 @@ Loading this module through a script tag will make the `IpfsBitswap` object avai
 
 ## API
 
-See https://ipfs.github.io/js-ipfs-bitswap
+See <https://ipfs.github.io/js-ipfs-bitswap>
 
 ### Stats
 
@@ -119,15 +115,15 @@ const movingAverages = stats.movingAverages
 
 This object contains these properties:
 
-* 'blocksReceived',
-* 'dataReceived',
-* 'dupBlksReceived',
-* 'dupDataReceived',
-* 'blocksSent',
-* 'dataSent',
-* 'providesBufferLength',
-* 'wantListLength',
-* 'peerCount'
+- 'blocksReceived',
+- 'dataReceived',
+- 'dupBlksReceived',
+- 'dupDataReceived',
+- 'blocksSent',
+- 'dataSent',
+- 'providesBufferLength',
+- 'wantListLength',
+- 'peerCount'
 
 ```js
 const dataReceivedMovingAverages = movingAverages.dataReceived
@@ -135,9 +131,9 @@ const dataReceivedMovingAverages = movingAverages.dataReceived
 
 Each one of these will contain one key per interval (miliseconds), being the default intervals defined:
 
-* 60000 (1 minute)
-* 300000 (5 minutes)
-* 900000 (15 minutes)
+- 60000 (1 minute)
+- 300000 (5 minutes)
+- 900000 (15 minutes)
 
 You can then select one of them
 
@@ -158,19 +154,19 @@ This object will be a [movingAverage](https://github.com/pgte/moving-average#rea
 src
 ├── constants.js
 ├── decision-engine
-│   ├── index.js
-│   └── ledger.js
+│   ├── index.js
+│   └── ledger.js
 ├── index.js
 ├── network.js             # Handles peerSet and open new conns
 ├── notifications.js       # Handles tracking of incomning blocks and wants/unwants.
 ├─── want-manager          # Keeps track of all blocks the peer (self) wants
-│   ├── index.js
-│   └── msg-queue.js       # Messages to send queue, one per peer
+│   ├── index.js
+│   └── msg-queue.js       # Messages to send queue, one per peer
 └─── types
     ├── message            # (Type) message that is put in the wire
-    │   ├── entry.js
-    │   ├── index.js
-    │   └── message.proto.js
+    │   ├── entry.js
+    │   ├── index.js
+    │   └── message.proto.js
     └── wantlist           # (Type) track wanted blocks
         ├── entry.js
         └── index.js
@@ -180,9 +176,7 @@ src
 
 You can run performance tests like this:
 
-```
-$ npm run benchmarks
-```
+    $ npm run benchmarks
 
 ### Profiling
 
@@ -205,14 +199,17 @@ Use the browser Chrome to open and inspect the generated graph.
 
 ![Flame graph](https://ipfs.io/ipfs/QmVbyLgYfkLewNtzTAFwAEMmP2hTJgs8sSqsRTBNBjyQ1y)
 
+## License
+
+Licensed under either of
+
+- Apache 2.0, ([LICENSE-APACHE](LICENSE-APACHE) / <http://www.apache.org/licenses/LICENSE-2.0>)
+- MIT ([LICENSE-MIT](LICENSE-MIT) / <http://opensource.org/licenses/MIT>)
+
 ## Contribute
 
-Feel free to join in. All welcome. Open an [issue](https://github.com/ipfs/js-ipfs-bitswap/issues)!
+Feel free to join in. All welcome. Open an [issue](https://github.com/ipfs/js-ipfs-unixfs-importer/issues)!
 
 This repository falls under the IPFS [Code of Conduct](https://github.com/ipfs/community/blob/master/code-of-conduct.md).
 
 [![](https://cdn.rawgit.com/jbenet/contribute-ipfs-gif/master/img/contribute.gif)](https://github.com/ipfs/community/blob/master/CONTRIBUTING.md)
-
-## License
-
-[MIT](LICENSE)

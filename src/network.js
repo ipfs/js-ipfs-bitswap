@@ -6,11 +6,11 @@ import * as CONSTANTS from './constants.js'
 import { logger } from './utils/index.js'
 
 /**
- * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
  * @typedef {import('multiformats').CID} CID
  * @typedef {import('@multiformats/multiaddr').Multiaddr} Multiaddr
- * @typedef {import('@libp2p/interfaces/connection').Connection} Connection
- * @typedef {import('@libp2p/interfaces/connection').Stream} Stream
+ * @typedef {import('@libp2p/interface-connection').Connection} Connection
+ * @typedef {import('@libp2p/interface-connection').Stream} Stream
  * @typedef {import('./types').MultihashHasherLoader} MultihashHasherLoader
  *
  * @typedef {object} Provider
@@ -24,6 +24,9 @@ const BITSWAP100 = '/ipfs/bitswap/1.0.0'
 const BITSWAP110 = '/ipfs/bitswap/1.1.0'
 const BITSWAP120 = '/ipfs/bitswap/1.2.0'
 
+const DEFAULT_MAX_INBOUND_STREAMS = 32
+const DEFAULT_MAX_OUTBOUND_STREAMS = 128
+
 export class Network {
   /**
    * @param {import('libp2p').Libp2p} libp2p
@@ -32,6 +35,8 @@ export class Network {
    * @param {object} [options]
    * @param {boolean} [options.b100Only]
    * @param {MultihashHasherLoader} [options.hashLoader]
+   * @param {number} [options.maxInboundStreams=32]
+   * @param {number} [options.maxOutboundStreams=32]
    */
   constructor (libp2p, bitswap, stats, options = {}) {
     this._log = logger(libp2p.peerId, 'network')
@@ -53,18 +58,29 @@ export class Network {
     this._onPeerDisconnect = this._onPeerDisconnect.bind(this)
     this._onConnection = this._onConnection.bind(this)
     this._hashLoader = options.hashLoader
+    this._maxInboundStreams = options.maxInboundStreams ?? DEFAULT_MAX_INBOUND_STREAMS
+    this._maxOutboundStreams = options.maxOutboundStreams ?? DEFAULT_MAX_OUTBOUND_STREAMS
   }
 
   async start () {
     this._running = true
-    await this._libp2p.handle(this._protocols, this._onConnection)
+    await this._libp2p.handle(this._protocols, this._onConnection, {
+      maxInboundStreams: this._maxInboundStreams,
+      maxOutboundStreams: this._maxOutboundStreams
+    })
 
     // register protocol with topology
     const topology = createTopology({
       onConnect: this._onPeerConnect,
       onDisconnect: this._onPeerDisconnect
     })
-    this._registrarId = await this._libp2p.registrar.register(this._protocols, topology)
+
+    /** @type {string[]} */
+    this._registrarIds = []
+
+    for (const protocol of this._protocols) {
+      this._registrarIds.push(await this._libp2p.registrar.register(protocol, topology))
+    }
 
     // All existing connections are like new ones for us
     this._libp2p.getConnections().forEach(conn => {
@@ -79,8 +95,12 @@ export class Network {
     await this._libp2p.unhandle(this._protocols)
 
     // unregister protocol and handlers
-    if (this._registrarId != null) {
-      this._libp2p.registrar.unregister(this._registrarId)
+    if (this._registrarIds != null) {
+      for (const id of this._registrarIds) {
+        this._libp2p.registrar.unregister(id)
+      }
+
+      this._registrarIds = []
     }
   }
 
@@ -89,17 +109,16 @@ export class Network {
    *
    * @private
    * @param {object} connection
-   * @param {string} connection.protocol - The protocol the stream is running
    * @param {Stream} connection.stream - A duplex iterable stream
    * @param {Connection} connection.connection - A libp2p Connection
    */
-  _onConnection ({ protocol, stream, connection }) {
+  _onConnection ({ stream, connection }) {
     if (!this._running) {
       return
     }
 
     Promise.resolve().then(async () => {
-      this._log('incoming new bitswap %s connection from %p', protocol, connection.remotePeer)
+      this._log('incoming new bitswap %s connection from %p', stream.stat.protocol, connection.remotePeer)
 
       await pipe(
         stream,
@@ -206,11 +225,11 @@ export class Network {
     this._log('sendMessage to %s', stringId, msg)
 
     const connection = await this._libp2p.dial(peer)
-    const { stream, protocol } = await connection.newStream([BITSWAP120, BITSWAP110, BITSWAP100])
+    const stream = await connection.newStream([BITSWAP120, BITSWAP110, BITSWAP100])
 
     /** @type {Uint8Array} */
     let serialized
-    switch (protocol) {
+    switch (stream.stat.protocol) {
       case BITSWAP100:
         serialized = msg.serializeToBitswap100()
         break
@@ -219,7 +238,7 @@ export class Network {
         serialized = msg.serializeToBitswap110()
         break
       default:
-        throw new Error('Unknown protocol: ' + protocol)
+        throw new Error('Unknown protocol: ' + stream.stat.protocol)
     }
 
     // Note: Don't wait for writeMessage() to complete

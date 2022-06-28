@@ -5,7 +5,7 @@ import { logger } from './utils/index.js'
 
 /**
  * @typedef {import('multiformats').CID} CID
- * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
  */
 
 /**

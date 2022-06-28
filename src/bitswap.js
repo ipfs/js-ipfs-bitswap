@@ -12,7 +12,7 @@ import { CID } from 'multiformats/cid'
  * @typedef {import('./types').IPFSBitswap} IPFSBitswap
  * @typedef {import('./types').MultihashHasherLoader} MultihashHasherLoader
  * @typedef {import('./message').BitswapMessage} BitswapMessage
- * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
  * @typedef {import('interface-blockstore').Blockstore} Blockstore
  * @typedef {import('interface-blockstore').Pair} Pair
  * @typedef {import('interface-blockstore').Options} Options
@@ -49,6 +49,8 @@ export class Bitswap extends BaseBlockstore {
    * @param {boolean} [options.statsEnabled=false]
    * @param {number} [options.statsComputeThrottleTimeout=1000]
    * @param {number} [options.statsComputeThrottleMaxQueueSize=1000]
+   * @param {number} [options.maxInboundStreams=32]
+   * @param {number} [options.maxOutboundStreams=32]
    * @param {MultihashHasherLoader} [options.hashLoader]
    */
   constructor (libp2p, blockstore, options = {}) {
@@ -68,7 +70,9 @@ export class Bitswap extends BaseBlockstore {
 
     // the network delivers messages
     this.network = new Network(libp2p, this, this._stats, {
-      hashLoader: options.hashLoader
+      hashLoader: options.hashLoader,
+      maxInboundStreams: options.maxInboundStreams,
+      maxOutboundStreams: options.maxOutboundStreams
     })
 
     // local database
