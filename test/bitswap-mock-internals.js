@@ -10,7 +10,7 @@ import { CID } from 'multiformats/cid'
 import delay from 'delay'
 import { base58btc } from 'multiformats/bases/base58'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
-import { isPeerId } from '@libp2p/interfaces/peer-id'
+import { isPeerId } from '@libp2p/interface-peer-id'
 import { MemoryBlockstore } from 'blockstore-core/memory'
 import {
   mockNetwork,
@@ -23,7 +23,7 @@ import { makePeerIds } from './utils/make-peer-id.js'
 import { orderedFinish } from './utils/helpers.js'
 
 /**
- * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
  */
 
 const DAG_PB_CODEC = 0x70

@@ -1,7 +1,7 @@
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 
 /**
- * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
  */
 
 export async function makePeerId () {

@@ -35,7 +35,8 @@ describe('start/stop', () => {
       handle: () => {},
       unhandle: () => {},
       registrar: {
-        register: () => {}
+        register: () => {},
+        unregister: () => {}
       },
       getConnections: () => []
     }

@@ -10,7 +10,7 @@ import { trackedMap } from '@libp2p/tracked-map'
 
 /**
  * @typedef {import('../message/entry').BitswapMessageEntry} BitswapMessageEntry
- * @typedef {import('@libp2p/interfaces/peer-id').PeerId} PeerId
+ * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
  */
 
 const WantType = Message.WantType
