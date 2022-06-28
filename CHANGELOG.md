@@ -1,3 +1,14 @@
+## [12.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v11.0.4...v12.0.0) (2022-06-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* uses libp2p with protocol stream limiting
+
+### Features
+
+* update libp2p deps ([#453](https://github.com/ipfs/js-ipfs-bitswap/issues/453)) ([2383088](https://github.com/ipfs/js-ipfs-bitswap/commit/2383088d6732ddae1cf3fe3470a832ab33013aad))
+
 ## [11.0.4](https://github.com/ipfs/js-ipfs-bitswap/compare/v11.0.3...v11.0.4) (2022-06-24)
 
 
