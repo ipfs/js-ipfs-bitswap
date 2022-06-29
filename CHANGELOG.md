@@ -1,3 +1,10 @@
+## [12.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v12.0.0...v12.0.1) (2022-06-29)
+
+
+### Trivial Changes
+
+* update deps ([#454](https://github.com/ipfs/js-ipfs-bitswap/issues/454)) ([7516593](https://github.com/ipfs/js-ipfs-bitswap/commit/751659351640756d82b9c7ee21bea57efacea877))
+
 ## [12.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v11.0.4...v12.0.0) (2022-06-28)
 
 
