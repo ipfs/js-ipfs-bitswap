@@ -168,6 +168,7 @@
     "@libp2p/tracked-map": "^2.0.0",
     "@multiformats/multiaddr": "^10.1.8",
     "@vascosantos/moving-average": "^1.1.0",
+    "abortable-iterator": "^4.0.2",
     "any-signal": "^3.0.0",
     "blockstore-core": "^1.0.2",
     "debug": "^4.2.0",
@@ -179,6 +180,7 @@
     "multiformats": "^9.0.4",
     "protobufjs": "^6.10.2",
     "readable-stream": "^4.0.0",
+    "timeout-abort-controller": "^3.0.0",
     "uint8arrays": "^3.0.0",
     "varint": "^6.0.0",
     "varint-decoder": "^1.0.0"

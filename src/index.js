@@ -19,6 +19,7 @@ import { Bitswap } from './bitswap.js'
  * @param {number} [options.statsComputeThrottleMaxQueueSize=1000]
  * @param {number} [options.maxInboundStreams=32]
  * @param {number} [options.maxOutboundStreams=128]
+ * @param {number} [options.incomingStreamTimeout=30000]
  * @param {MultihashHasherLoader} [options.hashLoader]
  * @returns {IPFSBitswap}
  */

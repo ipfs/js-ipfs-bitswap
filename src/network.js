@@ -4,6 +4,8 @@ import { createTopology } from '@libp2p/topology'
 import { BitswapMessage as Message } from './message/index.js'
 import * as CONSTANTS from './constants.js'
 import { logger } from './utils/index.js'
+import { TimeoutController } from 'timeout-abort-controller'
+import { abortableSource } from 'abortable-iterator'
 
 /**
  * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
@@ -26,6 +28,7 @@ const BITSWAP120 = '/ipfs/bitswap/1.2.0'
 
 const DEFAULT_MAX_INBOUND_STREAMS = 32
 const DEFAULT_MAX_OUTBOUND_STREAMS = 128
+const DEFAULT_INCOMING_STREAM_TIMEOUT = 30000
 
 export class Network {
   /**
@@ -37,6 +40,7 @@ export class Network {
    * @param {MultihashHasherLoader} [options.hashLoader]
    * @param {number} [options.maxInboundStreams=32]
    * @param {number} [options.maxOutboundStreams=32]
+   * @param {number} [options.incomingStreamTimeout=30000]
    */
   constructor (libp2p, bitswap, stats, options = {}) {
     this._log = logger(libp2p.peerId, 'network')
@@ -60,6 +64,7 @@ export class Network {
     this._hashLoader = options.hashLoader
     this._maxInboundStreams = options.maxInboundStreams ?? DEFAULT_MAX_INBOUND_STREAMS
     this._maxOutboundStreams = options.maxOutboundStreams ?? DEFAULT_MAX_OUTBOUND_STREAMS
+    this._incomingStreamTimeout = options.incomingStreamTimeout ?? DEFAULT_INCOMING_STREAM_TIMEOUT
   }
 
   async start () {
@@ -117,11 +122,13 @@ export class Network {
       return
     }
 
+    const controller = new TimeoutController(this._incomingStreamTimeout)
+
     Promise.resolve().then(async () => {
       this._log('incoming new bitswap %s connection from %p', stream.stat.protocol, connection.remotePeer)
 
       await pipe(
-        stream,
+        abortableSource(stream.source, controller.signal),
         lp.decode(),
         async (source) => {
           for await (const data of source) {
@@ -138,6 +145,10 @@ export class Network {
     })
       .catch(err => {
         this._log(err)
+        stream.abort(err)
+      })
+      .finally(() => {
+        controller.clear()
       })
   }
 

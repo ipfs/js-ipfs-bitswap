@@ -11,6 +11,7 @@ import { BitswapMessage as Message } from '../../src/message/index.js'
 import { Stats } from '../../src/stats/index.js'
 import sinon from 'sinon'
 import { CID } from 'multiformats/cid'
+import delay from 'delay'
 
 /**
  * @typedef {import('libp2p').Libp2p} Libp2p
@@ -337,5 +338,41 @@ describe('network', () => {
 
     expect(mockDial.calledWith(provider1.id)).to.be.true()
     expect(mockDial.calledWith(provider2.id)).to.be.true()
+  })
+
+  it('times out slow senders', async () => {
+    const deferred = pDefer()
+
+    const libp2p = {
+      handle: sinon.stub(),
+      registrar: {
+        register: sinon.stub()
+      },
+      getConnections: () => []
+    }
+
+    // @ts-expect-error not a complete libp2p implementation
+    const network = new Network(libp2p, {}, {}, {
+      incomingStreamTimeout: 1
+    })
+    await network.start()
+
+    const stream = {
+      source: async function * () {
+        await delay(100)
+      }(),
+      abort: (/** @type {Error} **/ err) => {
+        deferred.resolve(err)
+      },
+      stat: {
+        protocol: 'hello'
+      }
+    }
+
+    const handler = libp2p.handle.getCall(0).args[1]
+    handler({ stream, connection: {} })
+
+    const err = await deferred.promise
+    expect(err).to.have.property('code', 'ABORT_ERR')
   })
 })
