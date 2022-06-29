@@ -358,9 +358,10 @@ describe('network', () => {
     await network.start()
 
     const stream = {
-      source: async function * () {
+      source: (async function * () {
         await delay(100)
-      }(),
+        yield 'hello'
+      }()),
       abort: (/** @type {Error} **/ err) => {
         deferred.resolve(err)
       },
