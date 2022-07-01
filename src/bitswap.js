@@ -51,6 +51,7 @@ export class Bitswap extends BaseBlockstore {
    * @param {number} [options.statsComputeThrottleMaxQueueSize=1000]
    * @param {number} [options.maxInboundStreams=32]
    * @param {number} [options.maxOutboundStreams=32]
+   * @param {number} [options.incomingStreamTimeout=30000]
    * @param {MultihashHasherLoader} [options.hashLoader]
    */
   constructor (libp2p, blockstore, options = {}) {
@@ -72,7 +73,8 @@ export class Bitswap extends BaseBlockstore {
     this.network = new Network(libp2p, this, this._stats, {
       hashLoader: options.hashLoader,
       maxInboundStreams: options.maxInboundStreams,
-      maxOutboundStreams: options.maxOutboundStreams
+      maxOutboundStreams: options.maxOutboundStreams,
+      incomingStreamTimeout: options.incomingStreamTimeout
     })
 
     // local database
