@@ -161,7 +161,7 @@
     "generate:proto-types": "pbts -o src/message/message.d.ts src/message/message.js"
   },
   "dependencies": {
-    "@libp2p/interface-connection": "^2.1.1",
+    "@libp2p/interface-connection": "^3.0.0",
     "@libp2p/interface-peer-id": "^1.0.4",
     "@libp2p/interface-peer-store": "^1.2.0",
     "@libp2p/topology": "^3.0.0",
