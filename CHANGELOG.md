@@ -1,3 +1,21 @@
+## [12.0.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v12.0.1...v12.0.2) (2022-08-11)
+
+
+### Bug Fixes
+
+* time out slow senders ([#455](https://github.com/ipfs/js-ipfs-bitswap/issues/455)) ([1a14c92](https://github.com/ipfs/js-ipfs-bitswap/commit/1a14c92347a1e18754b51b69bd5bbfe5b595e88d))
+
+
+### Trivial Changes
+
+* Update .github/workflows/stale.yml [skip ci] ([b590c92](https://github.com/ipfs/js-ipfs-bitswap/commit/b590c92f7102326cef251f07c1e6b9f5758d60d8))
+* update project config ([#466](https://github.com/ipfs/js-ipfs-bitswap/issues/466)) ([799e6b0](https://github.com/ipfs/js-ipfs-bitswap/commit/799e6b03df4785e2bf1664771a18d8fcf42fa654))
+
+
+### Dependencies
+
+* update protobufs, it-pipe, etc ([#465](https://github.com/ipfs/js-ipfs-bitswap/issues/465)) ([019d5e7](https://github.com/ipfs/js-ipfs-bitswap/commit/019d5e72ecbb2c91f48c3a3d808185d8b7e754d3))
+
 ## [12.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v12.0.0...v12.0.1) (2022-06-29)
 
 
