@@ -127,27 +127,32 @@ export const Message = $root.Message = (() => {
         while (r.pos < c) {
             var t = r.uint32();
             switch (t >>> 3) {
-            case 1:
-                m.wantlist = $root.Message.Wantlist.decode(r, r.uint32());
-                break;
-            case 2:
-                if (!(m.blocks && m.blocks.length))
-                    m.blocks = [];
-                m.blocks.push(r.bytes());
-                break;
-            case 3:
-                if (!(m.payload && m.payload.length))
-                    m.payload = [];
-                m.payload.push($root.Message.Block.decode(r, r.uint32()));
-                break;
-            case 4:
-                if (!(m.blockPresences && m.blockPresences.length))
-                    m.blockPresences = [];
-                m.blockPresences.push($root.Message.BlockPresence.decode(r, r.uint32()));
-                break;
-            case 5:
-                m.pendingBytes = r.int32();
-                break;
+            case 1: {
+                    m.wantlist = $root.Message.Wantlist.decode(r, r.uint32());
+                    break;
+                }
+            case 2: {
+                    if (!(m.blocks && m.blocks.length))
+                        m.blocks = [];
+                    m.blocks.push(r.bytes());
+                    break;
+                }
+            case 3: {
+                    if (!(m.payload && m.payload.length))
+                        m.payload = [];
+                    m.payload.push($root.Message.Block.decode(r, r.uint32()));
+                    break;
+                }
+            case 4: {
+                    if (!(m.blockPresences && m.blockPresences.length))
+                        m.blockPresences = [];
+                    m.blockPresences.push($root.Message.BlockPresence.decode(r, r.uint32()));
+                    break;
+                }
+            case 5: {
+                    m.pendingBytes = r.int32();
+                    break;
+                }
             default:
                 r.skipType(t & 7);
                 break;
@@ -180,7 +185,7 @@ export const Message = $root.Message = (() => {
             for (var i = 0; i < d.blocks.length; ++i) {
                 if (typeof d.blocks[i] === "string")
                     $util.base64.decode(d.blocks[i], m.blocks[i] = $util.newBuffer($util.base64.length(d.blocks[i])), 0);
-                else if (d.blocks[i].length)
+                else if (d.blocks[i].length >= 0)
                     m.blocks[i] = d.blocks[i];
             }
         }
@@ -270,6 +275,21 @@ export const Message = $root.Message = (() => {
         return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
     };
 
+    /**
+     * Gets the default type url for Message
+     * @function getTypeUrl
+     * @memberof Message
+     * @static
+     * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+     * @returns {string} The default type url
+     */
+    Message.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+        if (typeUrlPrefix === undefined) {
+            typeUrlPrefix = "type.googleapis.com";
+        }
+        return typeUrlPrefix + "/Message";
+    };
+
     Message.Wantlist = (function() {
 
         /**
@@ -351,14 +371,16 @@ export const Message = $root.Message = (() => {
             while (r.pos < c) {
                 var t = r.uint32();
                 switch (t >>> 3) {
-                case 1:
-                    if (!(m.entries && m.entries.length))
-                        m.entries = [];
-                    m.entries.push($root.Message.Wantlist.Entry.decode(r, r.uint32()));
-                    break;
-                case 2:
-                    m.full = r.bool();
-                    break;
+                case 1: {
+                        if (!(m.entries && m.entries.length))
+                            m.entries = [];
+                        m.entries.push($root.Message.Wantlist.Entry.decode(r, r.uint32()));
+                        break;
+                    }
+                case 2: {
+                        m.full = r.bool();
+                        break;
+                    }
                 default:
                     r.skipType(t & 7);
                     break;
@@ -435,6 +457,21 @@ export const Message = $root.Message = (() => {
          */
         Wantlist.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Wantlist
+         * @function getTypeUrl
+         * @memberof Message.Wantlist
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Wantlist.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/Message.Wantlist";
         };
 
         /**
@@ -562,21 +599,26 @@ export const Message = $root.Message = (() => {
                 while (r.pos < c) {
                     var t = r.uint32();
                     switch (t >>> 3) {
-                    case 1:
-                        m.block = r.bytes();
-                        break;
-                    case 2:
-                        m.priority = r.int32();
-                        break;
-                    case 3:
-                        m.cancel = r.bool();
-                        break;
-                    case 4:
-                        m.wantType = r.int32();
-                        break;
-                    case 5:
-                        m.sendDontHave = r.bool();
-                        break;
+                    case 1: {
+                            m.block = r.bytes();
+                            break;
+                        }
+                    case 2: {
+                            m.priority = r.int32();
+                            break;
+                        }
+                    case 3: {
+                            m.cancel = r.bool();
+                            break;
+                        }
+                    case 4: {
+                            m.wantType = r.int32();
+                            break;
+                        }
+                    case 5: {
+                            m.sendDontHave = r.bool();
+                            break;
+                        }
                     default:
                         r.skipType(t & 7);
                         break;
@@ -600,7 +642,7 @@ export const Message = $root.Message = (() => {
                 if (d.block != null) {
                     if (typeof d.block === "string")
                         $util.base64.decode(d.block, m.block = $util.newBuffer($util.base64.length(d.block)), 0);
-                    else if (d.block.length)
+                    else if (d.block.length >= 0)
                         m.block = d.block;
                 }
                 if (d.priority != null) {
@@ -678,6 +720,21 @@ export const Message = $root.Message = (() => {
              */
             Entry.prototype.toJSON = function toJSON() {
                 return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            /**
+             * Gets the default type url for Entry
+             * @function getTypeUrl
+             * @memberof Message.Wantlist.Entry
+             * @static
+             * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+             * @returns {string} The default type url
+             */
+            Entry.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+                if (typeUrlPrefix === undefined) {
+                    typeUrlPrefix = "type.googleapis.com";
+                }
+                return typeUrlPrefix + "/Message.Wantlist.Entry";
             };
 
             return Entry;
@@ -764,12 +821,14 @@ export const Message = $root.Message = (() => {
             while (r.pos < c) {
                 var t = r.uint32();
                 switch (t >>> 3) {
-                case 1:
-                    m.prefix = r.bytes();
-                    break;
-                case 2:
-                    m.data = r.bytes();
-                    break;
+                case 1: {
+                        m.prefix = r.bytes();
+                        break;
+                    }
+                case 2: {
+                        m.data = r.bytes();
+                        break;
+                    }
                 default:
                     r.skipType(t & 7);
                     break;
@@ -793,13 +852,13 @@ export const Message = $root.Message = (() => {
             if (d.prefix != null) {
                 if (typeof d.prefix === "string")
                     $util.base64.decode(d.prefix, m.prefix = $util.newBuffer($util.base64.length(d.prefix)), 0);
-                else if (d.prefix.length)
+                else if (d.prefix.length >= 0)
                     m.prefix = d.prefix;
             }
             if (d.data != null) {
                 if (typeof d.data === "string")
                     $util.base64.decode(d.data, m.data = $util.newBuffer($util.base64.length(d.data)), 0);
-                else if (d.data.length)
+                else if (d.data.length >= 0)
                     m.data = d.data;
             }
             return m;
@@ -852,6 +911,21 @@ export const Message = $root.Message = (() => {
          */
         Block.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for Block
+         * @function getTypeUrl
+         * @memberof Message.Block
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        Block.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/Message.Block";
         };
 
         return Block;
@@ -949,12 +1023,14 @@ export const Message = $root.Message = (() => {
             while (r.pos < c) {
                 var t = r.uint32();
                 switch (t >>> 3) {
-                case 1:
-                    m.cid = r.bytes();
-                    break;
-                case 2:
-                    m.type = r.int32();
-                    break;
+                case 1: {
+                        m.cid = r.bytes();
+                        break;
+                    }
+                case 2: {
+                        m.type = r.int32();
+                        break;
+                    }
                 default:
                     r.skipType(t & 7);
                     break;
@@ -978,7 +1054,7 @@ export const Message = $root.Message = (() => {
             if (d.cid != null) {
                 if (typeof d.cid === "string")
                     $util.base64.decode(d.cid, m.cid = $util.newBuffer($util.base64.length(d.cid)), 0);
-                else if (d.cid.length)
+                else if (d.cid.length >= 0)
                     m.cid = d.cid;
             }
             switch (d.type) {
@@ -1035,6 +1111,21 @@ export const Message = $root.Message = (() => {
          */
         BlockPresence.prototype.toJSON = function toJSON() {
             return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        /**
+         * Gets the default type url for BlockPresence
+         * @function getTypeUrl
+         * @memberof Message.BlockPresence
+         * @static
+         * @param {string} [typeUrlPrefix] your custom typeUrlPrefix(default "type.googleapis.com")
+         * @returns {string} The default type url
+         */
+        BlockPresence.getTypeUrl = function getTypeUrl(typeUrlPrefix) {
+            if (typeUrlPrefix === undefined) {
+                typeUrlPrefix = "type.googleapis.com";
+            }
+            return typeUrlPrefix + "/Message.BlockPresence";
         };
 
         return BlockPresence;
