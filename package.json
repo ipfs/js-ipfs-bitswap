@@ -174,7 +174,7 @@
     "@vascosantos/moving-average": "^1.1.0",
     "abortable-iterator": "^4.0.2",
     "any-signal": "^3.0.0",
-    "blockstore-core": "^1.0.2",
+    "blockstore-core": "^2.0.1",
     "debug": "^4.2.0",
     "err-code": "^3.0.1",
     "interface-blockstore": "^2.0.2",
