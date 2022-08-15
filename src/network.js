@@ -133,7 +133,7 @@ export class Network {
         async (source) => {
           for await (const data of source) {
             try {
-              const message = await Message.deserialize(data.slice(), this._hashLoader)
+              const message = await Message.deserialize(data.subarray(), this._hashLoader)
               await this._bitswap._receiveMessage(connection.remotePeer, message)
             } catch (/** @type {any} */ err) {
               this._bitswap._receiveError(err)
@@ -149,6 +149,7 @@ export class Network {
       })
       .finally(() => {
         controller.clear()
+        stream.close()
       })
   }
 
@@ -252,8 +253,9 @@ export class Network {
         throw new Error('Unknown protocol: ' + stream.stat.protocol)
     }
 
-    // Note: Don't wait for writeMessage() to complete
-    writeMessage(stream, serialized, this._log)
+    await writeMessage(stream, serialized, this._log)
+
+    stream.close()
 
     this._updateSentStats(peer, msg.blocks)
   }
