@@ -1,3 +1,17 @@
+## [12.0.3](https://github.com/ipfs/js-ipfs-bitswap/compare/v12.0.2...v12.0.3) (2022-08-15)
+
+
+### Bug Fixes
+
+* close streams after use ([#470](https://github.com/ipfs/js-ipfs-bitswap/issues/470)) ([a10e9e9](https://github.com/ipfs/js-ipfs-bitswap/commit/a10e9e921d50a4f50ab4e665e1be35f3e4767b56))
+
+
+### Dependencies
+
+* bump blockstore-core from 1.0.5 to 2.0.1 ([#469](https://github.com/ipfs/js-ipfs-bitswap/issues/469)) ([2c10911](https://github.com/ipfs/js-ipfs-bitswap/commit/2c109113da63ffb339501740a31b768d8053ea1e))
+* bump interface-blockstore from 2.0.3 to 3.0.0 ([#467](https://github.com/ipfs/js-ipfs-bitswap/issues/467)) ([2f238a9](https://github.com/ipfs/js-ipfs-bitswap/commit/2f238a9ca20eb5402a8f1e3b800668cf0d46d613))
+* **dev:** bump interface-datastore from 6.1.1 to 7.0.0 ([#468](https://github.com/ipfs/js-ipfs-bitswap/issues/468)) ([e7852d1](https://github.com/ipfs/js-ipfs-bitswap/commit/e7852d117b57acb81161a9e76925810407028d59))
+
 ## [12.0.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v12.0.1...v12.0.2) (2022-08-11)
 
 
