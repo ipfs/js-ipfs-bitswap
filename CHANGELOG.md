@@ -1,3 +1,10 @@
+## [12.0.4](https://github.com/ipfs/js-ipfs-bitswap/compare/v12.0.3...v12.0.4) (2022-08-17)
+
+
+### Bug Fixes
+
+* ensure stream is closed when protocol is incorrect ([#471](https://github.com/ipfs/js-ipfs-bitswap/issues/471)) ([2509772](https://github.com/ipfs/js-ipfs-bitswap/commit/2509772baa31bea6ad610a721a4eb31dfa6f125f))
+
 ## [12.0.3](https://github.com/ipfs/js-ipfs-bitswap/compare/v12.0.2...v12.0.3) (2022-08-15)
 
 
