@@ -239,23 +239,7 @@ export class Network {
     const connection = await this._libp2p.dial(peer)
     const stream = await connection.newStream([BITSWAP120, BITSWAP110, BITSWAP100])
 
-    /** @type {Uint8Array} */
-    let serialized
-    switch (stream.stat.protocol) {
-      case BITSWAP100:
-        serialized = msg.serializeToBitswap100()
-        break
-      case BITSWAP110:
-      case BITSWAP120:
-        serialized = msg.serializeToBitswap110()
-        break
-      default:
-        throw new Error('Unknown protocol: ' + stream.stat.protocol)
-    }
-
-    await writeMessage(stream, serialized, this._log)
-
-    stream.close()
+    await writeMessage(stream, msg, this._log)
 
     this._updateSentStats(peer, msg.blocks)
   }
@@ -297,17 +281,33 @@ export class Network {
 /**
  *
  * @param {Stream} stream
- * @param {Uint8Array} msg
+ * @param {Message} msg
  * @param {*} log
  */
 async function writeMessage (stream, msg, log) {
   try {
+    /** @type {Uint8Array} */
+    let serialized
+    switch (stream.stat.protocol) {
+      case BITSWAP100:
+        serialized = msg.serializeToBitswap100()
+        break
+      case BITSWAP110:
+      case BITSWAP120:
+        serialized = msg.serializeToBitswap110()
+        break
+      default:
+        throw new Error('Unknown protocol: ' + stream.stat.protocol)
+    }
+
     await pipe(
-      [msg],
+      [serialized],
       lp.encode(),
       stream
     )
   } catch (err) {
     log(err)
+  } finally {
+    stream.close()
   }
 }
