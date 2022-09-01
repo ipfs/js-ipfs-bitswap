@@ -139,6 +139,9 @@ export class Network {
               this._bitswap._receiveError(err)
               break
             }
+
+            // we have received some data so reset the timeout controller
+            controller.reset()
           }
         }
       )
