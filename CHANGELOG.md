@@ -1,3 +1,15 @@
+## [12.0.5](https://github.com/ipfs/js-ipfs-bitswap/compare/v12.0.4...v12.0.5) (2022-09-01)
+
+
+### Bug Fixes
+
+* reset timeout controller when messages are received ([#474](https://github.com/ipfs/js-ipfs-bitswap/issues/474)) ([f6c6317](https://github.com/ipfs/js-ipfs-bitswap/commit/f6c6317c878a75a760e8d46d4b53e2530631d42b))
+
+
+### Trivial Changes
+
+* update project ([#473](https://github.com/ipfs/js-ipfs-bitswap/issues/473)) ([40376cf](https://github.com/ipfs/js-ipfs-bitswap/commit/40376cffd144583dd7f72644a32c79cd4ce5acd0))
+
 ## [12.0.4](https://github.com/ipfs/js-ipfs-bitswap/compare/v12.0.3...v12.0.4) (2022-08-17)
 
 
