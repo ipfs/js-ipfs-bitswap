@@ -170,7 +170,7 @@
     "@libp2p/interface-peer-store": "^1.2.0",
     "@libp2p/topology": "^3.0.0",
     "@libp2p/tracked-map": "^2.0.0",
-    "@multiformats/multiaddr": "^10.1.8",
+    "@multiformats/multiaddr": "^11.0.0",
     "@vascosantos/moving-average": "^1.1.0",
     "abortable-iterator": "^4.0.2",
     "any-signal": "^3.0.0",
