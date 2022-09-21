@@ -170,7 +170,7 @@
     "@libp2p/interface-peer-store": "^1.2.0",
     "@libp2p/topology": "^3.0.0",
     "@libp2p/tracked-map": "^2.0.0",
-    "@multiformats/multiaddr": "^10.1.8",
+    "@multiformats/multiaddr": "^11.0.0",
     "@vascosantos/moving-average": "^1.1.0",
     "abortable-iterator": "^4.0.2",
     "any-signal": "^3.0.0",
@@ -208,7 +208,7 @@
     "iso-random-stream": "^2.0.0",
     "it-all": "^1.0.5",
     "it-drain": "^1.0.4",
-    "libp2p": "next",
+    "libp2p": "^0.39.2",
     "lodash.difference": "^4.5.0",
     "lodash.flatten": "^4.4.0",
     "lodash.range": "^3.2.0",
@@ -225,7 +225,7 @@
     "stats-lite": "^2.2.0",
     "url": "^0.11.0",
     "util": "^0.12.3",
-    "uuid": "^8.3.2"
+    "uuid": "^9.0.0"
   },
   "browser": {
     "test/utils/create-libp2p-node.js": false
