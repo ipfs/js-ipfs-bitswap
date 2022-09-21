@@ -1,3 +1,10 @@
+## [12.0.6](https://github.com/ipfs/js-ipfs-bitswap/compare/v12.0.5...v12.0.6) (2022-09-21)
+
+
+### Dependencies
+
+* update @multiformats/multiaddr to 11.0.0 ([#478](https://github.com/ipfs/js-ipfs-bitswap/issues/478)) ([259b69c](https://github.com/ipfs/js-ipfs-bitswap/commit/259b69cb863d63aa61a254a945805ec9a9bef78c))
+
 ## [12.0.5](https://github.com/ipfs/js-ipfs-bitswap/compare/v12.0.4...v12.0.5) (2022-09-01)
 
 
