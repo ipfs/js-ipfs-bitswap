@@ -195,7 +195,7 @@
     "@libp2p/mplex": "^5.0.0",
     "@libp2p/peer-id": "^1.1.8",
     "@libp2p/peer-id-factory": "^1.0.8",
-    "@libp2p/tcp": "^3.0.1",
+    "@libp2p/tcp": "^4.0.1",
     "@nodeutils/defaults-deep": "^1.1.0",
     "@types/debug": "^4.1.5",
     "@types/stats-lite": "^2.2.0",
