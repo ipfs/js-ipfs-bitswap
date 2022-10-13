@@ -192,7 +192,7 @@
   "devDependencies": {
     "@chainsafe/libp2p-noise": "^8.0.0",
     "@libp2p/kad-dht": "^3.0.0",
-    "@libp2p/mplex": "^5.0.0",
+    "@libp2p/mplex": "^7.0.0",
     "@libp2p/peer-id": "^1.1.8",
     "@libp2p/peer-id-factory": "^1.0.8",
     "@libp2p/tcp": "^3.0.1",
