@@ -185,7 +185,7 @@
     "protobufjs": "^7.0.0",
     "readable-stream": "^4.0.0",
     "timeout-abort-controller": "^3.0.0",
-    "uint8arrays": "^3.0.0",
+    "uint8arrays": "^4.0.2",
     "varint": "^6.0.0",
     "varint-decoder": "^1.0.0"
   },
