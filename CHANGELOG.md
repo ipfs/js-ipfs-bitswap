@@ -1,3 +1,14 @@
+## [13.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v12.0.6...v13.0.0) (2022-10-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* updates to incompatible multiformats version
+
+### Dependencies
+
+* update multiformats to 10.x.x ([#490](https://github.com/ipfs/js-ipfs-bitswap/issues/490)) ([123f06b](https://github.com/ipfs/js-ipfs-bitswap/commit/123f06b372800e5a8a993cd959dcf216f296f320))
+
 ## [12.0.6](https://github.com/ipfs/js-ipfs-bitswap/compare/v12.0.5...v12.0.6) (2022-09-21)
 
 
