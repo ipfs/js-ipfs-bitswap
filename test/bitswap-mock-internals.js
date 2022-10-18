@@ -397,7 +397,7 @@ describe('bitswap with mocks', function () {
       expect(block).to.have.nested.property('cid.code', DAG_PB_CODEC)
       expect(block).to.have.nested.property('cid.version', 0)
 
-      const cid1 = CID.createV0(block.cid.multihash)
+      const cid1 = CID.create(0, DAG_PB_CODEC, block.cid.multihash)
       const cid2 = CID.createV1(DAG_PB_CODEC, block.cid.multihash)
       const cid3 = CID.createV1(RAW_CODEC, block.cid.multihash)
 

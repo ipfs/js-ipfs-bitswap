@@ -1,9 +1,9 @@
 
-import { TCP } from '@libp2p/tcp'
-import { Mplex } from '@libp2p/mplex'
+import { tcp } from '@libp2p/tcp'
+import { mplex } from '@libp2p/mplex'
 import { Noise } from '@chainsafe/libp2p-noise'
 import { createLibp2p } from 'libp2p'
-import { KadDHT } from '@libp2p/kad-dht'
+import { kadDHT } from '@libp2p/kad-dht'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 
 // @ts-ignore
@@ -28,16 +28,16 @@ export async function createLibp2pNode (options) {
       listen: ['/ip4/0.0.0.0/tcp/0']
     },
     transports: [
-      new TCP()
+      tcp()
     ],
     streamMuxers: [
-      new Mplex()
+      mplex()
     ],
     connectionEncryption: [
-      new Noise()
+      () => new Noise()
     ],
     dht: options.DHT
-      ? new KadDHT({
+      ? kadDHT({
         clientMode: false
       })
       : undefined
