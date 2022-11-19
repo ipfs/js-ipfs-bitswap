@@ -22,9 +22,7 @@ export class WantManager {
   constructor (peerId, network, stats, libp2p) {
     /** @type {Map<string, MsgQueue>} */
     this.peers = trackedMap({
-      system: 'ipfs',
-      component: 'bitswap',
-      metric: 'want-manager-peers',
+      name: 'ipfs_bitswap_want_manager_peers',
       metrics: libp2p.metrics
     })
     this.wantlist = new Wantlist(stats, libp2p)

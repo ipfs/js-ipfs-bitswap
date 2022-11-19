@@ -52,9 +52,7 @@ export class Stats extends EventEmitter {
 
     /** @type {Map<string, Stat>} */
     this._peers = trackedMap({
-      system: 'ipfs',
-      component: 'bitswap',
-      metric: 'stats-peers',
+      name: 'ipfs_bitswap_stats_peers',
       metrics: libp2p.metrics
     })
   }

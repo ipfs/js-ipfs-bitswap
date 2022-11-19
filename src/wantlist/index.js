@@ -36,9 +36,7 @@ export class Wantlist {
     /** @type {Map<string, Entry>} */
     this.set = libp2p
       ? trackedMap({
-        system: 'ipfs',
-        component: 'bitswap',
-        metric: 'wantlist',
+        name: 'ipfs_bitswap_wantlist',
         metrics: libp2p.metrics
       })
       : new Map()
