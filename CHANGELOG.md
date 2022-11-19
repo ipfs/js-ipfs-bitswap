@@ -1,3 +1,14 @@
+## [14.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v13.0.0...v14.0.0) (2022-11-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* updates to the new metrics interface
+
+### Bug Fixes
+
+* Update to new metrics interface ([#502](https://github.com/ipfs/js-ipfs-bitswap/issues/502)) ([60a5e6c](https://github.com/ipfs/js-ipfs-bitswap/commit/60a5e6cdb3fdb06ef9c8b935b339d2d3e5f8ef07))
+
 ## [13.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v12.0.6...v13.0.0) (2022-10-18)
 
 
