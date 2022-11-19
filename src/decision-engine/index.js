@@ -51,9 +51,7 @@ export class DecisionEngine {
     // A list of of ledgers by their partner id
     /** @type {Map<string, Ledger>} */
     this.ledgerMap = trackedMap({
-      system: 'ipfs',
-      component: 'bitswap',
-      metric: 'ledger-map',
+      name: 'ipfs_bitswap_ledger_map',
       metrics: libp2p.metrics
     })
     this._running = false

@@ -1,7 +1,7 @@
 
 import { tcp } from '@libp2p/tcp'
 import { mplex } from '@libp2p/mplex'
-import { Noise } from '@chainsafe/libp2p-noise'
+import { noise } from '@chainsafe/libp2p-noise'
 import { createLibp2p } from 'libp2p'
 import { kadDHT } from '@libp2p/kad-dht'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
@@ -34,7 +34,7 @@ export async function createLibp2pNode (options) {
       mplex()
     ],
     connectionEncryption: [
-      () => new Noise()
+      noise()
     ],
     dht: options.DHT
       ? kadDHT({
