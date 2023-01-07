@@ -11,15 +11,10 @@
 
 - [Install](#install)
   - [Browser `<script>` tag](#browser-script-tag)
-  - [Use in Node.js or in the browser with browserify, webpack or any other bundler](#use-in-nodejs-or-in-the-browser-with-browserify-webpack-or-any-other-bundler)
-  - [Use in a browser using a script tag](#use-in-a-browser-using-a-script-tag)
-- [API](#api)
-  - [Stats](#stats)
-    - [Peer accessor:](#peer-accessor)
-    - [Global snapshot accessor:](#global-snapshot-accessor)
-    - [Moving average accessor:](#moving-average-accessor)
-- [Development](#development)
-  - [Structure](#structure)
+- [Stats](#stats)
+  - [Peer accessor:](#peer-accessor)
+  - [Global snapshot accessor:](#global-snapshot-accessor)
+  - [Moving average accessor:](#moving-average-accessor)
 - [Performance tests](#performance-tests)
   - [Profiling](#profiling)
 - [API Docs](#api-docs)
@@ -40,23 +35,7 @@ Loading this module through a script tag will make it's exports available as `Ip
 <script src="https://unpkg.com/ipfs-bitswap/dist/index.min.js"></script>
 ```
 
-```bash
-> npm install ipfs-bitswap
-```
-
-### Use in Node.js or in the browser with browserify, webpack or any other bundler
-
-```js
-const { createBitswap } from 'ipfs-bitswap'
-```
-
-### Use in a browser using a script tag
-
-## API
-
-See <https://ipfs.github.io/js-ipfs-bitswap>
-
-### Stats
+## Stats
 
 ```js
 const bitswapNode = // ...
@@ -74,7 +53,7 @@ stats.on('update', (stats) => {
 })
 ```
 
-#### Peer accessor:
+### Peer accessor:
 
 You can get the stats for a specific peer by doing:
 
@@ -84,7 +63,7 @@ const peerStats = stats.forPeer(peerId)
 
 The returned object behaves like the root stats accessor (has a snapshot, a moving average accessors and is an event emitter).
 
-#### Global snapshot accessor:
+### Global snapshot accessor:
 
 ```js
 const snapshot = stats.snapshot
@@ -108,7 +87,7 @@ the snapshot will contain the following keys, with the values being [bignumber.j
 // }
 ```
 
-#### Moving average accessor:
+### Moving average accessor:
 
 ```js
 const movingAverages = stats.movingAverages
@@ -143,35 +122,6 @@ const oneMinuteDataReceivedMovingAverages = dataReceivedMovingAverages[60000]
 ```
 
 This object will be a [movingAverage](https://github.com/pgte/moving-average#readme) instance.
-
-## Development
-
-### Structure
-
-![](/img/architecture.png)
-
-```sh
-» tree src
-src
-├── constants.js
-├── decision-engine
-│   ├── index.js
-│   └── ledger.js
-├── index.js
-├── network.js             # Handles peerSet and open new conns
-├── notifications.js       # Handles tracking of incomning blocks and wants/unwants.
-├─── want-manager          # Keeps track of all blocks the peer (self) wants
-│   ├── index.js
-│   └── msg-queue.js       # Messages to send queue, one per peer
-└─── types
-    ├── message            # (Type) message that is put in the wire
-    │   ├── entry.js
-    │   ├── index.js
-    │   └── message.proto.js
-    └── wantlist           # (Type) track wanted blocks
-        ├── entry.js
-        └── index.js
-```
 
 ## Performance tests
 
