@@ -1,3 +1,14 @@
+## [15.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v14.0.0...v15.0.0) (2023-01-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* update multiformats to v11 (#509)
+
+### Dependencies
+
+* update multiformats to v11 ([#509](https://github.com/ipfs/js-ipfs-bitswap/issues/509)) ([09d4ff9](https://github.com/ipfs/js-ipfs-bitswap/commit/09d4ff948a9292df03c6205d2e9b3545e166509c))
+
 ## [14.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v13.0.0...v14.0.0) (2022-11-19)
 
 
