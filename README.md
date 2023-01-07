@@ -1,16 +1,16 @@
 # ipfs-bitswap <!-- omit in toc -->
 
-[![ipfs.io](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](http://ipfs.io)
-[![IRC](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23ipfs)
-[![Discord](https://img.shields.io/discord/806902334369824788?style=flat-square)](https://discord.gg/ipfs)
+[![ipfs.tech](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](https://ipfs.tech)
+[![Discuss](https://img.shields.io/discourse/https/discuss.ipfs.tech/posts.svg?style=flat-square)](https://discuss.ipfs.tech)
 [![codecov](https://img.shields.io/codecov/c/github/ipfs/js-ipfs-bitswap.svg?style=flat-square)](https://codecov.io/gh/ipfs/js-ipfs-bitswap)
-[![CI](https://img.shields.io/github/workflow/status/ipfs/js-ipfs-bitswap/test%20&%20maybe%20release/master?style=flat-square)](https://github.com/ipfs/js-ipfs-bitswap/actions/workflows/js-test-and-release.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/ipfs/js-ipfs-bitswap/js-test-and-release.yml?branch=master\&style=flat-square)](https://github.com/ipfs/js-ipfs-bitswap/actions/workflows/js-test-and-release.yml?query=branch%3Amaster)
 
 > JavaScript implementation of the Bitswap data exchange protocol used by IPFS
 
 ## Table of contents <!-- omit in toc -->
 
 - [Install](#install)
+  - [Browser `<script>` tag](#browser-script-tag)
   - [Use in Node.js or in the browser with browserify, webpack or any other bundler](#use-in-nodejs-or-in-the-browser-with-browserify-webpack-or-any-other-bundler)
   - [Use in a browser using a script tag](#use-in-a-browser-using-a-script-tag)
 - [API](#api)
@@ -22,6 +22,7 @@
   - [Structure](#structure)
 - [Performance tests](#performance-tests)
   - [Profiling](#profiling)
+- [API Docs](#api-docs)
 - [License](#license)
 - [Contribute](#contribute)
 
@@ -29,6 +30,14 @@
 
 ```console
 $ npm i ipfs-bitswap
+```
+
+### Browser `<script>` tag
+
+Loading this module through a script tag will make it's exports available as `IpfsBitswap` in the global namespace.
+
+```html
+<script src="https://unpkg.com/ipfs-bitswap/dist/index.min.js"></script>
 ```
 
 ```bash
@@ -42,14 +51,6 @@ const { createBitswap } from 'ipfs-bitswap'
 ```
 
 ### Use in a browser using a script tag
-
-Loading this module through a script tag will make the `IpfsBitswap` object available in the global namespace.
-
-```html
-<script src="https://unpkg.com/ipfs-bitswap/dist/index.min.js"></script>
-<!-- OR -->
-<script src="https://unpkg.com/ipfs-bitswap/dist/index.js"></script>
-```
 
 ## API
 
@@ -198,6 +199,10 @@ This will output a flame graph and print the location for it.
 Use the browser Chrome to open and inspect the generated graph.
 
 ![Flame graph](https://ipfs.io/ipfs/QmVbyLgYfkLewNtzTAFwAEMmP2hTJgs8sSqsRTBNBjyQ1y)
+
+## API Docs
+
+- <https://ipfs.github.io/js-ipfs-bitswap>
 
 ## License
 

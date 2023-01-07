@@ -32,7 +32,7 @@ const DEFAULT_INCOMING_STREAM_TIMEOUT = 30000
 
 export class Network {
   /**
-   * @param {import('libp2p').Libp2p} libp2p
+   * @param {import('@libp2p/interface-libp2p').Libp2p} libp2p
    * @param {import('./bitswap').Bitswap} bitswap
    * @param {import('./stats').Stats} stats
    * @param {object} [options]
@@ -84,7 +84,7 @@ export class Network {
     this._registrarIds = []
 
     for (const protocol of this._protocols) {
-      this._registrarIds.push(await this._libp2p.registrar.register(protocol, topology))
+      this._registrarIds.push(await this._libp2p.register(protocol, topology))
     }
 
     // All existing connections are like new ones for us
@@ -102,7 +102,7 @@ export class Network {
     // unregister protocol and handlers
     if (this._registrarIds != null) {
       for (const id of this._registrarIds) {
-        this._libp2p.registrar.unregister(id)
+        this._libp2p.unregister(id)
       }
 
       this._registrarIds = []

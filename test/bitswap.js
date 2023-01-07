@@ -12,7 +12,7 @@ import { BitswapMessage as Message } from '../src/message/index.js'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 
 /**
- * @typedef {import('libp2p').Libp2p} Libp2p
+ * @typedef {import('@libp2p/interface-libp2p').Libp2p} Libp2p
  */
 
 /**
@@ -34,10 +34,8 @@ describe('start/stop', () => {
     const libp2p = {
       handle: () => {},
       unhandle: () => {},
-      registrar: {
-        register: () => {},
-        unregister: () => {}
-      },
+      register: () => {},
+      unregister: () => {},
       getConnections: () => []
     }
     // @ts-ignore not a full libp2p

@@ -11,7 +11,7 @@ import { makeBlocks } from './utils/make-blocks.js'
 import { makePeerIds } from './utils/make-peer-id.js'
 
 /**
- * @typedef {import('libp2p').Libp2p} Libp2p
+ * @typedef {import('@libp2p/interface-libp2p').Libp2p} Libp2p
  * @typedef {import('multiformats/cid').CID} CID
  */
 

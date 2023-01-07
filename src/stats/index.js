@@ -23,7 +23,7 @@ const defaultOptions = {
 
 export class Stats extends EventEmitter {
   /**
-   * @param {import('libp2p').Libp2p} libp2p
+   * @param {import('@libp2p/interface-libp2p').Libp2p} libp2p
    * @param {string[]} [initialCounters]
    * @param {object} _options
    * @param {boolean} _options.enabled

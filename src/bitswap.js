@@ -43,7 +43,7 @@ const statsKeys = [
  */
 export class Bitswap extends BaseBlockstore {
   /**
-   * @param {import('libp2p').Libp2p} libp2p
+   * @param {import('@libp2p/interface-libp2p').Libp2p} libp2p
    * @param {Blockstore} blockstore
    * @param {object} [options]
    * @param {boolean} [options.statsEnabled=false]
