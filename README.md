@@ -1,27 +1,23 @@
 # ipfs-bitswap <!-- omit in toc -->
 
-[![ipfs.io](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](http://ipfs.io)
-[![IRC](https://img.shields.io/badge/freenode-%23ipfs-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23ipfs)
-[![Discord](https://img.shields.io/discord/806902334369824788?style=flat-square)](https://discord.gg/ipfs)
+[![ipfs.tech](https://img.shields.io/badge/project-IPFS-blue.svg?style=flat-square)](https://ipfs.tech)
+[![Discuss](https://img.shields.io/discourse/https/discuss.ipfs.tech/posts.svg?style=flat-square)](https://discuss.ipfs.tech)
 [![codecov](https://img.shields.io/codecov/c/github/ipfs/js-ipfs-bitswap.svg?style=flat-square)](https://codecov.io/gh/ipfs/js-ipfs-bitswap)
-[![CI](https://img.shields.io/github/workflow/status/ipfs/js-ipfs-bitswap/test%20&%20maybe%20release/master?style=flat-square)](https://github.com/ipfs/js-ipfs-bitswap/actions/workflows/js-test-and-release.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/ipfs/js-ipfs-bitswap/js-test-and-release.yml?branch=master\&style=flat-square)](https://github.com/ipfs/js-ipfs-bitswap/actions/workflows/js-test-and-release.yml?query=branch%3Amaster)
 
 > JavaScript implementation of the Bitswap data exchange protocol used by IPFS
 
 ## Table of contents <!-- omit in toc -->
 
 - [Install](#install)
-  - [Use in Node.js or in the browser with browserify, webpack or any other bundler](#use-in-nodejs-or-in-the-browser-with-browserify-webpack-or-any-other-bundler)
-  - [Use in a browser using a script tag](#use-in-a-browser-using-a-script-tag)
-- [API](#api)
-  - [Stats](#stats)
-    - [Peer accessor:](#peer-accessor)
-    - [Global snapshot accessor:](#global-snapshot-accessor)
-    - [Moving average accessor:](#moving-average-accessor)
-- [Development](#development)
-  - [Structure](#structure)
+  - [Browser `<script>` tag](#browser-script-tag)
+- [Stats](#stats)
+  - [Peer accessor:](#peer-accessor)
+  - [Global snapshot accessor:](#global-snapshot-accessor)
+  - [Moving average accessor:](#moving-average-accessor)
 - [Performance tests](#performance-tests)
   - [Profiling](#profiling)
+- [API Docs](#api-docs)
 - [License](#license)
 - [Contribute](#contribute)
 
@@ -31,31 +27,15 @@
 $ npm i ipfs-bitswap
 ```
 
-```bash
-> npm install ipfs-bitswap
-```
+### Browser `<script>` tag
 
-### Use in Node.js or in the browser with browserify, webpack or any other bundler
-
-```js
-const { createBitswap } from 'ipfs-bitswap'
-```
-
-### Use in a browser using a script tag
-
-Loading this module through a script tag will make the `IpfsBitswap` object available in the global namespace.
+Loading this module through a script tag will make it's exports available as `IpfsBitswap` in the global namespace.
 
 ```html
 <script src="https://unpkg.com/ipfs-bitswap/dist/index.min.js"></script>
-<!-- OR -->
-<script src="https://unpkg.com/ipfs-bitswap/dist/index.js"></script>
 ```
 
-## API
-
-See <https://ipfs.github.io/js-ipfs-bitswap>
-
-### Stats
+## Stats
 
 ```js
 const bitswapNode = // ...
@@ -73,7 +53,7 @@ stats.on('update', (stats) => {
 })
 ```
 
-#### Peer accessor:
+### Peer accessor:
 
 You can get the stats for a specific peer by doing:
 
@@ -83,7 +63,7 @@ const peerStats = stats.forPeer(peerId)
 
 The returned object behaves like the root stats accessor (has a snapshot, a moving average accessors and is an event emitter).
 
-#### Global snapshot accessor:
+### Global snapshot accessor:
 
 ```js
 const snapshot = stats.snapshot
@@ -107,7 +87,7 @@ the snapshot will contain the following keys, with the values being [bignumber.j
 // }
 ```
 
-#### Moving average accessor:
+### Moving average accessor:
 
 ```js
 const movingAverages = stats.movingAverages
@@ -143,35 +123,6 @@ const oneMinuteDataReceivedMovingAverages = dataReceivedMovingAverages[60000]
 
 This object will be a [movingAverage](https://github.com/pgte/moving-average#readme) instance.
 
-## Development
-
-### Structure
-
-![](/img/architecture.png)
-
-```sh
-» tree src
-src
-├── constants.js
-├── decision-engine
-│   ├── index.js
-│   └── ledger.js
-├── index.js
-├── network.js             # Handles peerSet and open new conns
-├── notifications.js       # Handles tracking of incomning blocks and wants/unwants.
-├─── want-manager          # Keeps track of all blocks the peer (self) wants
-│   ├── index.js
-│   └── msg-queue.js       # Messages to send queue, one per peer
-└─── types
-    ├── message            # (Type) message that is put in the wire
-    │   ├── entry.js
-    │   ├── index.js
-    │   └── message.proto.js
-    └── wantlist           # (Type) track wanted blocks
-        ├── entry.js
-        └── index.js
-```
-
 ## Performance tests
 
 You can run performance tests like this:
@@ -198,6 +149,10 @@ This will output a flame graph and print the location for it.
 Use the browser Chrome to open and inspect the generated graph.
 
 ![Flame graph](https://ipfs.io/ipfs/QmVbyLgYfkLewNtzTAFwAEMmP2hTJgs8sSqsRTBNBjyQ1y)
+
+## API Docs
+
+- <https://ipfs.github.io/js-ipfs-bitswap>
 
 ## License
 

@@ -36,7 +36,7 @@ export class DecisionEngine {
    * @param {import('interface-blockstore').Blockstore} blockstore
    * @param {import('../network').Network} network
    * @param {import('../stats').Stats} stats
-   * @param {import('libp2p').Libp2p} libp2p
+   * @param {import('@libp2p/interface-libp2p').Libp2p} libp2p
    * @param {object} [opts]
    * @param {number} [opts.targetMessageSize]
    * @param {number} [opts.maxSizeReplaceHasWithBlock]

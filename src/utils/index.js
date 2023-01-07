@@ -1,4 +1,4 @@
-import debug from 'debug'
+import { logger as createLogger } from '@libp2p/logger'
 import { equals as uint8ArrayEquals } from 'uint8arrays/equals'
 import { BitswapMessageEntry } from '../message/entry.js'
 
@@ -17,9 +17,7 @@ export const logger = (id, subsystem) => {
     name.push(`${id.toString().slice(0, 8)}`)
   }
 
-  return Object.assign(debug(name.join(':')), {
-    error: debug(name.concat(['error']).join(':'))
-  })
+  return createLogger(name.join(':'))
 }
 
 /**

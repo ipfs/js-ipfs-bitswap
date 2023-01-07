@@ -10,7 +10,7 @@ import { connectAll } from './connect-all.js'
 import all from 'it-all'
 
 /**
- * @typedef {import('libp2p').Libp2p} Libp2p
+ * @typedef {import('@libp2p/interface-libp2p').Libp2p} Libp2p
  * @typedef {import('../../src/types').IPFSBitswap} Bitswap
  */
 

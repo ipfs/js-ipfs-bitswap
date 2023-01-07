@@ -7,7 +7,7 @@ import ve from '../utils/varint-encoder.js'
 import { isMapEqual } from '../utils/index.js'
 import { Message } from './message.js'
 import { BitswapMessageEntry as Entry } from './entry.js'
-import errcode from 'err-code'
+import { CodeError } from '@libp2p/interfaces/errors'
 
 /**
  * @typedef {import('../types').MultihashHasherLoader} MultihashHasherLoader
@@ -291,7 +291,7 @@ BitswapMessage.deserialize = async (raw, hashLoader) => {
       const hasher = hashAlg === sha256.code ? sha256 : hashLoader && await hashLoader.getHasher(hashAlg)
 
       if (!hasher) {
-        throw errcode(new Error('Unknown hash algorithm'), 'ERR_UNKNOWN_HASH_ALG')
+        throw new CodeError('Unknown hash algorithm', 'ERR_UNKNOWN_HASH_ALG')
       }
 
       // const hashLen = values[3] // We haven't need to use this so far

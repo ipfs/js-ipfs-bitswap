@@ -30,7 +30,7 @@ const sortBy = (fn, list) => {
 export class Wantlist {
   /**
    * @param {import('../stats').Stats} [stats]
-   * @param {import('libp2p').Libp2p} [libp2p]
+   * @param {import('@libp2p/interface-libp2p').Libp2p} [libp2p]
    */
   constructor (stats, libp2p) {
     /** @type {Map<string, Entry>} */

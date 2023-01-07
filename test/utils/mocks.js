@@ -14,7 +14,7 @@ import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
  * @typedef {import('../../src/message').BitswapMessage} Message
  * @typedef {import('multiformats/cid').CID} CID
  * @typedef {import('@multiformats/multiaddr').Multiaddr} Multiaddr
- * @typedef {import('libp2p').Libp2p} Libp2p
+ * @typedef {import('@libp2p/interface-libp2p').Libp2p} Libp2p
  * @typedef {import('@libp2p/interface-peer-id').PeerId} PeerId
  * @typedef {import('@libp2p/interface-peer-store').PeerStore} PeerStore
  */
@@ -22,7 +22,7 @@ import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 /**
  * Create a mock libp2p node
  *
- * @returns {import('libp2p').Libp2p}
+ * @returns {import('@libp2p/interface-libp2p').Libp2p}
  */
 export const mockLibp2pNode = () => {
   const buf = uint8ArrayFromString('122019318b6e5e0cf93a2314bf01269a2cc23cd3dcd452d742cdb9379d8646f6e4a9', 'base16')
@@ -33,10 +33,8 @@ export const mockLibp2pNode = () => {
     multiaddrs: [],
     handle () {},
     unhandle () {},
-    registrar: {
-      register () {},
-      unregister () {}
-    },
+    register () {},
+    unregister () {},
     contentRouting: {
       provide: async (/** @type {CID} */ cid) => {}, // eslint-disable-line require-await
       findProviders: async (/** @type {CID} */ cid, /** @type {number} **/ timeout) => { return [] } // eslint-disable-line require-await

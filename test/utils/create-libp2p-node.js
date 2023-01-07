@@ -10,7 +10,7 @@ import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import defaultsDeep from '@nodeutils/defaults-deep'
 
 /**
- * @typedef {import('libp2p').Libp2p} Libp2p
+ * @typedef {import('@libp2p/interface-libp2p').Libp2p} Libp2p
  * @typedef {import('libp2p').Libp2pOptions & { DHT?: boolean}} NodeOptions
  */
 

@@ -14,7 +14,7 @@ import { CID } from 'multiformats/cid'
 import delay from 'delay'
 
 /**
- * @typedef {import('libp2p').Libp2p} Libp2p
+ * @typedef {import('@libp2p/interface-libp2p').Libp2p} Libp2p
  * @typedef {import('../../src/bitswap').Bitswap} Bitswap
  */
 
@@ -304,11 +304,8 @@ describe('network', () => {
       contentRouting: {
         findProviders: mockFindProviders
       },
-      // @ts-expect-error incomplete implementation
-      registrar: {
-        register: sinon.stub(),
-        unregister: sinon.stub()
-      },
+      register: sinon.stub(),
+      unregister: sinon.stub(),
       getConnections: () => [],
       dial: mockDial,
       handle: sinon.stub()
@@ -345,9 +342,8 @@ describe('network', () => {
 
     const libp2p = {
       handle: sinon.stub(),
-      registrar: {
-        register: sinon.stub()
-      },
+      register: sinon.stub(),
+      unregister: sinon.stub(),
       getConnections: () => []
     }
 
