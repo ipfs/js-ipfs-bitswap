@@ -1,3 +1,15 @@
+## [15.0.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v15.0.1...v15.0.2) (2023-01-27)
+
+
+### Bug Fixes
+
+* implement .has method from the blockstore interface ([#520](https://github.com/ipfs/js-ipfs-bitswap/issues/520)) ([6cd37ac](https://github.com/ipfs/js-ipfs-bitswap/commit/6cd37ac05a3e5a3e0c1f3e11c9ba73afea7c29d9))
+
+
+### Trivial Changes
+
+* remove rimraf as it is not used ([#521](https://github.com/ipfs/js-ipfs-bitswap/issues/521)) ([eac64fd](https://github.com/ipfs/js-ipfs-bitswap/commit/eac64fd1a202ddcbacf73e0e1d3f52c1286b0503))
+
 ## [15.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v15.0.0...v15.0.1) (2023-01-27)
 
 
