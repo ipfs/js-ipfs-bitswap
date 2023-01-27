@@ -53,6 +53,30 @@ describe('start/stop', () => {
   })
 })
 
+describe('blockstore', () => {
+  it('should support .has', async () => {
+    const [block] = await makeBlocks(1)
+    const libp2p = {
+      handle: () => {},
+      unhandle: () => {},
+      register: () => {},
+      unregister: () => {},
+      getConnections: () => []
+    }
+    // @ts-ignore not a full libp2p
+    const bitswap = new Bitswap(libp2p, new MemoryBlockstore())
+    await bitswap.start()
+
+    await expect(bitswap.has(block.cid)).to.eventually.be.false()
+
+    await bitswap.put(block.cid, block.data)
+
+    await expect(bitswap.has(block.cid)).to.eventually.be.true()
+
+    await bitswap.stop()
+  })
+})
+
 describe('bitswap without DHT', function () {
   this.timeout(20 * 1000)
 
