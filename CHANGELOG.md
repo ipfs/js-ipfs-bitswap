@@ -1,3 +1,11 @@
+## [15.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v15.0.0...v15.0.1) (2023-01-27)
+
+
+### Dependencies
+
+* **dev:** bump @chainsafe/libp2p-noise from 10.2.0 to 11.0.0 ([#511](https://github.com/ipfs/js-ipfs-bitswap/issues/511)) ([584db6c](https://github.com/ipfs/js-ipfs-bitswap/commit/584db6c1e226e6f9a5415236612b03ec38523d14))
+* **dev:** bump aegir from 37.12.1 to 38.1.0 ([#513](https://github.com/ipfs/js-ipfs-bitswap/issues/513)) ([72d6a4c](https://github.com/ipfs/js-ipfs-bitswap/commit/72d6a4c48f49583a41967200e567656cef70a9fe))
+
 ## [15.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v14.0.0...v15.0.0) (2023-01-07)
 
 
