@@ -455,4 +455,12 @@ export class Bitswap extends BaseBlockstore {
   unwrap () {
     return this.blockstore
   }
+
+  /**
+   * @param {CID} cid
+   * @returns {Promise<boolean>}
+   */
+  has (cid) {
+    return this.blockstore.has(cid)
+  }
 }
