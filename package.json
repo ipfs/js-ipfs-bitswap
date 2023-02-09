@@ -220,6 +220,6 @@
     "uuid": "^9.0.0"
   },
   "browser": {
-    "test/utils/create-libp2p-node.js": false
+    "dist/test/utils/create-libp2p-node.js": false
   }
 }
