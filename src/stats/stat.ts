@@ -146,7 +146,7 @@ export class Stat extends EventEmitter {
 
     this._stats[key] = BigInt(this._stats[key]) + BigInt(inc)
 
-    if (this._frequencyAccumulators[key] != null) {
+    if (this._frequencyAccumulators[key] == null) {
       this._frequencyAccumulators[key] = 0
     }
     this._frequencyAccumulators[key] += inc
