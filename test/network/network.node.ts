@@ -12,10 +12,10 @@ import { Stats } from '../../src/stats/index.js'
 import sinon from 'sinon'
 import { CID } from 'multiformats/cid'
 import delay from 'delay'
-import type { Bitswap } from '../../src/bitswap.js'
+import type { DefaultBitswap } from '../../src/bitswap.js'
 import type { Libp2p } from '@libp2p/interface-libp2p'
 
-function createBitswapMock (): Bitswap {
+function createBitswapMock (): DefaultBitswap {
   // @ts-expect-error incomplete implementation
   return {
     _receiveMessage: async (): Promise<void> => {},
@@ -28,15 +28,15 @@ function createBitswapMock (): Bitswap {
 describe('network', () => {
   let p2pA: Libp2p
   let networkA: Network
-  let bitswapMockA: Bitswap
+  let bitswapMockA: DefaultBitswap
 
   let p2pB: Libp2p
   let networkB: Network
-  let bitswapMockB: Bitswap
+  let bitswapMockB: DefaultBitswap
 
   let p2pC: Libp2p
   let networkC: Network
-  let bitswapMockC: Bitswap
+  let bitswapMockC: DefaultBitswap
 
   let blocks: Array<{ cid: CID, data: Uint8Array }>
 

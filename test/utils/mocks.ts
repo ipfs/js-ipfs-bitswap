@@ -1,6 +1,6 @@
 import { MemoryBlockstore } from 'blockstore-core/memory'
 import { EventEmitter } from 'events'
-import { Bitswap } from '../../src/bitswap.js'
+import { DefaultBitswap } from '../../src/bitswap.js'
 import { Network } from '../../src/network.js'
 import { Stats } from '../../src/stats/index.js'
 import { peerIdFromBytes } from '@libp2p/peer-id'
@@ -13,6 +13,7 @@ import type { PeerId } from '@libp2p/interface-peer-id'
 import type { Multiaddr } from '@multiformats/multiaddr'
 import type { Connection } from '@libp2p/interface-connection'
 import type { BitswapMessage } from '../../src/message/index.js'
+import type { Bitswap } from '../../src/index.js'
 
 /**
  * Create a mock libp2p node
@@ -81,7 +82,7 @@ export const mockNetwork = (calls: number = Infinity, done: OnDone = async (): P
 
     constructor () {
       // @ts-expect-error - {} is not an instance of libp2p
-      super({}, new Bitswap({}, new MemoryBlockstore()), new Stats({}))
+      super({}, new DefaultBitswap({}, new MemoryBlockstore()), new Stats({}))
 
       this.connects = connects
       this.messages = messages
@@ -126,7 +127,7 @@ export const mockNetwork = (calls: number = Infinity, done: OnDone = async (): P
   return new MockNetwork()
 }
 
-export const applyNetwork = (bs: Bitswap, n: Network): void => {
+export const applyNetwork = (bs: DefaultBitswap, n: Network): void => {
   bs.network = n
   bs.wm.network = n
   bs.engine.network = n
@@ -153,7 +154,7 @@ export const genBitswapNetwork = async (n: number, enableDHT: boolean = false): 
 
       return {
         libp2p,
-        bitswap: new Bitswap(libp2p, new MemoryBlockstore())
+        bitswap: new DefaultBitswap(libp2p, new MemoryBlockstore())
       }
     })
   )

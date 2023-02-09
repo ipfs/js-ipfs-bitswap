@@ -3,7 +3,7 @@
 import { expect } from 'aegir/chai'
 import sinon from 'sinon'
 import pWaitFor from 'p-wait-for'
-import { Bitswap } from '../src/bitswap.js'
+import { DefaultBitswap } from '../src/bitswap.js'
 import { MemoryBlockstore } from 'blockstore-core/memory'
 import { createLibp2pNode } from './utils/create-libp2p-node.js'
 import { makeBlocks } from './utils/make-blocks.js'
@@ -16,11 +16,11 @@ import drain from 'it-drain'
 /**
  * Creates a repo + libp2pNode + Bitswap with or without DHT
  */
-async function createThing (dht: boolean): Promise<{ libp2pNode: Libp2p, bitswap: Bitswap }> {
+async function createThing (dht: boolean): Promise<{ libp2pNode: Libp2p, bitswap: DefaultBitswap }> {
   const libp2pNode = await createLibp2pNode({
     DHT: dht
   })
-  const bitswap = new Bitswap(libp2pNode, new MemoryBlockstore())
+  const bitswap = new DefaultBitswap(libp2pNode, new MemoryBlockstore())
   await bitswap.start()
   return { libp2pNode, bitswap }
 }
@@ -35,7 +35,7 @@ describe('start/stop', () => {
       getConnections: () => []
     }
     // @ts-expect-error not a full libp2p
-    const bitswap = new Bitswap(libp2p, new MemoryBlockstore())
+    const bitswap = new DefaultBitswap(libp2p, new MemoryBlockstore())
 
     expect(bitswap.isStarted()).to.be.false()
 
@@ -60,7 +60,7 @@ describe('blockstore', () => {
       getConnections: () => []
     }
     // @ts-expect-error not a full libp2p
-    const bitswap = new Bitswap(libp2p, new MemoryBlockstore())
+    const bitswap = new DefaultBitswap(libp2p, new MemoryBlockstore())
     await bitswap.start()
 
     await expect(bitswap.has(block.cid)).to.eventually.be.false()
@@ -76,7 +76,7 @@ describe('blockstore', () => {
 describe('bitswap without DHT', function () {
   this.timeout(20 * 1000)
 
-  let nodes: Array<{ libp2pNode: Libp2p, bitswap: Bitswap }>
+  let nodes: Array<{ libp2pNode: Libp2p, bitswap: DefaultBitswap }>
 
   before(async () => {
     nodes = await Promise.all([
@@ -174,7 +174,7 @@ describe('bitswap without DHT', function () {
 describe('bitswap with DHT', function () {
   this.timeout(60 * 1000)
 
-  let nodes: Array<{ libp2pNode: Libp2p, bitswap: Bitswap }>
+  let nodes: Array<{ libp2pNode: Libp2p, bitswap: DefaultBitswap }>
 
   before(async () => {
     nodes = await Promise.all([

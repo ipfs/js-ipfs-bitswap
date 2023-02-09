@@ -7,7 +7,7 @@ import { Stats } from './stats/index.js'
 import { anySignal } from 'any-signal'
 import { BaseBlockstore } from 'blockstore-core/base'
 import { CID } from 'multiformats/cid'
-import type { BitswapOptions, IPFSBitswap, MultihashHasherLoader, WantListEntry } from './index.js'
+import type { BitswapOptions, Bitswap, MultihashHasherLoader, WantListEntry } from './index.js'
 import type { Libp2p } from '@libp2p/interface-libp2p'
 import type { Blockstore, Options, Pair } from 'interface-blockstore'
 import type { Logger } from '@libp2p/logger'
@@ -46,7 +46,7 @@ const statsKeys = [
  * JavaScript implementation of the Bitswap 'data exchange' protocol
  * used by IPFS.
  */
-export class Bitswap extends BaseBlockstore implements IPFSBitswap {
+export class DefaultBitswap extends BaseBlockstore implements Bitswap {
   private readonly _libp2p: Libp2p
   private readonly _log: Logger
   private readonly _options: Required<BitswapOptions>

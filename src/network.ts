@@ -10,7 +10,7 @@ import type { Libp2p } from '@libp2p/interface-libp2p'
 import type { PeerId } from '@libp2p/interface-peer-id'
 import type { Multiaddr } from '@multiformats/multiaddr'
 import type { MultihashHasherLoader } from './index.js'
-import type { Bitswap } from './bitswap.js'
+import type { DefaultBitswap } from './bitswap.js'
 import type { Stats } from './stats/index.js'
 import type { Logger } from '@libp2p/logger'
 import type { IncomingStreamData } from '@libp2p/interface-registrar'
@@ -43,7 +43,7 @@ export interface NetworkOptions {
 export class Network {
   private readonly _log: Logger
   private readonly _libp2p: Libp2p
-  private readonly _bitswap: Bitswap
+  private readonly _bitswap: DefaultBitswap
   public _protocols: string[]
   private readonly _stats: Stats
   private _running: boolean
@@ -53,7 +53,7 @@ export class Network {
   private readonly _incomingStreamTimeout: number
   private _registrarIds?: string[]
 
-  constructor (libp2p: Libp2p, bitswap: Bitswap, stats: Stats, options: NetworkOptions = {}) {
+  constructor (libp2p: Libp2p, bitswap: DefaultBitswap, stats: Stats, options: NetworkOptions = {}) {
     this._log = logger(libp2p.peerId, 'network')
     this._libp2p = libp2p
     this._bitswap = bitswap

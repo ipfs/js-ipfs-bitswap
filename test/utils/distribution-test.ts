@@ -8,12 +8,12 @@ import { makeBlocks } from './make-blocks.js'
 import { connectAll } from './connect-all.js'
 import all from 'it-all'
 import type { Libp2p } from '@libp2p/interface-libp2p'
-import type { IPFSBitswap } from '../../src/index.js'
+import type { Bitswap } from '../../src/index.js'
 
 export const distributionTest = async (instanceCount: number, blockCount: number, repeats: number, events: any): Promise<void> => {
   let pendingRepeats = repeats
 
-  const nodes: Array<{ libp2pNode: Libp2p, bitswap: IPFSBitswap }> = await Promise.all(range(instanceCount).map(async () => await createBitswap()))
+  const nodes: Array<{ libp2pNode: Libp2p, bitswap: Bitswap }> = await Promise.all(range(instanceCount).map(async () => await createBitswap()))
   events.emit('start')
 
   await connectAll(nodes)

@@ -3,8 +3,7 @@
 import { expect } from 'aegir/chai'
 import { pEvent } from 'p-event'
 import { BitswapMessage as Message } from '../src/message/index.js'
-import { Bitswap } from '../src/bitswap.js'
-
+import { DefaultBitswap } from '../src/bitswap.js'
 import { MemoryBlockstore } from 'blockstore-core/memory'
 import { createLibp2pNode } from './utils/create-libp2p-node.js'
 import { makeBlocks } from './utils/make-blocks.js'
@@ -37,8 +36,8 @@ const expectedTimeWindows = [
 
 describe('bitswap stats', () => {
   let libp2pNodes: Libp2p[]
-  let bitswaps: Bitswap[]
-  let bs: Bitswap
+  let bitswaps: DefaultBitswap[]
+  let bs: DefaultBitswap
   let blocks: Array<{ cid: CID, data: Uint8Array }>
   let ids: PeerId[]
 
@@ -54,7 +53,7 @@ describe('bitswap stats', () => {
 
     // create bitswaps
     bitswaps = libp2pNodes.map((node, i) =>
-      new Bitswap(node, new MemoryBlockstore(), {
+      new DefaultBitswap(node, new MemoryBlockstore(), {
         statsEnabled: true,
         statsComputeThrottleTimeout: 500 // fast update interval for tests
       })
@@ -157,7 +156,7 @@ describe('bitswap stats', () => {
   })
 
   describe('connected to another bitswap', () => {
-    let bs2: Bitswap
+    let bs2: DefaultBitswap
     let block: { cid: CID, data: Uint8Array }
 
     before(async () => {

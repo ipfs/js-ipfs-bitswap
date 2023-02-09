@@ -1,4 +1,4 @@
-import { Bitswap } from './bitswap.js'
+import { DefaultBitswap } from './bitswap.js'
 import type { Blockstore } from 'interface-blockstore'
 import type { PeerId } from '@libp2p/interface-peer-id'
 import type { CID } from 'multiformats/cid'
@@ -54,7 +54,7 @@ export interface Stats {
   push: (peer: string, counter: string, inc: number) => void
 }
 
-export interface IPFSBitswap extends Blockstore {
+export interface Bitswap extends Blockstore {
   peerId: PeerId
   isStarted: () => boolean
   enableStats: () => void
@@ -112,6 +112,6 @@ export interface BitswapOptions {
   hashLoader?: MultihashHasherLoader
 }
 
-export const createBitswap = (libp2p: Libp2p, blockstore: Blockstore, options: BitswapOptions = {}): IPFSBitswap => {
-  return new Bitswap(libp2p, blockstore, options)
+export const createBitswap = (libp2p: Libp2p, blockstore: Blockstore, options: BitswapOptions = {}): Bitswap => {
+  return new DefaultBitswap(libp2p, blockstore, options)
 }
