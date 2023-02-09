@@ -60,7 +60,7 @@ export interface IPFSBitswap extends Blockstore {
   enableStats: () => void
   disableStats: () => void
   wantlistForPeer: (peerId: PeerId) => Map<string, WantListEntry>
-  ledgerForPeer: (peerId: PeerId) => Ledger | null
+  ledgerForPeer: (peerId: PeerId) => Ledger | undefined
   unwant: (cids: CID | CID[]) => void
   cancelWants: (cids: CID | CID[]) => void
   getWantlist: () => IterableIterator<[string, WantListEntry]>

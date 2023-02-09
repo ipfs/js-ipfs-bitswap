@@ -7,12 +7,12 @@ import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
 import * as CONSTANTS from './constants.js'
 import { logger } from './utils/index.js'
 
-const unwantEvent = (cid: CID) => `unwant:${uint8ArrayToString(cid.multihash.bytes, 'base64')}`
+const unwantEvent = (cid: CID): string => `unwant:${uint8ArrayToString(cid.multihash.bytes, 'base64')}`
 
-const blockEvent = (cid: CID) => `block:${uint8ArrayToString(cid.multihash.bytes, 'base64')}`
+const blockEvent = (cid: CID): string => `block:${uint8ArrayToString(cid.multihash.bytes, 'base64')}`
 
 export class Notifications extends EventEmitter {
-  private _log: Logger
+  private readonly _log: Logger
 
   /**
    * Internal module used to track events about incoming blocks,
@@ -29,7 +29,7 @@ export class Notifications extends EventEmitter {
   /**
    * Signal the system that we received `block`.
    */
-  hasBlock (cid: CID, block: Uint8Array) {
+  hasBlock (cid: CID, block: Uint8Array): void {
     const event = blockEvent(cid)
     this._log(event)
     this.emit(event, block)
@@ -41,8 +41,8 @@ export class Notifications extends EventEmitter {
    * Returns a Promise that resolves to the block when it is received,
    * or undefined when the block is unwanted.
    */
-  wantBlock (cid: CID, options: AbortOptions = {}): Promise<Uint8Array> {
-    if (!cid) {
+  async wantBlock (cid: CID, options: AbortOptions = {}): Promise<Uint8Array> {
+    if (cid == null) {
       throw new Error('Not a valid cid')
     }
 
@@ -51,14 +51,14 @@ export class Notifications extends EventEmitter {
 
     this._log(`wantBlock:${cid}`)
 
-    return new Promise((resolve, reject) => {
-      const onUnwant = () => {
+    return await new Promise((resolve, reject) => {
+      const onUnwant = (): void => {
         this.removeListener(blockEvt, onBlock)
 
         reject(new Error(`Block for ${cid} unwanted`))
       }
 
-      const onBlock = (data: Uint8Array) => {
+      const onBlock = (data: Uint8Array): void => {
         this.removeListener(unwantEvt, onUnwant)
 
         resolve(data)
@@ -67,14 +67,12 @@ export class Notifications extends EventEmitter {
       this.once(unwantEvt, onUnwant)
       this.once(blockEvt, onBlock)
 
-      if (options && options.signal) {
-        options.signal.addEventListener('abort', () => {
-          this.removeListener(blockEvt, onBlock)
-          this.removeListener(unwantEvt, onUnwant)
+      options.signal?.addEventListener('abort', () => {
+        this.removeListener(blockEvt, onBlock)
+        this.removeListener(unwantEvt, onUnwant)
 
-          reject(new Error(`Want for ${cid} aborted`))
-        })
-      }
+        reject(new Error(`Want for ${cid} aborted`))
+      })
     })
   }
 

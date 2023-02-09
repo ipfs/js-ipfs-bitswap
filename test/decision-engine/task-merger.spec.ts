@@ -3,7 +3,7 @@
 import { expect } from 'aegir/chai'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import { RequestQueue } from '../../src/decision-engine/req-queue.js'
-import { TaskMerger } from '../../src/decision-engine/task-merger.js'
+import { DefaultTaskMerger } from '../../src/decision-engine/task-merger.js'
 import type { PeerId } from '@libp2p/interface-peer-id'
 
 interface Task {
@@ -49,10 +49,10 @@ describe('Task Merger', () => {
       }
     }
 
-    const runTestCase = (tasks: Task[], expIsWantBlock: boolean) => {
+    const runTestCase = (tasks: Task[], expIsWantBlock: boolean): void => {
       tasks = cloneTasks(tasks)
 
-      const rq = new RequestQueue(TaskMerger)
+      const rq = new RequestQueue(DefaultTaskMerger)
       rq.pushTasks(peerId, tasks)
 
       const popped = rq.popTasks(100).tasks
@@ -124,10 +124,10 @@ describe('Task Merger', () => {
       }
     }
 
-    const runTestCase = (tasks: Task[], expSize: number, expBlockSize: number, expIsWantBlock: boolean) => {
+    const runTestCase = (tasks: Task[], expSize: number, expBlockSize: number, expIsWantBlock: boolean): void => {
       tasks = cloneTasks(tasks)
 
-      const rq = new RequestQueue(TaskMerger)
+      const rq = new RequestQueue(DefaultTaskMerger)
       rq.pushTasks(peerId, tasks)
 
       const popped = rq.popTasks(100).tasks
@@ -202,10 +202,10 @@ describe('Task Merger', () => {
       }
     }
 
-    const runTestCase = (tasks: Task[], expCount: number) => {
+    const runTestCase = (tasks: Task[], expCount: number): void => {
       tasks = cloneTasks(tasks)
 
-      const rq = new RequestQueue(TaskMerger)
+      const rq = new RequestQueue(DefaultTaskMerger)
 
       const popped = []
       for (const task of tasks) {
@@ -274,10 +274,10 @@ describe('Task Merger', () => {
       }
     }
 
-    const runTestCase = (tasks: Task[], expTasks: Task[]) => {
+    const runTestCase = (tasks: Task[], expTasks: Task[]): void => {
       tasks = cloneTasks(tasks)
 
-      const rq = new RequestQueue(TaskMerger)
+      const rq = new RequestQueue(DefaultTaskMerger)
 
       const popped = []
       for (const task of tasks) {
@@ -335,7 +335,7 @@ describe('Task Merger', () => {
   })
 })
 
-function cloneTasks (tasks: Task[]) {
+function cloneTasks (tasks: Task[]): Task[] {
   const clone = []
   for (const t of tasks) {
     clone.push({ ...t, ...{ data: { ...t.data } } })

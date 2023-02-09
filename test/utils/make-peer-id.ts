@@ -6,8 +6,8 @@ export async function makePeerId (): Promise<PeerId> {
 }
 
 export async function makePeerIds (count: number): Promise<PeerId[]> {
-  const peerIds = await Promise.all([...new Array(count || 1)].map(() => {
-    return createEd25519PeerId()
+  const peerIds = await Promise.all([...new Array(count ?? 1)].map(async () => {
+    return await createEd25519PeerId()
   }))
   return peerIds
 }

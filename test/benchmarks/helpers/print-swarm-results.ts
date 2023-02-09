@@ -3,7 +3,7 @@
 import type { EventEmitter } from 'node:events'
 import stats from 'stats-lite'
 
-export const print = (suite: any, emitter: EventEmitter) => {
+export const print = (suite: any, emitter: EventEmitter): void => {
   const elapseds: number[] = []
   emitter.once('start', () => {
     console.log('\n------------------------')

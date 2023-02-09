@@ -35,7 +35,7 @@ describe('WantManager', () => {
 
     const msgs = [m1, m1, m2, m2, m3, m3]
 
-    return new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       const network = mockNetwork(6, (calls) => {
         expect(calls.connects).to.have.length(6)
         expect(calls.messages).to.have.length(6)
@@ -45,9 +45,9 @@ describe('WantManager', () => {
           const connect = calls.connects[ii]
           expect(message[0]).to.be.eql(connect)
           if (!message[1].equals(msgs[ii])) {
-            return reject(
-              new Error(`expected ${message[1].toString()} to equal ${msgs[ii].toString()}`)
-            )
+            reject(
+              new Error('expected messages to match')
+            ); return
           }
         }
 

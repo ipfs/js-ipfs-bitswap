@@ -10,10 +10,10 @@ import all from 'it-all'
 import type { Libp2p } from '@libp2p/interface-libp2p'
 import type { IPFSBitswap } from '../../src/index.js'
 
-export const distributionTest = async (instanceCount: number, blockCount: number, repeats: number, events: any) => {
+export const distributionTest = async (instanceCount: number, blockCount: number, repeats: number, events: any): Promise<void> => {
   let pendingRepeats = repeats
 
-  const nodes: Array<{ libp2pNode: Libp2p, bitswap: IPFSBitswap }> = await Promise.all(range(instanceCount).map(() => createBitswap()))
+  const nodes: Array<{ libp2pNode: Libp2p, bitswap: IPFSBitswap }> = await Promise.all(range(instanceCount).map(async () => await createBitswap()))
   events.emit('start')
 
   await connectAll(nodes)
@@ -25,7 +25,7 @@ export const distributionTest = async (instanceCount: number, blockCount: number
     const blocks = await makeBlocks(blockCount)
 
     await Promise.all(
-      blocks.map(block => first.bitswap.put(block.cid, block.data))
+      blocks.map(async block => { await first.bitswap.put(block.cid, block.data) })
     )
 
     events.emit('first put')
@@ -36,7 +36,7 @@ export const distributionTest = async (instanceCount: number, blockCount: number
 
         const cids = blocks.map((block) => block.cid)
         const start = Date.now()
-        const result = await node.bitswap.getMany(cids)
+        const result = await all(node.bitswap.getMany(cids))
         const elapsed = Date.now() - start
         events.emit('got block', elapsed)
 
@@ -63,7 +63,7 @@ export const distributionTest = async (instanceCount: number, blockCount: number
 
   await Promise.all(
     nodes.map(async node => {
-      await node.bitswap.stop()
+      node.bitswap.stop()
       await node.libp2pNode.stop()
     })
   )

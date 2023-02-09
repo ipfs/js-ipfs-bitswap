@@ -10,9 +10,9 @@ import type { Logger } from '@libp2p/logger'
 export class MsgQueue {
   public peerId: PeerId
   public refcnt: number
-  private network: Network
-  private _entries: Array<{cid:CID, priority:number, cancel?:boolean}>
-  private _log: Logger
+  private readonly network: Network
+  private _entries: Array<{ cid: CID, priority: number, cancel?: boolean }>
+  private readonly _log: Logger
 
   constructor (selfPeerId: PeerId, otherPeerId: PeerId, network: Network) {
     this.peerId = otherPeerId
@@ -23,27 +23,27 @@ export class MsgQueue {
     this.sendEntries = debounce(this.sendEntries.bind(this), wantlistSendDebounceMs)
   }
 
-  addMessage (msg: Message) {
+  addMessage (msg: Message): void {
     if (msg.empty) {
       return
     }
 
-    this.send(msg)
+    void this.send(msg)
   }
 
-  addEntries (entries: Array<{cid:CID, priority:number}>) {
+  addEntries (entries: Array<{ cid: CID, priority: number }>): void {
     this._entries = this._entries.concat(entries)
     this.sendEntries()
   }
 
-  sendEntries () {
-    if (!this._entries.length) {
+  sendEntries (): void {
+    if (this._entries.length === 0) {
       return
     }
 
     const msg = new Message(false)
     this._entries.forEach((entry) => {
-      if (entry.cancel) {
+      if (entry.cancel === true) {
         msg.cancel(entry.cid)
       } else {
         msg.addEntry(entry.cid, entry.priority)
@@ -53,7 +53,7 @@ export class MsgQueue {
     this.addMessage(msg)
   }
 
-  async send (msg: Message) {
+  async send (msg: Message): Promise<void> {
     try {
       await this.network.connectTo(this.peerId)
     } catch (err: any) {

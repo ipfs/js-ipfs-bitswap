@@ -52,7 +52,7 @@ export const mockLibp2pNode = (): Libp2p => {
 }
 
 interface OnDone {
-  (args: { connects: (PeerId|Multiaddr)[], messages: [PeerId, BitswapMessage][] }): void
+  (args: { connects: Array<PeerId | Multiaddr>, messages: Array<[PeerId, BitswapMessage]> }): void
 }
 
 interface OnMessage {
@@ -62,16 +62,16 @@ interface OnMessage {
 /**
  * Create a mock network instance
  */
-export const mockNetwork = (calls: number = Infinity, done: OnDone = () => {}, onMsg: OnMessage = () => {}): Network => {
+export const mockNetwork = (calls: number = Infinity, done: OnDone = async (): Promise<void> => {}, onMsg: OnMessage = async (): Promise<void> => {}): Network => {
   const connects: Array<PeerId | Multiaddr> = []
   const messages: Array<[PeerId, BitswapMessage]> = []
   let i = 0
 
-  const finish = (peerId: PeerId, message: BitswapMessage) => {
-    onMsg && onMsg(peerId, message)
+  const finish = (peerId: PeerId, message: BitswapMessage): void => {
+    onMsg?.(peerId, message)
 
     if (++i === calls) {
-      done && done({ connects: connects, messages: messages })
+      done?.({ connects, messages })
     }
   }
 
@@ -87,55 +87,55 @@ export const mockNetwork = (calls: number = Infinity, done: OnDone = () => {}, o
       this.messages = messages
     }
 
-    connectTo (p: PeerId|Multiaddr): Promise<Connection> {
+    async connectTo (p: PeerId | Multiaddr): Promise<Connection> {
       setTimeout(() => {
         connects.push(p)
       })
 
       // @ts-expect-error not all connection fields are implemented
-      return Promise.resolve({ id: '', remotePeer: '' })
+      return await Promise.resolve({ id: '', remotePeer: '' })
     }
 
-    sendMessage (p: PeerId, msg: BitswapMessage) {
+    async sendMessage (p: PeerId, msg: BitswapMessage): Promise<void> {
       messages.push([p, msg])
 
       setTimeout(() => {
         finish(p, msg)
       })
 
-      return Promise.resolve()
+      await Promise.resolve()
     }
 
-    start () {
-      return Promise.resolve()
+    async start (): Promise<void> {
+      await Promise.resolve()
     }
 
-    stop () {
-      return Promise.resolve()
+    async stop (): Promise<void> {
+      await Promise.resolve()
     }
 
-    findAndConnect () {
-      return Promise.resolve()
+    async findAndConnect (): Promise<void> {
+      await Promise.resolve()
     }
 
-    provide () {
-      return Promise.resolve()
+    async provide (): Promise<void> {
+      await Promise.resolve()
     }
   }
 
   return new MockNetwork()
 }
 
-export const applyNetwork = (bs: Bitswap, n: Network) => {
+export const applyNetwork = (bs: Bitswap, n: Network): void => {
   bs.network = n
   bs.wm.network = n
   bs.engine.network = n
 }
 
-export const genBitswapNetwork = async (n: number, enableDHT: boolean = false) => {
+export const genBitswapNetwork = async (n: number, enableDHT: boolean = false): Promise<Array<{ libp2p: Libp2p, bitswap: Bitswap }>> => {
   // create PeerId and libp2p.Node for each
   const peers = await Promise.all(
-    new Array(n).fill(0).map(() => createEd25519PeerId())
+    new Array(n).fill(0).map(async () => await createEd25519PeerId())
   )
 
   /** @type {{ libp2p: Libp2p, bitswap: Bitswap }[]} */

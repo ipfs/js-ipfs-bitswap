@@ -29,7 +29,7 @@ export async function createLibp2pNode (options: NodeOptions = {}): Promise<Libp
     connectionEncryption: [
       noise()
     ],
-    dht: options.DHT
+    dht: options.DHT === true
       ? kadDHT({
         clientMode: false
       })

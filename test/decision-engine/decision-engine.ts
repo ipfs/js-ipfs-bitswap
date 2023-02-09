@@ -26,23 +26,23 @@ import type { Network } from '../../src/network.js'
 import type { PeerId } from '@libp2p/interface-peer-id'
 import type { Blockstore } from 'interface-blockstore'
 
-const sum = (nums: number[]) => nums.reduce((a, b) => a + b, 0)
+const sum = (nums: number[]): number => nums.reduce((a, b) => a + b, 0)
 
-function messageToString (m: Message) {
+function messageToString (m: Message): string[] {
   return Array.from(m.blocks.values())
     .map((b) => uint8ArrayToString(b))
 }
 
-function stringifyMessages (messages: Message[]) {
+function stringifyMessages (messages: Message[]): string[] {
   return flatten(messages.map(messageToString))
 }
 
-async function newEngine (network: Network) {
+async function newEngine (network: Network): Promise<{ peer: PeerId, engine: DecisionEngine }> {
   const peerId = await createEd25519PeerId()
   // @ts-expect-error {} is not a real libp2p
   const engine = new DecisionEngine(peerId, new MemoryBlockstore(), network, new Stats({}), {})
   engine.start()
-  return { peer: peerId, engine: engine }
+  return { peer: peerId, engine }
 }
 
 describe('Engine', () => {
@@ -113,7 +113,7 @@ describe('Engine', () => {
       cancels: difference(alphabet, vowels)
     }]
 
-    async function partnerWants (dEngine: DecisionEngine, values: string[], partner: PeerId) {
+    async function partnerWants (dEngine: DecisionEngine, values: string[], partner: PeerId): Promise<void> {
       const message = new Message(false)
 
       const hashes = await Promise.all(values.map((v) => sha256.digest(uint8ArrayFromString(v))))
@@ -123,7 +123,7 @@ describe('Engine', () => {
       await dEngine.messageReceived(partner, message)
     }
 
-    async function partnerCancels (dEngine: DecisionEngine, values: string[], partner: PeerId) {
+    async function partnerCancels (dEngine: DecisionEngine, values: string[], partner: PeerId): Promise<void> {
       const message = new Message(false)
 
       const hashes = await Promise.all(values.map((v) => sha256.digest(uint8ArrayFromString(v))))
@@ -133,11 +133,11 @@ describe('Engine', () => {
       await dEngine.messageReceived(partner, message)
     }
 
-    async function peerSendsBlocks (dEngine: DecisionEngine, blockstore: Blockstore, blocks: { cid: CID, data: Uint8Array }[]) {
+    async function peerSendsBlocks (dEngine: DecisionEngine, blockstore: Blockstore, blocks: Array<{ cid: CID, data: Uint8Array }>): Promise<void> {
       // Bitswap puts blocks into the blockstore then passes the blocks to the
       // Decision Engine
       await drain(blockstore.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
-      await dEngine.receivedBlocks(blocks)
+      dEngine.receivedBlocks(blocks)
     }
 
     const hashes = await Promise.all(alphabet.map(v => sha256.digest(uint8ArrayFromString(v))))
@@ -186,7 +186,7 @@ describe('Engine', () => {
     const blockSize = 256 * 1024
     const blocks = await makeBlocks(20, blockSize)
 
-    const blockIndex = (cid: CID) => {
+    const blockIndex = (cid: CID): number => {
       for (const [i, b] of blocks.entries()) {
         if (b.cid.equals(cid)) {
           return i
@@ -205,8 +205,8 @@ describe('Engine', () => {
       const pid = peer.toString()
       const rcvd = received.get(pid)
 
-      if (!rcvd) {
-        return deferred.reject(new Error(`Could not get received for peer ${pid}`))
+      if (rcvd == null) {
+        deferred.reject(new Error(`Could not get received for peer ${pid}`)); return
       }
 
       // Blocks should arrive in priority order.
@@ -229,8 +229,8 @@ describe('Engine', () => {
         if (p !== peer) {
           const peerCount = received.get(p.toString())
 
-          if (!peerCount) {
-            return deferred.reject(new Error(`Could not get peer count for ${p.toString()}`))
+          if (peerCount == null) {
+            deferred.reject(new Error(`Could not get peer count for ${p.toString()}`)); return
           }
 
           const pCount = peerCount.count
@@ -246,8 +246,8 @@ describe('Engine', () => {
           const pid = peer.toString()
           const rcvd = received.get(pid)
 
-          if (!rcvd) {
-            return deferred.reject(new Error(`Could not get peer count for ${pid}`))
+          if (rcvd == null) {
+            deferred.reject(new Error(`Could not get peer count for ${pid}`)); return
           }
 
           expect(rcvd.count).to.eql(blocks.length)
@@ -280,7 +280,7 @@ describe('Engine', () => {
     const blocks = await makeBlocks(4, 8 * 1024)
 
     const deferred = defer<[PeerId, Message]>()
-    const network = mockNetwork(blocks.length, undefined, (peer, msg) => deferred.resolve([peer, msg]))
+    const network = mockNetwork(blocks.length, undefined, (peer, msg) => { deferred.resolve([peer, msg]) })
     const blockstore = new MemoryBlockstore()
     // @ts-expect-error {} is not a real libp2p
     const dEngine = new DecisionEngine(id, blockstore, network, new Stats({}), {}, { maxSizeReplaceHasWithBlock: 0 })
@@ -297,7 +297,7 @@ describe('Engine', () => {
     // them to the Decision Engine
     const rcvdBlocks = [blocks[0], blocks[2]]
     await drain(blockstore.putMany(rcvdBlocks.map(({ cid, data }) => ({ key: cid, value: data }))))
-    await dEngine.receivedBlocks(rcvdBlocks)
+    dEngine.receivedBlocks(rcvdBlocks)
 
     // Wait till the engine sends a message
     const [toPeer, msg] = await deferred.promise
@@ -318,7 +318,7 @@ describe('Engine', () => {
     const blocks = await makeBlocks(4, 8 * 1024)
 
     let onMsg: Function
-    const receiveMessage = () => new Promise<[PeerId, Message]>(resolve => {
+    const receiveMessage = async (): Promise<[PeerId, Message]> => await new Promise<[PeerId, Message]>(resolve => {
       onMsg = resolve
     })
     const network = mockNetwork(blocks.length, undefined, (peerId, message) => {
@@ -351,7 +351,7 @@ describe('Engine', () => {
     // Simulate receiving message with blocks - put blocks into the blockstore
     // then pass them to the Decision Engine
     await drain(blockstore.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
-    await dEngine.receivedBlocks(blocks)
+    dEngine.receivedBlocks(blocks)
 
     const [toPeer2, msg2] = await receiveMessage()
     expect(toPeer2.toString()).to.eql(peer.toString())
@@ -629,7 +629,7 @@ describe('Engine', () => {
       }
     ]
 
-    async function partnerWantBlocksHaves (dEngine: DecisionEngine, wantBlks: string[], wantHaves: string[], sendDontHave: boolean, partner: PeerId) {
+    async function partnerWantBlocksHaves (dEngine: DecisionEngine, wantBlks: string[], wantHaves: string[], sendDontHave: boolean, partner: PeerId): Promise<void> {
       const wantTypes = [{
         type: Message.WantType.Block,
         blocks: wantBlks
@@ -650,14 +650,14 @@ describe('Engine', () => {
     }
 
     let onMsg: Function | undefined
-    const nextMessage = () => {
-      return new Promise<Message>(resolve => {
+    const nextMessage = async (): Promise<Message> => {
+      return await new Promise<Message>(resolve => {
         onMsg = resolve
-        dEngine._processTasks()
+        void dEngine._processTasks()
       })
     }
     const network = mockNetwork(blocks.length, undefined, (peer, msg) => {
-      onMsg && onMsg(msg)
+      onMsg?.(msg)
       onMsg = undefined
     })
 
@@ -665,7 +665,7 @@ describe('Engine', () => {
     await drain(blockstore.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
     // @ts-expect-error {} is not a real libp2p
     const dEngine = new DecisionEngine(id, blockstore, network, new Stats({}), {}, { maxSizeReplaceHasWithBlock: 0 })
-    dEngine._scheduleProcessTasks = () => {}
+    dEngine._scheduleProcessTasks = (): void => {}
     dEngine.start()
 
     const onlyCases = []
@@ -675,7 +675,7 @@ describe('Engine', () => {
         onlyCases.push(testCase)
       }
     }
-    if (onlyCases.length) {
+    if (onlyCases.length > 0) {
       testCases = onlyCases
     }
 
@@ -684,14 +684,14 @@ describe('Engine', () => {
       for (const wl of testCase.wls) {
         // console.log("  want-blocks '%s' / want-haves '%s' / sendDontHave %s",
         //   wl.wantBlks || '', wl.wantHaves || '', wl.sendDontHave)
-        const wantBlks = (wl.wantBlks || '').split('')
-        const wantHaves = (wl.wantHaves || '').split('')
+        const wantBlks = (wl.wantBlks ?? '').split('')
+        const wantHaves = (wl.wantHaves ?? '').split('')
         await partnerWantBlocksHaves(dEngine, wantBlks, wantHaves, wl.sendDontHave, partner)
       }
 
-      const expBlks = (testCase.exp.blks || '').split('')
-      const expHaves = (testCase.exp.haves || '').split('')
-      const expDontHaves = (testCase.exp.dontHaves || '').split('')
+      const expBlks = (testCase.exp.blks ?? '').split('')
+      const expHaves = (testCase.exp.haves ?? '').split('')
+      const expDontHaves = (testCase.exp.dontHaves ?? '').split('')
 
       const msg = await nextMessage()
 

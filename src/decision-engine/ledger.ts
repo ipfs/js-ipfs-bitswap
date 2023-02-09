@@ -23,13 +23,13 @@ export class Ledger {
     }
   }
 
-  sentBytes (n: number) {
+  sentBytes (n: number): void {
     this.exchangeCount++
     this.lastExchange = (new Date()).getTime()
     this.accounting.bytesSent += n
   }
 
-  receivedBytes (n: number) {
+  receivedBytes (n: number): void {
     this.exchangeCount++
     this.lastExchange = (new Date()).getTime()
     this.accounting.bytesRecv += n

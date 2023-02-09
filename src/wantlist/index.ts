@@ -12,7 +12,7 @@ const WantType = {
   Have: Message.Wantlist.WantType.Have
 }
 
-const sortBy = <T> (fn: (v:T) => number, list: T[]): T[] => {
+const sortBy = <T> (fn: (v: T) => number, list: T[]): T[] => {
   return Array.prototype.slice.call(list, 0).sort((a, b) => {
     const aa = fn(a)
     const bb = fn(b)
@@ -23,11 +23,11 @@ const sortBy = <T> (fn: (v:T) => number, list: T[]): T[] => {
 export class Wantlist {
   static Entry = Entry
 
-  private set: Map<string, Entry>
-  private _stats?: Stats
+  private readonly set: Map<string, Entry>
+  private readonly _stats?: Stats
 
   constructor (stats?: Stats, libp2p?: Libp2p) {
-    this.set = libp2p
+    this.set = (libp2p != null)
       ? trackedMap({
         name: 'ipfs_bitswap_wantlist',
         metrics: libp2p.metrics
@@ -36,15 +36,15 @@ export class Wantlist {
     this._stats = stats
   }
 
-  get length () {
+  get length (): number {
     return this.set.size
   }
 
-  add (cid: CID, priority: number, wantType: Message.Wantlist.WantType) {
+  add (cid: CID, priority: number, wantType: Message.Wantlist.WantType): void {
     const cidStr = cid.toString(base58btc)
     const entry = this.set.get(cidStr)
 
-    if (entry) {
+    if (entry != null) {
       entry.inc()
       entry.priority = priority
 
@@ -60,11 +60,11 @@ export class Wantlist {
     }
   }
 
-  remove (cid: CID) {
+  remove (cid: CID): void {
     const cidStr = cid.toString(base58btc)
     const entry = this.set.get(cidStr)
 
-    if (!entry) {
+    if (entry == null) {
       return
     }
 
@@ -76,37 +76,37 @@ export class Wantlist {
     }
 
     this.set.delete(cidStr)
-    if (this._stats) {
+    if (this._stats != null) {
       this._stats.push(undefined, 'wantListSize', -1)
     }
   }
 
-  removeForce (cidStr: string) {
+  removeForce (cidStr: string): void {
     if (this.set.has(cidStr)) {
       this.set.delete(cidStr)
     }
   }
 
-  forEach (fn: (entry:Entry, key:string) => void) {
-    return this.set.forEach(fn)
+  forEach (fn: (entry: Entry, key: string) => void): void {
+    this.set.forEach(fn)
   }
 
-  entries () {
+  entries (): IterableIterator<[string, Entry]> {
     return this.set.entries()
   }
 
-  sortedEntries () {
+  sortedEntries (): Map<string, Entry> {
     // TODO: Figure out if this is an actual bug.
     // @ts-expect-error - Property 'key' does not exist on type 'WantListEntry'
     return new Map(sortBy(o => o[1].key, Array.from(this.set.entries())))
   }
 
-  contains (cid: CID) {
+  contains (cid: CID): boolean {
     const cidStr = cid.toString(base58btc)
     return this.set.has(cidStr)
   }
 
-  get (cid: CID) {
+  get (cid: CID): Entry | undefined {
     const cidStr = cid.toString(base58btc)
     return this.set.get(cidStr)
   }

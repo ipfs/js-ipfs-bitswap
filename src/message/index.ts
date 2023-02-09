@@ -23,38 +23,34 @@ export class BitswapMessage {
     DontHave: Message.BlockPresenceType.DontHave
   }
 
-  static deserialize = async (raw: Uint8Array, hashLoader?: MultihashHasherLoader) => {
+  static deserialize = async (raw: Uint8Array, hashLoader?: MultihashHasherLoader): Promise<BitswapMessage> => {
     const decoded = Message.decode(raw)
 
-    const isFull = (decoded.wantlist && decoded.wantlist.full) || false
+    const isFull = decoded.wantlist?.full === true
     const msg = new BitswapMessage(isFull)
 
-    if (decoded.wantlist && decoded.wantlist.entries) {
-      decoded.wantlist.entries.forEach((entry) => {
-        if (!entry.block) {
-          return
-        }
-        // note: entry.block is the CID here
-        const cid = CID.decode(entry.block)
-        msg.addEntry(cid, entry.priority || 0, entry.wantType, Boolean(entry.cancel), Boolean(entry.sendDontHave))
-      })
-    }
+    decoded.wantlist?.entries.forEach((entry) => {
+      if (entry.block == null) {
+        return
+      }
+      // note: entry.block is the CID here
+      const cid = CID.decode(entry.block)
+      msg.addEntry(cid, entry.priority ?? 0, entry.wantType, Boolean(entry.cancel), Boolean(entry.sendDontHave))
+    })
 
-    if (decoded.blockPresences) {
-      decoded.blockPresences.forEach((blockPresence) => {
-        if (!blockPresence.cid) {
-          return
-        }
+    decoded.blockPresences.forEach((blockPresence) => {
+      if (blockPresence.cid == null) {
+        return
+      }
 
-        const cid = CID.decode(blockPresence.cid)
+      const cid = CID.decode(blockPresence.cid)
 
-        if (blockPresence.type === BitswapMessage.BlockPresenceType.Have) {
-          msg.addHave(cid)
-        } else {
-          msg.addDontHave(cid)
-        }
-      })
-    }
+      if (blockPresence.type === BitswapMessage.BlockPresenceType.Have) {
+        msg.addHave(cid)
+      } else {
+        msg.addDontHave(cid)
+      }
+    })
 
     // Bitswap 1.0.0
     // decoded.blocks are just the byte arrays
@@ -70,16 +66,16 @@ export class BitswapMessage {
     // Bitswap 1.1.0
     if (decoded.payload.length > 0) {
       await Promise.all(decoded.payload.map(async (p) => {
-        if (!p.prefix || !p.data) {
+        if (p.prefix == null || p.data == null) {
           return
         }
         const values = vd(p.prefix)
         const cidVersion = values[0]
         const multicodec = values[1]
         const hashAlg = values[2]
-        const hasher = hashAlg === sha256.code ? sha256 : hashLoader && await hashLoader.getHasher(hashAlg)
+        const hasher = hashAlg === sha256.code ? sha256 : await hashLoader?.getHasher(hashAlg)
 
-        if (!hasher) {
+        if (hasher == null) {
           throw new CodeError('Unknown hash algorithm', 'ERR_UNKNOWN_HASH_ALG')
         }
 
@@ -95,7 +91,7 @@ export class BitswapMessage {
     return msg
   }
 
-  static blockPresenceSize = (cid: CID) => {
+  static blockPresenceSize = (cid: CID): number => {
     // It's ok if this is not exactly right: it's used to estimate the size of
     // the HAVE / DONT_HAVE on the wire, but when doing that calculation we leave
     // plenty of padding under the maximum message size.
@@ -117,39 +113,30 @@ export class BitswapMessage {
     this.pendingBytes = 0
   }
 
-  get empty () {
+  get empty (): boolean {
     return this.blocks.size === 0 &&
            this.wantlist.size === 0 &&
            this.blockPresences.size === 0
   }
 
-  /**
-   *
-   * @param {CID} cid
-   * @param {number} priority
-   * @param {import('./message').Message.Wantlist.WantType | null} [wantType]
-   * @param {boolean} [cancel]
-   * @param {boolean} [sendDontHave]
-   * @returns {void}
-   */
-  addEntry (cid: CID, priority: number, wantType?: Message.Wantlist.WantType, cancel?: boolean, sendDontHave?: boolean) {
+  addEntry (cid: CID, priority: number, wantType?: Message.Wantlist.WantType, cancel?: boolean, sendDontHave?: boolean): void {
     if (wantType == null) {
       wantType = BitswapMessage.WantType.Block
     }
 
     const cidStr = cid.toString(base58btc)
     const entry = this.wantlist.get(cidStr)
-    if (entry) {
+    if (entry != null) {
       // Only change priority if want is of the same type
       if (entry.wantType === wantType) {
         entry.priority = priority
       }
       // Only change from "dont cancel" to "do cancel"
-      if (cancel) {
+      if (cancel === true) {
         entry.cancel = Boolean(cancel)
       }
       // Only change from "dont send" to "do send" DONT_HAVE
-      if (sendDontHave) {
+      if (sendDontHave === true) {
         entry.sendDontHave = Boolean(sendDontHave)
       }
       // want-block overrides existing want-have
@@ -173,20 +160,20 @@ export class BitswapMessage {
     }
   }
 
-  addDontHave (cid: CID) {
+  addDontHave (cid: CID): void {
     const cidStr = cid.toString(base58btc)
     if (!this.blockPresences.has(cidStr)) {
       this.blockPresences.set(cidStr, BitswapMessage.BlockPresenceType.DontHave)
     }
   }
 
-  cancel (cid: CID) {
+  cancel (cid: CID): void {
     const cidStr = cid.toString(base58btc)
     this.wantlist.delete(cidStr)
     this.addEntry(cid, 0, BitswapMessage.WantType.Block, true, false)
   }
 
-  setPendingBytes (size: number) {
+  setPendingBytes (size: number): void {
     this.pendingBytes = size
   }
 
@@ -206,7 +193,7 @@ export class BitswapMessage {
             sendDontHave: false
           }
         }),
-        full: this.full ? true : false
+        full: Boolean(this.full)
       },
       blocks: Array.from(this.blocks.values())
     })
@@ -228,7 +215,7 @@ export class BitswapMessage {
             sendDontHave: Boolean(entry.sendDontHave)
           }
         }),
-        full: this.full ? true : false
+        full: Boolean(this.full)
       },
       blockPresences: [],
       payload: [],
@@ -281,7 +268,7 @@ export class BitswapMessage {
     return true
   }
 
-  get [Symbol.toStringTag] () {
+  get [Symbol.toStringTag] (): string {
     const list = Array.from(this.wantlist.keys())
     const blocks = Array.from(this.blocks.keys())
     return `BitswapMessage <full: ${this.full}, list: ${list}, blocks: ${blocks}>`

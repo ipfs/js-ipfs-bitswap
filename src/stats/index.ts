@@ -3,6 +3,7 @@ import { Stat } from './stat.js'
 import { trackedMap } from '@libp2p/tracked-map'
 import type { Libp2p } from 'libp2p'
 import type { PeerId } from '@libp2p/interface-peer-id'
+import type { IMovingAverage } from '@vascosantos/moving-average'
 
 /**
  * @typedef {import('multiformats').CID} CID
@@ -28,11 +29,11 @@ const defaultOptions: Required<StatsOptions> = {
 }
 
 export class Stats extends EventEmitter {
-  private _initialCounters: string[]
-  private _options: Required<StatsOptions>
+  private readonly _initialCounters: string[]
+  private readonly _options: Required<StatsOptions>
   private _enabled: boolean
-  private _global: Stat
-  private _peers: Map<string, Stat>
+  private readonly _global: Stat
+  private readonly _peers: Map<string, Stat>
 
   constructor (libp2p: Libp2p, initialCounters: string[] = [], _options: StatsOptions = defaultOptions) {
     super()
@@ -60,19 +61,19 @@ export class Stats extends EventEmitter {
     })
   }
 
-  enable () {
+  enable (): void {
     this._enabled = true
     this._options.enabled = true
     this._global.enable()
   }
 
-  disable () {
+  disable (): void {
     this._enabled = false
     this._options.enabled = false
     this._global.disable()
   }
 
-  stop () {
+  stop (): void {
     this._enabled = false
     this._global.stop()
     for (const peerStat of this._peers) {
@@ -80,29 +81,27 @@ export class Stats extends EventEmitter {
     }
   }
 
-  get snapshot () {
+  get snapshot (): Record<string, bigint> {
     return this._global.snapshot
   }
 
-  get movingAverages () {
+  get movingAverages (): Record<string, Record<number, IMovingAverage>> {
     return this._global.movingAverages
   }
 
   forPeer (peerId: PeerId | string): Stat | undefined {
-    const peerIdStr = (typeof peerId !== 'string' && peerId.toString)
-      ? peerId.toString()
-      : `${peerId}`
+    const peerIdStr = peerId.toString()
 
     return this._peers.get(peerIdStr)
   }
 
-  push (peer: string | undefined, counter: string, inc: number) {
+  push (peer: string | undefined, counter: string, inc: number): void {
     if (this._enabled) {
       this._global.push(counter, inc)
 
-      if (peer) {
+      if (peer != null) {
         let peerStats = this._peers.get(peer)
-        if (!peerStats) {
+        if (peerStats == null) {
           peerStats = new Stat(this._initialCounters, this._options)
           this._peers.set(peer, peerStats)
         }
@@ -112,10 +111,10 @@ export class Stats extends EventEmitter {
     }
   }
 
-  disconnected (peer: PeerId) {
+  disconnected (peer: PeerId): void {
     const peerId = peer.toString()
     const peerStats = this._peers.get(peerId)
-    if (peerStats) {
+    if (peerStats != null) {
       peerStats.stop()
       this._peers.delete(peerId)
     }

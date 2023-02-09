@@ -53,7 +53,7 @@ describe('utils spec', function () {
         this.id = id
       }
 
-      equals (instance: T) {
+      equals (instance: T): boolean {
         return instance.id === this.id
       }
     }
@@ -76,7 +76,7 @@ describe('utils spec', function () {
         this.id = id
       }
 
-      equals (instance: T) {
+      equals (instance: T): boolean {
         return instance.id === this.id
       }
     }
@@ -242,7 +242,7 @@ describe('utils spec', function () {
     })
 
     describe('custom order', () => {
-      const prioritySort = (a: [string, { k?: string, priority: number }], b: [string, { k?: string, priority: number }]) => b[1].priority - a[1].priority
+      const prioritySort = (a: [string, { k?: string, priority: number }], b: [string, { k?: string, priority: number }]): number => b[1].priority - a[1].priority
 
       it('forward', () => {
         const sm = new SortedMap([

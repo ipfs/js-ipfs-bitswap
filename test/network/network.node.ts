@@ -18,10 +18,10 @@ import type { Libp2p } from '@libp2p/interface-libp2p'
 function createBitswapMock (): Bitswap {
   // @ts-expect-error incomplete implementation
   return {
-    _receiveMessage: async () => {},
-    _receiveError: async () => {},
-    _onPeerConnected: async () => {},
-    _onPeerDisconnected: async () => {}
+    _receiveMessage: async (): Promise<void> => {},
+    _receiveError: (): void => {},
+    _onPeerConnected: (): void => {},
+    _onPeerDisconnected: (): void => {}
   }
 }
 
@@ -38,7 +38,7 @@ describe('network', () => {
   let networkC: Network
   let bitswapMockC: Bitswap
 
-  let blocks: { cid: CID, data: Uint8Array}[]
+  let blocks: Array<{ cid: CID, data: Uint8Array }>
 
   beforeEach(async () => {
     [p2pA, p2pB, p2pC] = await Promise.all([
@@ -167,12 +167,12 @@ describe('network', () => {
         // cannot do deep comparison on objects as one has Buffers and one has Uint8Arrays
         expect(msg.serializeToBitswap110()).to.equalBytes(msgReceived.serializeToBitswap110())
 
-        bitswapMockB._receiveMessage = async () => {}
-        bitswapMockB._receiveError = async () => {}
+        bitswapMockB._receiveMessage = async (): Promise<void> => {}
+        bitswapMockB._receiveError = (): void => {}
         deferred.resolve()
       }
 
-      bitswapMockB._receiveError = (err) => deferred.reject(err)
+      bitswapMockB._receiveError = (err) => { deferred.reject(err) }
 
       const ma = p2pB.getMultiaddrs()[0]
       const stream = await p2pA.dialProtocol(ma, '/ipfs/bitswap/' + version.num)
@@ -206,8 +206,8 @@ describe('network', () => {
       // cannot do deep comparison on objects as one has Buffers and one has Uint8Arrays
       expect(msg.serializeToBitswap110()).to.equalBytes(msgReceived.serializeToBitswap110())
 
-      bitswapMockB._receiveMessage = async () => {}
-      bitswapMockB._receiveError = async () => {}
+      bitswapMockB._receiveMessage = async (): Promise<void> => {}
+      bitswapMockB._receiveError = (): void => {}
       deferred.resolve()
     }
 
@@ -242,8 +242,8 @@ describe('network', () => {
       // cannot do deep comparison on objects as one has Buffers and one has Uint8Arrays
       expect(msg.serializeToBitswap110()).to.equalBytes(msgReceived.serializeToBitswap110())
 
-      bitswapMockC._receiveMessage = async () => {}
-      bitswapMockC._receiveError = async () => {}
+      bitswapMockC._receiveMessage = async (): Promise<void> => {}
+      bitswapMockC._receiveError = (): void => {}
       deferred.resolve()
     }
 

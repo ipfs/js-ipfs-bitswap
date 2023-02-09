@@ -4,7 +4,7 @@ import { BitswapMessage as Message } from '../message/index.js'
 import { Wantlist } from '../wantlist/index.js'
 import { Ledger } from './ledger.js'
 import { RequestQueue } from './req-queue.js'
-import { TaskMerger } from './task-merger.js'
+import { DefaultTaskMerger } from './task-merger.js'
 import { logger } from '../utils/index.js'
 import { trackedMap } from '@libp2p/tracked-map'
 import type { Message as PBMessage } from '../message/message.js'
@@ -91,12 +91,20 @@ export interface DecisionEngineOptions {
   maxSizeReplaceHasWithBlock?: number
 }
 
+export interface PeerLedger {
+  peer: PeerId
+  value: number
+  sent: number
+  recv: number
+  exchanged: number
+}
+
 export class DecisionEngine {
-  private _log: Logger
+  private readonly _log: Logger
   public blockstore: Blockstore
   public network: Network
-  private _stats: Stats
-  private _opts: Required<DecisionEngineOptions>
+  private readonly _stats: Stats
+  private readonly _opts: Required<DecisionEngineOptions>
   public ledgerMap: Map<string, Ledger>
   private _running: boolean
   public _requestQueue: RequestQueue
@@ -116,7 +124,7 @@ export class DecisionEngine {
     this._running = false
 
     // Queue of want-have / want-block per peer
-    this._requestQueue = new RequestQueue(TaskMerger)
+    this._requestQueue = new RequestQueue(DefaultTaskMerger)
   }
 
   _processOpts (opts: DecisionEngineOptions): Required<DecisionEngineOptions> {
@@ -129,7 +137,9 @@ export class DecisionEngine {
 
   _scheduleProcessTasks (): void {
     setTimeout(() => {
-      this._processTasks()
+      this._processTasks().catch(err => {
+        this._log.error('error processing stats', err)
+      })
     })
   }
 
@@ -156,7 +166,7 @@ export class DecisionEngine {
 
     // Split out want-blocks, want-haves and DONT_HAVEs
     const blockCids = []
-    const blockTasks = new Map()
+    const blockTasks = new Map<string, TaskData>()
     for (const task of tasks) {
       const cid = CID.parse(task.topic)
       if (task.data.haveBlock) {
@@ -178,7 +188,7 @@ export class DecisionEngine {
       const cid = CID.parse(topic)
       const blk = blocks.get(topic)
       // If the block was found (it has not been removed)
-      if (blk) {
+      if (blk != null) {
         // Add the block to the message
         msg.addBlock(cid, blk)
       } else {
@@ -192,7 +202,7 @@ export class DecisionEngine {
 
     // If there's nothing in the message, bail out
     if (msg.empty) {
-      peerId && this._requestQueue.tasksDone(peerId, tasks)
+      (peerId != null) && this._requestQueue.tasksDone(peerId, tasks)
 
       // Trigger the next round of task processing
       this._scheduleProcessTasks()
@@ -202,18 +212,18 @@ export class DecisionEngine {
 
     try {
       // Send the message
-      peerId && await this.network.sendMessage(peerId, msg)
+      (peerId != null) && await this.network.sendMessage(peerId, msg)
 
       // Peform sent message accounting
       for (const [cidStr, block] of blocks.entries()) {
-        peerId && this.messageSent(peerId, CID.parse(cidStr), block)
+        (peerId != null) && this.messageSent(peerId, CID.parse(cidStr), block)
       }
     } catch (err) {
       this._log.error(err)
     }
 
     // Free the tasks up from the request queue
-    peerId && this._requestQueue.tasksDone(peerId, tasks)
+    (peerId != null) && this._requestQueue.tasksDone(peerId, tasks)
 
     // Trigger the next round of task processing
     this._scheduleProcessTasks()
@@ -222,15 +232,15 @@ export class DecisionEngine {
   wantlistForPeer (peerId: PeerId): Map<string, WantListEntry> {
     const peerIdStr = peerId.toString()
     const ledger = this.ledgerMap.get(peerIdStr)
-    return ledger ? ledger.wantlist.sortedEntries() : new Map()
+    return (ledger != null) ? ledger.wantlist.sortedEntries() : new Map()
   }
 
-  ledgerForPeer (peerId: PeerId) {
+  ledgerForPeer (peerId: PeerId): PeerLedger | undefined {
     const peerIdStr = peerId.toString()
     const ledger = this.ledgerMap.get(peerIdStr)
 
-    if (!ledger) {
-      return null
+    if (ledger == null) {
+      return undefined
     }
 
     return {
@@ -250,8 +260,8 @@ export class DecisionEngine {
    * Receive blocks either from an incoming message from the network, or from
    * blocks being added by the client on the localhost (eg IPFS add)
    */
-  receivedBlocks (blocks: Array<{ cid: CID, data: Uint8Array }>) {
-    if (!blocks.length) {
+  receivedBlocks (blocks: Array<{ cid: CID, data: Uint8Array }>): void {
+    if (blocks.length === 0) {
       return
     }
 
@@ -261,7 +271,7 @@ export class DecisionEngine {
         // Filter out blocks that we don't want
         const want = ledger.wantlistContains(block.cid)
 
-        if (!want) {
+        if (want == null) {
           continue
         }
 
@@ -398,7 +408,7 @@ export class DecisionEngine {
     }
   }
 
-  _sendAsBlock (wantType: PBMessage.Wantlist.WantType, blockSize: number) {
+  _sendAsBlock (wantType: PBMessage.Wantlist.WantType, blockSize: number): boolean {
     return wantType === WantType.Block ||
       blockSize <= this._opts.maxSizeReplaceHasWithBlock
   }
@@ -423,7 +433,7 @@ export class DecisionEngine {
     return res
   }
 
-  _updateBlockAccounting (blocksMap: Map<string, Uint8Array>, ledger: Ledger) {
+  _updateBlockAccounting (blocksMap: Map<string, Uint8Array>, ledger: Ledger): void {
     for (const block of blocksMap.values()) {
       this._log('got block (%s bytes)', block.length)
       ledger.receivedBytes(block.length)
@@ -433,7 +443,7 @@ export class DecisionEngine {
   /**
    * Clear up all accounting things after message was sent
    */
-  messageSent (peerId: PeerId, cid: CID, block: Uint8Array) {
+  messageSent (peerId: PeerId, cid: CID, block: Uint8Array): void {
     const ledger = this._findOrCreate(peerId)
     ledger.sentBytes(block.length)
     ledger.wantlist.remove(cid)
@@ -454,25 +464,25 @@ export class DecisionEngine {
   _findOrCreate (peerId: PeerId): Ledger {
     const peerIdStr = peerId.toString()
     const ledger = this.ledgerMap.get(peerIdStr)
-    if (ledger) {
+    if (ledger != null) {
       return ledger
     }
 
     const l = new Ledger(peerId)
 
     this.ledgerMap.set(peerIdStr, l)
-    if (this._stats) {
+    if (this._stats != null) {
       this._stats.push(peerIdStr, 'peerCount', 1)
     }
 
     return l
   }
 
-  start () {
+  start (): void {
     this._running = true
   }
 
-  stop () {
+  stop (): void {
     this._running = false
   }
 }

@@ -16,7 +16,8 @@ import type { Logger } from '@libp2p/logger'
 import type { IncomingStreamData } from '@libp2p/interface-registrar'
 import type { CID } from 'multiformats/cid'
 import type { AbortOptions } from '@libp2p/interfaces'
-import type { Stream } from '@libp2p/interface-connection'
+import type { Connection, Stream } from '@libp2p/interface-connection'
+import type { PeerInfo } from '@libp2p/interface-peer-info'
 
 export interface Provider {
   id: PeerId
@@ -40,16 +41,16 @@ export interface NetworkOptions {
 }
 
 export class Network {
-  private _log: Logger
-  private _libp2p: Libp2p
-  private _bitswap: Bitswap
+  private readonly _log: Logger
+  private readonly _libp2p: Libp2p
+  private readonly _bitswap: Bitswap
   public _protocols: string[]
-  private _stats: Stats
+  private readonly _stats: Stats
   private _running: boolean
-  private _hashLoader: MultihashHasherLoader
-  private _maxInboundStreams: number
-  private _maxOutboundStreams: number
-  private _incomingStreamTimeout: number
+  private readonly _hashLoader: MultihashHasherLoader
+  private readonly _maxInboundStreams: number
+  private readonly _maxOutboundStreams: number
+  private readonly _incomingStreamTimeout: number
   private _registrarIds?: string[]
 
   constructor (libp2p: Libp2p, bitswap: Bitswap, stats: Stats, options: NetworkOptions = {}) {
@@ -58,7 +59,7 @@ export class Network {
     this._bitswap = bitswap
     this._protocols = [BITSWAP100]
 
-    if (!options.b100Only) {
+    if (options.b100Only !== true) {
       // Latest bitswap first
       this._protocols.unshift(BITSWAP110)
       this._protocols.unshift(BITSWAP120)
@@ -81,7 +82,7 @@ export class Network {
     this._incomingStreamTimeout = options.incomingStreamTimeout ?? DEFAULT_INCOMING_STREAM_TIMEOUT
   }
 
-  async start () {
+  async start (): Promise<void> {
     this._running = true
     await this._libp2p.handle(this._protocols, this._onConnection, {
       maxInboundStreams: this._maxInboundStreams,
@@ -107,7 +108,7 @@ export class Network {
     })
   }
 
-  async stop () {
+  async stop (): Promise<void> {
     this._running = false
 
     // Unhandle both, libp2p doesn't care if it's not already handled
@@ -126,7 +127,7 @@ export class Network {
   /**
    * Handles both types of incoming bitswap messages
    */
-  _onConnection (info: IncomingStreamData) {
+  _onConnection (info: IncomingStreamData): void {
     if (!this._running) {
       return
     }
@@ -166,25 +167,25 @@ export class Network {
       })
   }
 
-  _onPeerConnect (peerId: PeerId) {
+  _onPeerConnect (peerId: PeerId): void {
     this._bitswap._onPeerConnected(peerId)
   }
 
-  _onPeerDisconnect (peerId: PeerId) {
+  _onPeerDisconnect (peerId: PeerId): void {
     this._bitswap._onPeerDisconnected(peerId)
   }
 
   /**
    * Find providers given a `cid`.
    */
-  findProviders (cid: CID, options: AbortOptions = {}) {
+  findProviders (cid: CID, options: AbortOptions = {}): AsyncIterable<PeerInfo> {
     return this._libp2p.contentRouting.findProviders(cid, options)
   }
 
   /**
    * Find the providers of a given `cid` and connect to them.
    */
-  async findAndConnect (cid: CID, options?: AbortOptions) {
+  async findAndConnect (cid: CID, options?: AbortOptions): Promise<void> {
     const connectAttempts = []
     let found = 0
 
@@ -211,7 +212,7 @@ export class Network {
   /**
    * Tell the network we can provide content for the passed CID
    */
-  async provide (cid: CID, options?: AbortOptions) {
+  async provide (cid: CID, options?: AbortOptions): Promise<void> {
     await this._libp2p.contentRouting.provide(cid, options)
   }
 
@@ -219,7 +220,7 @@ export class Network {
    * Connect to the given peer
    * Send the given msg (instance of Message) to the given peer
    */
-  async sendMessage (peer: PeerId, msg: Message) {
+  async sendMessage (peer: PeerId, msg: Message): Promise<void> {
     if (!this._running) throw new Error('network isn\'t running')
 
     const stringId = peer.toString()
@@ -236,18 +237,18 @@ export class Network {
   /**
    * Connects to another peer
    */
-  async connectTo (peer: PeerId | Multiaddr, options?: AbortOptions) { // eslint-disable-line require-await
+  async connectTo (peer: PeerId | Multiaddr, options?: AbortOptions): Promise<Connection> { // eslint-disable-line require-await
     if (!this._running) {
       throw new Error('network isn\'t running')
     }
 
-    return this._libp2p.dial(peer, options)
+    return await this._libp2p.dial(peer, options)
   }
 
-  _updateSentStats (peer: PeerId, blocks: Map<string, Uint8Array>) {
+  _updateSentStats (peer: PeerId, blocks: Map<string, Uint8Array>): void {
     const peerId = peer.toString()
 
-    if (this._stats) {
+    if (this._stats != null) {
       for (const block of blocks.values()) {
         this._stats.push(peerId, 'dataSent', block.length)
       }
@@ -257,7 +258,7 @@ export class Network {
   }
 }
 
-async function writeMessage (stream: Stream, msg: Message, log: Logger) {
+async function writeMessage (stream: Stream, msg: Message, log: Logger): Promise<void> {
   try {
     /** @type {Uint8Array} */
     let serialized
@@ -270,7 +271,7 @@ async function writeMessage (stream: Stream, msg: Message, log: Logger) {
         serialized = msg.serializeToBitswap110()
         break
       default:
-        throw new Error('Unknown protocol: ' + stream.stat.protocol)
+        throw new Error(`Unknown protocol: ${stream.stat.protocol}`)
     }
 
     await pipe(

@@ -39,7 +39,7 @@ describe('bitswap stats', () => {
   let libp2pNodes: Libp2p[]
   let bitswaps: Bitswap[]
   let bs: Bitswap
-  let blocks: Array<{ cid: CID, data: Uint8Array}>
+  let blocks: Array<{ cid: CID, data: Uint8Array }>
   let ids: PeerId[]
 
   before(async () => {
@@ -48,7 +48,7 @@ describe('bitswap stats', () => {
     ids = await makePeerIds(2)
 
     // create 2 libp2p nodes
-    libp2pNodes = await Promise.all(nodes.map((i) => createLibp2pNode({
+    libp2pNodes = await Promise.all(nodes.map(async (i) => await createLibp2pNode({
       DHT: true
     })))
 
@@ -68,7 +68,7 @@ describe('bitswap stats', () => {
 
   after(async () => {
     await Promise.all(
-      bitswaps.map((bs) => bs.stop())
+      bitswaps.map(async (bs) => { await bs.stop() })
     )
     await Promise.all(
       libp2pNodes.map((n) => n.stop())
@@ -131,9 +131,9 @@ describe('bitswap stats', () => {
     const other = ids[1]
 
     const msg = new Message(false)
-    blocks.forEach((block) => msg.addBlock(block.cid, block.data))
+    blocks.forEach((block) => { msg.addBlock(block.cid, block.data) })
 
-    bs._receiveMessage(other, msg)
+    void bs._receiveMessage(other, msg)
   })
 
   it('updates duplicate blocks counters', (done) => {
@@ -151,14 +151,14 @@ describe('bitswap stats', () => {
     const other = ids[1]
 
     const msg = new Message(false)
-    blocks.forEach((block) => msg.addBlock(block.cid, block.data))
+    blocks.forEach((block) => { msg.addBlock(block.cid, block.data) })
 
-    bs._receiveMessage(other, msg)
+    void bs._receiveMessage(other, msg)
   })
 
   describe('connected to another bitswap', () => {
     let bs2: Bitswap
-    let block: { cid: CID, data: Uint8Array}
+    let block: { cid: CID, data: Uint8Array }
 
     before(async () => {
       bs2 = bitswaps[1]
@@ -211,7 +211,7 @@ describe('bitswap stats', () => {
       const peerStats = bs2.stat().forPeer(libp2pNodes[0].peerId)
       expect(peerStats).to.exist()
 
-      if (!peerStats) {
+      if (peerStats == null) {
         // needed for ts
         throw new Error('No stats found for peer')
       }

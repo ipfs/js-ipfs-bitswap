@@ -34,7 +34,7 @@ const DefaultTaskMerger: TaskMerger = {
  * for more details.
  */
 export class RequestQueue {
-  private _taskMerger: TaskMerger
+  private readonly _taskMerger: TaskMerger
   public _byPeer: SortedMap<string, PeerTasks>
 
   constructor (taskMerger: TaskMerger = DefaultTaskMerger) {
@@ -48,7 +48,7 @@ export class RequestQueue {
   pushTasks (peerId: PeerId, tasks: Task[]): void {
     let peerTasks = this._byPeer.get(peerId.toString())
 
-    if (!peerTasks) {
+    if (peerTasks == null) {
       peerTasks = new PeerTasks(peerId, this._taskMerger)
     }
 
@@ -110,7 +110,7 @@ export class RequestQueue {
    */
   remove (topic: string, peerId: PeerId): void {
     const peerTasks = this._byPeer.get(peerId.toString())
-    peerTasks && peerTasks.remove(topic)
+    peerTasks?.remove(topic)
   }
 
   /**
@@ -118,7 +118,7 @@ export class RequestQueue {
    */
   tasksDone (peerId: PeerId, tasks: Task[]): void {
     const peerTasks = this._byPeer.get(peerId.toString())
-    if (!peerTasks) {
+    if (peerTasks == null) {
       return
     }
 
@@ -139,10 +139,10 @@ export class RequestQueue {
  */
 class PeerTasks {
   public peerId: PeerId
-  private _taskMerger: TaskMerger
+  private readonly _taskMerger: TaskMerger
   private _activeTotalSize: number
-  private _pending: PendingTasks
-  private _active: Set<Task>
+  private readonly _pending: PendingTasks
+  private readonly _active: Set<Task>
 
   constructor (peerId: PeerId, taskMerger: TaskMerger) {
     this.peerId = peerId
@@ -170,7 +170,7 @@ class PeerTasks {
 
     // If there is already a non-active (pending) task with this topic
     const existingTask = this._pending.get(task.topic)
-    if (existingTask) {
+    if (existingTask != null) {
       // If the new task has a higher priority than the old task,
       if (task.priority > existingTask.priority) {
         // Update the priority and the task's position in the queue
@@ -287,13 +287,13 @@ class PeerTasks {
  * Queue of pending tasks for a particular peer, sorted by priority.
  */
 class PendingTasks {
-  private _tasks: SortedMap<string, PendingTask>
+  private readonly _tasks: SortedMap<string, PendingTask>
 
   constructor () {
     this._tasks = new SortedMap([], this._compare)
   }
 
-  get length () {
+  get length (): number {
     return this._tasks.size
   }
 
@@ -305,10 +305,10 @@ class PendingTasks {
   }
 
   get (topic: string): Task | undefined {
-    return (this._tasks.get(topic) || {}).task
+    return this._tasks?.get(topic)?.task
   }
 
-  add (task: Task) {
+  add (task: Task): void {
     this._tasks.set(task.topic, {
       created: Date.now(),
       task
@@ -320,7 +320,7 @@ class PendingTasks {
   }
 
   // All pending tasks, in priority order
-  tasks () {
+  tasks (): Task[] {
     return [...this._tasks.values()].map(i => i.task)
   }
 
@@ -329,7 +329,7 @@ class PendingTasks {
    **/
   updatePriority (topic: string, priority: number): void {
     const obj = this._tasks.get(topic)
-    if (!obj) {
+    if (obj == null) {
       return
     }
 

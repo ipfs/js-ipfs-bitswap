@@ -1,6 +1,6 @@
-import type { Task } from "./index.js"
+import type { Task } from './index.js'
 
-export const TaskMerger = {
+export const DefaultTaskMerger = {
   /**
    * Indicates whether the given task has newer information than the active
    * tasks with the same topic.

@@ -74,7 +74,7 @@ describe.skip('swarms', () => {
     await distributionTest(10, 100, 1, emitter)
   })
 
-  function maybePrint (suite: any, emitter: EventEmitter) {
+  function maybePrint (suite: any, emitter: EventEmitter): void {
     if (!print) {
       return
     }

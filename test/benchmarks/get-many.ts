@@ -5,7 +5,7 @@ import { distributionTest } from '../utils/distribution-test'
 import { print } from './helpers/print-swarm-results'
 import { EventEmitter } from 'events'
 
-;(async function () {
+void (async function (): Promise<void> {
   const emitter = new EventEmitter()
 
   print('10 nodes, 10 blocks, 5 iterations', emitter)

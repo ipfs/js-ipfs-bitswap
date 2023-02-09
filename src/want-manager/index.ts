@@ -15,11 +15,11 @@ import type { CID } from 'multiformats/cid'
 import type { AbortOptions } from '@multiformats/multiaddr'
 
 export class WantManager {
-  private peers: Map<string, MsgQueue>
+  private readonly peers: Map<string, MsgQueue>
   public wantlist: Wantlist
   public network: Network
-  private _peerId: PeerId
-  private _log: Logger
+  private readonly _peerId: PeerId
+  private readonly _log: Logger
 
   constructor (peerId: PeerId, network: Network, stats: Stats, libp2p: Libp2p) {
     this.peers = trackedMap({
@@ -32,7 +32,7 @@ export class WantManager {
     this._log = logger(peerId, 'want')
   }
 
-  _addEntries (cids: CID[], cancel: boolean, force?: boolean) {
+  _addEntries (cids: CID[], cancel: boolean, force?: boolean): void {
     const entries = cids.map((cid, i) => {
       return new Message.Entry(cid, CONSTANTS.kMaxPriority - i, Message.WantType.Block, cancel)
     })
@@ -40,7 +40,7 @@ export class WantManager {
     entries.forEach((e) => {
       // add changes to our wantlist
       if (e.cancel) {
-        if (force) {
+        if (force === true) {
           this.wantlist.removeForce(e.cid.toString(base58btc))
         } else {
           this.wantlist.remove(e.cid)
@@ -59,7 +59,7 @@ export class WantManager {
     }
   }
 
-  _startPeerHandler (peerId: PeerId) {
+  _startPeerHandler (peerId: PeerId): MsgQueue | undefined {
     let mq = this.peers.get(peerId.toString())
 
     if (mq != null) {
@@ -82,10 +82,10 @@ export class WantManager {
     return mq
   }
 
-  _stopPeerHandler (peerId: PeerId) {
+  _stopPeerHandler (peerId: PeerId): void {
     const mq = this.peers.get(peerId.toString())
 
-    if (!mq) {
+    if (mq == null) {
       return
     }
 
@@ -100,20 +100,18 @@ export class WantManager {
   /**
    * add all the cids to the wantlist
    */
-  wantBlocks (cids: CID[], options: AbortOptions = {}) {
+  wantBlocks (cids: CID[], options: AbortOptions = {}): void {
     this._addEntries(cids, false)
 
-    if (options && options.signal) {
-      options.signal.addEventListener('abort', () => {
-        this.cancelWants(cids)
-      })
-    }
+    options.signal?.addEventListener('abort', () => {
+      this.cancelWants(cids)
+    })
   }
 
   /**
    * Remove blocks of all the given keys without respecting refcounts
    */
-  unwantBlocks (cids: CID[]) {
+  unwantBlocks (cids: CID[]): void {
     this._log('unwant blocks: %s', cids.length)
     this._addEntries(cids, true, true)
   }
@@ -121,7 +119,7 @@ export class WantManager {
   /**
    * Cancel wanting all of the given keys
    */
-  cancelWants (cids: CID[]) {
+  cancelWants (cids: CID[]): void {
     this._log('cancel wants: %s', cids.length)
     this._addEntries(cids, true)
   }
@@ -129,22 +127,22 @@ export class WantManager {
   /**
    * Returns a list of all currently connected peers
    */
-  connectedPeers () {
+  connectedPeers (): string[] {
     return Array.from(this.peers.keys())
   }
 
-  connected (peerId: PeerId) {
+  connected (peerId: PeerId): void {
     this._startPeerHandler(peerId)
   }
 
-  disconnected (peerId: PeerId) {
+  disconnected (peerId: PeerId): void {
     this._stopPeerHandler(peerId)
   }
 
-  start () {
+  start (): void {
   }
 
-  stop () {
-    this.peers.forEach((mq) => this.disconnected(mq.peerId))
+  stop (): void {
+    this.peers.forEach((mq) => { this.disconnected(mq.peerId) })
   }
 }

@@ -17,7 +17,7 @@ const rawMessageFullWantlist = loadFixture(testDataPath + '/bitswap110-message-f
 const rawMessageOneBlock = loadFixture(testDataPath + '/bitswap110-message-one-block')
 
 describe('BitswapMessage', () => {
-  let blocks: { cid: CID, data: Uint8Array }[]
+  let blocks: Array<{ cid: CID, data: Uint8Array }>
   let cids: CID[]
 
   before(async () => {
@@ -350,7 +350,7 @@ describe('BitswapMessage', () => {
       // They've since reverted to being `singular` which means they can be omitted from the buffer
       // if they are set to the default value so compliant protobuf encoders wont produce bytes that
       // match any more.
-      //expect(msg.serializeToBitswap100()).to.equalBytes(goEncoded)
+      // expect(msg.serializeToBitswap100()).to.equalBytes(goEncoded)
     })
 
     describe.skip('bitswap 1.1.0 message', () => {

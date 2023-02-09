@@ -3,10 +3,10 @@
  * SortedMap is a Map whose iterator order can be defined by the user
  */
 export class SortedMap<Key, Value> extends Map<Key, Value> {
-  private _cmp: (a:[Key, Value], b:[Key, Value]) => number
+  private readonly _cmp: (a: [Key, Value], b: [Key, Value]) => number
   private _keys: Key[]
 
-  constructor (entries?: Array<[Key, Value]>, cmp?: (a:[Key, Value], b:[Key, Value]) => number) {
+  constructor (entries?: Array<[Key, Value]>, cmp?: (a: [Key, Value], b: [Key, Value]) => number) {
     super()
 
     this._cmp = cmp ?? this._defaultSort
@@ -23,7 +23,7 @@ export class SortedMap<Key, Value> extends Map<Key, Value> {
    * priority changes, call update.
    * Call indexOf() to get the index _before_ the change happens.
    */
-  update (i: number) {
+  update (i: number): void {
     if (i < 0 || i >= this._keys.length) {
       return
     }
@@ -34,7 +34,7 @@ export class SortedMap<Key, Value> extends Map<Key, Value> {
     this._keys.splice(newIdx, 0, k)
   }
 
-  set (k: Key, v: Value) {
+  set (k: Key, v: Value): this {
     // If the key is already in the map, remove it from the ordering and
     // re-insert it below
     if (this.has(k)) {
@@ -52,12 +52,12 @@ export class SortedMap<Key, Value> extends Map<Key, Value> {
     return this
   }
 
-  clear () {
+  clear (): void {
     super.clear()
     this._keys = []
   }
 
-  delete (k: Key) {
+  delete (k: Key): boolean {
     if (!this.has(k)) {
       return false
     }
@@ -67,7 +67,7 @@ export class SortedMap<Key, Value> extends Map<Key, Value> {
     return super.delete(k)
   }
 
-  indexOf (k: Key) {
+  indexOf (k: Key): number {
     if (!this.has(k)) {
       return -1
     }
@@ -106,7 +106,7 @@ export class SortedMap<Key, Value> extends Map<Key, Value> {
     return lower
   }
 
-  * keys () {
+  * keys (): IterableIterator<Key> {
     for (const k of this._keys) {
       yield k
     }
@@ -136,13 +136,13 @@ export class SortedMap<Key, Value> extends Map<Key, Value> {
     return undefined
   }
 
-  * [Symbol.iterator] () {
+  * [Symbol.iterator] (): IterableIterator<[Key, Value]> {
     yield * this.entries()
   }
 
   // @ts-expect-error - Callback in Map forEach is (V, K, Map<K, V>) => void
-  forEach (cb: (entry:[Key, Value]) => void, thisArg: SortedMap<Key, Value> = this) {
-    if (!cb) {
+  forEach (cb: (entry: [Key, Value]) => void, thisArg: SortedMap<Key, Value> = this): void {
+    if (cb == null) {
       return
     }
 
@@ -163,7 +163,7 @@ export class SortedMap<Key, Value> extends Map<Key, Value> {
     return 0
   }
 
-  _kCmp (a: Key, b: Key) {
+  _kCmp (a: Key, b: Key): number {
     return this._cmp(
       // @ts-expect-error - get may return undefined
       [a, this.get(a)],

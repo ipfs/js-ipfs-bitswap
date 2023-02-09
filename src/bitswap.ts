@@ -1,13 +1,13 @@
 import { WantManager } from './want-manager/index.js'
 import { Network } from './network.js'
-import { DecisionEngine } from './decision-engine/index.js'
+import { DecisionEngine, PeerLedger } from './decision-engine/index.js'
 import { Notifications } from './notifications.js'
 import { logger } from './utils/index.js'
 import { Stats } from './stats/index.js'
 import { anySignal } from 'any-signal'
 import { BaseBlockstore } from 'blockstore-core/base'
 import { CID } from 'multiformats/cid'
-import type { BitswapOptions, IPFSBitswap, MultihashHasherLoader } from './index.js'
+import type { BitswapOptions, IPFSBitswap, MultihashHasherLoader, WantListEntry } from './index.js'
 import type { Libp2p } from '@libp2p/interface-libp2p'
 import type { Blockstore, Options, Pair } from 'interface-blockstore'
 import type { Logger } from '@libp2p/logger'
@@ -47,10 +47,10 @@ const statsKeys = [
  * used by IPFS.
  */
 export class Bitswap extends BaseBlockstore implements IPFSBitswap {
-  private _libp2p: Libp2p
-  private _log: Logger
-  private _options: Required<BitswapOptions>
-  private _stats: Stats
+  private readonly _libp2p: Libp2p
+  private readonly _log: Logger
+  private readonly _options: Required<BitswapOptions>
+  private readonly _stats: Stats
   public network: Network
   public blockstore: Blockstore
   public engine: DecisionEngine
@@ -92,18 +92,18 @@ export class Bitswap extends BaseBlockstore implements IPFSBitswap {
     this.started = false
   }
 
-  isStarted () {
+  isStarted (): boolean {
     return this.started
   }
 
-  get peerId () {
+  get peerId (): PeerId {
     return this._libp2p.peerId
   }
 
   /**
    * handle messages received through the network
    */
-  async _receiveMessage (peerId: PeerId, incoming: BitswapMessage) {
+  async _receiveMessage (peerId: PeerId, incoming: BitswapMessage): Promise<void> {
     try {
       // Note: this allows the engine to respond to any wants in the message.
       // Processing of the blocks in the message happens below, after the
@@ -142,12 +142,12 @@ export class Bitswap extends BaseBlockstore implements IPFSBitswap {
 
     await Promise.all(
       received.map(
-        ({ cid, wasWanted, data }) => this._handleReceivedBlock(peerId, cid, data, wasWanted)
+        async ({ cid, wasWanted, data }) => { await this._handleReceivedBlock(peerId, cid, data, wasWanted) }
       )
     )
   }
 
-  async _handleReceivedBlock (peerId: PeerId, cid: CID, data: Uint8Array, wasWanted: boolean) {
+  async _handleReceivedBlock (peerId: PeerId, cid: CID, data: Uint8Array, wasWanted: boolean): Promise<void> {
     this._log('received block')
 
     const has = await this.blockstore.has(cid)
@@ -161,7 +161,7 @@ export class Bitswap extends BaseBlockstore implements IPFSBitswap {
     await this.put(cid, data)
   }
 
-  _updateReceiveCounters (peerIdStr: string, cid: CID, data: Uint8Array, exists: boolean) {
+  _updateReceiveCounters (peerIdStr: string, cid: CID, data: Uint8Array, exists: boolean): void {
     this._stats.push(peerIdStr, 'blocksReceived', 1)
     this._stats.push(peerIdStr, 'dataReceived', data.length)
 
@@ -174,45 +174,45 @@ export class Bitswap extends BaseBlockstore implements IPFSBitswap {
   /**
    * handle errors on the receiving channel
    */
-  _receiveError (err: Error) {
+  _receiveError (err: Error): void {
     this._log.error('ReceiveError', err)
   }
 
   /**
    * handle new peers
    */
-  _onPeerConnected (peerId: PeerId) {
+  _onPeerConnected (peerId: PeerId): void {
     this.wm.connected(peerId)
   }
 
   /**
    * handle peers being disconnected
    */
-  _onPeerDisconnected (peerId: PeerId) {
+  _onPeerDisconnected (peerId: PeerId): void {
     this.wm.disconnected(peerId)
     this.engine.peerDisconnected(peerId)
     this._stats.disconnected(peerId)
   }
 
-  enableStats () {
+  enableStats (): void {
     this._stats.enable()
   }
 
-  disableStats () {
+  disableStats (): void {
     this._stats.disable()
   }
 
   /**
    * Return the current wantlist for a given `peerId`
    */
-  wantlistForPeer (peerId: PeerId, _options?: any) {
+  wantlistForPeer (peerId: PeerId, _options?: any): Map<string, WantListEntry> {
     return this.engine.wantlistForPeer(peerId)
   }
 
   /**
    * Return ledger information for a given `peerId`
    */
-  ledgerForPeer (peerId: PeerId) {
+  ledgerForPeer (peerId: PeerId): PeerLedger | undefined {
     return this.engine.ledgerForPeer(peerId)
   }
 
@@ -220,18 +220,18 @@ export class Bitswap extends BaseBlockstore implements IPFSBitswap {
    * Fetch a given block by cid. If the block is in the local
    * blockstore it is returned, otherwise the block is added to the wantlist and returned once another node sends it to us.
    */
-  async get (cid: CID, options: AbortOptions = {}) {
-    const fetchFromNetwork = (cid: CID, options: AbortOptions) => {
+  async get (cid: CID, options: AbortOptions = {}): Promise<Uint8Array> {
+    const fetchFromNetwork = async (cid: CID, options: AbortOptions): Promise<Uint8Array> => {
       // add it to the want list - n.b. later we will abort the AbortSignal
       // so no need to remove the blocks from the wantlist after we have it
       this.wm.wantBlocks([cid], options)
 
-      return this.notifications.wantBlock(cid, options)
+      return await this.notifications.wantBlock(cid, options)
     }
 
     let promptedNetwork = false
 
-    const loadOrFetchFromNetwork = async (cid: CID, options: AbortOptions) => {
+    const loadOrFetchFromNetwork = async (cid: CID, options: AbortOptions): Promise<Uint8Array> => {
       try {
         // have to await here as we want to handle ERR_NOT_FOUND
         const block = await this.blockstore.get(cid, options)
@@ -246,11 +246,11 @@ export class Bitswap extends BaseBlockstore implements IPFSBitswap {
           promptedNetwork = true
 
           this.network.findAndConnect(cid, options)
-            .catch((err) => this._log.error(err))
+            .catch((err) => { this._log.error(err) })
         }
 
         // we don't have the block locally so fetch it from the network
-        return fetchFromNetwork(cid, options)
+        return await fetchFromNetwork(cid, options)
       }
     }
 
@@ -259,7 +259,7 @@ export class Bitswap extends BaseBlockstore implements IPFSBitswap {
     // a race condition, so register for incoming block notifications as well
     // as trying to get it from the datastore
     const controller = new AbortController()
-    const signal = options.signal
+    const signal = (options.signal != null)
       ? anySignal([options.signal, controller.signal])
       : controller.signal
 
@@ -284,7 +284,7 @@ export class Bitswap extends BaseBlockstore implements IPFSBitswap {
    * Fetch a a list of blocks by cid. If the blocks are in the local
    * blockstore they are returned, otherwise the blocks are added to the wantlist and returned once another node sends them to us.
    */
-  async * getMany (cids: AsyncIterable<CID>|Iterable<CID>, options: AbortOptions = {}) {
+  async * getMany (cids: AsyncIterable<CID> | Iterable<CID>, options: AbortOptions = {}): AsyncGenerator<Uint8Array> {
     for await (const cid of cids) {
       yield this.get(cid, options)
     }
@@ -298,11 +298,11 @@ export class Bitswap extends BaseBlockstore implements IPFSBitswap {
    * If you want to cancel the want for a block without doing that, pass an
    * AbortSignal in to `.get` or `.getMany` and abort it.
    */
-  unwant (cids: CID[]|CID) {
+  unwant (cids: CID[] | CID): void {
     const cidsArray = Array.isArray(cids) ? cids : [cids]
 
     this.wm.unwantBlocks(cidsArray)
-    cidsArray.forEach((cid) => this.notifications.unwantBlock(cid))
+    cidsArray.forEach((cid) => { this.notifications.unwantBlock(cid) })
   }
 
   /**
@@ -310,7 +310,7 @@ export class Bitswap extends BaseBlockstore implements IPFSBitswap {
    * for blocks to never resolve.  If you wish these promises to abort instead
    * call `unwant(cids)` instead.
    */
-  cancelWants (cids: CID[]|CID) {
+  cancelWants (cids: CID[] | CID): void {
     this.wm.cancelWants(Array.isArray(cids) ? cids : [cids])
   }
 
@@ -318,7 +318,7 @@ export class Bitswap extends BaseBlockstore implements IPFSBitswap {
    * Put the given block to the underlying blockstore and
    * send it to nodes that have it in their wantlist.
    */
-  async put (cid: CID, block: Uint8Array, _options?: any) {
+  async put (cid: CID, block: Uint8Array, _options?: any): Promise<void> {
     await this.blockstore.put(cid, block)
     this._sendHaveBlockNotifications(cid, block)
   }
@@ -327,7 +327,7 @@ export class Bitswap extends BaseBlockstore implements IPFSBitswap {
    * Put the given blocks to the underlying blockstore and
    * send it to nodes that have it them their wantlist.
    */
-  async * putMany (source: Iterable<Pair> | AsyncIterable<Pair>, options?: Options) {
+  async * putMany (source: Iterable<Pair> | AsyncIterable<Pair>, options?: Options): AsyncGenerator<Pair> {
     for await (const { key, value } of this.blockstore.putMany(source, options)) {
       this._sendHaveBlockNotifications(key, value)
 
@@ -338,7 +338,7 @@ export class Bitswap extends BaseBlockstore implements IPFSBitswap {
   /**
    * Sends notifications about the arrival of a block
    */
-  _sendHaveBlockNotifications (cid: CID, data: Uint8Array) {
+  _sendHaveBlockNotifications (cid: CID, data: Uint8Array): void {
     this.notifications.hasBlock(cid, data)
     this.engine.receivedBlocks([{ cid, data }])
     // Note: Don't wait for provide to finish before returning
@@ -350,28 +350,28 @@ export class Bitswap extends BaseBlockstore implements IPFSBitswap {
   /**
    * Get the current list of wants
    */
-  getWantlist () {
+  getWantlist (): IterableIterator<[string, WantListEntry]> {
     return this.wm.wantlist.entries()
   }
 
   /**
    * Get the current list of partners
    */
-  peers () {
+  peers (): PeerId[] {
     return this.engine.peers()
   }
 
   /**
    * Get stats about the bitswap node
    */
-  stat () {
+  stat (): Stats {
     return this._stats
   }
 
   /**
    * Start the bitswap node
    */
-  async start () {
+  async start (): Promise<void> {
     this.wm.start()
     await this.network.start()
     this.engine.start()
@@ -381,7 +381,7 @@ export class Bitswap extends BaseBlockstore implements IPFSBitswap {
   /**
    * Stop the bitswap node
    */
-  async stop () {
+  async stop (): Promise<void> {
     this._stats.stop()
     this.wm.stop()
     await this.network.stop()
@@ -389,11 +389,11 @@ export class Bitswap extends BaseBlockstore implements IPFSBitswap {
     this.started = false
   }
 
-  unwrap () {
+  unwrap (): Blockstore {
     return this.blockstore
   }
 
-  has (cid: CID): Promise<boolean> {
-    return this.blockstore.has(cid)
+  async has (cid: CID): Promise<boolean> {
+    return await this.blockstore.has(cid)
   }
 }

@@ -14,7 +14,7 @@ const DAG_PB_CODEC = 0x70
 
 describe('Wantlist', () => {
   let wm: Wantlist
-  let blocks: { cid: CID, data: Uint8Array }[]
+  let blocks: Array<{ cid: CID, data: Uint8Array }>
 
   before(async () => {
     blocks = await makeBlocks(2)

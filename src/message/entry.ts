@@ -14,7 +14,7 @@ export class BitswapMessageEntry {
     this.sendDontHave = Boolean(sendDontHave)
   }
 
-  get cid () {
+  get cid (): CID {
     return this.entry.cid
   }
 
@@ -22,7 +22,7 @@ export class BitswapMessageEntry {
     this.entry.cid = cid
   }
 
-  get priority () {
+  get priority (): number {
     return this.entry.priority
   }
 
@@ -30,7 +30,7 @@ export class BitswapMessageEntry {
     this.entry.priority = val
   }
 
-  get wantType () {
+  get wantType (): Message.Wantlist.WantType {
     return this.entry.wantType
   }
 
@@ -38,7 +38,7 @@ export class BitswapMessageEntry {
     this.entry.wantType = val
   }
 
-  get [Symbol.toStringTag] () {
+  get [Symbol.toStringTag] (): string {
     const cidStr = this.cid.toString(base58btc)
     return `BitswapMessageEntry ${cidStr} <cancel: ${this.cancel}, priority: ${this.priority}>`
   }

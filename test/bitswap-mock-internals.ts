@@ -27,7 +27,7 @@ import type { Network } from '../src/network.js'
 const DAG_PB_CODEC = 0x70
 const RAW_CODEC = 0x50
 
-function wantsBlock (cid: CID, bitswap: Bitswap) {
+function wantsBlock (cid: CID, bitswap: Bitswap): boolean {
   for (const [, value] of bitswap.getWantlist()) {
     if (value.cid.equals(cid)) {
       return true
@@ -41,7 +41,7 @@ describe('bitswap with mocks', function () {
   this.timeout(10 * 1000)
 
   let blockstore: Blockstore
-  let blocks: Array<{ cid: CID, data: Uint8Array}>
+  let blocks: Array<{ cid: CID, data: Uint8Array }>
   let ids: PeerId[]
 
   before(async () => {
@@ -70,14 +70,14 @@ describe('bitswap with mocks', function () {
 
       const blks = await Promise.all([
         b1.cid, b2.cid
-      ].map((cid) => blockstore.get(cid)))
+      ].map(async (cid) => await blockstore.get(cid)))
 
       expect(blks[0]).to.eql(b1.data)
       expect(blks[1]).to.eql(b2.data)
 
       const ledger = bs.ledgerForPeer(other)
 
-      if (!ledger) {
+      if (ledger == null) {
         throw new Error('No ledger found for peer')
       }
 
@@ -163,12 +163,12 @@ describe('bitswap with mocks', function () {
 
       await bs._receiveMessage(other, msg)
 
-      const res = await Promise.all([b1.cid, b2.cid, b3.cid].map((cid) => blockstore.get(cid).then(() => true, () => false)))
+      const res = await Promise.all([b1.cid, b2.cid, b3.cid].map(async (cid) => await blockstore.get(cid).then(() => true, () => false)))
       expect(res).to.eql([false, true, false])
 
       const ledger = bs.ledgerForPeer(other)
 
-      if (!ledger) {
+      if (ledger == null) {
         throw new Error('No ledger found for peer')
       }
 
@@ -255,7 +255,7 @@ describe('bitswap with mocks', function () {
 
       setTimeout(() => {
         finish(1)
-        bs.put(block.cid, block.data)
+        void bs.put(block.cid, block.data)
       }, 200)
 
       const res = await get
@@ -273,7 +273,7 @@ describe('bitswap with mocks', function () {
 
       const n1: Network = {
         // @ts-expect-error incorrect return type
-        connectTo (id) {
+        async connectTo (id) {
           if (!(isPeerId(id))) {
             throw new Error('Not a peer id')
           }
@@ -282,30 +282,30 @@ describe('bitswap with mocks', function () {
             throw new Error('unknown peer')
           }
 
-          return Promise.resolve()
+          await Promise.resolve()
         },
-        sendMessage (id, msg) {
+        async sendMessage (id, msg) {
           if (id.toString() === other.toString()) {
-            return bs2._receiveMessage(me, msg)
+            await bs2._receiveMessage(me, msg); return
           }
           throw new Error('unknown peer')
         },
-        start () {
-          return Promise.resolve()
+        async start () {
+          await Promise.resolve()
         },
-        stop () {
-          return Promise.resolve()
+        async stop () {
+          await Promise.resolve()
         },
-        findAndConnect (cid) {
-          return Promise.resolve()
+        async findAndConnect (cid) {
+          await Promise.resolve()
         },
-        provide (cid) {
-          return Promise.resolve()
+        async provide (cid) {
+          await Promise.resolve()
         }
       }
       const n2: Network = {
         // @ts-expect-error incorrect return type
-        connectTo (id) {
+        async connectTo (id) {
           if (!(isPeerId(id))) {
             throw new Error('Not a peer id')
           }
@@ -314,26 +314,26 @@ describe('bitswap with mocks', function () {
             throw new Error('unknown peer')
           }
 
-          return Promise.resolve()
+          await Promise.resolve()
         },
-        sendMessage (id, msg) {
+        async sendMessage (id, msg) {
           if (id.toString() === me.toString()) {
-            return bs1._receiveMessage(other, msg)
+            await bs1._receiveMessage(other, msg); return
           }
 
           throw new Error('unknown peer')
         },
-        start () {
-          return Promise.resolve()
+        async start () {
+          await Promise.resolve()
         },
-        stop () {
-          return Promise.resolve()
+        async stop () {
+          await Promise.resolve()
         },
-        findAndConnect (cid) {
-          return Promise.resolve()
+        async findAndConnect (cid) {
+          await Promise.resolve()
         },
-        provide (cid) {
-          return Promise.resolve()
+        async provide (cid) {
+          await Promise.resolve()
         }
       }
 
@@ -352,7 +352,7 @@ describe('bitswap with mocks', function () {
 
       const p1 = bs1.get(block.cid)
       setTimeout(() => {
-        bs2.put(block.cid, block.data)
+        void bs2.put(block.cid, block.data)
       }, 1000)
       const b1 = await p1
       expect(b1).to.equalBytes(block.data)
@@ -371,7 +371,7 @@ describe('bitswap with mocks', function () {
         bs.get(block.cid)
       ])
 
-      bs.put(block.cid, block.data)
+      void bs.put(block.cid, block.data)
 
       const res = await resP
       expect(res[0]).to.equalBytes(block.data)
@@ -396,7 +396,7 @@ describe('bitswap with mocks', function () {
         bs.get(cid3)
       ])
 
-      bs.put(block.cid, block.data)
+      void bs.put(block.cid, block.data)
 
       const res = await resP
 
@@ -448,7 +448,7 @@ describe('bitswap with mocks', function () {
       await expect(p1).to.eventually.rejectedWith(/aborted/)
 
       // here comes the block
-      bs.put(block.cid, block.data)
+      await bs.put(block.cid, block.data)
 
       // should still want it
       expect(wantsBlock(block.cid, bs)).to.be.true()
@@ -472,7 +472,7 @@ describe('bitswap with mocks', function () {
         bs.get(b.cid)
       ])
 
-      setTimeout(() => bs.unwant(b.cid), 1e3)
+      setTimeout(() => { bs.unwant(b.cid) }, 1e3)
 
       await expect(p).to.eventually.be.rejected()
 
@@ -485,7 +485,7 @@ describe('bitswap with mocks', function () {
       const bs = new Bitswap(mockLibp2pNode(), blockstore)
       const id = await createEd25519PeerId()
       const ledger = bs.ledgerForPeer(id)
-      expect(ledger).to.equal(null)
+      expect(ledger).to.be.undefined()
     })
   })
 })

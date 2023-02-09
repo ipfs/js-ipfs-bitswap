@@ -15,9 +15,9 @@ describe('gen Bitswap network', function () {
     const node = nodes[0]
     const blocks = await makeBlocks(100)
 
-    await Promise.all(blocks.map(b => node.bitswap.put(b.cid, b.data)))
-    const res = await Promise.all(new Array(100).fill(0).map((_, i) => {
-      return node.bitswap.get(blocks[i].cid)
+    await Promise.all(blocks.map(async b => { await node.bitswap.put(b.cid, b.data) }))
+    const res = await Promise.all(new Array(100).fill(0).map(async (_, i) => {
+      return await node.bitswap.get(blocks[i].cid)
     }))
     expect(res).to.have.length(blocks.length)
 
@@ -41,7 +41,7 @@ describe('gen Bitswap network', function () {
   })
 })
 
-async function exchangeBlocks (nodes: Array<any>, blocksPerNode: number = 10) {
+async function exchangeBlocks (nodes: any[], blocksPerNode: number = 10): Promise<void> {
   const blocks = await makeBlocks(nodes.length * blocksPerNode)
 
   const cids = blocks.map((b) => b.cid)

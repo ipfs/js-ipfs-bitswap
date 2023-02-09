@@ -11,11 +11,12 @@ import { orderedFinish } from './utils/helpers.js'
 import { BitswapMessage as Message } from '../src/message/index.js'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import type { Libp2p } from '@libp2p/interface-libp2p'
+import drain from 'it-drain'
 
 /**
  * Creates a repo + libp2pNode + Bitswap with or without DHT
  */
-async function createThing (dht: boolean) {
+async function createThing (dht: boolean): Promise<{ libp2pNode: Libp2p, bitswap: Bitswap }> {
   const libp2pNode = await createLibp2pNode({
     DHT: dht
   })
@@ -27,10 +28,10 @@ async function createThing (dht: boolean) {
 describe('start/stop', () => {
   it('should tell us if the node is started or not', async () => {
     const libp2p = {
-      handle: () => {},
-      unhandle: () => {},
-      register: () => {},
-      unregister: () => {},
+      handle: async (): Promise<void> => {},
+      unhandle: async (): Promise<void> => {},
+      register: async (): Promise<void> => {},
+      unregister: async (): Promise<void> => {},
       getConnections: () => []
     }
     // @ts-expect-error not a full libp2p
@@ -52,10 +53,10 @@ describe('blockstore', () => {
   it('should support .has', async () => {
     const [block] = await makeBlocks(1)
     const libp2p = {
-      handle: () => {},
-      unhandle: () => {},
-      register: () => {},
-      unregister: () => {},
+      handle: async (): Promise<void> => {},
+      unhandle: async (): Promise<void> => {},
+      register: async (): Promise<void> => {},
+      unregister: async (): Promise<void> => {},
       getConnections: () => []
     }
     // @ts-expect-error not a full libp2p
@@ -95,7 +96,7 @@ describe('bitswap without DHT', function () {
   })
 
   after(async () => {
-    await Promise.all(nodes.map((node) => Promise.all([
+    await Promise.all(nodes.map(async (node) => await Promise.all([
       node.bitswap.stop(),
       node.libp2pNode.stop()
     ])))
@@ -200,7 +201,7 @@ describe('bitswap with DHT', function () {
   })
 
   after(async () => {
-    await Promise.all(nodes.map((node) => Promise.all([
+    await Promise.all(nodes.map(async (node) => await Promise.all([
       node.bitswap.stop(),
       node.libp2pNode.stop()
     ])))
@@ -217,7 +218,7 @@ describe('bitswap with DHT', function () {
     await nodes[2].bitswap.put(block.cid, block.data)
 
     // wait for the DHT to finish providing
-    await provideSpy.returnValues[0]
+    await drain(provideSpy.returnValues[0])
 
     const blockRetrieved = await nodes[0].bitswap.get(block.cid)
     expect(block.data).to.eql(blockRetrieved)

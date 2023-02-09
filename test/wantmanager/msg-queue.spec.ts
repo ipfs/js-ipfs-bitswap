@@ -15,7 +15,7 @@ describe('MessageQueue', () => {
   let cids: CID[]
 
   before(async () => {
-    peerIds = await Promise.all([0, 1].map(() => makePeerId()))
+    peerIds = await Promise.all([0, 1].map(async () => await makePeerId()))
     cids = (await makeBlocks(6)).map(({ cid }) => cid)
   })
 
