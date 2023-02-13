@@ -1,15 +1,10 @@
 {
   "extends": "aegir/src/config/tsconfig.aegir.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "emitDeclarationOnly": true
+    "outDir": "dist"
   },
   "include": [
     "src",
     "test"
-  ],
-  "exclude": [
-    "src/message/message.js",
-    "test/types.test-d.ts"
   ]
 }
