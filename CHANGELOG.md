@@ -1,3 +1,19 @@
+## [16.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v15.0.2...v16.0.0) (2023-02-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* this module is now typescript
+
+### Features
+
+* convert to typescript ([#525](https://github.com/ipfs/js-ipfs-bitswap/issues/525)) ([11d9261](https://github.com/ipfs/js-ipfs-bitswap/commit/11d9261bf26c722a5fa28fc7c9d52c7090cb12a6))
+
+
+### Trivial Changes
+
+* update paths ([3874ec4](https://github.com/ipfs/js-ipfs-bitswap/commit/3874ec451fb714ae7e48a4a0b9f69a8187a82255))
+
 ## [15.0.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v15.0.1...v15.0.2) (2023-01-27)
 
 
