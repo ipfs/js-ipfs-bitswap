@@ -116,7 +116,7 @@ describe('Engine', () => {
     async function partnerWants (dEngine: DecisionEngine, values: string[], partner: PeerId): Promise<void> {
       const message = new Message(false)
 
-      const hashes = await Promise.all(values.map((v) => sha256.digest(uint8ArrayFromString(v))))
+      const hashes = await Promise.all(values.map(async (v) => await sha256.digest(uint8ArrayFromString(v))))
       hashes.forEach((hash, i) => {
         message.addEntry(CID.createV0(hash), Math.pow(2, 32) - 1 - i)
       })
@@ -126,7 +126,7 @@ describe('Engine', () => {
     async function partnerCancels (dEngine: DecisionEngine, values: string[], partner: PeerId): Promise<void> {
       const message = new Message(false)
 
-      const hashes = await Promise.all(values.map((v) => sha256.digest(uint8ArrayFromString(v))))
+      const hashes = await Promise.all(values.map(async (v) => await sha256.digest(uint8ArrayFromString(v))))
       hashes.forEach((hash) => {
         message.cancel(CID.createV0(hash))
       })
@@ -140,7 +140,7 @@ describe('Engine', () => {
       dEngine.receivedBlocks(blocks)
     }
 
-    const hashes = await Promise.all(alphabet.map(v => sha256.digest(uint8ArrayFromString(v))))
+    const hashes = await Promise.all(alphabet.map(async v => await sha256.digest(uint8ArrayFromString(v))))
     const blocks = hashes.map((h, i) => {
       return {
         cid: CID.createV0(h),
@@ -371,7 +371,7 @@ describe('Engine', () => {
     const vowels = 'aeiou'
 
     const alphabetLs = alphabet.split('')
-    const hashes = await Promise.all(alphabetLs.map(v => sha256.digest(uint8ArrayFromString(v))))
+    const hashes = await Promise.all(alphabetLs.map(async v => await sha256.digest(uint8ArrayFromString(v))))
     const blocks = hashes.map((h, i) => {
       return {
         cid: CID.createV0(h),
@@ -641,7 +641,7 @@ describe('Engine', () => {
       let i = wantBlks.length + wantHaves.length
       const message = new Message(false)
       for (const { type, blocks } of wantTypes) {
-        const hashes = await Promise.all(blocks.map((v) => sha256.digest(uint8ArrayFromString(v))))
+        const hashes = await Promise.all(blocks.map(async (v) => await sha256.digest(uint8ArrayFromString(v))))
         for (const hash of hashes) {
           message.addEntry(CID.createV0(hash), i--, type, false, sendDontHave)
         }

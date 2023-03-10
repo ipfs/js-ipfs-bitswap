@@ -6,6 +6,10 @@ import type { Message } from './message/message'
 import type { IMovingAverage } from '@vascosantos/moving-average'
 import type { MultihashHasher } from 'multiformats/hashes/interface'
 import type { Libp2p } from '@libp2p/interface-libp2p'
+import type { AbortOptions } from '@libp2p/interfaces'
+import type { Startable } from '@libp2p/interfaces/startable'
+import type { ProgressEvent, ProgressOptions } from 'progress-events'
+import type { BitswapNetworkProgressEvents } from './network.js'
 
 export interface WantListEntry {
   cid: CID
@@ -54,21 +58,46 @@ export interface Stats {
   push: (peer: string, counter: string, inc: number) => void
 }
 
-export interface Bitswap extends Blockstore {
-  peerId: PeerId
-  isStarted: () => boolean
-  enableStats: () => void
-  disableStats: () => void
+export type BitswapGetProgressEvents =
+  ProgressEvent<'bitswap:get:start', unknown> |
+  ProgressEvent<'bitswap:get:start', unknown> |
+  BitswapWantBlockProgressEvents
+
+export type BitswapNotifyProgressEvents =
+  ProgressEvent<'bitswap:notify:start', unknown> |
+  ProgressEvent<'bitswap:notify:start', unknown>
+
+export type BitswapWantBlockProgressEvents =
+  ProgressEvent<'bitswap:want-block:unwant', CID> |
+  ProgressEvent<'bitswap:want-block:block', CID> |
+  BitswapNetworkProgressEvents
+
+export interface Bitswap extends Startable {
+  /**
+   * Bitswap statistics
+   */
+  stats: Stats
+
+  /**
+   * The peers that we are tracking a ledger for
+   */
+  peers: PeerId[]
+
   wantlistForPeer: (peerId: PeerId) => Map<string, WantListEntry>
   ledgerForPeer: (peerId: PeerId) => Ledger | undefined
   unwant: (cids: CID | CID[]) => void
   cancelWants: (cids: CID | CID[]) => void
   getWantlist: () => IterableIterator<[string, WantListEntry]>
-  peers: () => PeerId[]
-  stat: () => Stats
-  start: () => void
-  stop: () => void
-  unwrap: () => Blockstore
+
+  /**
+   * Notify bitswap that a new block is available
+   */
+  notify: (cid: CID, block: Uint8Array, options?: ProgressOptions<BitswapNotifyProgressEvents>) => void
+
+  /**
+   * Retrieve a block from the network
+   */
+  want: (cid: CID, options?: AbortOptions & ProgressOptions<BitswapGetProgressEvents>) => Promise<Uint8Array>
 }
 
 export interface MultihashHasherLoader {

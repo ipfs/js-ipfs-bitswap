@@ -13,6 +13,8 @@ import type { Libp2p } from '@libp2p/interface-libp2p'
 import type { Logger } from '@libp2p/logger'
 import type { CID } from 'multiformats/cid'
 import type { AbortOptions } from '@multiformats/multiaddr'
+import type { ProgressOptions } from 'progress-events'
+import type { BitswapWantBlockProgressEvents } from '../index.js'
 
 export class WantManager {
   private readonly peers: Map<string, MsgQueue>
@@ -32,7 +34,7 @@ export class WantManager {
     this._log = logger(peerId, 'want')
   }
 
-  _addEntries (cids: CID[], cancel: boolean, force?: boolean): void {
+  _addEntries (cids: CID[], cancel: boolean, force?: boolean, options: ProgressOptions<BitswapWantBlockProgressEvents> = {}): void {
     const entries = cids.map((cid, i) => {
       return new Message.Entry(cid, CONSTANTS.kMaxPriority - i, Message.WantType.Block, cancel)
     })
@@ -55,7 +57,7 @@ export class WantManager {
 
     // broadcast changes
     for (const p of this.peers.values()) {
-      p.addEntries(entries)
+      p.addEntries(entries, options)
     }
   }
 
@@ -100,8 +102,8 @@ export class WantManager {
   /**
    * add all the cids to the wantlist
    */
-  wantBlocks (cids: CID[], options: AbortOptions = {}): void {
-    this._addEntries(cids, false)
+  wantBlocks (cids: CID[], options: AbortOptions & ProgressOptions<BitswapWantBlockProgressEvents> = {}): void {
+    this._addEntries(cids, false, false, options)
 
     options.signal?.addEventListener('abort', () => {
       this.cancelWants(cids)

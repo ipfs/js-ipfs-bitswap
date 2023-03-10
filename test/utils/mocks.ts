@@ -1,4 +1,4 @@
-import { MemoryBlockstore } from 'blockstore-core/memory'
+import { Blockstore, MemoryBlockstore } from 'blockstore-core/memory'
 import { EventEmitter } from 'events'
 import { DefaultBitswap } from '../../src/bitswap.js'
 import { Network } from '../../src/network.js'
@@ -133,7 +133,13 @@ export const applyNetwork = (bs: DefaultBitswap, n: Network): void => {
   bs.engine.network = n
 }
 
-export const genBitswapNetwork = async (n: number, enableDHT: boolean = false): Promise<Array<{ libp2p: Libp2p, bitswap: Bitswap }>> => {
+export interface BitswapNode {
+  libp2p: Libp2p
+  bitswap: Bitswap
+  blockstore: Blockstore
+}
+
+export const genBitswapNetwork = async (n: number, enableDHT: boolean = false): Promise<BitswapNode[]> => {
   // create PeerId and libp2p.Node for each
   const peers = await Promise.all(
     new Array(n).fill(0).map(async () => await createEd25519PeerId())
@@ -152,9 +158,12 @@ export const genBitswapNetwork = async (n: number, enableDHT: boolean = false): 
 
       await libp2p.start()
 
+      const blockstore = new MemoryBlockstore()
+
       return {
         libp2p,
-        bitswap: new DefaultBitswap(libp2p, new MemoryBlockstore())
+        bitswap: new DefaultBitswap(libp2p, blockstore),
+        blockstore
       }
     })
   )

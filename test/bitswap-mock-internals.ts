@@ -208,7 +208,7 @@ describe('bitswap with mocks', function () {
       await blockstore.put(block.cid, block.data)
       const bs = new DefaultBitswap(mockLibp2pNode(), blockstore)
 
-      expect(await bs.get(block.cid)).to.equalBytes(block.data)
+      expect(await bs.want(block.cid)).to.equalBytes(block.data)
     })
 
     it('blocks exist locally', async () => {
@@ -219,7 +219,9 @@ describe('bitswap with mocks', function () {
       await drain(blockstore.putMany([{ key: b1.cid, value: b1.data }, { key: b2.cid, value: b2.data }, { key: b3.cid, value: b3.data }]))
       const bs = new DefaultBitswap(mockLibp2pNode(), blockstore)
 
-      const retrievedBlocks = await all(bs.getMany([b1.cid, b2.cid, b3.cid]))
+      const retrievedBlocks = await all(
+        [b1.cid, b2.cid, b3.cid].map(async cid => await bs.want(cid))
+      )
 
       expect(retrievedBlocks).to.be.eql([b1.data, b2.data, b3.data])
     })
@@ -232,13 +234,13 @@ describe('bitswap with mocks', function () {
       await drain(blockstore.putMany([{ key: b1.cid, value: b1.data }, { key: b2.cid, value: b2.data }, { key: b3.cid, value: b3.data }]))
       const bs = new DefaultBitswap(mockLibp2pNode(), blockstore)
 
-      const block1 = await bs.get(b1.cid)
+      const block1 = await bs.want(b1.cid)
       expect(block1).to.equalBytes(b1.data)
 
-      const block2 = await bs.get(b2.cid)
+      const block2 = await bs.want(b2.cid)
       expect(block2).to.equalBytes(b2.data)
 
-      const block3 = await bs.get(b3.cid)
+      const block3 = await bs.want(b3.cid)
       expect(block3).to.equalBytes(b3.data)
     })
 
@@ -252,7 +254,7 @@ describe('bitswap with mocks', function () {
       bs.wm.network = net
       bs.engine.network = net
       await bs.start()
-      const get = bs.get(block.cid)
+      const get = bs.want(block.cid)
 
       setTimeout(() => {
         finish(1)
@@ -351,7 +353,7 @@ describe('bitswap with mocks', function () {
       bs1._onPeerConnected(other)
       bs2._onPeerConnected(me)
 
-      const p1 = bs1.get(block.cid)
+      const p1 = bs1.want(block.cid)
       setTimeout(() => {
         void bs2.put(block.cid, block.data)
       }, 1000)
@@ -368,8 +370,8 @@ describe('bitswap with mocks', function () {
       const bs = new DefaultBitswap(mockLibp2pNode(), blockstore)
 
       const resP = Promise.all([
-        bs.get(block.cid),
-        bs.get(block.cid)
+        bs.want(block.cid),
+        bs.want(block.cid)
       ])
 
       void bs.put(block.cid, block.data)
@@ -392,9 +394,9 @@ describe('bitswap with mocks', function () {
       const cid3 = CID.createV1(RAW_CODEC, block.cid.multihash)
 
       const resP = Promise.all([
-        bs.get(cid1),
-        bs.get(cid2),
-        bs.get(cid3)
+        bs.want(cid1),
+        bs.want(cid2),
+        bs.want(cid3)
       ])
 
       void bs.put(block.cid, block.data)
@@ -412,7 +414,7 @@ describe('bitswap with mocks', function () {
       const bs = new DefaultBitswap(mockLibp2pNode(), blockstore)
       const controller = new AbortController()
 
-      const p = bs.get(block.cid, {
+      const p = bs.want(block.cid, {
         signal: controller.signal
       })
 
@@ -433,10 +435,10 @@ describe('bitswap with mocks', function () {
       const controller = new AbortController()
 
       // request twice
-      const p1 = bs.get(block.cid, {
+      const p1 = bs.want(block.cid, {
         signal: controller.signal
       })
-      const p2 = bs.get(block.cid)
+      const p2 = bs.want(block.cid)
 
       await delay(100)
 
@@ -469,8 +471,8 @@ describe('bitswap with mocks', function () {
 
       const b = blocks[12]
       const p = Promise.all([
-        bs.get(b.cid),
-        bs.get(b.cid)
+        bs.want(b.cid),
+        bs.want(b.cid)
       ])
 
       setTimeout(() => { bs.unwant(b.cid) }, 1e3)

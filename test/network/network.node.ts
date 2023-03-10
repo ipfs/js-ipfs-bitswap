@@ -104,8 +104,8 @@ describe('network', () => {
   })
 
   it('connectTo success', async () => {
-    const ma = p2pB.getMultiaddrs()[0]
-    await networkA.connectTo(ma)
+    await p2pA.peerStore.addressBook.add(p2pB.peerId, p2pB.getMultiaddrs())
+    await networkA.connectTo(p2pB.peerId)
   })
 
   it('sets up peer handlers for previously connected peers', async () => {

@@ -3,8 +3,10 @@ import type { AbortOptions } from '@libp2p/interfaces'
 import type { Logger } from '@libp2p/logger'
 import { EventEmitter } from 'events'
 import type { CID } from 'multiformats/cid'
+import { CustomProgressEvent, ProgressOptions } from 'progress-events'
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
 import * as CONSTANTS from './constants.js'
+import type { BitswapWantBlockProgressEvents } from './index.js'
 import { logger } from './utils/index.js'
 
 const unwantEvent = (cid: CID): string => `unwant:${uint8ArrayToString(cid.multihash.bytes, 'base64')}`
@@ -41,7 +43,7 @@ export class Notifications extends EventEmitter {
    * Returns a Promise that resolves to the block when it is received,
    * or undefined when the block is unwanted.
    */
-  async wantBlock (cid: CID, options: AbortOptions = {}): Promise<Uint8Array> {
+  async wantBlock (cid: CID, options: AbortOptions & ProgressOptions<BitswapWantBlockProgressEvents> = {}): Promise<Uint8Array> {
     if (cid == null) {
       throw new Error('Not a valid cid')
     }
@@ -55,12 +57,14 @@ export class Notifications extends EventEmitter {
       const onUnwant = (): void => {
         this.removeListener(blockEvt, onBlock)
 
+        options.onProgress?.(new CustomProgressEvent<CID>('bitswap:want-block:unwant', cid))
         reject(new Error(`Block for ${cid} unwanted`))
       }
 
       const onBlock = (data: Uint8Array): void => {
         this.removeListener(unwantEvt, onUnwant)
 
+        options.onProgress?.(new CustomProgressEvent<CID>('bitswap:want-block:block', cid))
         resolve(data)
       }
 
