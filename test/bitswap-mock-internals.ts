@@ -196,7 +196,7 @@ describe('bitswap with mocks', function () {
       const bs = new DefaultBitswap(mockLibp2pNode(), blockstore)
       try {
         // @ts-expect-error we want this to fail
-        await bs.get(null)
+        await bs.want(null)
       } catch (err: any) {
         expect(err).to.exist()
         expect(err.message).to.equal('Not a valid cid')

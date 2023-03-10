@@ -46,7 +46,7 @@ async function exchangeBlocks (nodes: any[], blocksPerNode: number = 10): Promis
 
   // fetch all blocks on every node
   await Promise.all(nodes.map(async (node) => {
-    const bs = await Promise.all(cids.map((cid) => node.bitswap.get(cid)))
+    const bs = await Promise.all(cids.map((cid) => node.bitswap.want(cid)))
     expect(bs).to.deep.equal(blocks.map(b => b.data))
   }))
 
