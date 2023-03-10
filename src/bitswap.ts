@@ -6,7 +6,7 @@ import { logger } from './utils/index.js'
 import { Stats } from './stats/index.js'
 import { anySignal } from 'any-signal'
 import { CID } from 'multiformats/cid'
-import type { BitswapOptions, Bitswap, MultihashHasherLoader, WantListEntry, BitswapGetProgressEvents, BitswapNotifyProgressEvents } from './index.js'
+import type { BitswapOptions, Bitswap, MultihashHasherLoader, WantListEntry, BitswapWantProgressEvents, BitswapNotifyProgressEvents } from './index.js'
 import type { Libp2p } from '@libp2p/interface-libp2p'
 import type { Blockstore, Options, Pair } from 'interface-blockstore'
 import type { Logger } from '@libp2p/logger'
@@ -218,8 +218,8 @@ export class DefaultBitswap implements Bitswap {
    * Fetch a given block by cid. If the block is in the local
    * blockstore it is returned, otherwise the block is added to the wantlist and returned once another node sends it to us.
    */
-  async want (cid: CID, options: AbortOptions & ProgressOptions<BitswapGetProgressEvents> = {}): Promise<Uint8Array> {
-    const fetchFromNetwork = async (cid: CID, options: AbortOptions): Promise<Uint8Array> => {
+  async want (cid: CID, options: AbortOptions & ProgressOptions<BitswapWantProgressEvents> = {}): Promise<Uint8Array> {
+    const fetchFromNetwork = async (cid: CID, options: AbortOptions & ProgressOptions<BitswapWantProgressEvents>): Promise<Uint8Array> => {
       // add it to the want list - n.b. later we will abort the AbortSignal
       // so no need to remove the blocks from the wantlist after we have it
       this.wm.wantBlocks([cid], options)
@@ -229,7 +229,7 @@ export class DefaultBitswap implements Bitswap {
 
     let promptedNetwork = false
 
-    const loadOrFetchFromNetwork = async (cid: CID, options: AbortOptions): Promise<Uint8Array> => {
+    const loadOrFetchFromNetwork = async (cid: CID, options: AbortOptions & ProgressOptions<BitswapWantProgressEvents>): Promise<Uint8Array> => {
       try {
         // have to await here as we want to handle ERR_NOT_FOUND
         const block = await this.blockstore.get(cid, options)
@@ -333,7 +333,7 @@ export class DefaultBitswap implements Bitswap {
     this.notifications.hasBlock(cid, data)
     this.engine.receivedBlocks([{ cid, data }])
     // Note: Don't wait for provide to finish before returning
-    this.network.provide(cid).catch((err) => {
+    this.network.provide(cid, options).catch((err) => {
       this._log.error('Failed to provide: %s', err.message)
     })
   }

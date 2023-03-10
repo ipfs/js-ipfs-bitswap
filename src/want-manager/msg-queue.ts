@@ -3,7 +3,7 @@ import { BitswapMessage as Message } from '../message/index.js'
 import { logger } from '../utils/index.js'
 import { wantlistSendDebounceMs } from '../constants.js'
 import type { PeerId } from '@libp2p/interface-peer-id'
-import type { BitswapNetworkProgressEvents, Network } from '../network.js'
+import type { BitswapNetworkWantProgressEvents, Network } from '../network.js'
 import type { CID } from 'multiformats/cid'
 import type { Logger } from '@libp2p/logger'
 import type { ProgressOptions } from 'progress-events'
@@ -25,7 +25,7 @@ export class MsgQueue {
     this.sendEntries = debounce(this.sendEntries.bind(this), wantlistSendDebounceMs)
   }
 
-  addMessage (msg: Message, options: ProgressOptions<BitswapNetworkProgressEvents> = {}): void {
+  addMessage (msg: Message, options: ProgressOptions<BitswapNetworkWantProgressEvents> = {}): void {
     if (msg.empty) {
       return
     }
@@ -55,7 +55,7 @@ export class MsgQueue {
     this.addMessage(msg, options)
   }
 
-  async send (msg: Message, options: ProgressOptions<BitswapNetworkProgressEvents> = {}): Promise<void> {
+  async send (msg: Message, options: ProgressOptions<BitswapNetworkWantProgressEvents> = {}): Promise<void> {
     try {
       await this.network.connectTo(this.peerId, options)
     } catch (err: any) {

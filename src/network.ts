@@ -19,6 +19,9 @@ import type { AbortOptions } from '@libp2p/interfaces'
 import type { Connection } from '@libp2p/interface-connection'
 import type { PeerInfo } from '@libp2p/interface-peer-info'
 import { ProgressEvent, CustomProgressEvent, ProgressOptions } from 'progress-events'
+import take from 'it-take'
+import drain from 'it-drain'
+import map from 'it-map'
 
 export interface Provider {
   id: PeerId
@@ -26,9 +29,17 @@ export interface Provider {
 }
 
 export type BitswapNetworkProgressEvents =
-  ProgressEvent<'bitswap:network:dial', PeerId> |
+  ProgressEvent<'bitswap:network:dial', PeerId>
+
+export type BitswapNetworkWantProgressEvents =
   ProgressEvent<'bitswap:network:send-wantlist', PeerId> |
-  ProgressEvent<'bitswap:network:send-wantlist:error', { peer: PeerId, error: Error }>
+  ProgressEvent<'bitswap:network:send-wantlist:error', { peer: PeerId, error: Error }> |
+  ProgressEvent<'bitswap:network:find-providers', CID> |
+  BitswapNetworkProgressEvents
+
+export type BitswapNetworkNotifyProgressEvents =
+  ProgressEvent<'bitswap:network:provide', CID> |
+  BitswapNetworkProgressEvents
 
 const BITSWAP100 = '/ipfs/bitswap/1.0.0'
 const BITSWAP110 = '/ipfs/bitswap/1.1.0'
@@ -184,41 +195,35 @@ export class Network {
   /**
    * Find providers given a `cid`.
    */
-  findProviders (cid: CID, options: AbortOptions = {}): AsyncIterable<PeerInfo> {
+  findProviders (cid: CID, options: AbortOptions & ProgressOptions<BitswapNetworkWantProgressEvents> = {}): AsyncIterable<PeerInfo> {
+    options.onProgress?.(new CustomProgressEvent<PeerId>('bitswap:network:find-providers', cid))
     return this._libp2p.contentRouting.findProviders(cid, options)
   }
 
   /**
    * Find the providers of a given `cid` and connect to them.
    */
-  async findAndConnect (cid: CID, options?: AbortOptions): Promise<void> {
-    const connectAttempts = []
-    let found = 0
-
-    for await (const provider of this.findProviders(cid, options)) {
-      this._log(`connecting to provider ${provider.id}`)
-      connectAttempts.push(
-        this.connectTo(provider.id, options)
+  async findAndConnect (cid: CID, options?: AbortOptions & ProgressOptions<BitswapNetworkWantProgressEvents>): Promise<void> {
+    await drain(
+      take(
+        map(this.findProviders(cid, options), async provider => await this.connectTo(provider.id, options)
           .catch(err => {
             // Prevent unhandled promise rejection
             this._log.error(err)
-          })
+          })),
+        CONSTANTS.maxProvidersPerRequest
       )
-
-      found++
-
-      if (found === CONSTANTS.maxProvidersPerRequest) {
-        break
-      }
-    }
-
-    await Promise.all(connectAttempts)
+    )
+      .catch(err => {
+        this._log.error(err)
+      })
   }
 
   /**
    * Tell the network we can provide content for the passed CID
    */
-  async provide (cid: CID, options?: AbortOptions): Promise<void> {
+  async provide (cid: CID, options: AbortOptions & ProgressOptions<BitswapNetworkNotifyProgressEvents> = {}): Promise<void> {
+    options.onProgress?.(new CustomProgressEvent<PeerId>('bitswap:network:provide', cid))
     await this._libp2p.contentRouting.provide(cid, options)
   }
 
@@ -226,7 +231,7 @@ export class Network {
    * Connect to the given peer
    * Send the given msg (instance of Message) to the given peer
    */
-  async sendMessage (peer: PeerId, msg: Message, options: ProgressOptions<BitswapNetworkProgressEvents> = {}): Promise<void> {
+  async sendMessage (peer: PeerId, msg: Message, options: ProgressOptions<BitswapNetworkWantProgressEvents> = {}): Promise<void> {
     if (!this._running) throw new Error('network isn\'t running')
 
     const stringId = peer.toString()
@@ -262,7 +267,7 @@ export class Network {
     }
   }
 
-  async _writeMessage (peerId: PeerId, msg: Message, options: ProgressOptions<BitswapNetworkProgressEvents> = {}): Promise<void> {
+  async _writeMessage (peerId: PeerId, msg: Message, options: ProgressOptions<BitswapNetworkWantProgressEvents> = {}): Promise<void> {
     const stream = await this._libp2p.dialProtocol(peerId, [BITSWAP120, BITSWAP110, BITSWAP100])
 
     try {

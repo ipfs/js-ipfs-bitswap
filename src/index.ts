@@ -9,7 +9,7 @@ import type { Libp2p } from '@libp2p/interface-libp2p'
 import type { AbortOptions } from '@libp2p/interfaces'
 import type { Startable } from '@libp2p/interfaces/startable'
 import type { ProgressEvent, ProgressOptions } from 'progress-events'
-import type { BitswapNetworkProgressEvents } from './network.js'
+import type { BitswapNetworkNotifyProgressEvents, BitswapNetworkWantProgressEvents } from './network.js'
 
 export interface WantListEntry {
   cid: CID
@@ -58,19 +58,16 @@ export interface Stats {
   push: (peer: string, counter: string, inc: number) => void
 }
 
-export type BitswapGetProgressEvents =
-  ProgressEvent<'bitswap:get:start', unknown> |
-  ProgressEvent<'bitswap:get:start', unknown> |
+export type BitswapWantProgressEvents =
   BitswapWantBlockProgressEvents
 
 export type BitswapNotifyProgressEvents =
-  ProgressEvent<'bitswap:notify:start', unknown> |
-  ProgressEvent<'bitswap:notify:start', unknown>
+  BitswapNetworkNotifyProgressEvents
 
 export type BitswapWantBlockProgressEvents =
   ProgressEvent<'bitswap:want-block:unwant', CID> |
   ProgressEvent<'bitswap:want-block:block', CID> |
-  BitswapNetworkProgressEvents
+  BitswapNetworkWantProgressEvents
 
 export interface Bitswap extends Startable {
   /**
@@ -97,7 +94,7 @@ export interface Bitswap extends Startable {
   /**
    * Retrieve a block from the network
    */
-  want: (cid: CID, options?: AbortOptions & ProgressOptions<BitswapGetProgressEvents>) => Promise<Uint8Array>
+  want: (cid: CID, options?: AbortOptions & ProgressOptions<BitswapWantProgressEvents>) => Promise<Uint8Array>
 }
 
 export interface MultihashHasherLoader {
