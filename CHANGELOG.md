@@ -1,3 +1,14 @@
+## [17.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v16.0.0...v17.0.0) (2023-03-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* `.get`, `.getMany`, `.put` and `.putMany` are no longer part of the `Bitswap` interface - instead call `.want` and `.notify`
+
+### Features
+
+* simplify bitswap interface, add progress handlers ([#527](https://github.com/ipfs/js-ipfs-bitswap/issues/527)) ([1f31995](https://github.com/ipfs/js-ipfs-bitswap/commit/1f3199505ac53e3c16cb8ea713d2279fbe69acb1))
+
 ## [16.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v15.0.2...v16.0.0) (2023-02-13)
 
 
