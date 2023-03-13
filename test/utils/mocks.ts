@@ -1,4 +1,5 @@
-import { Blockstore, MemoryBlockstore } from 'blockstore-core/memory'
+import type { Blockstore } from 'interface-blockstore'
+import { MemoryBlockstore } from 'blockstore-core/memory'
 import { EventEmitter } from 'events'
 import { DefaultBitswap } from '../../src/bitswap.js'
 import { Network } from '../../src/network.js'

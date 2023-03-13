@@ -38,7 +38,7 @@ describe('network', () => {
   let networkC: Network
   let bitswapMockC: DefaultBitswap
 
-  let blocks: Array<{ cid: CID, data: Uint8Array }>
+  let blocks: Array<{ cid: CID, block: Uint8Array }>
 
   beforeEach(async () => {
     [p2pA, p2pB, p2pC] = await Promise.all([
@@ -160,8 +160,8 @@ describe('network', () => {
       const deferred = pDefer()
 
       msg.addEntry(b1.cid, 0)
-      msg.addBlock(b1.cid, b1.data)
-      msg.addBlock(b2.cid, b2.data)
+      msg.addBlock(b1.cid, b1.block)
+      msg.addBlock(b2.cid, b2.block)
 
       bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
         // cannot do deep comparison on objects as one has Buffers and one has Uint8Arrays
@@ -195,8 +195,8 @@ describe('network', () => {
     const deferred = pDefer()
 
     msg.addEntry(b1.cid, 0)
-    msg.addBlock(b1.cid, b1.data)
-    msg.addBlock(b2.cid, b2.data)
+    msg.addBlock(b1.cid, b1.block)
+    msg.addBlock(b2.cid, b2.block)
 
     // In a real network scenario, peers will be discovered and their addresses
     // will be added to the addressBook before bitswap kicks in
@@ -231,8 +231,8 @@ describe('network', () => {
     const deferred = pDefer()
 
     msg.addEntry(b1.cid, 0)
-    msg.addBlock(b1.cid, b1.data)
-    msg.addBlock(b2.cid, b2.data)
+    msg.addBlock(b1.cid, b1.block)
+    msg.addBlock(b2.cid, b2.block)
 
     // In a real network scenario, peers will be discovered and their addresses
     // will be added to the addressBook before bitswap kicks in

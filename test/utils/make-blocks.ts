@@ -7,14 +7,14 @@ import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 // @ts-expect-error no types
 import { v4 as uuid } from 'uuid'
 
-export const makeBlocks = async (count: number, size?: number): Promise<Array<{ cid: CID, data: Uint8Array }>> => {
+export const makeBlocks = async (count: number, size?: number): Promise<Array<{ cid: CID, block: Uint8Array }>> => {
   const blocks = await Promise.all(
     range(count ?? 1).map(async () => {
-      const data = size != null ? randomBytes(size) : uint8ArrayFromString(`hello world ${uuid()}`)
-      const hash = await sha256.digest(data)
+      const block = size != null ? randomBytes(size) : uint8ArrayFromString(`hello world ${uuid()}`)
+      const hash = await sha256.digest(block)
       return {
         cid: CID.createV0(hash),
-        data
+        block
       }
     })
   )

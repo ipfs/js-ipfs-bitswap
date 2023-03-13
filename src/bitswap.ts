@@ -319,19 +319,19 @@ export class DefaultBitswap implements Bitswap {
    * send it to nodes that have it them their wantlist.
    */
   async * putMany (source: Iterable<Pair> | AsyncIterable<Pair>, options?: Options): AsyncGenerator<Pair> {
-    for await (const { key, value } of this.blockstore.putMany(source, options)) {
-      this.notify(key, value)
+    for await (const { cid, block } of this.blockstore.putMany(source, options)) {
+      this.notify(cid, block)
 
-      yield { key, value }
+      yield { cid, block }
     }
   }
 
   /**
    * Sends notifications about the arrival of a block
    */
-  notify (cid: CID, data: Uint8Array, options: ProgressOptions<BitswapNotifyProgressEvents> = {}): void {
-    this.notifications.hasBlock(cid, data)
-    this.engine.receivedBlocks([{ cid, data }])
+  notify (cid: CID, block: Uint8Array, options: ProgressOptions<BitswapNotifyProgressEvents> = {}): void {
+    this.notifications.hasBlock(cid, block)
+    this.engine.receivedBlocks([{ cid, block }])
     // Note: Don't wait for provide to finish before returning
     this.network.provide(cid, options).catch((err) => {
       this._log.error('Failed to provide: %s', err.message)

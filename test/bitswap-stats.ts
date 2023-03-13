@@ -38,7 +38,7 @@ describe('bitswap stats', () => {
   let libp2pNodes: Libp2p[]
   let bitswaps: DefaultBitswap[]
   let bs: DefaultBitswap
-  let blocks: Array<{ cid: CID, data: Uint8Array }>
+  let blocks: Array<{ cid: CID, block: Uint8Array }>
   let ids: PeerId[]
 
   before(async () => {
@@ -130,7 +130,7 @@ describe('bitswap stats', () => {
     const other = ids[1]
 
     const msg = new Message(false)
-    blocks.forEach((block) => { msg.addBlock(block.cid, block.data) })
+    blocks.forEach((block) => { msg.addBlock(block.cid, block.block) })
 
     void bs._receiveMessage(other, msg)
   })
@@ -150,14 +150,14 @@ describe('bitswap stats', () => {
     const other = ids[1]
 
     const msg = new Message(false)
-    blocks.forEach((block) => { msg.addBlock(block.cid, block.data) })
+    blocks.forEach((block) => { msg.addBlock(block.cid, block.block) })
 
     void bs._receiveMessage(other, msg)
   })
 
   describe('connected to another bitswap', () => {
     let bs2: DefaultBitswap
-    let block: { cid: CID, data: Uint8Array }
+    let block: { cid: CID, block: Uint8Array }
 
     before(async () => {
       bs2 = bitswaps[1]
@@ -168,7 +168,7 @@ describe('bitswap stats', () => {
 
       block = (await makeBlocks(1))[0]
 
-      await bs.put(block.cid, block.data)
+      await bs.put(block.cid, block.block)
     })
 
     after(async () => {

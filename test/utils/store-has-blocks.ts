@@ -1,5 +1,5 @@
 import { expect } from 'aegir/chai'
-import type { Blockstore } from 'blockstore-core/dist/src/base'
+import type { Blockstore } from 'interface-blockstore'
 import { CID } from 'multiformats/cid'
 import type { BitswapMessage } from '../../src/message'
 

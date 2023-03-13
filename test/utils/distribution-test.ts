@@ -24,7 +24,7 @@ export const distributionTest = async (instanceCount: number, blockCount: number
     const blocks = await makeBlocks(blockCount)
 
     await Promise.all(
-      blocks.map(async block => { await first.blockstore.put(block.cid, block.data) })
+      blocks.map(async block => { await first.blockstore.put(block.cid, block.block) })
     )
 
     events.emit('first put')
@@ -50,7 +50,7 @@ export const distributionTest = async (instanceCount: number, blockCount: number
         const nodeBlocks = await all(result)
         expect(nodeBlocks).to.have.lengthOf(blocks.length)
         nodeBlocks.forEach((block, i) => {
-          expect(block).to.deep.equal(blocks[i].data)
+          expect(block).to.deep.equal(blocks[i].block)
         })
       }
     } finally {
