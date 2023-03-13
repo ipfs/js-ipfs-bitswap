@@ -174,7 +174,7 @@ describe('bitswap with mocks', function () {
               return false
             }
           }
-        )
+          )
       )
       expect(res).to.eql([false, true, false])
 
