@@ -10,7 +10,7 @@ import { makePeerId } from './utils/make-peer-id.js'
 import type { PeerId } from '@libp2p/interface-peer-id'
 
 describe('Notifications', () => {
-  let blocks: Array<{ cid: CID, data: Uint8Array }>
+  let blocks: Array<{ cid: CID, block: Uint8Array }>
   let peerId: PeerId
 
   before(async () => {
@@ -22,10 +22,10 @@ describe('Notifications', () => {
     const n = new Notifications(peerId)
     const b = blocks[0]
     n.once(`block:${uint8ArrayToString(b.cid.multihash.bytes, 'base64')}`, (block) => {
-      expect(b.data).to.equalBytes(block)
+      expect(b.block).to.equalBytes(block)
       done()
     })
-    n.hasBlock(b.cid, b.data)
+    n.hasBlock(b.cid, b.block)
   })
 
   describe('wantBlock', () => {
@@ -39,11 +39,11 @@ describe('Notifications', () => {
       expect(n.listenerCount(`block:${uint8ArrayToString(b.cid.multihash.bytes, 'base64')}`)).to.equal(1)
       expect(n.listenerCount(`unwant:${uint8ArrayToString(b.cid.multihash.bytes, 'base64')}`)).to.equal(1)
 
-      n.hasBlock(b.cid, b.data)
+      n.hasBlock(b.cid, b.block)
 
       const block = await p
 
-      expect(b.data).to.equalBytes(block)
+      expect(b.block).to.equalBytes(block)
 
       // check that internal cleanup works as expected
       expect(n.listenerCount(`block:${uint8ArrayToString(b.cid.multihash.bytes, 'base64')}`)).to.equal(0)
@@ -89,9 +89,9 @@ describe('Notifications', () => {
       expect(n.listenerCount(`block:${uint8ArrayToString(cid2.multihash.bytes, 'base64')}`)).to.equal(1)
       expect(n.listenerCount(`unwant:${uint8ArrayToString(cid2.multihash.bytes, 'base64')}`)).to.equal(1)
 
-      n.hasBlock(cid, blocks[0].data)
+      n.hasBlock(cid, blocks[0].block)
 
-      await expect(p).to.eventually.deep.equal(blocks[0].data)
+      await expect(p).to.eventually.deep.equal(blocks[0].block)
 
       // check that internal cleanup works as expected
       expect(n.listenerCount(`block:${uint8ArrayToString(cid2.multihash.bytes, 'base64')}`)).to.equal(0)

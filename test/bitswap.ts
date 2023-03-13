@@ -12,6 +12,7 @@ import { BitswapMessage as Message } from '../src/message/index.js'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import type { Libp2p } from '@libp2p/interface-libp2p'
 import drain from 'it-drain'
+import { CID } from 'multiformats/cid'
 
 /**
  * Creates a repo + libp2pNode + Bitswap with or without DHT
@@ -47,11 +48,8 @@ describe('start/stop', () => {
 
     expect(bitswap.isStarted()).to.be.false()
   })
-})
 
-describe('blockstore', () => {
-  it('should support .has', async () => {
-    const [block] = await makeBlocks(1)
+  it('notify should be a noop if not started', () => {
     const libp2p = {
       handle: async (): Promise<void> => {},
       unhandle: async (): Promise<void> => {},
@@ -61,15 +59,10 @@ describe('blockstore', () => {
     }
     // @ts-expect-error not a full libp2p
     const bitswap = new DefaultBitswap(libp2p, new MemoryBlockstore())
-    await bitswap.start()
 
-    await expect(bitswap.has(block.cid)).to.eventually.be.false()
+    expect(bitswap.isStarted()).to.be.false()
 
-    await bitswap.put(block.cid, block.data)
-
-    await expect(bitswap.has(block.cid)).to.eventually.be.true()
-
-    await bitswap.stop()
+    bitswap.notify(CID.parse('QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn'), new Uint8Array(0))
   })
 })
 
@@ -106,9 +99,9 @@ describe('bitswap without DHT', function () {
     const finish = orderedFinish(2)
 
     const [block] = await makeBlocks(1)
-    await nodes[2].bitswap.put(block.cid, block.data)
+    await nodes[2].bitswap.put(block.cid, block.block)
 
-    const node0Get = nodes[0].bitswap.get(block.cid)
+    const node0Get = nodes[0].bitswap.want(block.cid)
 
     setTimeout(() => {
       finish(1)
@@ -131,7 +124,7 @@ describe('bitswap without DHT', function () {
     // incoming message with requested block from the other peer
     const message = new Message(false)
     message.addEntry(block.cid, 1, Message.WantType.Block)
-    message.addBlock(block.cid, block.data)
+    message.addBlock(block.cid, block.block)
 
     const mockBlockstore: any = {
       get: sinon.stub().withArgs(block.cid).throws({ code: 'ERR_NOT_FOUND' }),
@@ -143,7 +136,7 @@ describe('bitswap without DHT', function () {
     nodes[0].bitswap.blockstore = mockBlockstore
 
     // add the block to our want list
-    const wantBlockPromise1 = nodes[0].bitswap.get(block.cid)
+    const wantBlockPromise1 = nodes[0].bitswap.want(block.cid)
 
     // oh look, a peer has sent it to us - this will trigger a `blockstore.put` which
     // is an async operation so `self.blockstore.get(cid)` will still throw
@@ -154,7 +147,7 @@ describe('bitswap without DHT', function () {
     expect(mockBlockstore.get.calledWith(block.cid)).to.be.true()
 
     // another context wants the same block
-    const wantBlockPromise2 = nodes[0].bitswap.get(block.cid)
+    const wantBlockPromise2 = nodes[0].bitswap.want(block.cid)
 
     // meanwhile the blockstore has written the block
     nodes[0].bitswap.blockstore.has = sinon.stub().withArgs(block.cid).returns(true)
@@ -166,8 +159,8 @@ describe('bitswap without DHT', function () {
     expect(mockBlockstore.get.calledWith(block.cid)).to.be.true()
 
     // both requests should get the block
-    expect(await wantBlockPromise1).to.equalBytes(block.data)
-    expect(await wantBlockPromise2).to.equalBytes(block.data)
+    expect(await wantBlockPromise1).to.equalBytes(block.block)
+    expect(await wantBlockPromise2).to.equalBytes(block.block)
   })
 })
 
@@ -215,12 +208,12 @@ describe('bitswap with DHT', function () {
     }
 
     const provideSpy = sinon.spy(nodes[2].libp2pNode.dht, 'provide')
-    await nodes[2].bitswap.put(block.cid, block.data)
+    await nodes[2].bitswap.put(block.cid, block.block)
 
     // wait for the DHT to finish providing
     await drain(provideSpy.returnValues[0])
 
-    const blockRetrieved = await nodes[0].bitswap.get(block.cid)
-    expect(block.data).to.eql(blockRetrieved)
+    const blockRetrieved = await nodes[0].bitswap.want(block.cid)
+    expect(block.block).to.eql(blockRetrieved)
   })
 })

@@ -38,7 +38,7 @@ describe('bitswap stats', () => {
   let libp2pNodes: Libp2p[]
   let bitswaps: DefaultBitswap[]
   let bs: DefaultBitswap
-  let blocks: Array<{ cid: CID, data: Uint8Array }>
+  let blocks: Array<{ cid: CID, block: Uint8Array }>
   let ids: PeerId[]
 
   before(async () => {
@@ -70,12 +70,12 @@ describe('bitswap stats', () => {
       bitswaps.map(async (bs) => { await bs.stop() })
     )
     await Promise.all(
-      libp2pNodes.map((n) => n.stop())
+      libp2pNodes.map(async (n) => { await n.stop() })
     )
   })
 
   it('has initial stats', () => {
-    const stats = bs.stat()
+    const stats = bs.stats
     const snapshot = stats.snapshot
 
     expectedStats.forEach((key) => {
@@ -96,7 +96,7 @@ describe('bitswap stats', () => {
   })
 
   it('updates blocks received', (done) => {
-    bs.stat().once('update', (stats) => {
+    bs.stats.once('update', (stats) => {
       expect(stats.blocksReceived).to.equal(BigInt(2))
       expect(stats.dataReceived).to.equal(BigInt(96))
       expect(stats.dupBlksReceived).to.equal(BigInt(0))
@@ -108,7 +108,7 @@ describe('bitswap stats', () => {
       expect(stats.peerCount).to.equal(BigInt(1))
 
       // test moving averages
-      const movingAverages = bs.stat().movingAverages
+      const movingAverages = bs.stats.movingAverages
       const blocksReceivedMA = movingAverages.blocksReceived
       expectedTimeWindows.forEach((timeWindow) => {
         expect(blocksReceivedMA).to.have.property(`${timeWindow}`)
@@ -130,13 +130,13 @@ describe('bitswap stats', () => {
     const other = ids[1]
 
     const msg = new Message(false)
-    blocks.forEach((block) => { msg.addBlock(block.cid, block.data) })
+    blocks.forEach((block) => { msg.addBlock(block.cid, block.block) })
 
     void bs._receiveMessage(other, msg)
   })
 
   it('updates duplicate blocks counters', (done) => {
-    bs.stat().once('update', (stats) => {
+    bs.stats.once('update', (stats) => {
       expect(stats.blocksReceived).to.equal(BigInt(4))
       expect(stats.dataReceived).to.equal(BigInt(192))
       expect(stats.dupBlksReceived).to.equal(BigInt(2))
@@ -150,14 +150,14 @@ describe('bitswap stats', () => {
     const other = ids[1]
 
     const msg = new Message(false)
-    blocks.forEach((block) => { msg.addBlock(block.cid, block.data) })
+    blocks.forEach((block) => { msg.addBlock(block.cid, block.block) })
 
     void bs._receiveMessage(other, msg)
   })
 
   describe('connected to another bitswap', () => {
     let bs2: DefaultBitswap
-    let block: { cid: CID, data: Uint8Array }
+    let block: { cid: CID, block: Uint8Array }
 
     before(async () => {
       bs2 = bitswaps[1]
@@ -168,7 +168,7 @@ describe('bitswap stats', () => {
 
       block = (await makeBlocks(1))[0]
 
-      await bs.put(block.cid, block.data)
+      await bs.put(block.cid, block.block)
     })
 
     after(async () => {
@@ -176,7 +176,7 @@ describe('bitswap stats', () => {
     })
 
     it('updates stats on transfer', async () => {
-      const originalStats = bs.stat().snapshot
+      const originalStats = bs.stats.snapshot
 
       expect(originalStats.blocksReceived).to.equal(BigInt(4))
       expect(originalStats.dataReceived).to.equal(BigInt(192))
@@ -188,10 +188,10 @@ describe('bitswap stats', () => {
       expect(originalStats.wantListLength).to.equal(BigInt(0))
       expect(originalStats.peerCount).to.equal(BigInt(1))
 
-      const deferred = pEvent(bs.stat(), 'update')
+      const deferred = pEvent(bs.stats, 'update')
 
       // pull block from bs to bs2
-      await bs2.get(block.cid)
+      await bs2.want(block.cid)
 
       const nextStats = await deferred
 
@@ -207,7 +207,7 @@ describe('bitswap stats', () => {
     })
 
     it('has peer stats', async () => {
-      const peerStats = bs2.stat().forPeer(libp2pNodes[0].peerId)
+      const peerStats = bs2.stats.forPeer(libp2pNodes[0].peerId)
       expect(peerStats).to.exist()
 
       if (peerStats == null) {

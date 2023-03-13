@@ -17,7 +17,7 @@ const rawMessageFullWantlist = loadFixture(testDataPath + '/bitswap110-message-f
 const rawMessageOneBlock = loadFixture(testDataPath + '/bitswap110-message-one-block')
 
 describe('BitswapMessage', () => {
-  let blocks: Array<{ cid: CID, data: Uint8Array }>
+  let blocks: Array<{ cid: CID, block: Uint8Array }>
   let cids: CID[]
 
   before(async () => {
@@ -88,15 +88,15 @@ describe('BitswapMessage', () => {
   it('.serializeToBitswap100', () => {
     const block = blocks[1]
     const msg = new BitswapMessage(true)
-    msg.addBlock(block.cid, block.data)
+    msg.addBlock(block.cid, block.block)
     const serialized = msg.serializeToBitswap100()
-    expect(Message.decode(serialized).blocks).to.eql([block.data])
+    expect(Message.decode(serialized).blocks).to.eql([block.block])
   })
 
   it('.serializeToBitswap110', () => {
     const block = blocks[1]
     const msg = new BitswapMessage(true)
-    msg.addBlock(block.cid, block.data)
+    msg.addBlock(block.cid, block.block)
     msg.setPendingBytes(10)
     msg.addEntry(cids[0], 10, BitswapMessage.WantType.Have, false, true)
     msg.addHave(cids[1])
@@ -105,7 +105,7 @@ describe('BitswapMessage', () => {
     const serialized = msg.serializeToBitswap110()
     const decoded = Message.decode(serialized)
 
-    expect(decoded.payload[0].data).to.eql(block.data)
+    expect(decoded.payload[0].data).to.eql(block.block)
     expect(decoded.pendingBytes).to.eql(10)
     expect(decoded).to.have.nested.property('wantlist.entries').with.lengthOf(1)
     expect(decoded).to.have.nested.property('wantlist.entries[0].priority', 10)
@@ -142,8 +142,8 @@ describe('BitswapMessage', () => {
         full: true
       },
       blocks: [
-        b1.data,
-        b2.data
+        b1.block,
+        b2.block
       ]
     })
 
@@ -158,8 +158,8 @@ describe('BitswapMessage', () => {
     expect(
       Array.from(msg.blocks).map((b) => [b[0], b[1]])
     ).to.eql([
-      [cid1.toString(base58btc), b1.data],
-      [cid2.toString(base58btc), b2.data]
+      [cid1.toString(base58btc), b1.block],
+      [cid2.toString(base58btc), b2.block]
     ])
   })
 
@@ -184,7 +184,7 @@ describe('BitswapMessage', () => {
         full: true
       },
       payload: [{
-        data: b1.data,
+        data: b1.block,
         prefix: varintEncoder([
           cid1.version,
           cid1.code,
@@ -192,7 +192,7 @@ describe('BitswapMessage', () => {
           cid1.multihash.digest.length
         ])
       }, {
-        data: b2.data,
+        data: b2.block,
         prefix: varintEncoder([
           cid2.version,
           cid2.code,
@@ -218,8 +218,8 @@ describe('BitswapMessage', () => {
     expect(
       Array.from(msg.blocks).map((b) => [b[0], b[1]])
     ).to.eql([
-      [cid1.toString(base58btc), b1.data],
-      [cid2.toString(base58btc), b2.data]
+      [cid1.toString(base58btc), b1.block],
+      [cid2.toString(base58btc), b2.block]
     ])
 
     expect(Array.from(msg.blockPresences))
@@ -240,8 +240,8 @@ describe('BitswapMessage', () => {
     m.addEntry(cid, 1)
 
     expect(m.wantlist.size).to.be.eql(1)
-    m.addBlock(b.cid, b.data)
-    m.addBlock(b.cid, b.data)
+    m.addBlock(b.cid, b.block)
+    m.addBlock(b.cid, b.block)
     expect(m.blocks.size).to.be.eql(1)
   })
 
@@ -267,8 +267,8 @@ describe('BitswapMessage', () => {
       m1.addEntry(cid, 1)
       m2.addEntry(cid, 1)
 
-      m1.addBlock(b.cid, b.data)
-      m2.addBlock(b.cid, b.data)
+      m1.addBlock(b.cid, b.block)
+      m2.addBlock(b.cid, b.block)
       expect(m1.equals(m2)).to.equal(true)
     })
 
@@ -281,8 +281,8 @@ describe('BitswapMessage', () => {
       m1.addEntry(cid, 100)
       m2.addEntry(cid, 3750)
 
-      m1.addBlock(b.cid, b.data)
-      m2.addBlock(b.cid, b.data)
+      m1.addBlock(b.cid, b.block)
+      m2.addBlock(b.cid, b.block)
       expect(m1.equals(m2)).to.equal(false)
     })
 
@@ -297,8 +297,8 @@ describe('BitswapMessage', () => {
       m1.addEntry(cid1, 1)
       m2.addEntry(cid2, 1)
 
-      m1.addBlock(b.cid, b.data)
-      m2.addBlock(b.cid, b.data)
+      m1.addBlock(b.cid, b.block)
+      m2.addBlock(b.cid, b.block)
       expect(m1.equals(m2)).to.equal(true)
     })
   })

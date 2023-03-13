@@ -40,7 +40,7 @@ Loading this module through a script tag will make it's exports available as `Ip
 ```js
 const bitswapNode = // ...
 
-const stats = bitswapNode.stat()
+const stats = bitswapNode.stats
 ```
 
 Stats contains a snapshot accessor, a moving average acessor and a peer accessor.

@@ -116,7 +116,7 @@ describe('Engine', () => {
     async function partnerWants (dEngine: DecisionEngine, values: string[], partner: PeerId): Promise<void> {
       const message = new Message(false)
 
-      const hashes = await Promise.all(values.map((v) => sha256.digest(uint8ArrayFromString(v))))
+      const hashes = await Promise.all(values.map(async (v) => await sha256.digest(uint8ArrayFromString(v))))
       hashes.forEach((hash, i) => {
         message.addEntry(CID.createV0(hash), Math.pow(2, 32) - 1 - i)
       })
@@ -126,25 +126,25 @@ describe('Engine', () => {
     async function partnerCancels (dEngine: DecisionEngine, values: string[], partner: PeerId): Promise<void> {
       const message = new Message(false)
 
-      const hashes = await Promise.all(values.map((v) => sha256.digest(uint8ArrayFromString(v))))
+      const hashes = await Promise.all(values.map(async (v) => await sha256.digest(uint8ArrayFromString(v))))
       hashes.forEach((hash) => {
         message.cancel(CID.createV0(hash))
       })
       await dEngine.messageReceived(partner, message)
     }
 
-    async function peerSendsBlocks (dEngine: DecisionEngine, blockstore: Blockstore, blocks: Array<{ cid: CID, data: Uint8Array }>): Promise<void> {
+    async function peerSendsBlocks (dEngine: DecisionEngine, blockstore: Blockstore, blocks: Array<{ cid: CID, block: Uint8Array }>): Promise<void> {
       // Bitswap puts blocks into the blockstore then passes the blocks to the
       // Decision Engine
-      await drain(blockstore.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
+      await drain(blockstore.putMany(blocks))
       dEngine.receivedBlocks(blocks)
     }
 
-    const hashes = await Promise.all(alphabet.map(v => sha256.digest(uint8ArrayFromString(v))))
+    const hashes = await Promise.all(alphabet.map(async v => await sha256.digest(uint8ArrayFromString(v))))
     const blocks = hashes.map((h, i) => {
       return {
         cid: CID.createV0(h),
-        data: uint8ArrayFromString(alphabet[i])
+        block: uint8ArrayFromString(alphabet[i])
       }
     })
     const partner = await createEd25519PeerId()
@@ -196,7 +196,7 @@ describe('Engine', () => {
     }
 
     const blockstore = new MemoryBlockstore()
-    await drain(blockstore.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
+    await drain(blockstore.putMany(blocks))
 
     let rcvdBlockCount = 0
     const received = new Map(peers.map(p => [p.toString(), { count: 0, bytes: 0 }]))
@@ -296,7 +296,7 @@ describe('Engine', () => {
     // Simulate receiving message - put blocks into the blockstore then pass
     // them to the Decision Engine
     const rcvdBlocks = [blocks[0], blocks[2]]
-    await drain(blockstore.putMany(rcvdBlocks.map(({ cid, data }) => ({ key: cid, value: data }))))
+    await drain(blockstore.putMany(rcvdBlocks))
     dEngine.receivedBlocks(rcvdBlocks)
 
     // Wait till the engine sends a message
@@ -350,7 +350,7 @@ describe('Engine', () => {
 
     // Simulate receiving message with blocks - put blocks into the blockstore
     // then pass them to the Decision Engine
-    await drain(blockstore.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
+    await drain(blockstore.putMany(blocks))
     dEngine.receivedBlocks(blocks)
 
     const [toPeer2, msg2] = await receiveMessage()
@@ -371,11 +371,11 @@ describe('Engine', () => {
     const vowels = 'aeiou'
 
     const alphabetLs = alphabet.split('')
-    const hashes = await Promise.all(alphabetLs.map(v => sha256.digest(uint8ArrayFromString(v))))
+    const hashes = await Promise.all(alphabetLs.map(async v => await sha256.digest(uint8ArrayFromString(v))))
     const blocks = hashes.map((h, i) => {
       return {
         cid: CID.createV0(h),
-        data: uint8ArrayFromString(alphabetLs[i])
+        block: uint8ArrayFromString(alphabetLs[i])
       }
     })
 
@@ -641,7 +641,7 @@ describe('Engine', () => {
       let i = wantBlks.length + wantHaves.length
       const message = new Message(false)
       for (const { type, blocks } of wantTypes) {
-        const hashes = await Promise.all(blocks.map((v) => sha256.digest(uint8ArrayFromString(v))))
+        const hashes = await Promise.all(blocks.map(async (v) => await sha256.digest(uint8ArrayFromString(v))))
         for (const hash of hashes) {
           message.addEntry(CID.createV0(hash), i--, type, false, sendDontHave)
         }
@@ -662,7 +662,7 @@ describe('Engine', () => {
     })
 
     const blockstore = new MemoryBlockstore()
-    await drain(blockstore.putMany(blocks.map(({ cid, data }) => ({ key: cid, value: data }))))
+    await drain(blockstore.putMany(blocks))
     // @ts-expect-error {} is not a real libp2p
     const dEngine = new DecisionEngine(id, blockstore, network, new Stats({}), {}, { maxSizeReplaceHasWithBlock: 0 })
     dEngine._scheduleProcessTasks = (): void => {}

@@ -260,16 +260,16 @@ export class DecisionEngine {
    * Receive blocks either from an incoming message from the network, or from
    * blocks being added by the client on the localhost (eg IPFS add)
    */
-  receivedBlocks (blocks: Array<{ cid: CID, data: Uint8Array }>): void {
+  receivedBlocks (blocks: Array<{ cid: CID, block: Uint8Array }>): void {
     if (blocks.length === 0) {
       return
     }
 
     // For each connected peer, check if it wants the block we received
     for (const ledger of this.ledgerMap.values()) {
-      for (const block of blocks) {
+      for (const { cid, block } of blocks) {
         // Filter out blocks that we don't want
-        const want = ledger.wantlistContains(block.cid)
+        const want = ledger.wantlistContains(cid)
 
         if (want == null) {
           continue
@@ -277,7 +277,7 @@ export class DecisionEngine {
 
         // If the block is small enough, just send the block, even if the
         // client asked for a HAVE
-        const blockSize = block.data.length
+        const blockSize = block.length
         const isWantBlock = this._sendAsBlock(want.wantType, blockSize)
 
         let entrySize = blockSize

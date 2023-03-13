@@ -7,13 +7,12 @@ import { createBitswap } from './create-bitswap.js'
 import { makeBlocks } from './make-blocks.js'
 import { connectAll } from './connect-all.js'
 import all from 'it-all'
-import type { Libp2p } from '@libp2p/interface-libp2p'
-import type { Bitswap } from '../../src/index.js'
+import type { BitswapNode } from './mocks.js'
 
 export const distributionTest = async (instanceCount: number, blockCount: number, repeats: number, events: any): Promise<void> => {
   let pendingRepeats = repeats
 
-  const nodes: Array<{ libp2pNode: Libp2p, bitswap: Bitswap }> = await Promise.all(range(instanceCount).map(async () => await createBitswap()))
+  const nodes: BitswapNode[] = await Promise.all(range(instanceCount).map(async () => await createBitswap()))
   events.emit('start')
 
   await connectAll(nodes)
@@ -25,7 +24,7 @@ export const distributionTest = async (instanceCount: number, blockCount: number
     const blocks = await makeBlocks(blockCount)
 
     await Promise.all(
-      blocks.map(async block => { await first.bitswap.put(block.cid, block.data) })
+      blocks.map(async block => { await first.blockstore.put(block.cid, block.block) })
     )
 
     events.emit('first put')
@@ -36,7 +35,7 @@ export const distributionTest = async (instanceCount: number, blockCount: number
 
         const cids = blocks.map((block) => block.cid)
         const start = Date.now()
-        const result = await all(node.bitswap.getMany(cids))
+        const result = await all(cids.map(async cid => await node.bitswap.want(cid)))
         const elapsed = Date.now() - start
         events.emit('got block', elapsed)
 
@@ -51,7 +50,7 @@ export const distributionTest = async (instanceCount: number, blockCount: number
         const nodeBlocks = await all(result)
         expect(nodeBlocks).to.have.lengthOf(blocks.length)
         nodeBlocks.forEach((block, i) => {
-          expect(block).to.deep.equal(blocks[i].data)
+          expect(block).to.deep.equal(blocks[i].block)
         })
       }
     } finally {
@@ -63,8 +62,8 @@ export const distributionTest = async (instanceCount: number, blockCount: number
 
   await Promise.all(
     nodes.map(async node => {
-      node.bitswap.stop()
-      await node.libp2pNode.stop()
+      await node.bitswap.stop()
+      await node.libp2p.stop()
     })
   )
 

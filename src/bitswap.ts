@@ -5,15 +5,15 @@ import { Notifications } from './notifications.js'
 import { logger } from './utils/index.js'
 import { Stats } from './stats/index.js'
 import { anySignal } from 'any-signal'
-import { BaseBlockstore } from 'blockstore-core/base'
 import { CID } from 'multiformats/cid'
-import type { BitswapOptions, Bitswap, MultihashHasherLoader, WantListEntry } from './index.js'
+import type { BitswapOptions, Bitswap, MultihashHasherLoader, WantListEntry, BitswapWantProgressEvents, BitswapNotifyProgressEvents } from './index.js'
 import type { Libp2p } from '@libp2p/interface-libp2p'
 import type { Blockstore, Options, Pair } from 'interface-blockstore'
 import type { Logger } from '@libp2p/logger'
 import type { PeerId } from '@libp2p/interface-peer-id'
 import type { BitswapMessage } from './message/index.js'
 import type { AbortOptions } from '@multiformats/multiaddr'
+import type { ProgressOptions } from 'progress-events'
 
 const hashLoader: MultihashHasherLoader = {
   async getHasher () {
@@ -46,35 +46,33 @@ const statsKeys = [
  * JavaScript implementation of the Bitswap 'data exchange' protocol
  * used by IPFS.
  */
-export class DefaultBitswap extends BaseBlockstore implements Bitswap {
+export class DefaultBitswap implements Bitswap {
   private readonly _libp2p: Libp2p
   private readonly _log: Logger
   private readonly _options: Required<BitswapOptions>
-  private readonly _stats: Stats
+  public readonly stats: Stats
   public network: Network
   public blockstore: Blockstore
   public engine: DecisionEngine
   public wm: WantManager
   public notifications: Notifications
-  public started: boolean
+  private started: boolean
 
   constructor (libp2p: Libp2p, blockstore: Blockstore, options: BitswapOptions = {}) {
-    super()
-
     this._libp2p = libp2p
     this._log = logger(this.peerId)
 
     this._options = Object.assign({}, defaultOptions, options)
 
     // stats
-    this._stats = new Stats(libp2p, statsKeys, {
+    this.stats = new Stats(libp2p, statsKeys, {
       enabled: this._options.statsEnabled,
       computeThrottleTimeout: this._options.statsComputeThrottleTimeout,
       computeThrottleMaxQueueSize: this._options.statsComputeThrottleMaxQueueSize
     })
 
-    // the network delivers messages
-    this.network = new Network(libp2p, this, this._stats, {
+    // the network delivers a messages
+    this.network = new Network(libp2p, this, this.stats, {
       hashLoader: options.hashLoader,
       maxInboundStreams: options.maxInboundStreams,
       maxOutboundStreams: options.maxOutboundStreams,
@@ -84,10 +82,10 @@ export class DefaultBitswap extends BaseBlockstore implements Bitswap {
     // local database
     this.blockstore = blockstore
 
-    this.engine = new DecisionEngine(this.peerId, blockstore, this.network, this._stats, libp2p)
+    this.engine = new DecisionEngine(this.peerId, blockstore, this.network, this.stats, libp2p)
 
     // handle message sending
-    this.wm = new WantManager(this.peerId, this.network, this._stats, libp2p)
+    this.wm = new WantManager(this.peerId, this.network, this.stats, libp2p)
     this.notifications = new Notifications(this.peerId)
     this.started = false
   }
@@ -162,12 +160,12 @@ export class DefaultBitswap extends BaseBlockstore implements Bitswap {
   }
 
   _updateReceiveCounters (peerIdStr: string, cid: CID, data: Uint8Array, exists: boolean): void {
-    this._stats.push(peerIdStr, 'blocksReceived', 1)
-    this._stats.push(peerIdStr, 'dataReceived', data.length)
+    this.stats.push(peerIdStr, 'blocksReceived', 1)
+    this.stats.push(peerIdStr, 'dataReceived', data.length)
 
     if (exists) {
-      this._stats.push(peerIdStr, 'dupBlksReceived', 1)
-      this._stats.push(peerIdStr, 'dupDataReceived', data.length)
+      this.stats.push(peerIdStr, 'dupBlksReceived', 1)
+      this.stats.push(peerIdStr, 'dupDataReceived', data.length)
     }
   }
 
@@ -191,15 +189,15 @@ export class DefaultBitswap extends BaseBlockstore implements Bitswap {
   _onPeerDisconnected (peerId: PeerId): void {
     this.wm.disconnected(peerId)
     this.engine.peerDisconnected(peerId)
-    this._stats.disconnected(peerId)
+    this.stats.disconnected(peerId)
   }
 
   enableStats (): void {
-    this._stats.enable()
+    this.stats.enable()
   }
 
   disableStats (): void {
-    this._stats.disable()
+    this.stats.disable()
   }
 
   /**
@@ -220,8 +218,8 @@ export class DefaultBitswap extends BaseBlockstore implements Bitswap {
    * Fetch a given block by cid. If the block is in the local
    * blockstore it is returned, otherwise the block is added to the wantlist and returned once another node sends it to us.
    */
-  async get (cid: CID, options: AbortOptions = {}): Promise<Uint8Array> {
-    const fetchFromNetwork = async (cid: CID, options: AbortOptions): Promise<Uint8Array> => {
+  async want (cid: CID, options: AbortOptions & ProgressOptions<BitswapWantProgressEvents> = {}): Promise<Uint8Array> {
+    const fetchFromNetwork = async (cid: CID, options: AbortOptions & ProgressOptions<BitswapWantProgressEvents>): Promise<Uint8Array> => {
       // add it to the want list - n.b. later we will abort the AbortSignal
       // so no need to remove the blocks from the wantlist after we have it
       this.wm.wantBlocks([cid], options)
@@ -231,7 +229,7 @@ export class DefaultBitswap extends BaseBlockstore implements Bitswap {
 
     let promptedNetwork = false
 
-    const loadOrFetchFromNetwork = async (cid: CID, options: AbortOptions): Promise<Uint8Array> => {
+    const loadOrFetchFromNetwork = async (cid: CID, options: AbortOptions & ProgressOptions<BitswapWantProgressEvents>): Promise<Uint8Array> => {
       try {
         // have to await here as we want to handle ERR_NOT_FOUND
         const block = await this.blockstore.get(cid, options)
@@ -266,27 +264,20 @@ export class DefaultBitswap extends BaseBlockstore implements Bitswap {
     try {
       const block = await Promise.race([
         this.notifications.wantBlock(cid, {
+          ...options,
           signal
         }),
         loadOrFetchFromNetwork(cid, {
+          ...options,
           signal
         })
       ])
 
       return block
     } finally {
-      // since we have the block we can now remove our listener
+      // since we have the block we can now abort any outstanding attempts to
+      // fetch it
       controller.abort()
-    }
-  }
-
-  /**
-   * Fetch a a list of blocks by cid. If the blocks are in the local
-   * blockstore they are returned, otherwise the blocks are added to the wantlist and returned once another node sends them to us.
-   */
-  async * getMany (cids: AsyncIterable<CID> | Iterable<CID>, options: AbortOptions = {}): AsyncGenerator<Uint8Array> {
-    for await (const cid of cids) {
-      yield this.get(cid, options)
     }
   }
 
@@ -320,7 +311,7 @@ export class DefaultBitswap extends BaseBlockstore implements Bitswap {
    */
   async put (cid: CID, block: Uint8Array, _options?: any): Promise<void> {
     await this.blockstore.put(cid, block)
-    this._sendHaveBlockNotifications(cid, block)
+    this.notify(cid, block)
   }
 
   /**
@@ -328,21 +319,21 @@ export class DefaultBitswap extends BaseBlockstore implements Bitswap {
    * send it to nodes that have it them their wantlist.
    */
   async * putMany (source: Iterable<Pair> | AsyncIterable<Pair>, options?: Options): AsyncGenerator<Pair> {
-    for await (const { key, value } of this.blockstore.putMany(source, options)) {
-      this._sendHaveBlockNotifications(key, value)
+    for await (const { cid, block } of this.blockstore.putMany(source, options)) {
+      this.notify(cid, block)
 
-      yield { key, value }
+      yield { cid, block }
     }
   }
 
   /**
    * Sends notifications about the arrival of a block
    */
-  _sendHaveBlockNotifications (cid: CID, data: Uint8Array): void {
-    this.notifications.hasBlock(cid, data)
-    this.engine.receivedBlocks([{ cid, data }])
+  notify (cid: CID, block: Uint8Array, options: ProgressOptions<BitswapNotifyProgressEvents> = {}): void {
+    this.notifications.hasBlock(cid, block)
+    this.engine.receivedBlocks([{ cid, block }])
     // Note: Don't wait for provide to finish before returning
-    this.network.provide(cid).catch((err) => {
+    this.network.provide(cid, options).catch((err) => {
       this._log.error('Failed to provide: %s', err.message)
     })
   }
@@ -357,15 +348,8 @@ export class DefaultBitswap extends BaseBlockstore implements Bitswap {
   /**
    * Get the current list of partners
    */
-  peers (): PeerId[] {
+  get peers (): PeerId[] {
     return this.engine.peers()
-  }
-
-  /**
-   * Get stats about the bitswap node
-   */
-  stat (): Stats {
-    return this._stats
   }
 
   /**
@@ -382,18 +366,10 @@ export class DefaultBitswap extends BaseBlockstore implements Bitswap {
    * Stop the bitswap node
    */
   async stop (): Promise<void> {
-    this._stats.stop()
+    this.stats.stop()
     this.wm.stop()
     await this.network.stop()
     this.engine.stop()
     this.started = false
-  }
-
-  unwrap (): Blockstore {
-    return this.blockstore
-  }
-
-  async has (cid: CID): Promise<boolean> {
-    return await this.blockstore.has(cid)
   }
 }

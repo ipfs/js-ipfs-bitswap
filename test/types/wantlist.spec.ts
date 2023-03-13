@@ -14,7 +14,7 @@ const DAG_PB_CODEC = 0x70
 
 describe('Wantlist', () => {
   let wm: Wantlist
-  let blocks: Array<{ cid: CID, data: Uint8Array }>
+  let blocks: Array<{ cid: CID, block: Uint8Array }>
 
   before(async () => {
     blocks = await makeBlocks(2)
@@ -114,7 +114,7 @@ describe('Wantlist', () => {
 
   it('with cidV1', async () => {
     const b = blocks[0]
-    const digest = await sha256.digest(b.data)
+    const digest = await sha256.digest(b.block)
 
     const cid = CID.createV1(DAG_PB_CODEC, digest)
     wm.add(cid, 2, Message.WantType.Block)
