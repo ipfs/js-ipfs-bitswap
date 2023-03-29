@@ -208,7 +208,7 @@
     "iso-random-stream": "^2.0.0",
     "it-all": "^2.0.0",
     "it-drain": "^2.0.0",
-    "libp2p": "^0.42.0",
+    "libp2p": "^0.43.3",
     "lodash.difference": "^4.5.0",
     "lodash.flatten": "^4.4.0",
     "lodash.range": "^3.2.0",
