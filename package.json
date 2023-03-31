@@ -180,7 +180,7 @@
     "interface-blockstore": "^5.0.0",
     "it-length-prefixed": "^8.0.2",
     "it-map": "^2.0.1",
-    "it-pipe": "^2.0.4",
+    "it-pipe": "^3.0.0",
     "it-take": "^2.0.1",
     "just-debounce-it": "^3.0.1",
     "multiformats": "^11.0.0",
