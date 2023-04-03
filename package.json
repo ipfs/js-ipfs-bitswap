@@ -178,7 +178,7 @@
     "any-signal": "^3.0.0",
     "blockstore-core": "^4.0.0",
     "interface-blockstore": "^5.0.0",
-    "it-length-prefixed": "^8.0.2",
+    "it-length-prefixed": "^9.0.0",
     "it-map": "^2.0.1",
     "it-pipe": "^2.0.4",
     "it-take": "^2.0.1",
