@@ -177,6 +177,7 @@
     "abortable-iterator": "^4.0.2",
     "any-signal": "^3.0.0",
     "blockstore-core": "^4.0.0",
+    "events": "^3.3.0",
     "interface-blockstore": "^5.0.0",
     "it-length-prefixed": "^8.0.2",
     "it-map": "^2.0.1",
