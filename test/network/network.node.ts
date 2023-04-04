@@ -179,7 +179,7 @@ describe('network', () => {
 
       await pipe(
         [version.serialize(msg)],
-        lp.encode(),
+        (source) => lp.encode(source),
         stream
       )
 

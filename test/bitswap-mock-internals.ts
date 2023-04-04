@@ -2,7 +2,6 @@
 /* eslint max-nested-callbacks: ["error", 5] */
 
 import { expect } from 'aegir/chai'
-import all from 'it-all'
 import drain from 'it-drain'
 import { BitswapMessage as Message } from '../src/message/index.js'
 import { DefaultBitswap } from '../src/bitswap.js'
@@ -230,7 +229,7 @@ describe('bitswap with mocks', function () {
       await drain(blockstore.putMany([{ cid: b1.cid, block: b1.block }, { cid: b2.cid, block: b2.block }, { cid: b3.cid, block: b3.block }]))
       const bs = new DefaultBitswap(mockLibp2pNode(), blockstore)
 
-      const retrievedBlocks = await all(
+      const retrievedBlocks = await Promise.all(
         [b1.cid, b2.cid, b3.cid].map(async cid => await bs.want(cid))
       )
 

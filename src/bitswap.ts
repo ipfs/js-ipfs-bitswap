@@ -6,14 +6,16 @@ import { logger } from './utils/index.js'
 import { Stats } from './stats/index.js'
 import { anySignal } from 'any-signal'
 import { CID } from 'multiformats/cid'
+import forEach from 'it-foreach'
 import type { BitswapOptions, Bitswap, MultihashHasherLoader, WantListEntry, BitswapWantProgressEvents, BitswapNotifyProgressEvents } from './index.js'
 import type { Libp2p } from '@libp2p/interface-libp2p'
-import type { Blockstore, Options, Pair } from 'interface-blockstore'
+import type { Blockstore, Pair } from 'interface-blockstore'
 import type { Logger } from '@libp2p/logger'
 import type { PeerId } from '@libp2p/interface-peer-id'
 import type { BitswapMessage } from './message/index.js'
 import type { AbortOptions } from '@multiformats/multiaddr'
 import type { ProgressOptions } from 'progress-events'
+import type { AwaitIterable } from 'interface-store'
 
 const hashLoader: MultihashHasherLoader = {
   async getHasher () {
@@ -318,12 +320,10 @@ export class DefaultBitswap implements Bitswap {
    * Put the given blocks to the underlying blockstore and
    * send it to nodes that have it them their wantlist.
    */
-  async * putMany (source: Iterable<Pair> | AsyncIterable<Pair>, options?: Options): AsyncGenerator<Pair> {
-    for await (const { cid, block } of this.blockstore.putMany(source, options)) {
+  async * putMany (source: Iterable<Pair> | AsyncIterable<Pair>, options?: AbortOptions): AwaitIterable<CID> {
+    yield * this.blockstore.putMany(forEach(source, ({ cid, block }) => {
       this.notify(cid, block)
-
-      yield { cid, block }
-    }
+    }), options)
   }
 
   /**
