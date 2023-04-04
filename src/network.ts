@@ -157,7 +157,7 @@ export class Network {
 
       await pipe(
         abortableSource(stream.source, controller.signal),
-        lp.decode(),
+        (source) => lp.decode(source),
         async (source) => {
           for await (const data of source) {
             try {
@@ -287,7 +287,7 @@ export class Network {
 
       await pipe(
         [serialized],
-        lp.encode(),
+        (source) => lp.encode(source),
         stream
       )
     } catch (err: any) {
