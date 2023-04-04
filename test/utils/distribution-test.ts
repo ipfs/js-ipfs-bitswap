@@ -6,7 +6,6 @@ import { expect } from 'aegir/chai'
 import { createBitswap } from './create-bitswap.js'
 import { makeBlocks } from './make-blocks.js'
 import { connectAll } from './connect-all.js'
-import all from 'it-all'
 import type { BitswapNode } from './mocks.js'
 
 export const distributionTest = async (instanceCount: number, blockCount: number, repeats: number, events: any): Promise<void> => {
@@ -35,7 +34,7 @@ export const distributionTest = async (instanceCount: number, blockCount: number
 
         const cids = blocks.map((block) => block.cid)
         const start = Date.now()
-        const result = await all(cids.map(async cid => await node.bitswap.want(cid)))
+        const result = await Promise.all(cids.map(async cid => await node.bitswap.want(cid)))
         const elapsed = Date.now() - start
         events.emit('got block', elapsed)
 
@@ -46,8 +45,7 @@ export const distributionTest = async (instanceCount: number, blockCount: number
     try {
       expect(results).have.lengthOf(instanceCount)
 
-      for (const result of results) {
-        const nodeBlocks = await all(result)
+      for (const nodeBlocks of results) {
         expect(nodeBlocks).to.have.lengthOf(blocks.length)
         nodeBlocks.forEach((block, i) => {
           expect(block).to.deep.equal(blocks[i].block)
