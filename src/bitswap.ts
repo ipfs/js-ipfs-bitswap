@@ -24,8 +24,8 @@ const hashLoader: MultihashHasherLoader = {
 }
 
 const defaultOptions: Required<BitswapOptions> = {
-  maxInboundStreams: 32,
-  maxOutboundStreams: 128,
+  maxInboundStreams: 1024,
+  maxOutboundStreams: 1024,
   incomingStreamTimeout: 30000,
   hashLoader,
   statsEnabled: false,
@@ -51,7 +51,6 @@ const statsKeys = [
 export class DefaultBitswap implements Bitswap {
   private readonly _libp2p: Libp2p
   private readonly _log: Logger
-  private readonly _options: Required<BitswapOptions>
   public readonly stats: Stats
   public network: Network
   public blockstore: Blockstore
@@ -64,16 +63,16 @@ export class DefaultBitswap implements Bitswap {
     this._libp2p = libp2p
     this._log = logger(this.peerId)
 
-    this._options = Object.assign({}, defaultOptions, options)
+    options = Object.assign({}, defaultOptions, options)
 
     // stats
     this.stats = new Stats(libp2p, statsKeys, {
-      enabled: this._options.statsEnabled,
-      computeThrottleTimeout: this._options.statsComputeThrottleTimeout,
-      computeThrottleMaxQueueSize: this._options.statsComputeThrottleMaxQueueSize
+      enabled: options.statsEnabled,
+      computeThrottleTimeout: options.statsComputeThrottleTimeout,
+      computeThrottleMaxQueueSize: options.statsComputeThrottleMaxQueueSize
     })
 
-    // the network delivers a messages
+    // the network delivers messages
     this.network = new Network(libp2p, this, this.stats, {
       hashLoader: options.hashLoader,
       maxInboundStreams: options.maxInboundStreams,
