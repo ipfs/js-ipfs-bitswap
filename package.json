@@ -1,6 +1,6 @@
 {
   "name": "ipfs-bitswap",
-  "version": "17.0.1",
+  "version": "17.0.2",
   "description": "JavaScript implementation of the Bitswap data exchange protocol used by IPFS",
   "license": "Apache-2.0 OR MIT",
   "homepage": "https://github.com/ipfs/js-ipfs-bitswap#readme",

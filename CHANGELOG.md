@@ -1,3 +1,10 @@
+## [17.0.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v17.0.1...v17.0.2) (2023-04-13)
+
+
+### Bug Fixes
+
+* increase default stream limit ([#550](https://github.com/ipfs/js-ipfs-bitswap/issues/550)) ([3484be0](https://github.com/ipfs/js-ipfs-bitswap/commit/3484be038321e9c2828bded225f4c6dc94a4d5d9))
+
 ## [17.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v17.0.0...v17.0.1) (2023-04-04)
 
 
