@@ -45,8 +45,8 @@ const BITSWAP100 = '/ipfs/bitswap/1.0.0'
 const BITSWAP110 = '/ipfs/bitswap/1.1.0'
 const BITSWAP120 = '/ipfs/bitswap/1.2.0'
 
-const DEFAULT_MAX_INBOUND_STREAMS = 32
-const DEFAULT_MAX_OUTBOUND_STREAMS = 128
+const DEFAULT_MAX_INBOUND_STREAMS = 1024
+const DEFAULT_MAX_OUTBOUND_STREAMS = 1024
 const DEFAULT_INCOMING_STREAM_TIMEOUT = 30000
 
 export interface NetworkOptions {
