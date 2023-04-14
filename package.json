@@ -175,7 +175,7 @@
     "@multiformats/multiaddr": "^12.1.0",
     "@vascosantos/moving-average": "^1.1.0",
     "abortable-iterator": "^4.0.2",
-    "any-signal": "^3.0.0",
+    "any-signal": "^4.1.1",
     "blockstore-core": "^4.0.0",
     "events": "^3.3.0",
     "interface-blockstore": "^5.0.0",
