@@ -201,7 +201,7 @@
     "@libp2p/mplex": "^7.0.0",
     "@libp2p/peer-id": "^2.0.0",
     "@libp2p/peer-id-factory": "^2.0.0",
-    "@libp2p/tcp": "^6.0.0",
+    "@libp2p/tcp": "^7.0.0",
     "@nodeutils/defaults-deep": "^1.1.0",
     "@types/stats-lite": "^2.2.0",
     "@types/varint": "^6.0.0",
