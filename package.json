@@ -205,7 +205,7 @@
     "@nodeutils/defaults-deep": "^1.1.0",
     "@types/stats-lite": "^2.2.0",
     "@types/varint": "^6.0.0",
-    "aegir": "^38.1.0",
+    "aegir": "^39.0.6",
     "benchmark": "^2.1.4",
     "delay": "^5.0.0",
     "iso-random-stream": "^2.0.0",
