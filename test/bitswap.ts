@@ -5,7 +5,6 @@ import { expect } from 'aegir/chai'
 import { MemoryBlockstore } from 'blockstore-core/memory'
 import drain from 'it-drain'
 import { CID } from 'multiformats/cid'
-import pWaitFor from 'p-wait-for'
 import sinon from 'sinon'
 import { DefaultBitswap } from '../src/bitswap.js'
 import { BitswapMessage as Message } from '../src/message/index.js'
@@ -13,11 +12,12 @@ import { createLibp2pNode } from './utils/create-libp2p-node.js'
 import { orderedFinish } from './utils/helpers.js'
 import { makeBlocks } from './utils/make-blocks.js'
 import type { Libp2p } from '@libp2p/interface-libp2p'
+import type { DualKadDHT } from '@libp2p/kad-dht'
 
 /**
  * Creates a repo + libp2pNode + Bitswap with or without DHT
  */
-async function createThing (dht: boolean): Promise<{ libp2pNode: Libp2p, bitswap: DefaultBitswap }> {
+async function createThing (dht: boolean): Promise<{ libp2pNode: Libp2p<{ dht: DualKadDHT }>, bitswap: DefaultBitswap }> {
   const libp2pNode = await createLibp2pNode({
     DHT: dht
   })
@@ -167,7 +167,7 @@ describe('bitswap without DHT', function () {
 describe('bitswap with DHT', function () {
   this.timeout(60 * 1000)
 
-  let nodes: Array<{ libp2pNode: Libp2p, bitswap: DefaultBitswap }>
+  let nodes: Array<{ libp2pNode: Libp2p<{ dht: DualKadDHT }>, bitswap: DefaultBitswap }>
 
   before(async () => {
     nodes = await Promise.all([
@@ -184,13 +184,6 @@ describe('bitswap with DHT', function () {
       nodes[0].libp2pNode.dial(ma1),
       nodes[1].libp2pNode.dial(ma2)
     ])
-
-    // wait until dht routing tables are updated
-    await Promise.all([
-      pWaitFor(() => nodes[0].libp2pNode.dht?.lan?.routingTable?.size != null && nodes[0].libp2pNode.dht?.lan?.routingTable?.size >= 1),
-      pWaitFor(() => nodes[1].libp2pNode.dht?.lan?.routingTable?.size != null && nodes[1].libp2pNode.dht?.lan?.routingTable?.size >= 2),
-      pWaitFor(() => nodes[2].libp2pNode.dht?.lan?.routingTable?.size != null && nodes[2].libp2pNode.dht?.lan?.routingTable?.size >= 1)
-    ])
   })
 
   after(async () => {
@@ -203,11 +196,11 @@ describe('bitswap with DHT', function () {
   it('put a block in 2, get it in 0', async () => {
     const [block] = await makeBlocks(1)
 
-    if (nodes[2].libp2pNode.dht == null) {
+    if (nodes[2].libp2pNode.services.dht == null) {
       throw new Error('DHT was not configured')
     }
 
-    const provideSpy = sinon.spy(nodes[2].libp2pNode.dht, 'provide')
+    const provideSpy = sinon.spy(nodes[2].libp2pNode.services.dht, 'provide')
     await nodes[2].bitswap.put(block.cid, block.block)
 
     // wait for the DHT to finish providing
