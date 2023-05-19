@@ -1,3 +1,14 @@
+## [18.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v17.0.3...v18.0.0) (2023-05-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* bump libp2p from 0.43.4 to 0.45.1 (#579)
+
+### Dependencies
+
+* bump libp2p from 0.43.4 to 0.45.1 ([#579](https://github.com/ipfs/js-ipfs-bitswap/issues/579)) ([90691b9](https://github.com/ipfs/js-ipfs-bitswap/commit/90691b911ea3fedbc030fc2582939d8b6a7e80fc))
+
 ## [17.0.3](https://github.com/ipfs/js-ipfs-bitswap/compare/v17.0.2...v17.0.3) (2023-05-19)
 
 
