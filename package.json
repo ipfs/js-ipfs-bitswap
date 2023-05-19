@@ -154,7 +154,7 @@
     "@libp2p/tracked-map": "^3.0.0",
     "@multiformats/multiaddr": "^12.1.0",
     "@vascosantos/moving-average": "^1.1.0",
-    "abortable-iterator": "^4.0.2",
+    "abortable-iterator": "^5.0.1",
     "any-signal": "^3.0.0",
     "blockstore-core": "^4.0.0",
     "interface-blockstore": "^5.0.0",
