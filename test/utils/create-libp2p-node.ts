@@ -1,14 +1,13 @@
 
-import { tcp } from '@libp2p/tcp'
-import { mplex } from '@libp2p/mplex'
 import { noise } from '@chainsafe/libp2p-noise'
-import { createLibp2p, Libp2pOptions } from 'libp2p'
 import { kadDHT } from '@libp2p/kad-dht'
+import { mplex } from '@libp2p/mplex'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
-import type { Libp2p } from '@libp2p/interface-libp2p'
-
+import { tcp } from '@libp2p/tcp'
 // @ts-expect-error no types
 import defaultsDeep from '@nodeutils/defaults-deep'
+import { createLibp2p, type Libp2pOptions } from 'libp2p'
+import type { Libp2p } from '@libp2p/interface-libp2p'
 
 export interface NodeOptions extends Libp2pOptions {
   DHT?: boolean

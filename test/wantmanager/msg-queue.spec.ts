@@ -1,21 +1,21 @@
 /* eslint-env mocha */
 
 import { expect } from 'aegir/chai'
+import defer from 'p-defer'
 import { BitswapMessage as Message } from '../../src/message/index.js'
 import { MsgQueue } from '../../src/want-manager/msg-queue.js'
-import defer from 'p-defer'
-import { mockNetwork } from '../utils/mocks.js'
 import { makeBlocks } from '../utils/make-blocks.js'
 import { makePeerId } from '../utils/make-peer-id.js'
-import type { CID } from 'multiformats/cid'
+import { mockNetwork } from '../utils/mocks.js'
 import type { PeerId } from '@libp2p/interface-peer-id'
+import type { CID } from 'multiformats/cid'
 
 describe('MessageQueue', () => {
   let peerIds: PeerId[]
   let cids: CID[]
 
   before(async () => {
-    peerIds = await Promise.all([0, 1].map(async () => await makePeerId()))
+    peerIds = await Promise.all([0, 1].map(async () => makePeerId()))
     cids = (await makeBlocks(6)).map(({ cid }) => cid)
   })
 

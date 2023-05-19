@@ -1,8 +1,7 @@
+import { randomBytes } from 'iso-random-stream'
+import range from 'lodash.range'
 import { CID } from 'multiformats/cid'
 import { sha256 } from 'multiformats/hashes/sha2'
-import { randomBytes } from 'iso-random-stream'
-// @ts-expect-error no types
-import range from 'lodash.range'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 // @ts-expect-error no types
 import { v4 as uuid } from 'uuid'

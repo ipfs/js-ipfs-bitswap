@@ -1,28 +1,28 @@
 /* eslint-env mocha */
 /* eslint max-nested-callbacks: ["error", 5] */
 
-import { expect } from 'aegir/chai'
-import drain from 'it-drain'
-import { BitswapMessage as Message } from '../src/message/index.js'
-import { DefaultBitswap } from '../src/bitswap.js'
-import { CID } from 'multiformats/cid'
-import delay from 'delay'
-import { base58btc } from 'multiformats/bases/base58'
+import { isPeerId, type PeerId } from '@libp2p/interface-peer-id'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
-import { isPeerId, PeerId } from '@libp2p/interface-peer-id'
+import { expect } from 'aegir/chai'
 import { MemoryBlockstore } from 'blockstore-core/memory'
+import delay from 'delay'
+import drain from 'it-drain'
+import { base58btc } from 'multiformats/bases/base58'
+import { CID } from 'multiformats/cid'
+import { DefaultBitswap } from '../src/bitswap.js'
+import { BitswapMessage as Message } from '../src/message/index.js'
+import { orderedFinish } from './utils/helpers.js'
+import { makeBlocks } from './utils/make-blocks.js'
+import { makePeerIds } from './utils/make-peer-id.js'
 import {
   mockNetwork,
   applyNetwork,
   mockLibp2pNode
 } from './utils/mocks.js'
 import { storeHasBlocks } from './utils/store-has-blocks.js'
-import { makeBlocks } from './utils/make-blocks.js'
-import { makePeerIds } from './utils/make-peer-id.js'
-import { orderedFinish } from './utils/helpers.js'
-import type { Blockstore } from 'interface-blockstore'
-import type { Network } from '../src/network.js'
 import type { Bitswap } from '../src/index.js'
+import type { Network } from '../src/network.js'
+import type { Blockstore } from 'interface-blockstore'
 
 const DAG_PB_CODEC = 0x70
 const RAW_CODEC = 0x50
@@ -70,7 +70,7 @@ describe('bitswap with mocks', function () {
 
       const blks = await Promise.all([
         b1.cid, b2.cid
-      ].map(async (cid) => await blockstore.get(cid)))
+      ].map(async (cid) => blockstore.get(cid)))
 
       expect(blks[0]).to.eql(b1.block)
       expect(blks[1]).to.eql(b2.block)
@@ -230,7 +230,7 @@ describe('bitswap with mocks', function () {
       const bs = new DefaultBitswap(mockLibp2pNode(), blockstore)
 
       const retrievedBlocks = await Promise.all(
-        [b1.cid, b2.cid, b3.cid].map(async cid => await bs.want(cid))
+        [b1.cid, b2.cid, b3.cid].map(async cid => bs.want(cid))
       )
 
       expect(retrievedBlocks).to.be.eql([b1.block, b2.block, b3.block])

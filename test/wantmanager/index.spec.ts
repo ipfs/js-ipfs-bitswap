@@ -3,11 +3,11 @@
 import { expect } from 'aegir/chai'
 import * as CONSTANTS from '../../src/constants.js'
 import { BitswapMessage as Message } from '../../src/message/index.js'
-import { WantManager } from '../../src/want-manager/index.js'
 import { Stats } from '../../src/stats/index.js'
-import { mockNetwork } from '../utils/mocks.js'
+import { WantManager } from '../../src/want-manager/index.js'
 import { makeBlocks } from '../utils/make-blocks.js'
 import { makePeerIds } from '../utils/make-peer-id.js'
+import { mockNetwork } from '../utils/mocks.js'
 
 describe('WantManager', () => {
   it('sends wantlist to all connected peers', async function () {

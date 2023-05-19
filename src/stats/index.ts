@@ -1,9 +1,9 @@
 import { EventEmitter } from 'events'
-import { Stat } from './stat.js'
 import { trackedMap } from '@libp2p/tracked-map'
-import type { Libp2p } from 'libp2p'
+import { Stat } from './stat.js'
 import type { PeerId } from '@libp2p/interface-peer-id'
 import type { IMovingAverage } from '@vascosantos/moving-average'
+import type { Libp2p } from 'libp2p'
 
 /**
  * @typedef {import('multiformats').CID} CID

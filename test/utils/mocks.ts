@@ -1,20 +1,20 @@
-import type { Blockstore } from 'interface-blockstore'
-import { MemoryBlockstore } from 'blockstore-core/memory'
 import { EventEmitter } from 'events'
+import { peerIdFromBytes } from '@libp2p/peer-id'
+import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+import { MemoryBlockstore } from 'blockstore-core/memory'
+import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 import { DefaultBitswap } from '../../src/bitswap.js'
 import { Network } from '../../src/network.js'
 import { Stats } from '../../src/stats/index.js'
-import { peerIdFromBytes } from '@libp2p/peer-id'
 import { createLibp2pNode } from './create-libp2p-node.js'
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
-import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
+import type { Bitswap } from '../../src/index.js'
+import type { BitswapMessage } from '../../src/message/index.js'
+import type { Connection } from '@libp2p/interface-connection'
 import type { Libp2p } from '@libp2p/interface-libp2p'
-import type { CID } from 'multiformats/cid'
 import type { PeerId } from '@libp2p/interface-peer-id'
 import type { Multiaddr } from '@multiformats/multiaddr'
-import type { Connection } from '@libp2p/interface-connection'
-import type { BitswapMessage } from '../../src/message/index.js'
-import type { Bitswap } from '../../src/index.js'
+import type { Blockstore } from 'interface-blockstore'
+import type { CID } from 'multiformats/cid'
 
 /**
  * Create a mock libp2p node
@@ -95,7 +95,7 @@ export const mockNetwork = (calls: number = Infinity, done: OnDone = async (): P
       })
 
       // @ts-expect-error not all connection fields are implemented
-      return await Promise.resolve({ id: '', remotePeer: '' })
+      return Promise.resolve({ id: '', remotePeer: '' })
     }
 
     async sendMessage (p: PeerId, msg: BitswapMessage): Promise<void> {
@@ -143,7 +143,7 @@ export interface BitswapNode {
 export const genBitswapNetwork = async (n: number, enableDHT: boolean = false): Promise<BitswapNode[]> => {
   // create PeerId and libp2p.Node for each
   const peers = await Promise.all(
-    new Array(n).fill(0).map(async () => await createEd25519PeerId())
+    new Array(n).fill(0).map(async () => createEd25519PeerId())
   )
 
   /** @type {{ libp2p: Libp2p, bitswap: Bitswap }[]} */

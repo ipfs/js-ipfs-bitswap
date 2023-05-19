@@ -1,9 +1,9 @@
 
 /* eslint-disable no-console */
 
+import { EventEmitter } from 'events'
 import { distributionTest } from '../utils/distribution-test'
 import { print } from './helpers/print-swarm-results'
-import { EventEmitter } from 'events'
 
 void (async function (): Promise<void> {
   const emitter = new EventEmitter()

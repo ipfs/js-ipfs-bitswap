@@ -17,28 +17,8 @@
     "libp2p",
     "p2p"
   ],
-  "engines": {
-    "node": ">=16.0.0",
-    "npm": ">=7.0.0"
-  },
   "type": "module",
   "types": "./dist/src/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "*": [
-        "*",
-        "dist/*",
-        "dist/src/*",
-        "dist/src/*/index"
-      ],
-      "src/*": [
-        "*",
-        "dist/*",
-        "dist/src/*",
-        "dist/src/*/index"
-      ]
-    }
-  },
   "files": [
     "src",
     "dist",
@@ -177,7 +157,6 @@
     "abortable-iterator": "^4.0.2",
     "any-signal": "^3.0.0",
     "blockstore-core": "^4.0.0",
-    "events": "^3.3.0",
     "interface-blockstore": "^5.0.0",
     "interface-store": "^5.1.0",
     "it-foreach": "^2.0.2",
@@ -203,9 +182,13 @@
     "@libp2p/peer-id-factory": "^2.0.0",
     "@libp2p/tcp": "^6.0.0",
     "@nodeutils/defaults-deep": "^1.1.0",
+    "@types/lodash.difference": "^4.5.7",
+    "@types/lodash.flatten": "^4.4.7",
+    "@types/lodash.range": "^3.2.7",
+    "@types/sinon": "^10.0.15",
     "@types/stats-lite": "^2.2.0",
     "@types/varint": "^6.0.0",
-    "aegir": "^38.1.0",
+    "aegir": "^39.0.7",
     "benchmark": "^2.1.4",
     "delay": "^5.0.0",
     "iso-random-stream": "^2.0.0",

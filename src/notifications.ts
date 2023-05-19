@@ -1,13 +1,13 @@
+import { EventEmitter } from 'events'
+import { CustomProgressEvent, type ProgressOptions } from 'progress-events'
+import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
+import * as CONSTANTS from './constants.js'
+import { logger } from './utils/index.js'
+import type { BitswapWantBlockProgressEvents } from './index.js'
 import type { PeerId } from '@libp2p/interface-peer-id'
 import type { AbortOptions } from '@libp2p/interfaces'
 import type { Logger } from '@libp2p/logger'
-import { EventEmitter } from 'events'
 import type { CID } from 'multiformats/cid'
-import { CustomProgressEvent, ProgressOptions } from 'progress-events'
-import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
-import * as CONSTANTS from './constants.js'
-import type { BitswapWantBlockProgressEvents } from './index.js'
-import { logger } from './utils/index.js'
 
 const unwantEvent = (cid: CID): string => `unwant:${uint8ArrayToString(cid.multihash.bytes, 'base64')}`
 
@@ -53,7 +53,7 @@ export class Notifications extends EventEmitter {
 
     this._log(`wantBlock:${cid}`)
 
-    return await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       const onUnwant = (): void => {
         this.removeListener(blockEvt, onBlock)
 

@@ -1,13 +1,13 @@
+import { CodeError } from '@libp2p/interfaces/errors'
+import { base58btc } from 'multiformats/bases/base58'
 import { CID } from 'multiformats/cid'
 import { sha256 } from 'multiformats/hashes/sha2'
-import { base58btc } from 'multiformats/bases/base58'
 // @ts-expect-error no types
 import vd from 'varint-decoder'
-import ve from '../utils/varint-encoder.js'
 import { isMapEqual } from '../utils/index.js'
-import { Message } from './message.js'
+import ve from '../utils/varint-encoder.js'
 import { BitswapMessageEntry as Entry } from './entry.js'
-import { CodeError } from '@libp2p/interfaces/errors'
+import { Message } from './message.js'
 import type { MultihashHasherLoader } from '../index.js'
 
 export class BitswapMessage {

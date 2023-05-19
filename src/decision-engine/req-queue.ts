@@ -1,6 +1,6 @@
-import type { PeerId } from '@libp2p/interface-peer-id'
 import { SortedMap } from '../utils/sorted-map.js'
 import type { Task, TaskMerger } from './index.js'
+import type { PeerId } from '@libp2p/interface-peer-id'
 
 export interface PopTaskResult {
   peerId?: PeerId

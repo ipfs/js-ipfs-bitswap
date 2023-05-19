@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import MovingAverage, { IMovingAverage } from '@vascosantos/moving-average'
+import MovingAverage, { type IMovingAverage } from '@vascosantos/moving-average'
 
 export type Op = [string, number, number]
 

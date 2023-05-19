@@ -2,9 +2,9 @@
 /* eslint-env mocha */
 /* eslint-disable no-console */
 
+import { EventEmitter } from 'events'
 import stats from 'stats-lite'
 import { distributionTest } from './utils/distribution-test.js'
-import { EventEmitter } from 'events'
 
 const test = it
 

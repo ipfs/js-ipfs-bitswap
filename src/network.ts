@@ -1,27 +1,27 @@
-import * as lp from 'it-length-prefixed'
-import { pipe } from 'it-pipe'
 import { createTopology } from '@libp2p/topology'
-import { BitswapMessage as Message } from './message/index.js'
-import * as CONSTANTS from './constants.js'
-import { logger } from './utils/index.js'
-import { TimeoutController } from 'timeout-abort-controller'
 import { abortableSource } from 'abortable-iterator'
+import drain from 'it-drain'
+import * as lp from 'it-length-prefixed'
+import map from 'it-map'
+import { pipe } from 'it-pipe'
+import take from 'it-take'
+import { type ProgressEvent, CustomProgressEvent, type ProgressOptions } from 'progress-events'
+import { TimeoutController } from 'timeout-abort-controller'
+import * as CONSTANTS from './constants.js'
+import { BitswapMessage as Message } from './message/index.js'
+import { logger } from './utils/index.js'
+import type { DefaultBitswap } from './bitswap.js'
+import type { MultihashHasherLoader } from './index.js'
+import type { Stats } from './stats/index.js'
+import type { Connection } from '@libp2p/interface-connection'
 import type { Libp2p } from '@libp2p/interface-libp2p'
 import type { PeerId } from '@libp2p/interface-peer-id'
-import type { Multiaddr } from '@multiformats/multiaddr'
-import type { MultihashHasherLoader } from './index.js'
-import type { DefaultBitswap } from './bitswap.js'
-import type { Stats } from './stats/index.js'
-import type { Logger } from '@libp2p/logger'
-import type { IncomingStreamData } from '@libp2p/interface-registrar'
-import type { CID } from 'multiformats/cid'
-import type { AbortOptions } from '@libp2p/interfaces'
-import type { Connection } from '@libp2p/interface-connection'
 import type { PeerInfo } from '@libp2p/interface-peer-info'
-import { ProgressEvent, CustomProgressEvent, ProgressOptions } from 'progress-events'
-import take from 'it-take'
-import drain from 'it-drain'
-import map from 'it-map'
+import type { IncomingStreamData } from '@libp2p/interface-registrar'
+import type { AbortOptions } from '@libp2p/interfaces'
+import type { Logger } from '@libp2p/logger'
+import type { Multiaddr } from '@multiformats/multiaddr'
+import type { CID } from 'multiformats/cid'
 
 export interface Provider {
   id: PeerId
@@ -206,7 +206,7 @@ export class Network {
   async findAndConnect (cid: CID, options?: AbortOptions & ProgressOptions<BitswapNetworkWantProgressEvents>): Promise<void> {
     await drain(
       take(
-        map(this.findProviders(cid, options), async provider => await this.connectTo(provider.id, options)
+        map(this.findProviders(cid, options), async provider => this.connectTo(provider.id, options)
           .catch(err => {
             // Prevent unhandled promise rejection
             this._log.error(err)
@@ -252,7 +252,8 @@ export class Network {
     }
 
     options.onProgress?.(new CustomProgressEvent<PeerId>('bitswap:network:dial', peer))
-    return await this._libp2p.dial(peer, options)
+    // @ts-expect-error types are not aligned
+    return this._libp2p.dial(peer, options)
   }
 
   _updateSentStats (peer: PeerId, blocks: Map<string, Uint8Array>): void {

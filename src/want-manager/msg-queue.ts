@@ -1,13 +1,13 @@
 import debounce from 'just-debounce-it'
+import { wantlistSendDebounceMs } from '../constants.js'
 import { BitswapMessage as Message } from '../message/index.js'
 import { logger } from '../utils/index.js'
-import { wantlistSendDebounceMs } from '../constants.js'
-import type { PeerId } from '@libp2p/interface-peer-id'
-import type { BitswapNetworkWantProgressEvents, Network } from '../network.js'
-import type { CID } from 'multiformats/cid'
-import type { Logger } from '@libp2p/logger'
-import type { ProgressOptions } from 'progress-events'
 import type { BitswapWantBlockProgressEvents } from '../index.js'
+import type { BitswapNetworkWantProgressEvents, Network } from '../network.js'
+import type { PeerId } from '@libp2p/interface-peer-id'
+import type { Logger } from '@libp2p/logger'
+import type { CID } from 'multiformats/cid'
+import type { ProgressOptions } from 'progress-events'
 
 export class MsgQueue {
   public peerId: PeerId

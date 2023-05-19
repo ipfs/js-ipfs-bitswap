@@ -1,7 +1,7 @@
 import { base58btc } from 'multiformats/bases/base58'
-import type { CID } from 'multiformats/cid'
-import type { Message } from './message.js'
 import { WantListEntry } from '../wantlist/entry.js'
+import type { Message } from './message.js'
+import type { CID } from 'multiformats/cid'
 
 export class BitswapMessageEntry {
   public entry: WantListEntry
