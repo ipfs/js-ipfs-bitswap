@@ -1,3 +1,10 @@
+## [17.0.3](https://github.com/ipfs/js-ipfs-bitswap/compare/v17.0.2...v17.0.3) (2023-05-19)
+
+
+### Dependencies
+
+* **dev:** bump aegir from 38.1.8 to 39.0.7 ([#576](https://github.com/ipfs/js-ipfs-bitswap/issues/576)) ([1868cac](https://github.com/ipfs/js-ipfs-bitswap/commit/1868cac8c0934286b91ad05e4b1a38481a3b49b8))
+
 ## [17.0.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v17.0.1...v17.0.2) (2023-04-13)
 
 
