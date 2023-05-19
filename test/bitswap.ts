@@ -211,7 +211,7 @@ describe('bitswap with DHT', function () {
     await nodes[2].bitswap.put(block.cid, block.block)
 
     // wait for the DHT to finish providing
-    drain(provideSpy.returnValues[0])
+    await drain(provideSpy.returnValues[0])
 
     const blockRetrieved = await nodes[0].bitswap.want(block.cid)
     expect(block.block).to.eql(blockRetrieved)
