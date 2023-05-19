@@ -1,15 +1,15 @@
 import { DefaultBitswap } from './bitswap.js'
-import type { Blockstore } from 'interface-blockstore'
-import type { PeerId } from '@libp2p/interface-peer-id'
-import type { CID } from 'multiformats/cid'
 import type { Message } from './message/message'
-import type { IMovingAverage } from '@vascosantos/moving-average'
-import type { MultihashHasher } from 'multiformats/hashes/interface'
+import type { BitswapNetworkNotifyProgressEvents, BitswapNetworkWantProgressEvents } from './network.js'
 import type { Libp2p } from '@libp2p/interface-libp2p'
+import type { PeerId } from '@libp2p/interface-peer-id'
 import type { AbortOptions } from '@libp2p/interfaces'
 import type { Startable } from '@libp2p/interfaces/startable'
+import type { IMovingAverage } from '@vascosantos/moving-average'
+import type { Blockstore } from 'interface-blockstore'
+import type { CID } from 'multiformats/cid'
+import type { MultihashHasher } from 'multiformats/hashes/interface'
 import type { ProgressEvent, ProgressOptions } from 'progress-events'
-import type { BitswapNetworkNotifyProgressEvents, BitswapNetworkWantProgressEvents } from './network.js'
 
 export interface WantListEntry {
   cid: CID

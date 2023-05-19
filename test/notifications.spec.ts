@@ -1,8 +1,8 @@
 /* eslint-env mocha */
 
 import { expect } from 'aegir/chai'
-import { CID } from 'multiformats/cid'
 import { base32 } from 'multiformats/bases/base32'
+import { CID } from 'multiformats/cid'
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
 import { Notifications } from '../src/notifications.js'
 import { makeBlocks } from './utils/make-blocks.js'

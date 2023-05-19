@@ -1,8 +1,8 @@
 /* eslint max-nested-callbacks: ["error", 5] */
 /* eslint-disable no-console */
 
-import Benchmark from 'benchmark'
 import assert from 'assert'
+import Benchmark from 'benchmark'
 import all from 'it-all'
 import drain from 'it-drain'
 import { makeBlocks } from '../test/utils/make-blocks.js'

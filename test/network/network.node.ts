@@ -1,17 +1,17 @@
 /* eslint-env mocha */
 
 import { expect, assert } from 'aegir/chai'
+import delay from 'delay'
 import * as lp from 'it-length-prefixed'
 import { pipe } from 'it-pipe'
+import { CID } from 'multiformats/cid'
 import pDefer from 'p-defer'
+import sinon from 'sinon'
+import { BitswapMessage as Message } from '../../src/message/index.js'
+import { Network } from '../../src/network.js'
+import { Stats } from '../../src/stats/index.js'
 import { createLibp2pNode } from '../utils/create-libp2p-node.js'
 import { makeBlocks } from '../utils/make-blocks.js'
-import { Network } from '../../src/network.js'
-import { BitswapMessage as Message } from '../../src/message/index.js'
-import { Stats } from '../../src/stats/index.js'
-import sinon from 'sinon'
-import { CID } from 'multiformats/cid'
-import delay from 'delay'
 import type { DefaultBitswap } from '../../src/bitswap.js'
 import type { Libp2p } from '@libp2p/interface-libp2p'
 

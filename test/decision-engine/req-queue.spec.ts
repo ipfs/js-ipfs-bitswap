@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 
-import { expect } from 'aegir/chai'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
+import { expect } from 'aegir/chai'
 import { RequestQueue } from '../../src/decision-engine/req-queue.js'
 import type { PeerId } from '@libp2p/interface-peer-id'
 

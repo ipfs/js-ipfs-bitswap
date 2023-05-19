@@ -1,27 +1,24 @@
 /* eslint-env mocha */
 
+import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import { expect } from 'aegir/chai'
-// @ts-expect-error no types
-import range from 'lodash.range'
-// @ts-expect-error no types
+import { MemoryBlockstore } from 'blockstore-core/memory'
+import drain from 'it-drain'
 import difference from 'lodash.difference'
-// @ts-expect-error no types
 import flatten from 'lodash.flatten'
+import range from 'lodash.range'
+import { base58btc } from 'multiformats/bases/base58'
 import { CID } from 'multiformats/cid'
 import { sha256 } from 'multiformats/hashes/sha2'
-import { base58btc } from 'multiformats/bases/base58'
+import defer from 'p-defer'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
 import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
-import drain from 'it-drain'
-import defer from 'p-defer'
-import { BitswapMessage as Message } from '../../src/message/index.js'
 import { DecisionEngine } from '../../src/decision-engine/index.js'
+import { BitswapMessage as Message } from '../../src/message/index.js'
 import { Stats } from '../../src/stats/index.js'
-import { MemoryBlockstore } from 'blockstore-core/memory'
 import { makeBlocks } from '../utils/make-blocks.js'
 import { makePeerId, makePeerIds } from '../utils/make-peer-id.js'
 import { mockNetwork } from '../utils/mocks.js'
-import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import type { Network } from '../../src/network.js'
 import type { PeerId } from '@libp2p/interface-peer-id'
 import type { Blockstore } from 'interface-blockstore'
@@ -116,7 +113,7 @@ describe('Engine', () => {
     async function partnerWants (dEngine: DecisionEngine, values: string[], partner: PeerId): Promise<void> {
       const message = new Message(false)
 
-      const hashes = await Promise.all(values.map(async (v) => await sha256.digest(uint8ArrayFromString(v))))
+      const hashes = await Promise.all(values.map(async (v) => sha256.digest(uint8ArrayFromString(v))))
       hashes.forEach((hash, i) => {
         message.addEntry(CID.createV0(hash), Math.pow(2, 32) - 1 - i)
       })
@@ -126,7 +123,7 @@ describe('Engine', () => {
     async function partnerCancels (dEngine: DecisionEngine, values: string[], partner: PeerId): Promise<void> {
       const message = new Message(false)
 
-      const hashes = await Promise.all(values.map(async (v) => await sha256.digest(uint8ArrayFromString(v))))
+      const hashes = await Promise.all(values.map(async (v) => sha256.digest(uint8ArrayFromString(v))))
       hashes.forEach((hash) => {
         message.cancel(CID.createV0(hash))
       })
@@ -140,7 +137,7 @@ describe('Engine', () => {
       dEngine.receivedBlocks(blocks)
     }
 
-    const hashes = await Promise.all(alphabet.map(async v => await sha256.digest(uint8ArrayFromString(v))))
+    const hashes = await Promise.all(alphabet.map(async v => sha256.digest(uint8ArrayFromString(v))))
     const blocks = hashes.map((h, i) => {
       return {
         cid: CID.createV0(h),
@@ -317,8 +314,8 @@ describe('Engine', () => {
     const [id, peer] = await makePeerIds(2)
     const blocks = await makeBlocks(4, 8 * 1024)
 
-    let onMsg: Function
-    const receiveMessage = async (): Promise<[PeerId, Message]> => await new Promise<[PeerId, Message]>(resolve => {
+    let onMsg: ((msg: [PeerId, Message]) => void)
+    const receiveMessage = async (): Promise<[PeerId, Message]> => new Promise<[PeerId, Message]>(resolve => {
       onMsg = resolve
     })
     const network = mockNetwork(blocks.length, undefined, (peerId, message) => {
@@ -371,7 +368,7 @@ describe('Engine', () => {
     const vowels = 'aeiou'
 
     const alphabetLs = alphabet.split('')
-    const hashes = await Promise.all(alphabetLs.map(async v => await sha256.digest(uint8ArrayFromString(v))))
+    const hashes = await Promise.all(alphabetLs.map(async v => sha256.digest(uint8ArrayFromString(v))))
     const blocks = hashes.map((h, i) => {
       return {
         cid: CID.createV0(h),
@@ -641,7 +638,7 @@ describe('Engine', () => {
       let i = wantBlks.length + wantHaves.length
       const message = new Message(false)
       for (const { type, blocks } of wantTypes) {
-        const hashes = await Promise.all(blocks.map(async (v) => await sha256.digest(uint8ArrayFromString(v))))
+        const hashes = await Promise.all(blocks.map(async (v) => sha256.digest(uint8ArrayFromString(v))))
         for (const hash of hashes) {
           message.addEntry(CID.createV0(hash), i--, type, false, sendDontHave)
         }
@@ -649,9 +646,9 @@ describe('Engine', () => {
       await dEngine.messageReceived(partner, message)
     }
 
-    let onMsg: Function | undefined
+    let onMsg: ((msg: Message) => void) | undefined
     const nextMessage = async (): Promise<Message> => {
-      return await new Promise<Message>(resolve => {
+      return new Promise<Message>(resolve => {
         onMsg = resolve
         void dEngine._processTasks()
       })
@@ -724,9 +721,8 @@ describe('Engine', () => {
   })
 
   it('survives not being able to send a message to peer', async () => {
-    /** @type {} */
-    let r: Function
-    const failToSendPromise = new Promise((resolve) => {
+    let r: () => void
+    const failToSendPromise = new Promise<void>((resolve) => {
       r = resolve
     })
 

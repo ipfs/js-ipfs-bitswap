@@ -3,15 +3,14 @@
 import { expect } from 'aegir/chai'
 import { CID } from 'multiformats/cid'
 import { sha256 } from 'multiformats/hashes/sha2'
-import { BitswapMessageEntry } from '../src/message/entry.js'
 import { fromString as uint8ArrayFromString } from 'uint8arrays/from-string'
+// @ts-expect-error no types
+import varintDecoder from 'varint-decoder'
+import { BitswapMessageEntry } from '../src/message/entry.js'
 import { BitswapMessage } from '../src/message/index.js'
-
 import { groupBy, uniqWith, pullAllWith, includesWith, sortBy, isMapEqual } from '../src/utils/index.js'
 import { SortedMap } from '../src/utils/sorted-map.js'
 import varintEncoder from '../src/utils/varint-encoder.js'
-// @ts-expect-error no types
-import varintDecoder from 'varint-decoder'
 
 const DAG_PB_CODEC = 0x70
 

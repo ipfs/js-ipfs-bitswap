@@ -1,8 +1,8 @@
-import type { PeerId } from '@libp2p/interface-peer-id'
-import type { CID } from 'multiformats/cid'
+import { Wantlist } from '../wantlist/index.js'
 import type { Message } from '../message/message.js'
 import type { WantListEntry } from '../wantlist/entry.js'
-import { Wantlist } from '../wantlist/index.js'
+import type { PeerId } from '@libp2p/interface-peer-id'
+import type { CID } from 'multiformats/cid'
 
 export class Ledger {
   public partner: PeerId

@@ -1,17 +1,15 @@
 
-/** @type {(n:number) => any[]} */
-// @ts-expect-error no types
-import range from 'lodash.range'
 import { expect } from 'aegir/chai'
+import range from 'lodash.range'
+import { connectAll } from './connect-all.js'
 import { createBitswap } from './create-bitswap.js'
 import { makeBlocks } from './make-blocks.js'
-import { connectAll } from './connect-all.js'
 import type { BitswapNode } from './mocks.js'
 
 export const distributionTest = async (instanceCount: number, blockCount: number, repeats: number, events: any): Promise<void> => {
   let pendingRepeats = repeats
 
-  const nodes: BitswapNode[] = await Promise.all(range(instanceCount).map(async () => await createBitswap()))
+  const nodes: BitswapNode[] = await Promise.all(range(instanceCount).map(async () => createBitswap()))
   events.emit('start')
 
   await connectAll(nodes)
@@ -34,7 +32,7 @@ export const distributionTest = async (instanceCount: number, blockCount: number
 
         const cids = blocks.map((block) => block.cid)
         const start = Date.now()
-        const result = await Promise.all(cids.map(async cid => await node.bitswap.want(cid)))
+        const result = await Promise.all(cids.map(async cid => node.bitswap.want(cid)))
         const elapsed = Date.now() - start
         events.emit('got block', elapsed)
 

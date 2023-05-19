@@ -1,10 +1,10 @@
 /* eslint-env mocha */
 
 import { expect } from 'aegir/chai'
-import { pEvent } from 'p-event'
-import { BitswapMessage as Message } from '../src/message/index.js'
-import { DefaultBitswap } from '../src/bitswap.js'
 import { MemoryBlockstore } from 'blockstore-core/memory'
+import { pEvent } from 'p-event'
+import { DefaultBitswap } from '../src/bitswap.js'
+import { BitswapMessage as Message } from '../src/message/index.js'
 import { createLibp2pNode } from './utils/create-libp2p-node.js'
 import { makeBlocks } from './utils/make-blocks.js'
 import { makePeerIds } from './utils/make-peer-id.js'
@@ -47,7 +47,7 @@ describe('bitswap stats', () => {
     ids = await makePeerIds(2)
 
     // create 2 libp2p nodes
-    libp2pNodes = await Promise.all(nodes.map(async (i) => await createLibp2pNode({
+    libp2pNodes = await Promise.all(nodes.map(async (i) => createLibp2pNode({
       DHT: true
     })))
 

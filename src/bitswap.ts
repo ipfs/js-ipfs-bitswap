@@ -1,21 +1,21 @@
-import { WantManager } from './want-manager/index.js'
-import { Network } from './network.js'
-import { DecisionEngine, PeerLedger } from './decision-engine/index.js'
-import { Notifications } from './notifications.js'
-import { logger } from './utils/index.js'
-import { Stats } from './stats/index.js'
 import { anySignal } from 'any-signal'
-import { CID } from 'multiformats/cid'
 import forEach from 'it-foreach'
+import { CID } from 'multiformats/cid'
+import { DecisionEngine, type PeerLedger } from './decision-engine/index.js'
+import { Network } from './network.js'
+import { Notifications } from './notifications.js'
+import { Stats } from './stats/index.js'
+import { logger } from './utils/index.js'
+import { WantManager } from './want-manager/index.js'
 import type { BitswapOptions, Bitswap, MultihashHasherLoader, WantListEntry, BitswapWantProgressEvents, BitswapNotifyProgressEvents } from './index.js'
-import type { Libp2p } from '@libp2p/interface-libp2p'
-import type { Blockstore, Pair } from 'interface-blockstore'
-import type { Logger } from '@libp2p/logger'
-import type { PeerId } from '@libp2p/interface-peer-id'
 import type { BitswapMessage } from './message/index.js'
+import type { Libp2p } from '@libp2p/interface-libp2p'
+import type { PeerId } from '@libp2p/interface-peer-id'
+import type { Logger } from '@libp2p/logger'
 import type { AbortOptions } from '@multiformats/multiaddr'
-import type { ProgressOptions } from 'progress-events'
+import type { Blockstore, Pair } from 'interface-blockstore'
 import type { AwaitIterable } from 'interface-store'
+import type { ProgressOptions } from 'progress-events'
 
 const hashLoader: MultihashHasherLoader = {
   async getHasher () {
@@ -225,7 +225,7 @@ export class DefaultBitswap implements Bitswap {
       // so no need to remove the blocks from the wantlist after we have it
       this.wm.wantBlocks([cid], options)
 
-      return await this.notifications.wantBlock(cid, options)
+      return this.notifications.wantBlock(cid, options)
     }
 
     let promptedNetwork = false

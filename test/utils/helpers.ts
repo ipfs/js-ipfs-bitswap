@@ -1,7 +1,5 @@
-
-// @ts-expect-error no types
-import range from 'lodash.range'
 import { expect } from 'aegir/chai'
+import range from 'lodash.range'
 
 export const orderedFinish = (n: number): { (i: number): void, assert: () => void } => {
   const r = range(1, n + 1)

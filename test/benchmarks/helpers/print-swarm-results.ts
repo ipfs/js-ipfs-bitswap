@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
-import type { EventEmitter } from 'node:events'
 import stats from 'stats-lite'
+import type { EventEmitter } from 'node:events'
 
 export const print = (suite: any, emitter: EventEmitter): void => {
   const elapseds: number[] = []

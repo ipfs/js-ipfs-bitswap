@@ -1,13 +1,12 @@
 /* eslint-env mocha */
 
 import { expect } from 'aegir/chai'
-import { CID } from 'multiformats/cid'
-import { sha256 } from 'multiformats/hashes/sha2'
 import { base58btc } from 'multiformats/bases/base58'
 import { base64 } from 'multiformats/bases/base64'
-
-import { Wantlist } from '../../src/wantlist/index.js'
+import { CID } from 'multiformats/cid'
+import { sha256 } from 'multiformats/hashes/sha2'
 import { BitswapMessage as Message } from '../../src/message/index.js'
+import { Wantlist } from '../../src/wantlist/index.js'
 import { makeBlocks } from '../utils/make-blocks.js'
 
 const DAG_PB_CODEC = 0x70

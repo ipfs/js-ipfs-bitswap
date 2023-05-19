@@ -1,7 +1,7 @@
 
 import { base58btc } from 'multiformats/bases/base58'
-import type { CID } from 'multiformats/cid'
 import type { Message } from '../message/message'
+import type { CID } from 'multiformats/cid'
 
 export class WantListEntry {
   private _refCounter: number
