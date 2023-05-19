@@ -104,7 +104,9 @@ describe('network', () => {
   })
 
   it('connectTo success', async () => {
-    await p2pA.peerStore.addressBook.add(p2pB.peerId, p2pB.getMultiaddrs())
+    await p2pA.peerStore.merge(p2pB.peerId, {
+      multiaddrs: p2pB.getMultiaddrs()
+    })
     await networkA.connectTo(p2pB.peerId)
   })
 
@@ -200,7 +202,9 @@ describe('network', () => {
 
     // In a real network scenario, peers will be discovered and their addresses
     // will be added to the addressBook before bitswap kicks in
-    await p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.getMultiaddrs())
+    await p2pA.peerStore.patch(p2pB.peerId, {
+      multiaddrs: p2pB.getMultiaddrs()
+    })
 
     bitswapMockB._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       // cannot do deep comparison on objects as one has Buffers and one has Uint8Arrays
@@ -236,7 +240,9 @@ describe('network', () => {
 
     // In a real network scenario, peers will be discovered and their addresses
     // will be added to the addressBook before bitswap kicks in
-    await p2pA.peerStore.addressBook.set(p2pC.peerId, p2pC.getMultiaddrs())
+    await p2pA.peerStore.patch(p2pC.peerId, {
+      multiaddrs: p2pC.getMultiaddrs()
+    })
 
     bitswapMockC._receiveMessage = async (peerId, msgReceived) => { // eslint-disable-line require-await
       // cannot do deep comparison on objects as one has Buffers and one has Uint8Arrays
@@ -265,7 +271,9 @@ describe('network', () => {
 
     // In a real network scenario, peers will be discovered and their addresses
     // will be added to the addressBook before bitswap kicks in
-    await p2pA.peerStore.addressBook.set(p2pB.peerId, p2pB.getMultiaddrs())
+    await p2pA.peerStore.patch(p2pB.peerId, {
+      multiaddrs: p2pB.getMultiaddrs()
+    })
 
     const deferred = pDefer()
 

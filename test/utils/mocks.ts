@@ -151,10 +151,7 @@ export const genBitswapNetwork = async (n: number, enableDHT: boolean = false): 
     peers.map(async (peerId, i) => {
       const libp2p = await createLibp2pNode({
         peerId,
-        DHT: enableDHT,
-        nat: {
-          enabled: false
-        }
+        DHT: enableDHT
       })
 
       await libp2p.start()
@@ -180,7 +177,9 @@ export const genBitswapNetwork = async (n: number, enableDHT: boolean = false): 
 
       const netB = netArray[j]
 
-      await netA.libp2p.peerStore.addressBook.set(netB.libp2p.peerId, netB.libp2p.getMultiaddrs())
+      await netA.libp2p.peerStore.patch(netB.libp2p.peerId, {
+        multiaddrs: netB.libp2p.getMultiaddrs()
+      })
     }
   }
 

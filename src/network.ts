@@ -252,7 +252,6 @@ export class Network {
     }
 
     options.onProgress?.(new CustomProgressEvent<PeerId>('bitswap:network:dial', peer))
-    // @ts-expect-error types are not aligned
     return this._libp2p.dial(peer, options)
   }
 

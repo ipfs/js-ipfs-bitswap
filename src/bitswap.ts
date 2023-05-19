@@ -258,9 +258,7 @@ export class DefaultBitswap implements Bitswap {
     // a race condition, so register for incoming block notifications as well
     // as trying to get it from the datastore
     const controller = new AbortController()
-    const signal = (options.signal != null)
-      ? anySignal([options.signal, controller.signal])
-      : controller.signal
+    const signal = anySignal([controller.signal, options.signal])
 
     try {
       const block = await Promise.race([
@@ -279,6 +277,7 @@ export class DefaultBitswap implements Bitswap {
       // since we have the block we can now abort any outstanding attempts to
       // fetch it
       controller.abort()
+      signal.clear()
     }
   }
 
