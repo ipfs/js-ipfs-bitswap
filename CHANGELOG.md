@@ -1,3 +1,10 @@
+## [18.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v18.0.0...v18.0.1) (2023-05-22)
+
+
+### Bug Fixes
+
+* add events dep ([#581](https://github.com/ipfs/js-ipfs-bitswap/issues/581)) ([d26cd16](https://github.com/ipfs/js-ipfs-bitswap/commit/d26cd1642e6abc6c0055451a99ac2daf5b1ad341))
+
 ## [18.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v17.0.3...v18.0.0) (2023-05-19)
 
 
