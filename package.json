@@ -138,7 +138,7 @@
     "test:firefox": "aegir test -t browser -- --browser firefox",
     "test:firefox-webworker": "aegir test -t webworker -- --browser firefox",
     "test:electron-main": "aegir test -t electron-main",
-    "dep-check": "aegir dep-check -i protons",
+    "dep-check": "aegir dep-check -i protons -i events",
     "generate": "protons ./src/message/message.proto",
     "docs": "aegir docs"
   },
@@ -157,6 +157,7 @@
     "abortable-iterator": "^5.0.1",
     "any-signal": "^4.1.1",
     "blockstore-core": "^4.0.0",
+    "events": "^3.3.0",
     "interface-blockstore": "^5.0.0",
     "interface-store": "^5.1.0",
     "it-foreach": "^2.0.2",
