@@ -189,7 +189,7 @@
     "@types/sinon": "^10.0.15",
     "@types/stats-lite": "^2.2.0",
     "@types/varint": "^6.0.0",
-    "aegir": "^40.0.1",
+    "aegir": "^40.0.2",
     "benchmark": "^2.1.4",
     "delay": "^6.0.0",
     "iso-random-stream": "^2.0.0",
