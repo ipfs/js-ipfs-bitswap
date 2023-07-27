@@ -1,4 +1,3 @@
-
 /* eslint-env mocha */
 /* eslint-disable no-console */
 

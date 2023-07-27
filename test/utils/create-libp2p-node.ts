@@ -1,4 +1,3 @@
-
 import { noise } from '@chainsafe/libp2p-noise'
 import { type DualKadDHT, kadDHT } from '@libp2p/kad-dht'
 import { mplex } from '@libp2p/mplex'
