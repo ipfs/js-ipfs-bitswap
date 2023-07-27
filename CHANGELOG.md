@@ -1,3 +1,17 @@
+## [18.0.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v18.0.1...v18.0.2) (2023-07-27)
+
+
+### Trivial Changes
+
+* Update .github/workflows/stale.yml [skip ci] ([79974a5](https://github.com/ipfs/js-ipfs-bitswap/commit/79974a5b165d84b878f25bb11ac63639d4e3e093))
+* Update .github/workflows/stale.yml [skip ci] ([63f3993](https://github.com/ipfs/js-ipfs-bitswap/commit/63f39935cfd560319b6eaf117e539bd018316dc7))
+
+
+### Dependencies
+
+* **dev:** bump delay from 5.0.0 to 6.0.0 ([#580](https://github.com/ipfs/js-ipfs-bitswap/issues/580)) ([d796ebc](https://github.com/ipfs/js-ipfs-bitswap/commit/d796ebcd7eb0267cc2709017ec06faf16a4ca2bb))
+* **dev:** bump p-event from 5.0.1 to 6.0.0 ([#582](https://github.com/ipfs/js-ipfs-bitswap/issues/582)) ([ae8fd6f](https://github.com/ipfs/js-ipfs-bitswap/commit/ae8fd6f16bdc49779b78fba3a22975153c138f7e))
+
 ## [18.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v18.0.0...v18.0.1) (2023-05-22)
 
 
