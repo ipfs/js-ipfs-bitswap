@@ -1,4 +1,3 @@
-
 import { base58btc } from 'multiformats/bases/base58'
 import type { Message } from '../message/message'
 import type { CID } from 'multiformats/cid'

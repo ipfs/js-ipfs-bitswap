@@ -1,4 +1,3 @@
-
 import { MemoryBlockstore } from 'blockstore-core/memory'
 import { DefaultBitswap } from '../../src/bitswap.js'
 import { createLibp2pNode } from './create-libp2p-node.js'

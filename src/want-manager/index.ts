@@ -1,4 +1,3 @@
-
 import { trackedMap } from '@libp2p/tracked-map'
 import { base58btc } from 'multiformats/bases/base58'
 import * as CONSTANTS from '../constants.js'

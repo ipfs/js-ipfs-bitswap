@@ -1,4 +1,3 @@
-
 import { expect } from 'aegir/chai'
 import range from 'lodash.range'
 import { connectAll } from './connect-all.js'
