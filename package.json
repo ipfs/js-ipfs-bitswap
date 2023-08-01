@@ -181,7 +181,7 @@
     "@libp2p/mplex": "^8.0.3",
     "@libp2p/peer-id": "^2.0.0",
     "@libp2p/peer-id-factory": "^2.0.0",
-    "@libp2p/tcp": "^7.0.1",
+    "@libp2p/tcp": "^8.0.0",
     "@nodeutils/defaults-deep": "^1.1.0",
     "@types/lodash.difference": "^4.5.7",
     "@types/lodash.flatten": "^4.4.7",
