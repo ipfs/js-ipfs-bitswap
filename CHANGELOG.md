@@ -1,3 +1,14 @@
+## [19.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v18.0.3...v19.0.0) (2023-08-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* requires libp2p@0.46.x or later
+
+### Dependencies
+
+* update to libp2p 0.46.x ([#596](https://github.com/ipfs/js-ipfs-bitswap/issues/596)) ([be8fe06](https://github.com/ipfs/js-ipfs-bitswap/commit/be8fe06bb10d6d940ac51c56b30c80154469673b))
+
 ## [18.0.3](https://github.com/ipfs/js-ipfs-bitswap/compare/v18.0.2...v18.0.3) (2023-07-27)
 
 
