@@ -7,7 +7,7 @@ import { toString as uint8ArrayToString } from 'uint8arrays/to-string'
 import { Notifications } from '../src/notifications.js'
 import { makeBlocks } from './utils/make-blocks.js'
 import { makePeerId } from './utils/make-peer-id.js'
-import type { PeerId } from '@libp2p/interface-peer-id'
+import type { PeerId } from '@libp2p/interface/peer-id'
 
 describe('Notifications', () => {
   let blocks: Array<{ cid: CID, block: Uint8Array }>

@@ -3,7 +3,7 @@
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import { expect } from 'aegir/chai'
 import { RequestQueue } from '../../src/decision-engine/req-queue.js'
-import type { PeerId } from '@libp2p/interface-peer-id'
+import type { PeerId } from '@libp2p/interface/peer-id'
 
 describe('Request Queue', () => {
   let peerIds: PeerId[]

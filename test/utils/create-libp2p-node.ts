@@ -7,7 +7,7 @@ import { tcp } from '@libp2p/tcp'
 import defaultsDeep from '@nodeutils/defaults-deep'
 import { createLibp2p, type Libp2pOptions } from 'libp2p'
 import { identifyService } from 'libp2p/identify'
-import type { Libp2p, ServiceMap } from '@libp2p/interface-libp2p'
+import type { Libp2p, ServiceMap } from '@libp2p/interface'
 
 export interface NodeOptions extends Libp2pOptions {
   DHT?: boolean

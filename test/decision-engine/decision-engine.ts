@@ -20,7 +20,7 @@ import { makeBlocks } from '../utils/make-blocks.js'
 import { makePeerId, makePeerIds } from '../utils/make-peer-id.js'
 import { mockNetwork } from '../utils/mocks.js'
 import type { Network } from '../../src/network.js'
-import type { PeerId } from '@libp2p/interface-peer-id'
+import type { PeerId } from '@libp2p/interface/peer-id'
 import type { Blockstore } from 'interface-blockstore'
 
 const sum = (nums: number[]): number => nums.reduce((a, b) => a + b, 0)

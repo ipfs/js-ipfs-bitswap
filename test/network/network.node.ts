@@ -13,7 +13,7 @@ import { Stats } from '../../src/stats/index.js'
 import { createLibp2pNode } from '../utils/create-libp2p-node.js'
 import { makeBlocks } from '../utils/make-blocks.js'
 import type { DefaultBitswap } from '../../src/bitswap.js'
-import type { Libp2p } from '@libp2p/interface-libp2p'
+import type { Libp2p } from '@libp2p/interface'
 
 function createBitswapMock (): DefaultBitswap {
   // @ts-expect-error incomplete implementation
@@ -224,7 +224,7 @@ describe('network', () => {
     const ma = p2pC.getMultiaddrs()[0]
     const stream = await p2pA.dialProtocol(ma, ['/ipfs/bitswap/1.1.0', '/ipfs/bitswap/1.0.0'])
 
-    expect(stream).to.have.nested.property('stat.protocol', '/ipfs/bitswap/1.0.0')
+    expect(stream).to.have.property('protocol', '/ipfs/bitswap/1.0.0')
   })
 
   // From p2pA to p2pC
@@ -329,7 +329,7 @@ describe('network', () => {
   })
 
   it('times out slow senders', async () => {
-    const deferred = pDefer()
+    const deferred = pDefer<Error>()
 
     const libp2p = {
       handle: sinon.stub(),
@@ -345,6 +345,7 @@ describe('network', () => {
     await network.start()
 
     const stream = {
+      sink: async () => {},
       source: (async function * () {
         await delay(100)
         yield 'hello'
@@ -361,6 +362,6 @@ describe('network', () => {
     handler({ stream, connection: {} })
 
     const err = await deferred.promise
-    expect(err).to.have.property('code', 'ABORT_ERR')
+    expect(err).to.have.property('code', 'ERR_TIMEOUT')
   })
 })

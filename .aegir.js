@@ -2,6 +2,6 @@
 /** @type {import('aegir').PartialOptions} */
 export default {
   build: {
-    bundlesizeMax: '32KB'
+    bundlesizeMax: '33KB'
   }
 }
