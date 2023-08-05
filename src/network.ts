@@ -1,5 +1,4 @@
-import { createTopology } from '@libp2p/topology'
-import { abortableSource } from 'abortable-iterator'
+import { CodeError } from '@libp2p/interface/errors'
 import drain from 'it-drain'
 import * as lp from 'it-length-prefixed'
 import map from 'it-map'
@@ -13,11 +12,12 @@ import { logger } from './utils/index.js'
 import type { DefaultBitswap } from './bitswap.js'
 import type { MultihashHasherLoader } from './index.js'
 import type { Stats } from './stats/index.js'
-import type { Connection } from '@libp2p/interface-connection'
-import type { Libp2p } from '@libp2p/interface-libp2p'
-import type { PeerId } from '@libp2p/interface-peer-id'
-import type { PeerInfo } from '@libp2p/interface-peer-info'
-import type { IncomingStreamData } from '@libp2p/interface-registrar'
+import type { Libp2p } from '@libp2p/interface'
+import type { Connection } from '@libp2p/interface/connection'
+import type { PeerId } from '@libp2p/interface/peer-id'
+import type { PeerInfo } from '@libp2p/interface/peer-info'
+import type { IncomingStreamData } from '@libp2p/interface/stream-handler'
+import type { Topology } from '@libp2p/interface/topology'
 import type { AbortOptions } from '@libp2p/interfaces'
 import type { Logger } from '@libp2p/logger'
 import type { Multiaddr } from '@multiformats/multiaddr'
@@ -107,10 +107,10 @@ export class Network {
     })
 
     // register protocol with topology
-    const topology = createTopology({
+    const topology: Topology = {
       onConnect: this._onPeerConnect,
       onDisconnect: this._onPeerDisconnect
-    })
+    }
 
     /** @type {string[]} */
     this._registrarIds = []
@@ -153,10 +153,16 @@ export class Network {
     const controller = new TimeoutController(this._incomingStreamTimeout)
 
     Promise.resolve().then(async () => {
-      this._log('incoming new bitswap %s connection from %p', stream.stat.protocol, connection.remotePeer)
+      this._log('incoming new bitswap %s connection from %p', stream.protocol, connection.remotePeer)
+      const abortListener = (): void => {
+        stream.abort(new CodeError('Incoming Bitswap stream timed out', 'ERR_TIMEOUT'))
+      }
+
+      let signal = AbortSignal.timeout(this._incomingStreamTimeout)
+      signal.addEventListener('abort', abortListener)
 
       await pipe(
-        abortableSource(stream.source, controller.signal),
+        stream,
         (source) => lp.decode(source),
         async (source) => {
           for await (const data of source) {
@@ -169,10 +175,16 @@ export class Network {
             }
 
             // we have received some data so reset the timeout controller
-            controller.reset()
+            signal.removeEventListener('abort', abortListener)
+            signal = AbortSignal.timeout(this._incomingStreamTimeout)
+            signal.addEventListener('abort', abortListener)
           }
         }
       )
+
+      await stream.close({
+        signal
+      })
     })
       .catch(err => {
         this._log(err)
@@ -180,7 +192,6 @@ export class Network {
       })
       .finally(() => {
         controller.clear()
-        stream.close()
       })
   }
 
@@ -273,7 +284,7 @@ export class Network {
     try {
       /** @type {Uint8Array} */
       let serialized
-      switch (stream.stat.protocol) {
+      switch (stream.protocol) {
         case BITSWAP100:
           serialized = msg.serializeToBitswap100()
           break
@@ -282,7 +293,7 @@ export class Network {
           serialized = msg.serializeToBitswap110()
           break
         default:
-          throw new Error(`Unknown protocol: ${stream.stat.protocol}`)
+          throw new Error(`Unknown protocol: ${stream.protocol}`)
       }
 
       await pipe(
@@ -290,11 +301,12 @@ export class Network {
         (source) => lp.encode(source),
         stream
       )
+
+      await stream.close()
     } catch (err: any) {
       options.onProgress?.(new CustomProgressEvent<{ peer: PeerId, error: Error }>('bitswap:network:send-wantlist:error', { peer: peerId, error: err }))
       this._log(err)
-    } finally {
-      stream.close()
+      stream.abort(err)
     }
   }
 }

@@ -1,7 +1,7 @@
 import { logger as createLogger, type Logger } from '@libp2p/logger'
 import { equals as uint8ArrayEquals } from 'uint8arrays/equals'
 import { BitswapMessageEntry } from '../message/entry.js'
-import type { PeerId } from '@libp2p/interface-peer-id'
+import type { PeerId } from '@libp2p/interface/peer-id'
 
 /**
  * Creates a logger for the given subsystem

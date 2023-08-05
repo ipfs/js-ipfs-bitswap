@@ -1,9 +1,9 @@
-import { trackedMap } from '@libp2p/tracked-map'
+import { trackedMap } from '@libp2p/interface/metrics/tracked-map'
 import { base58btc } from 'multiformats/bases/base58'
 import { Message } from '../message/message.js'
 import { WantListEntry as Entry } from './entry.js'
 import type { Stats } from '../stats/index.js'
-import type { Libp2p } from '@libp2p/interface-libp2p'
+import type { Libp2p } from '@libp2p/interface'
 import type { CID } from 'multiformats/cid'
 
 const WantType = {

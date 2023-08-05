@@ -8,14 +8,9 @@ import { BitswapMessage as Message } from '../src/message/index.js'
 import { createLibp2pNode } from './utils/create-libp2p-node.js'
 import { makeBlocks } from './utils/make-blocks.js'
 import { makePeerIds } from './utils/make-peer-id.js'
-import type { Libp2p } from '@libp2p/interface-libp2p'
-import type { PeerId } from '@libp2p/interface-peer-id'
+import type { Libp2p } from '@libp2p/interface'
+import type { PeerId } from '@libp2p/interface/peer-id'
 import type { CID } from 'multiformats/cid'
-
-/**
- * @typedef {import('@libp2p/interface-libp2p').Libp2p} Libp2p
- * @typedef {import('multiformats/cid').CID} CID
- */
 
 const expectedStats = [
   'blocksReceived',
