@@ -4,7 +4,7 @@ import type { BitswapNetworkNotifyProgressEvents, BitswapNetworkWantProgressEven
 import type { Libp2p } from '@libp2p/interface'
 import type { PeerId } from '@libp2p/interface/peer-id'
 import type { Startable } from '@libp2p/interface/startable'
-import type { AbortOptions } from '@libp2p/interfaces'
+import type { AbortOptions } from '@libp2p/interface'
 import type { IMovingAverage } from '@vascosantos/moving-average'
 import type { Blockstore } from 'interface-blockstore'
 import type { CID } from 'multiformats/cid'

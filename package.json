@@ -147,7 +147,6 @@
     "@libp2p/logger": "^3.0.1",
     "@multiformats/multiaddr": "^12.1.0",
     "@vascosantos/moving-average": "^1.1.0",
-    "abortable-iterator": "^5.0.1",
     "any-signal": "^4.1.1",
     "blockstore-core": "^4.0.0",
     "events": "^3.3.0",

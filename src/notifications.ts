@@ -5,7 +5,7 @@ import * as CONSTANTS from './constants.js'
 import { logger } from './utils/index.js'
 import type { BitswapWantBlockProgressEvents } from './index.js'
 import type { PeerId } from '@libp2p/interface/peer-id'
-import type { AbortOptions } from '@libp2p/interfaces'
+import type { AbortOptions } from '@libp2p/interface'
 import type { Logger } from '@libp2p/logger'
 import type { CID } from 'multiformats/cid'
 
