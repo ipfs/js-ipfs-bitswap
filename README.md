@@ -127,7 +127,9 @@ This object will be a [movingAverage](https://github.com/pgte/moving-average#rea
 
 You can run performance tests like this:
 
-    $ npm run benchmarks
+```
+$ npm run benchmarks
+```
 
 ### Profiling
 

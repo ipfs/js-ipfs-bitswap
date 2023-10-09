@@ -1,7 +1,7 @@
 import { expect } from 'aegir/chai'
 import range from 'lodash.range'
 
-export const orderedFinish = (n: number): { (i: number): void, assert: () => void } => {
+export const orderedFinish = (n: number): { (i: number): void, assert(): void } => {
   const r = range(1, n + 1)
   const finishes: number[] = []
 
@@ -17,7 +17,7 @@ export const orderedFinish = (n: number): { (i: number): void, assert: () => voi
   return output
 }
 
-export const countToFinish = (n: number): { (): void, assert: () => void } => {
+export const countToFinish = (n: number): { (): void, assert(): void } => {
   let pending = n
 
   const output = (): void => {
