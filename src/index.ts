@@ -14,20 +14,20 @@ export interface WantListEntry {
   cid: CID
   priority: number
   wantType: Message.Wantlist.WantType
-  inc: () => void
-  dec: () => void
-  hasRefs: () => boolean
+  inc(): void
+  dec(): void
+  hasRefs(): boolean
 }
 
 export interface Wantlist {
   length: number
-  add: (cid: CID, priority: number, wantType: Message.Wantlist.WantType) => void
-  remove: (cid: CID) => void
-  removeForce: (cid: string) => void
-  forEach: (fn: (entry: WantListEntry, key: string) => void) => void
-  sortedEntries: () => Map<string, WantListEntry>
-  contains: (cid: CID) => boolean
-  get: (cid: CID) => WantListEntry
+  add(cid: CID, priority: number, wantType: Message.Wantlist.WantType): void
+  remove(cid: CID): void
+  removeForce(cid: string): void
+  forEach(fn: (entry: WantListEntry, key: string) => void): void
+  sortedEntries(): Map<string, WantListEntry>
+  contains(cid: CID): boolean
+  get(cid: CID): WantListEntry
 }
 
 export interface Ledger {
@@ -39,22 +39,22 @@ export interface Ledger {
 }
 
 export interface Stat {
-  enable: () => void
-  disable: () => void
-  stop: () => void
+  enable(): void
+  disable(): void
+  stop(): void
   snapshot: Record<string, bigint>
   movingAverages: Record<string, Record<number, IMovingAverage>>
-  push: (counter: string, inc: number) => void
+  push(counter: string, inc: number): void
 }
 
 export interface Stats {
   snapshot: Record<string, bigint>
   movingAverages: Record<string, Record<number, IMovingAverage>>
-  enable: () => void
-  disable: () => void
-  stop: () => void
-  forPeer: (peerId: PeerId | string) => Stat | undefined
-  push: (peer: string, counter: string, inc: number) => void
+  enable(): void
+  disable(): void
+  stop(): void
+  forPeer(peerId: PeerId | string): Stat | undefined
+  push(peer: string, counter: string, inc: number): void
 }
 
 export type BitswapWantProgressEvents =
@@ -79,25 +79,25 @@ export interface Bitswap extends Startable {
    */
   peers: PeerId[]
 
-  wantlistForPeer: (peerId: PeerId) => Map<string, WantListEntry>
-  ledgerForPeer: (peerId: PeerId) => Ledger | undefined
-  unwant: (cids: CID | CID[]) => void
-  cancelWants: (cids: CID | CID[]) => void
-  getWantlist: () => IterableIterator<[string, WantListEntry]>
+  wantlistForPeer(peerId: PeerId): Map<string, WantListEntry>
+  ledgerForPeer(peerId: PeerId): Ledger | undefined
+  unwant(cids: CID | CID[]): void
+  cancelWants(cids: CID | CID[]): void
+  getWantlist(): IterableIterator<[string, WantListEntry]>
 
   /**
    * Notify bitswap that a new block is available
    */
-  notify: (cid: CID, block: Uint8Array, options?: ProgressOptions<BitswapNotifyProgressEvents>) => void
+  notify(cid: CID, block: Uint8Array, options?: ProgressOptions<BitswapNotifyProgressEvents>): void
 
   /**
    * Retrieve a block from the network
    */
-  want: (cid: CID, options?: AbortOptions & ProgressOptions<BitswapWantProgressEvents>) => Promise<Uint8Array>
+  want(cid: CID, options?: AbortOptions & ProgressOptions<BitswapWantProgressEvents>): Promise<Uint8Array>
 }
 
 export interface MultihashHasherLoader {
-  getHasher: (codeOrName: number | string) => Promise<MultihashHasher>
+  getHasher(codeOrName: number | string): Promise<MultihashHasher>
 }
 
 export interface BitswapOptions {
