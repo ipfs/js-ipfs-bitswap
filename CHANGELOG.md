@@ -1,3 +1,17 @@
+## [19.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v19.0.0...v19.0.1) (2023-10-09)
+
+
+### Trivial Changes
+
+* add or force update .github/workflows/js-test-and-release.yml ([#598](https://github.com/ipfs/js-ipfs-bitswap/issues/598)) ([061acfa](https://github.com/ipfs/js-ipfs-bitswap/commit/061acfa2ffb8e1893bb3a26ebd320be20973e322))
+* delete templates [skip ci] ([#597](https://github.com/ipfs/js-ipfs-bitswap/issues/597)) ([0d56b0a](https://github.com/ipfs/js-ipfs-bitswap/commit/0d56b0aaa6de9a58f2b73e72784ad49ba4b2db45))
+
+
+### Dependencies
+
+* **dev:** bump aegir from 40.0.13 to 41.0.0 ([#601](https://github.com/ipfs/js-ipfs-bitswap/issues/601)) ([a510fdc](https://github.com/ipfs/js-ipfs-bitswap/commit/a510fdc7b149b94bc3043c4f5b25700270a5408f))
+* **dev:** bump sinon from 15.2.0 to 16.1.0 ([#602](https://github.com/ipfs/js-ipfs-bitswap/issues/602)) ([ac858e7](https://github.com/ipfs/js-ipfs-bitswap/commit/ac858e7d8edcf965da150d89adc0f7a470f2899a))
+
 ## [19.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v18.0.3...v19.0.0) (2023-08-05)
 
 
