@@ -1,3 +1,10 @@
+## [19.0.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v19.0.1...v19.0.2) (2023-11-04)
+
+
+### Dependencies
+
+* **dev:** bump sinon from 16.1.3 to 17.0.1 ([#606](https://github.com/ipfs/js-ipfs-bitswap/issues/606)) ([01f8738](https://github.com/ipfs/js-ipfs-bitswap/commit/01f8738df272bed69bcb2714dbe80c3e28f4d7b6))
+
 ## [19.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v19.0.0...v19.0.1) (2023-10-09)
 
 
