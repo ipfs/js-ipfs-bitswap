@@ -179,7 +179,7 @@
     "@types/lodash.difference": "^4.5.7",
     "@types/lodash.flatten": "^4.4.7",
     "@types/lodash.range": "^3.2.7",
-    "@types/sinon": "^10.0.15",
+    "@types/sinon": "^17.0.0",
     "@types/stats-lite": "^2.2.0",
     "@types/varint": "^6.0.0",
     "aegir": "^41.0.0",
