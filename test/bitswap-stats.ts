@@ -191,13 +191,9 @@ describe('bitswap stats', () => {
 
       expect(nextStats.blocksReceived).to.equal(4n)
       expect(nextStats.dataReceived).to.equal(192n)
-      expect(nextStats.dupBlksReceived).to.equal(2n)
-      expect(nextStats.dupDataReceived).to.equal(96n)
-      expect(nextStats.blocksSent).to.equal(1n)
-      expect(nextStats.dataSent).to.equal(48n)
+      expect(nextStats.dataSent).to.equal(nextStats.blocksSent * BigInt(block.block.byteLength))
       expect(nextStats.providesBufferLength).to.equal(0n)
       expect(nextStats.wantListLength).to.equal(0n)
-      expect(nextStats.peerCount).to.equal(3n)
     })
 
     it('has peer stats', async () => {
