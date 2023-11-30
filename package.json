@@ -11,6 +11,10 @@
   "bugs": {
     "url": "https://github.com/ipfs/js-ipfs-bitswap/issues"
   },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "keywords": [
     "exchange",
     "ipfs",
