@@ -1,5 +1,5 @@
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
-import type { PeerId } from '@libp2p/interface/peer-id'
+import type { PeerId } from '@libp2p/interface'
 
 export async function makePeerId (): Promise<PeerId> {
   return (await makePeerIds(1))[0]

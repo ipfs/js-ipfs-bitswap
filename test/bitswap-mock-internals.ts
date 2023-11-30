@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 /* eslint max-nested-callbacks: ["error", 5] */
 
-import { isPeerId, type PeerId } from '@libp2p/interface/peer-id'
+import { isPeerId, type PeerId } from '@libp2p/interface'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import { expect } from 'aegir/chai'
 import { MemoryBlockstore } from 'blockstore-core/memory'

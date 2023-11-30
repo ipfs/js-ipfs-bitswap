@@ -1,4 +1,4 @@
-import { trackedMap } from '@libp2p/interface/metrics/tracked-map'
+import { trackedMap } from '@libp2p/utils/tracked-map'
 import { base58btc } from 'multiformats/bases/base58'
 import { Message } from '../message/message.js'
 import { WantListEntry as Entry } from './entry.js'
