@@ -194,7 +194,7 @@ describe('bitswap stats', () => {
       expect(nextStats.dupBlksReceived).to.equal(2n)
       expect(nextStats.dupDataReceived).to.equal(96n)
       expect(nextStats.blocksSent).to.equal(1n)
-      expect(nextStats.dataSent).to.equal(BigInt(48))
+      expect(nextStats.dataSent).to.equal(48n)
       expect(nextStats.providesBufferLength).to.equal(0n)
       expect(nextStats.wantListLength).to.equal(0n)
       expect(nextStats.peerCount).to.equal(3n)
