@@ -7,7 +7,7 @@ import { MsgQueue } from '../../src/want-manager/msg-queue.js'
 import { makeBlocks } from '../utils/make-blocks.js'
 import { makePeerId } from '../utils/make-peer-id.js'
 import { mockNetwork } from '../utils/mocks.js'
-import type { PeerId } from '@libp2p/interface/peer-id'
+import type { PeerId } from '@libp2p/interface'
 import type { CID } from 'multiformats/cid'
 
 describe('MessageQueue', () => {

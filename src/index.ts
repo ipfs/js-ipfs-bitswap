@@ -1,9 +1,13 @@
+/**
+ * @packageDocumentation
+ *
+ * This module implements the [Bitswap protocol](https://docs.ipfs.tech/concepts/bitswap/) in TypeScript.
+ */
+
 import { DefaultBitswap } from './bitswap.js'
 import type { Message } from './message/message'
 import type { BitswapNetworkNotifyProgressEvents, BitswapNetworkWantProgressEvents } from './network.js'
-import type { Libp2p, AbortOptions } from '@libp2p/interface'
-import type { PeerId } from '@libp2p/interface/peer-id'
-import type { Startable } from '@libp2p/interface/startable'
+import type { Libp2p, AbortOptions, PeerId, Startable } from '@libp2p/interface'
 import type { IMovingAverage } from '@vascosantos/moving-average'
 import type { Blockstore } from 'interface-blockstore'
 import type { CID } from 'multiformats/cid'

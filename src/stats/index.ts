@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
-import { trackedMap } from '@libp2p/interface/metrics/tracked-map'
+import { trackedMap } from '@libp2p/utils/tracked-map'
 import { Stat } from './stat.js'
-import type { PeerId } from '@libp2p/interface/peer-id'
+import type { PeerId } from '@libp2p/interface'
 import type { IMovingAverage } from '@vascosantos/moving-average'
 import type { Libp2p } from 'libp2p'
 
