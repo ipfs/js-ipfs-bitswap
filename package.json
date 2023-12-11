@@ -179,7 +179,7 @@
     "@libp2p/kad-dht": "^11.0.0",
     "@libp2p/mplex": "^10.0.0",
     "@libp2p/peer-id": "^4.0.0",
-    "@libp2p/peer-id-factory": "^3.0.2",
+    "@libp2p/peer-id-factory": "^4.0.1",
     "@libp2p/tcp": "^9.0.0",
     "@nodeutils/defaults-deep": "^1.1.0",
     "@types/lodash.difference": "^4.5.7",
