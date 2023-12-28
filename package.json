@@ -170,7 +170,7 @@
     "protons-runtime": "^5.0.0",
     "timeout-abort-controller": "^3.0.0",
     "uint8arraylist": "^2.4.3",
-    "uint8arrays": "^4.0.2",
+    "uint8arrays": "^5.0.1",
     "varint": "^6.0.0",
     "varint-decoder": "^1.0.0"
   },
