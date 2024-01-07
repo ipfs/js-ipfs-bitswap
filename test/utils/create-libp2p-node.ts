@@ -1,6 +1,6 @@
 import { noise } from '@chainsafe/libp2p-noise'
 import { identify } from '@libp2p/identify'
-import { type KadDHT, kadDHT } from '@libp2p/kad-dht'
+import { type KadDHT, kadDHT, removePublicAddressesMapper } from '@libp2p/kad-dht'
 import { mplex } from '@libp2p/mplex'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import { tcp } from '@libp2p/tcp'
@@ -20,6 +20,8 @@ export async function createLibp2pNode (options: NodeOptions = {}): Promise<Libp
 
   if (options.DHT === true) {
     services.dht = kadDHT({
+      protocol: '/ipfs/lan/kad/1.0.0',
+      peerInfoMapper: removePublicAddressesMapper,
       clientMode: false
     })
   }
