@@ -1,6 +1,6 @@
 import { noise } from '@chainsafe/libp2p-noise'
 import { identify } from '@libp2p/identify'
-import { type DualKadDHT, kadDHT } from '@libp2p/kad-dht'
+import { type KadDHT, kadDHT } from '@libp2p/kad-dht'
 import { mplex } from '@libp2p/mplex'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import { tcp } from '@libp2p/tcp'
@@ -13,7 +13,7 @@ export interface NodeOptions extends Libp2pOptions {
   DHT?: boolean
 }
 
-export async function createLibp2pNode (options: NodeOptions = {}): Promise<Libp2p<{ dht: DualKadDHT }>> {
+export async function createLibp2pNode (options: NodeOptions = {}): Promise<Libp2p<{ dht: KadDHT }>> {
   const services: ServiceMap = {
     identify: identify()
   }
@@ -24,7 +24,7 @@ export async function createLibp2pNode (options: NodeOptions = {}): Promise<Libp
     })
   }
 
-  const node = await createLibp2p<{ dht: DualKadDHT }>(defaultsDeep({
+  const node = await createLibp2p<{ dht: KadDHT }>(defaultsDeep({
     peerId: await createEd25519PeerId(),
     addresses: {
       listen: ['/ip4/0.0.0.0/tcp/0']
