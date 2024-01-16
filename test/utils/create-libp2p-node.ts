@@ -1,7 +1,7 @@
 import { noise } from '@chainsafe/libp2p-noise'
+import { yamux } from '@chainsafe/libp2p-yamux'
 import { identify } from '@libp2p/identify'
 import { type KadDHT, kadDHT, removePublicAddressesMapper } from '@libp2p/kad-dht'
-import { mplex } from '@libp2p/mplex'
 import { createEd25519PeerId } from '@libp2p/peer-id-factory'
 import { tcp } from '@libp2p/tcp'
 // @ts-expect-error no types
@@ -35,7 +35,7 @@ export async function createLibp2pNode (options: NodeOptions = {}): Promise<Libp
       tcp()
     ],
     streamMuxers: [
-      mplex()
+      yamux()
     ],
     connectionEncryption: [
       noise()
