@@ -1,3 +1,10 @@
+## [20.0.2](https://github.com/ipfs/js-ipfs-bitswap/compare/v20.0.1...v20.0.2) (2024-01-16)
+
+
+### Bug Fixes
+
+* mark package as side-effect free ([#630](https://github.com/ipfs/js-ipfs-bitswap/issues/630)) ([699c1e0](https://github.com/ipfs/js-ipfs-bitswap/commit/699c1e05eb5449b156083934bb1ce6edb66caeb7))
+
 ## [20.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v20.0.0...v20.0.1) (2024-01-16)
 
 
