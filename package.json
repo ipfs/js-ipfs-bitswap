@@ -208,5 +208,6 @@
   },
   "browser": {
     "dist/test/utils/create-libp2p-node.js": false
-  }
+  },
+  "sideEffects": false
 }
