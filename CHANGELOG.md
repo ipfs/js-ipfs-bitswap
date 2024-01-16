@@ -1,3 +1,16 @@
+## [20.0.1](https://github.com/ipfs/js-ipfs-bitswap/compare/v20.0.0...v20.0.1) (2024-01-16)
+
+
+### Trivial Changes
+
+* update .github/workflows/js-test-and-release.yml ([#611](https://github.com/ipfs/js-ipfs-bitswap/issues/611)) ([d95c807](https://github.com/ipfs/js-ipfs-bitswap/commit/d95c8079f1f8d296737249d7458e27124eb8e9eb))
+* Update .github/workflows/stale.yml [skip ci] ([9d5bc7e](https://github.com/ipfs/js-ipfs-bitswap/commit/9d5bc7eecaa7752545ea977d2d5e9350cf7c8959))
+
+
+### Dependencies
+
+* bump multiformats from 12.1.3 to 13.0.0 ([#615](https://github.com/ipfs/js-ipfs-bitswap/issues/615)) ([243dc1a](https://github.com/ipfs/js-ipfs-bitswap/commit/243dc1a2ec813d9a33426cf85572cf5016656fd7))
+
 ## [20.0.0](https://github.com/ipfs/js-ipfs-bitswap/compare/v19.0.2...v20.0.0) (2023-11-30)
 
 
