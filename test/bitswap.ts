@@ -12,12 +12,12 @@ import { createLibp2pNode } from './utils/create-libp2p-node.js'
 import { orderedFinish } from './utils/helpers.js'
 import { makeBlocks } from './utils/make-blocks.js'
 import type { Libp2p } from '@libp2p/interface'
-import type { DualKadDHT } from '@libp2p/kad-dht'
+import type { KadDHT } from '@libp2p/kad-dht'
 
 /**
  * Creates a repo + libp2pNode + Bitswap with or without DHT
  */
-async function createThing (dht: boolean): Promise<{ libp2pNode: Libp2p<{ dht: DualKadDHT }>, bitswap: DefaultBitswap }> {
+async function createThing (dht: boolean): Promise<{ libp2pNode: Libp2p<{ dht: KadDHT }>, bitswap: DefaultBitswap }> {
   const libp2pNode = await createLibp2pNode({
     DHT: dht
   })
@@ -167,7 +167,7 @@ describe('bitswap without DHT', function () {
 describe('bitswap with DHT', function () {
   this.timeout(60 * 1000)
 
-  let nodes: Array<{ libp2pNode: Libp2p<{ dht: DualKadDHT }>, bitswap: DefaultBitswap }>
+  let nodes: Array<{ libp2pNode: Libp2p<{ dht: KadDHT }>, bitswap: DefaultBitswap }>
 
   before(async () => {
     nodes = await Promise.all([
