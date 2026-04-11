@@ -188,7 +188,7 @@
     "@types/sinon": "^17.0.2",
     "@types/stats-lite": "^2.2.0",
     "@types/varint": "^6.0.0",
-    "aegir": "^42.0.1",
+    "aegir": "^47.0.26",
     "benchmark": "^2.1.4",
     "blockstore-core": "^4.0.0",
     "delay": "^6.0.0",
